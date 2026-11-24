@@ -18,7 +18,7 @@ interface AddedRow { _id: string; name: string; label?: FrameText; type: string;
 export type ImportQuestion = Displayed<AskQuestion>
 export type ImportStep =
   /** missed = 显示出口没翻到的字（检查用，界面不显示）。 */
-  | { status: 'question'; question: ImportQuestion; ms: number; missed: string[] }
+  | { status: 'question'; question: ImportQuestion; ms: number; missed: string[]; split: { run: number; display: number } }
   | { status: 'ready'; changes: KernelChange[]; added: Array<{ id: string; type: string; typeLabel: string; name: string }>; ms: number }
   | { status: 'error'; error: string; ms: number }
 
@@ -29,13 +29,15 @@ export class KernelImportFlow {
   async step(ownerKey: string, actorId: string, ref: EntryRef, answers: AskAnswer[], replaceItemId?: string): Promise<ImportStep> {
     const t0 = performance.now()
     const ms = () => Math.round(performance.now() - t0)
+    // 问答一开始就在后台预读物品资料（起始装备题要用；只读资料、不改人物），不等它
+    if (!answers.length) void this.deps.runtime.session(ownerKey).then(({ session }) => session.call('warmImport')).catch((e: unknown) => console.warn('[trpg-assistant] 预读物品资料没成功', e))
     const out = await this.run(ownerKey, actorId, ref, answers, replaceItemId)
+    const ran = ms()
     if (out.status === 'pending' && out.question) {
-      // 第一题出来后玩家要想一会儿：后台先把物品资料读好（起始装备题要用），不等它
-      if (!answers.length) void this.deps.runtime.session(ownerKey).then(({ session }) => session.call('warmImport')).catch((e: unknown) => console.warn('[trpg-assistant] 预读物品资料没成功', e))
       await this.deps.people.cancel(ownerKey, [actorId])
       const shown = await (await this.deps.runtime.displayFor(ownerKey, [ref])).show(out.question as AskQuestion)
-      return { status: 'question', question: shown.value as ImportQuestion, ms: ms(), missed: shown.missed }
+      const all = ms()
+      return { status: 'question', question: shown.value as ImportQuestion, ms: all, missed: shown.missed, split: { run: ran, display: all - ran } }
     }
     if (out.status !== 'complete') {
       if (out.changes?.length) await this.deps.people.cancel(ownerKey, [actorId])

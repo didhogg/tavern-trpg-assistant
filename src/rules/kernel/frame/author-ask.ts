@@ -22,20 +22,21 @@ const INPUT_FNS = ['pGetUserBoolean', 'pGetUserEnum', 'pGetUserNumber', 'pGetUse
 /** 作者自己画窗口等玩家的类（先 render(true) 再 pWaitForUserInput）：问答期间不画，等输入改成问答桥。 */
 const APP_CLASSES = ['EquipmentApp', 'ActorAbilityScoreIncrease'] as const
 
-/** 跑 run；期间作者的每次提问按顺序取 answers。交回作者结果 + 这次一共问了哪些题（界面显示“已答”摘要用）。 */
-export async function withAuthorAnswers<T>(answers: AskAnswer[], run: () => Promise<T>): Promise<{ value: T; asked: AskQuestion[] }> {
+/** 跑作者流程。已有回答直接交回组件，只有遇到新题才准备它的显示内容。 */
+export async function withAuthorAnswers<T>(answers: AskAnswer[], run: () => Promise<T>): Promise<T> {
   const api = plutoniumBuild
   if (!api?.UtilApplications || !api?.InputUiUtil) throw Error('此版本 Plutonium 缺少提问入口（UtilApplications / InputUiUtil）')
-  const asked: AskQuestion[] = []
+  let nextIndex = 0
   let needs: AskQuestion | null = null
   const answer = async (kind: string, subject: any): Promise<unknown> => {
     if (needs) return null
     const adapter = ASK_KINDS[kind] ?? ASK_KINDS['*']
-    const index = asked.length
-    const question = { index, ...(await adapter.read(subject, kind)) } as AskQuestion
-    asked.push(question)
+    const index = nextIndex++
     const given = answers[index]
-    if (given === undefined) { needs = question; return null }
+    if (given === undefined) {
+      needs = { index, ...(await adapter.read(subject, kind)) }
+      return null
+    }
     if (given.skip) return adapter.skip ? adapter.skip() : skipMark()
     return adapter.write(subject, given)
   }
@@ -59,7 +60,7 @@ export async function withAuthorAnswers<T>(answers: AskAnswer[], run: () => Prom
   try {
     const value = await run()
     if (needs) throw new NeedsAnswer(needs)
-    return { value, asked }
+    return value
   } finally {
     Apps.pGetImportCompApplicationFormData = originalApp
     for (const fn of INPUT_FNS) Input[fn] = originalInputs[fn]

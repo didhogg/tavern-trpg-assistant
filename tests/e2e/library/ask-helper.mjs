@@ -3,7 +3,8 @@
 //   勾选题从上往下勾满、起始装备每组选第一个方案（「任选一件」选第一个候选）、属性提升力量 +2。
 //   onStep(题号, 题目, 截图前的页面) 给截图用。交回每一步：题目、做了什么、耗时毫秒。
 const root = () => document.querySelector('#trpg-assistant-root').shadowRoot
-export async function answerImport(page, { level, prefer = {}, onStep } = {}) {
+/** firstPause：第一题出来后停多少毫秒再作答（真人要读题；后台趁这时预读资料）。 */
+export async function answerImport(page, { level, prefer = {}, onStep, firstPause = 0 } = {}) {
   const ask = page.getByTestId('import-ask')
   const log = []
   const idle = () => page.waitForFunction(() => { const a = document.querySelector('#trpg-assistant-root').shadowRoot.querySelector('[data-testid=import-ask]'); return !a || !a.getAttribute('aria-busy') }, null, { timeout: 60000 })
@@ -27,6 +28,7 @@ export async function answerImport(page, { level, prefer = {}, onStep } = {}) {
     if (await page.getByTestId('ask-error').count()) { log.push({ error: await page.getByTestId('ask-error').innerText() }); break }
     const title = await page.getByTestId('ask-title').innerText()
     await onStep?.(n, title)
+    if (n === 1 && firstPause) await page.waitForTimeout(firstPause)
     let did = ''
     if (await page.getByTestId('ask-yes').count()) {
       const t0 = Date.now(); await page.getByTestId('ask-yes').click(); await changed(title)

@@ -106,6 +106,9 @@
   .ps-vitals { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: 'label hp rows'; align-items: center; column-gap: var(--sp-4); row-gap: 0; padding: var(--sp-2) var(--sp-4); }
   .ps-vitals > .ps-card-label { grid-area: label; }
   .ps-vitals .ps-hp-now { font-size: 1.75rem; }
+  /* 当前 / 上限 / 临时 / 临时上限排一行，不换行（之前「± 上限」掉到第二行） */
+  .ps-vitals .ps-hp-line { flex-wrap: nowrap; gap: var(--sp-1); }
+  .ps-vitals .ps-hp-temp { white-space: nowrap; padding: 1px var(--sp-2); font-size: var(--fs-xs); }
   .ps-vitals > .ps-hp { grid-area: hp; }
   .ps-vitals > .ps-vital-rows { grid-area: rows; margin-top: 0; }
 }

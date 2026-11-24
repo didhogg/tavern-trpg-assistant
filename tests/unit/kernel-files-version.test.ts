@@ -4,7 +4,11 @@ import { describe, expect, it } from 'vitest'
 import { dataVersionOf } from '../../src/library/revision-data'
 import { kernelDataSource } from '../../src/library/sources'
 import { kernelFilesVersion, kernelImportKey } from '../../src/rules/kernel/cache'
-import type { OfficialSetState } from '../../src/library/db'
+import { LibraryDatabase, type OfficialSetState } from '../../src/library/db'
+import { LibraryOperations } from '../../src/library/operations'
+import { LibraryRevisionStore } from '../../src/library/revision'
+import { FileProvider } from '../../src/library/files'
+import { kernelHandlers, libraryData } from '../../src/rules/kernel/host'
 
 const set = (commit: string, sources: string[]): OfficialSetState => ({ commit, status: 'installed', sources, books: null, adventures: [] } as unknown as OfficialSetState)
 const entry = { name: 'Fireball', source: 'PHB' }
@@ -28,5 +32,29 @@ describe('换算缓存认的资料版本', () => {
   })
   it('旧数据没有 kernelFiles：按总版本算（只会多算，不会算错）', () => {
     expect(kernelFilesVersion({ official: 'v2:x', brews: {} })).toBe('v2:x')
+  })
+
+  it('按书安装后，结算和 Plutonium 都只能从该版本的来源索引加载已装数据', async () => {
+    const db = new LibraryDatabase(`kernel-library-${crypto.randomUUID()}`)
+    const revisions = new LibraryRevisionStore(db)
+    const operations = new LibraryOperations({ db, revisions })
+    const source = kernelDataSource()
+    const path = 'data/spells/index.json'
+    try {
+      await revisions.ensureLegacy()
+      const handle = await operations.begin({ kind: 'test', set: source.id, codeSet: source.codeSet })
+      const text = JSON.stringify({ PHB: 'spells-phb.json', AU: 'spells-au.json' })
+      await handle.target.filePut(source, path, { commit: 'en1', text, gitSha: 'index-en1', size: text.length })
+      const view = await operations.publish(handle, { sourceIndexes: { [`${source.codeSet}|${path}`]: ['PHB'] } })
+      const files = new FileProvider({ db })
+      const data = libraryData(files, view)
+      const kernel = kernelHandlers({ pluginRoot: new URL('https://test.local/'), data })
+      const expected = JSON.stringify({ PHB: 'spells-phb.json' })
+      expect(await kernel.file(path)).toBe(expected)
+      expect(await kernel.file(`modules/plutonium/${path}`)).toBe(expected)
+      expect((await view.fileGet(source, path))?.text).toBe(text)
+    } finally {
+      await db.delete()
+    }
   })
 })

@@ -26,7 +26,12 @@ export const BREW_FILE_DIR = 'brews/'
 
 export function libraryData(files: FileProvider, view?: LibraryView): DataReader {
   const source = kernelDataSource()
-  return (path) => files.get(source, path, { allowNetwork: false, ...(view ? { view } : {}) })
+  return async (path) => {
+    const text = await files.get(source, path, { allowNetwork: false, ...(view ? { view } : {}) })
+    // 整类读取先看作者的来源索引。和资料页用同一个版本的过滤规则，
+    // 否则单书安装时，作者会按原索引请求其余未装来源并中断整个导入。
+    return text === null || !view ? text : view.filterIndex(path, text, source.codeSet)
+  }
 }
 
 export function kernelHandlers({ pluginRoot, data, fetchImpl = fetch, moduleRoots = {}, brewFiles }: { pluginRoot: URL; data: DataReader; fetchImpl?: typeof fetch; moduleRoots?: Record<string, string>; brewFiles?: ReadonlyMap<string, string> }): FrameHandlers {

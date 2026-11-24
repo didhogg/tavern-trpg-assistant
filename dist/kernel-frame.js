@@ -341,8 +341,8 @@ var ce = [
 ], le = {
 	rule: "no-target",
 	reason: "目标路径既没有数据字段，人物身上也没有这个属性；原代码写进去也没有规则读取"
-}, ue = globalThis, de = /* @__PURE__ */ new WeakMap(), j = !1, fe = (e) => e?.documentName === "Actor";
-function pe(e, t, n) {
+}, ue = globalThis, de = /* @__PURE__ */ new WeakMap(), fe = !1, pe = (e) => e?.documentName === "Actor";
+function me(e, t, n) {
 	let r = String(t.effect?.uuid ?? ""), i = String(t.key ?? ""), a = de.get(e);
 	a || de.set(e, a = /* @__PURE__ */ new Map()), a.has(`${r}|${i}`) || a.set(`${r}|${i}`, {
 		actor: e.id,
@@ -354,41 +354,41 @@ function pe(e, t, n) {
 		affects: i
 	});
 }
-function me() {
-	if (j) return;
+function he() {
+	if (fe) return;
 	let e = ue.CONFIG?.ActiveEffect?.documentClass, t = ue.CONFIG?.Actor?.documentClass;
 	if (!e || !t) return;
-	j = !0;
+	fe = !0;
 	let n = t.prototype.applyActiveEffects;
 	t.prototype.applyActiveEffects = function(e, ...t) {
 		return (e === "initial" || e === void 0) && de.set(this, /* @__PURE__ */ new Map()), n.call(this, e, ...t);
 	};
 	let r = e.applyChange;
 	e.applyChange = function(e, t, ...n) {
-		let i = fe(e) && t?.effect ? ce.find((e) => e.test(String(t.key ?? ""))) : void 0;
-		return i && pe(e, t, {
+		let i = pe(e) && t?.effect ? ce.find((e) => e.test(String(t.key ?? ""))) : void 0;
+		return i && me(e, t, {
 			rule: i.id,
 			reason: i.reason
 		}), r.call(this, e, t, ...n);
 	};
 	let i = e._applyChangeUnguided;
 	e._applyChangeUnguided = function(e, t, ...n) {
-		return fe(e) && t?.effect && ue.foundry.utils.getProperty(e, t.key) === void 0 && !ce.some((e) => e.test(String(t.key ?? ""))) && pe(e, t, le), i.call(this, e, t, ...n);
+		return pe(e) && t?.effect && ue.foundry.utils.getProperty(e, t.key) === void 0 && !ce.some((e) => e.test(String(t.key ?? ""))) && me(e, t, le), i.call(this, e, t, ...n);
 	};
 }
-function he(e) {
-	return me(), de.has(e) || e.reset(), [...de.get(e)?.values() ?? []];
+function ge(e) {
+	return he(), de.has(e) || e.reset(), [...de.get(e)?.values() ?? []];
 }
 // src/rules/kernel/frame/commands-items.ts
-var ge = globalThis;
-function M(e) {
+var _e = globalThis;
+function j(e) {
 	return !e || e.max === void 0 || e.max === null || e.max === "" ? null : {
 		value: e.value ?? null,
 		max: e.max ?? null,
 		spent: e.spent ?? null
 	};
 }
-function _e(e) {
+function ve(e) {
 	return {
 		id: e.id,
 		name: e.name,
@@ -396,16 +396,16 @@ function _e(e) {
 		equipped: "equipped" in e.system ? e.system.equipped : null,
 		attuned: "attuned" in e.system ? e.system.attuned : null,
 		attunement: e.system.attunement ?? null,
-		uses: M(e.system.uses),
+		uses: j(e.system.uses),
 		activities: e.system.activities ? [...e.system.activities].map((e) => ({
 			id: e.id,
 			name: e.name,
 			type: e.type,
-			uses: M(e.uses)
+			uses: j(e.uses)
 		})) : []
 	};
 }
-function ve(e) {
+function ye(e) {
 	let t = e.system.attributes?.ac, n = e.system.attributes?.attunement;
 	return {
 		ac: t ? {
@@ -419,7 +419,7 @@ function ve(e) {
 		} : null
 	};
 }
-function ye(e) {
+function be(e) {
 	return e.map((e) => ({
 		formula: e.formula ?? null,
 		total: e.total ?? null,
@@ -429,25 +429,25 @@ function ye(e) {
 		})) ?? []
 	}));
 }
-function be(e, t) {
+function xe(e, t) {
 	let n = (e, n) => t(e).items.get(n, { strict: !0 });
 	return {
 		equip: (r, i, a) => e([], async () => {
 			let e = t(r), o = n(r, i);
 			return await o.update({ "system.equipped": !!a }), {
-				item: _e(o),
-				actor: ve(e)
+				item: ve(o),
+				actor: ye(e)
 			};
 		}, [r]),
 		attune: (r, i, a) => e([], async () => {
 			let e = t(r), o = n(r, i);
 			return await o.update({ "system.attuned": !!a }), {
-				item: _e(o),
-				actor: ve(e)
+				item: ve(o),
+				actor: ye(e)
 			};
 		}, [r]),
 		useItem: (t, r, i = [], a = null) => {
-			let o = [], s = ge.ui?.notifications, c = s?.error;
+			let o = [], s = _e.ui?.notifications, c = s?.error;
 			return s && c && (s.error = function(e, ...t) {
 				return o.push(String(e)), c.call(this, e, ...t);
 			}), e(i, async () => {
@@ -457,7 +457,7 @@ function be(e, t) {
 					i = await s.use({}, { configure: !1 }, { create: !1 });
 				} else i = await e.use({}, { configure: !1 }, { create: !1 });
 				return {
-					item: _e(e),
+					item: ve(e),
 					activity: s ? {
 						id: s.id,
 						name: s.name,
@@ -491,17 +491,17 @@ function be(e, t) {
 					id: t.id,
 					name: t.name,
 					destroy: !0
-				})) : ge.foundry.utils.isEmpty(n.updates) || (await t.update(n.updates), i.push({
+				})) : _e.foundry.utils.isEmpty(n.updates) || (await t.update(n.updates), i.push({
 					id: t.id,
 					name: t.name,
 					updates: n.updates,
-					rolls: ye(n.rolls ?? [])
+					rolls: be(n.rolls ?? [])
 				})));
 			}
 			return {
 				period: r,
 				items: i,
-				actor: ve(e)
+				actor: ye(e)
 			};
 		}, [n]),
 		filterItems: (n, r) => e([], async () => {
@@ -509,9 +509,9 @@ function be(e, t) {
 			if (!e?._filterChildren) throw Error(`人物 ${n} 没有官方人物表单实例`);
 			return { ids: e._filterChildren("items", new Set(r)).map((e) => e.id) };
 		}),
-		splitStack: (r, i, a) => e([], async () => (await n(r, i).system.split(a), { actor: ve(t(r)) }), [r]),
+		splitStack: (r, i, a) => e([], async () => (await n(r, i).system.split(a), { actor: ye(t(r)) }), [r]),
 		createScroll: (r, i, a) => e([], async () => {
-			let e = t(r), o = await ge.CONFIG.Item.documentClass.createScrollFromSpell(n(r, i), {}, { dialog: !1 });
+			let e = t(r), o = await _e.CONFIG.Item.documentClass.createScrollFromSpell(n(r, i), {}, { dialog: !1 });
 			if (!o) throw Error("官方没有生成卷轴");
 			let s = o.toObject ? o.toObject() : o;
 			return a && (s.name = a, s.flags = {
@@ -522,7 +522,7 @@ function be(e, t) {
 				}
 			}), {
 				created: (await e.createEmbeddedDocuments("Item", [s])).map((e) => e.id),
-				actor: ve(e)
+				actor: ye(e)
 			};
 		}, [r]),
 		duplicateItem: (r, i, a) => e([], async () => ({
@@ -530,16 +530,16 @@ function be(e, t) {
 				name: a,
 				"flags.tavern-trpg.named": !0
 			}, { save: !0 }))?.id ?? null,
-			actor: ve(t(r))
+			actor: ye(t(r))
 		}), [r]),
 		convertCurrency: (n) => e([], async () => {
 			let e = t(n);
-			return await ge.dnd5e.applications.CurrencyManager.convertCurrency(e), { currency: e.system.currency };
+			return await _e.dnd5e.applications.CurrencyManager.convertCurrency(e), { currency: e.system.currency };
 		}, [n])
 	};
 }
 // src/rules/kernel/frame/author-classes.ts
-var xe = [
+var Se = [
 	"Config",
 	"ConfigConsts",
 	"VetoolsLinks",
@@ -561,22 +561,22 @@ var xe = [
 	"DataConverterClass",
 	"SourceUtil",
 	"MiscUtil"
-], Se;
-function Ce() {
-	return Se ??= (async () => {
-		let e = await (await fetch(new URL("modules/plutonium/js/Bundle.js", document.baseURI))).text(), t = Object.getPrototypeOf(async () => void 0).constructor, n = await new t(`${e}\n;return { ${xe.join(", ")} };`)();
+], Ce;
+function we() {
+	return Ce ??= (async () => {
+		let e = await (await fetch(new URL("modules/plutonium/js/Bundle.js", document.baseURI))).text(), t = Object.getPrototypeOf(async () => void 0).constructor, n = await new t(`${e}\n;return { ${Se.join(", ")} };`)();
 		return n.Config._CONFIG_TEMP = {
 			dataSources: { baseSiteUrl: new URL(".", document.baseURI).href },
 			misc: { rulesVersion: "classic" }
 		}, n.ConfigConsts.prePreInit({ implRegistryImportList: n.ImplementationRegistryImportList.get() }), n.Config._CONFIG = n.Config.api_getDefaults(), n.Config._CONFIG_PLAYER = n.Config._getDefaultPlayerConfig(), n.Vetools.prePreInit_preConfig(), n.VetoolsLinks.prePreInit_postConfig(), n.Vetools.prePreInit_postConfig(), n.UtilDamageTypes.init(), n.Dnd5eUtil.init(), n.Vetools.init(), n.SideDataInterfaces.init(), n;
 	})();
 }
-var N = globalThis, we;
-function Te() {
-	return we ??= (async () => {
-		let e = (await N.game.modules.get("plutonium")?.api?.importer?.pGetImporter?.({ prop: "item" }))?.constructor?._DataConverter;
+var M = globalThis, Te;
+function Ee() {
+	return Te ??= (async () => {
+		let e = (await M.game.modules.get("plutonium")?.api?.importer?.pGetImporter?.({ prop: "item" }))?.constructor?._DataConverter;
 		if (!e?._getWeaponIdKey) throw Error("作者物品转换类不可用（Plutonium 物品导入器）");
-		let t = N.Parser, n = (N.game?.settings?.get?.("dnd5e", "rulesVersion") === "modern" ? [
+		let t = M.Parser, n = (M.game?.settings?.get?.("dnd5e", "rulesVersion") === "modern" ? [
 			t.SRC_XPHB,
 			t.SRC_XDMG,
 			t.SRC_PHB,
@@ -586,12 +586,12 @@ function Te() {
 			t.SRC_DMG,
 			t.SRC_XPHB,
 			t.SRC_XDMG
-		]).map((e) => String(e).toLowerCase()), r = N.Renderer.get().baseUrl, [i, a] = await Promise.all([N.DataUtil.loadJSON(`${r}data/items-base.json`), N.DataUtil.loadJSON(`${r}data/items.json`)]), o = [...i?.baseitem ?? [], ...a?.item ?? []].filter((e) => n.includes(String(e.source).toLowerCase())).sort((e, t) => n.indexOf(String(e.source).toLowerCase()) - n.indexOf(String(t.source).toLowerCase())), s = /* @__PURE__ */ new Map();
+		]).map((e) => String(e).toLowerCase()), r = M.Renderer.get().baseUrl, [i, a] = await Promise.all([M.DataUtil.loadJSON(`${r}data/items-base.json`), M.DataUtil.loadJSON(`${r}data/items.json`)]), o = [...i?.baseitem ?? [], ...a?.item ?? []].filter((e) => n.includes(String(e.source).toLowerCase())).sort((e, t) => n.indexOf(String(e.source).toLowerCase()) - n.indexOf(String(t.source).toLowerCase())), s = /* @__PURE__ */ new Map();
 		for (let t of o) {
 			let n = String(t.name).toLowerCase(), r = {
 				propDroppable: "item",
 				source: String(t.source),
-				hash: N.UrlUtil.URL_TO_HASH_BUILDER[N.UrlUtil.PG_ITEMS](t)
+				hash: M.UrlUtil.URL_TO_HASH_BUILDER[M.UrlUtil.PG_ITEMS](t)
 			};
 			for (let t of /* @__PURE__ */ new Set([
 				e._getWeaponIdKey({ nameLower: n }),
@@ -603,8 +603,8 @@ function Te() {
 	})();
 }
 // src/rules/kernel/frame/commands-combat.ts
-var Ee = globalThis;
-function De(e) {
+var De = globalThis;
+function Oe(e) {
 	let t = e.system.spells;
 	return t ? Object.fromEntries(Object.entries(t).map(([e, t]) => [e, {
 		value: t.value ?? null,
@@ -613,7 +613,7 @@ function De(e) {
 		type: t.type ?? null
 	}])) : null;
 }
-function Oe(e) {
+function ke(e) {
 	let t = e.concentration?.effects;
 	return {
 		effects: t ? [...t].map((e) => ({
@@ -624,7 +624,7 @@ function Oe(e) {
 		limit: e.system.attributes?.concentration?.limit ?? null
 	};
 }
-function ke(e) {
+function Ae(e) {
 	return {
 		statuses: e.statuses ? [...e.statuses] : [],
 		effects: e.effects.contents.map((e) => ({
@@ -635,7 +635,7 @@ function ke(e) {
 		}))
 	};
 }
-function Ae(e) {
+function je(e) {
 	return {
 		id: e.id,
 		name: e.name,
@@ -653,7 +653,7 @@ function Ae(e) {
 		}))
 	};
 }
-function je(e) {
+function Me(e) {
 	return {
 		formula: e.formula ?? null,
 		total: e.total ?? null,
@@ -665,28 +665,28 @@ function je(e) {
 		})) ?? []
 	};
 }
-function Me(e, t) {
-	let n = null, r = () => n ?? Ee.game.combat, i = () => {
+function Ne(e, t) {
+	let n = null, r = () => n ?? De.game.combat, i = () => {
 		let e = r();
 		if (!e) throw Error("No active combat");
 		return e;
 	};
 	return {
 		combatStart: (t, r = []) => e(r, async () => {
-			let e = await Ee.CONFIG.Combat.documentClass.create({
+			let e = await De.CONFIG.Combat.documentClass.create({
 				name: "Kernel encounter",
 				combatants: t.map((e) => ({ actorId: e }))
 			});
-			return await e.rollInitiative(e.combatants.map((e) => e.id), { dialog: !1 }), await e.startCombat(), n = e, Ae(e);
+			return await e.rollInitiative(e.combatants.map((e) => e.id), { dialog: !1 }), await e.startCombat(), n = e, je(e);
 		}, t),
 		combatNext: (t = []) => e(t, async () => {
 			let e = i();
-			return await e.nextTurn(), Ae(e);
+			return await e.nextTurn(), je(e);
 		}),
 		combatEnd: () => e([], async () => {
 			let e = i();
 			await e.endCombat();
-			let t = Ae(e);
+			let t = je(e);
 			return n = null, t;
 		}),
 		cast: (n, r, i, a = [], o = {}) => e(a, async () => {
@@ -694,14 +694,14 @@ function Me(e, t) {
 			if (!s) throw Error(`Item has no activity: ${i}`);
 			let c = await s.use(o, { configure: !1 }, { create: !1 });
 			return {
-				item: _e(a),
+				item: ve(a),
 				activity: {
 					id: s.id,
 					name: s.name,
 					type: s.type
 				},
-				slots: De(e),
-				concentration: Oe(e),
+				slots: Oe(e),
+				concentration: ke(e),
 				effects: (c?.effects ?? []).map((e) => ({
 					id: e.id,
 					name: e.name,
@@ -716,28 +716,28 @@ function Me(e, t) {
 		}, [n]),
 		condition: (n, r, i = !0) => e([], async () => {
 			let e = t(n);
-			return await e.toggleStatusEffect(r, { active: i }), ke(e);
+			return await e.toggleStatusEffect(r, { active: i }), Ae(e);
 		}, [n]),
 		concentrationCheck: (n, r, i = []) => e(i, async () => {
 			let e = t(n);
 			if (!e.concentration?.effects?.size) return {
 				dc: null,
 				skipped: "not concentrating",
-				concentration: Oe(e)
+				concentration: ke(e)
 			};
 			let i = e.getConcentrationDC(r), a = await e.rollConcentration({ target: i }, { configure: !1 }, { create: !1 }), o = a?.[0] ?? null, s = o ? o.total >= i : null;
 			return s === !1 && await e.endConcentration(), {
 				dc: i,
 				success: s,
-				rolls: (a ?? []).map(je),
-				concentration: Oe(e)
+				rolls: (a ?? []).map(Me),
+				concentration: ke(e)
 			};
 		}, [n]),
-		concentration: (n) => e([], async () => Oe(t(n)), [n])
+		concentration: (n) => e([], async () => ke(t(n)), [n])
 	};
 }
 // src/rules/kernel/frame/plutonium-zh.ts
-async function Ne(e, t, n = fetch) {
+async function Pe(e, t, n = fetch) {
 	try {
 		let r = await n(new URL("fingerprints.json", t), { cache: "no-store" });
 		if (r.status === 404) return null;
@@ -754,34 +754,8 @@ async function Ne(e, t, n = fetch) {
 	}
 }
 // src/rules/kernel/frame/plutonium-build.ts
-var Pe = "13b1a03b99eab99f4b078e11075c7092c175a365d076d5319914f376c583e245", Fe = "608e0a5497354d1937c3d3e780f85a103c4ddffb846d4bb1cdcfb00bdffb0bf2", Ie = [
-	"Charactermancer_FeatureOptionsSelect",
-	"Charactermancer_AdditionalFeatsSelect",
-	"StatGenUtilAdditionalFeats",
-	"DataPrimerFauxFeatureClassSubclassFeat",
-	"DataPrimerFauxFeatureClassSubclassOptionalfeature",
-	"UtilDataConverter",
-	"Config",
-	"Charactermancer_AvailableProficiencyManager",
-	"CharactermancerFeatureSubCompManagerProficiencyOtherBase",
-	"Charactermancer_ItemMasteries_Util",
-	"Charactermancer_Class_Util",
-	"Charactermancer_OtherProficiencySelect",
-	"Charactermancer_ExpertiseSelect",
-	"Charactermancer_ImmResVulnSelect",
-	"UtilAdvancementsEntry",
-	"UtilAdvancements",
-	"ComponentUiUtil",
-	"veE",
-	"EQUIPMENT_TYPE_EXPANDERS",
-	"UtilEntityItem",
-	"UtilApplications",
-	"InputUiUtil",
-	"EquipmentApp",
-	"ActorAbilityScoreIncrease",
-	"UtilEntityBackgroundFeature"
-], P = null, Le;
-async function Re(e, t = !1) {
+var Fe = "13b1a03b99eab99f4b078e11075c7092c175a365d076d5319914f376c583e245", Ie = "608e0a5497354d1937c3d3e780f85a103c4ddffb846d4bb1cdcfb00bdffb0bf2", Le = /* @__PURE__ */ "Charactermancer_FeatureOptionsSelect.Charactermancer_AdditionalFeatsSelect.StatGenUtilAdditionalFeats.DataPrimerFauxFeatureClassSubclassFeat.DataPrimerFauxFeatureClassSubclassOptionalfeature.UtilDataConverter.Config.Charactermancer_AvailableProficiencyManager.CharactermancerFeatureSubCompManagerProficiencyOtherBase.Charactermancer_ItemMasteries_Util.Charactermancer_Class_Util.Charactermancer_OtherProficiencySelect.Charactermancer_ExpertiseSelect.Charactermancer_ImmResVulnSelect.UtilAdvancementsEntry.UtilAdvancements.ComponentUiUtil.veE.EQUIPMENT_TYPE_EXPANDERS.UtilEntityItem.UtilApplications.InputUiUtil.EquipmentApp.ActorAbilityScoreIncrease.UtilEntityBackgroundFeature.IconProviderDdbImporter.IconProviderDndStar.DataConverterItem".split("."), N = null, Re;
+async function ze(e, t = !1) {
 	if (!e.pathname.endsWith("/modules/plutonium/js/Bundle.js")) {
 		await import(
 			/* @vite-ignore */
@@ -792,18 +766,18 @@ async function Re(e, t = !1) {
 	let n = await fetch(e);
 	if (!n.ok) throw Error(`读取 Plutonium 失败：${n.status}`);
 	let r = await n.text(), i = new URL(n.url || e.href), a = h(r);
-	if (a !== Pe) {
-		let e = new URL("../private/modules/plutonium/js/Bundle.js", location.href), n = t && i.href === e.href ? await Ne(r, new URL("../private/lang/zh/modules/plutonium/js/", location.href)) : null;
-		if (i.href === e.href && a === Fe) {
-			let { nativeBuilder: e } = await ze(n ?? r, i, "\nexport const nativeBuilder = { ActorCharactermancer, ComponentUiUtil, Charactermancer_Util, Charactermancer_Spell_Level, Charactermancer_AvailableEquipmentInfo };\n");
-			Le = e;
+	if (a !== Fe) {
+		let e = new URL("../private/modules/plutonium/js/Bundle.js", location.href), n = t && i.href === e.href ? await Pe(r, new URL("../private/lang/zh/modules/plutonium/js/", location.href)) : null;
+		if (i.href === e.href && a === Ie) {
+			let { nativeBuilder: e } = await Be(n ?? r, i, "\nexport const nativeBuilder = { ActorCharactermancer, ComponentUiUtil, Charactermancer_Util, Charactermancer_Spell_Level, Charactermancer_AvailableEquipmentInfo };\n");
+			Re = e;
 		} else n === null ? await import(
 			/* @vite-ignore */
 			i.href
-) : await ze(n, i);
-	} else P = (await ze(r, e, `\nexport const buildAdapter = { ${Ie.join(", ")} };\n`)).buildAdapter;
+) : await Be(n, i);
+	} else N = (await Be(r, e, `\nexport const buildAdapter = { ${Le.join(", ")} };\n`)).buildAdapter;
 }
-async function ze(e, t, n = "") {
+async function Be(e, t, n = "") {
 	let r = e.replace("import('../lib/ace.js')", `import(${JSON.stringify(new URL("../lib/ace.js", t).href)})`), i = URL.createObjectURL(new Blob([
 		r,
 		n,
@@ -819,27 +793,27 @@ async function ze(e, t, n = "") {
 	}
 }
 // src/rules/kernel/frame/trait-origins.ts
-var Be = "tavern-trpg-assistant", Ve = "automaticTraitOrigins";
-function He(e) {
-	return e.flags?.[Be]?.[Ve] ?? {};
-}
+var Ve = "tavern-trpg-assistant", He = "automaticTraitOrigins";
 function Ue(e) {
-	let t = e.flags?.[Be];
-	t && Ve in t && (delete t[Ve], Object.keys(t).length || delete e.flags[Be]);
+	return e.flags?.[Ve]?.[He] ?? {};
 }
-var We = (e = []) => [...e].sort(), Ge = (e) => m({
+function We(e) {
+	let t = e.flags?.[Ve];
+	t && He in t && (delete t[He], Object.keys(t).length || delete e.flags[Ve]);
+}
+var Ge = (e = []) => [...e].sort(), Ke = (e) => m({
 	type: e.type,
 	level: e.level ?? 0,
 	restriction: e.classRestriction || null,
 	name: e.name ?? "",
 	hint: e.hint ?? "",
 	mode: e.configuration?.mode ?? "default",
-	grants: We(e.configuration?.grants),
+	grants: Ge(e.configuration?.grants),
 	allowReplacements: !!e.configuration?.allowReplacements,
-	choices: (e.configuration?.choices ?? []).map((e) => [e.count ?? 1, We(e.pool)])
+	choices: (e.configuration?.choices ?? []).map((e) => [e.count ?? 1, Ge(e.pool)])
 });
-async function Ke(e) {
-	let t = P;
+async function qe(e) {
+	let t = N;
 	if (!t) return e();
 	let n = t.UtilAdvancementsEntry, r = t.UtilAdvancements, i = n.getGenericAdvancements, a = r.getAdvancementsObject, o = /* @__PURE__ */ new WeakMap(), s = /* @__PURE__ */ new Map();
 	n.getGenericAdvancements = function(e, ...t) {
@@ -867,7 +841,7 @@ async function Ke(e) {
 			let t = o.get(n);
 			t ? s.set(e, {
 				origin: t,
-				signature: Ge(n)
+				signature: Ke(n)
 			}) : s.delete(e);
 		}
 		return t;
@@ -875,23 +849,23 @@ async function Ke(e) {
 	try {
 		let t = await e(), n = Object.fromEntries(Object.entries(t.system?.advancement ?? {}).flatMap(([e, t]) => {
 			let n = s.get(e);
-			return n && n.signature === Ge(t) ? [[e, n.origin]] : [];
+			return n && n.signature === Ke(t) ? [[e, n.origin]] : [];
 		}));
-		return Ue(t), Object.keys(n).length && (t.flags ??= {}, t.flags[Be] ??= {}, t.flags[Be][Ve] = n), t;
+		return We(t), Object.keys(n).length && (t.flags ??= {}, t.flags[Ve] ??= {}, t.flags[Ve][He] = n), t;
 	} finally {
 		n.getGenericAdvancements = i, r.getAdvancementsObject = a;
 	}
 }
 // src/rules/kernel/frame/importer.ts
-var qe = globalThis, Je = {
+var Je = globalThis, Ye = {
 	skillsChosenFvtt: [],
 	languagesChosenFvtt: [],
 	armorProficienciesChosenFvtt: [],
 	weaponProficienciesChosenFvtt: [],
 	toolProficienciesChosenFvtt: []
 };
-function Ye() {
-	let e = qe.foundry?.documents?.collections?.CompendiumCollection;
+function Xe() {
+	let e = Je.foundry?.documents?.collections?.CompendiumCollection;
 	if (e?.prototype && !e.prototype.getDocuments.__seeded) for (let t of ["getDocuments", "getDocument"]) {
 		let n = e.prototype[t], r = function(...e) {
 			return ie(`pack:${this.collection}:${t}:${JSON.stringify(e)}`, () => n.apply(this, e));
@@ -899,29 +873,29 @@ function Ye() {
 		r.__seeded = !0, e.prototype[t] = r;
 	}
 }
-var Xe = Promise.resolve();
-function F(e, t) {
-	let n = Xe.then(() => Ze(e, t));
-	return Xe = n.then(() => void 0, () => void 0), n;
+var Ze = Promise.resolve();
+function P(e, t) {
+	let n = Ze.then(() => Qe(e, t));
+	return Ze = n.then(() => void 0, () => void 0), n;
 }
-async function Ze(e, t) {
-	Ye();
-	let n = qe.game.modules.get("plutonium")?.api;
+async function Qe(e, t) {
+	Xe();
+	let n = Je.game.modules.get("plutonium")?.api;
 	if (!n?.importer) throw Error("Plutonium importer is not available");
 	let r = await n.importer.pGetImporter({ prop: e });
 	if (!r) throw Error(`No Plutonium importer for ${e}`);
 	let i = async () => {
-		let i = structuredClone(t), a = new n.importer.ImportOpts({ isTemp: !0 }), o = (e === "class" && r.pImportEntryClass ? await r.pImportEntryClass(i, a) : await r.pImportEntry(i, a, structuredClone(Je)))?.imported?.[0]?.document ?? null;
+		let i = structuredClone(t), a = new n.importer.ImportOpts({ isTemp: !0 }), o = (e === "class" && r.pImportEntryClass ? await r.pImportEntryClass(i, a) : await r.pImportEntry(i, a, structuredClone(Ye)))?.imported?.[0]?.document ?? null;
 		if (!o) throw Error(`Plutonium import failed for ${t?.name ?? e}`);
 		return o.toObject ? o.toObject() : o;
 	};
-	return k(se(e, t)), await i(), k(se(e, t)), Ke(i);
-}
-async function Qe(e) {
-	return (await $e(e)).map((e) => e.prop);
+	return k(se(e, t)), await i(), k(se(e, t)), qe(i);
 }
 async function $e(e) {
-	let t = qe.game.modules.get("plutonium")?.api;
+	return (await et(e)).map((e) => e.prop);
+}
+async function et(e) {
+	let t = Je.game.modules.get("plutonium")?.api;
 	if (!t?.importer) throw Error("Plutonium importer is not available");
 	let n = [];
 	for (let r of e) try {
@@ -934,69 +908,69 @@ async function $e(e) {
 	return n;
 }
 // src/rules/kernel/frame/off.ts
-var et = globalThis, tt = "trpgOffHidden000", nt = (e) => {
+var tt = globalThis, nt = "trpgOffHidden000", rt = (e) => {
 	let t = e?.flags?.plutonium;
 	return t?.propDroppable && t.source && t.hash ? `${t.propDroppable}|${t.source}|${t.hash}` : null;
-}, rt = (e) => e.constructor?.typeName ?? e.type, it = (e) => JSON.parse(JSON.stringify(e ?? null, (e, t) => t instanceof Set ? [...t] : t));
-function at(e) {
+}, it = (e) => e.constructor?.typeName ?? e.type, at = (e) => JSON.parse(JSON.stringify(e ?? null, (e, t) => t instanceof Set ? [...t] : t));
+function ot(e) {
 	let t = e.system.details?.level ?? 1, n = [];
 	for (let r of e.items) {
-		let e = nt(r);
+		let e = rt(r);
 		if (e) for (let i of Object.values(r.advancement?.byId ?? {})) for (let a of i.levels ?? []) (a <= t || a === 0) && n.push({
 			item: r,
 			key: e,
 			adv: i,
-			type: rt(i),
+			type: it(i),
 			level: a
 		});
 	}
 	return n;
 }
-var ot = () => et.foundry.data.fields, st = (e) => e instanceof ot().ArrayField, ct = (e) => e instanceof ot().TypedObjectField;
-function lt(e, t) {
+var st = () => tt.foundry.data.fields, ct = (e) => e instanceof st().ArrayField, lt = (e) => e instanceof st().TypedObjectField;
+function ut(e, t) {
 	let n = e?.schema?.fields;
 	if (!n || !t || typeof t != "object") return null;
 	let r = [];
 	for (let [e, i] of Object.entries(n)) {
 		let n = t[e];
-		if (st(i) && Array.isArray(n)) for (let t of n) typeof t == "string" && r.push([e, t]);
-		else if (ct(i) && n && typeof n == "object") for (let [t, i] of Object.entries(n)) r.push([e, t]), typeof i == "string" && r.push([e, i]);
+		if (ct(i) && Array.isArray(n)) for (let t of n) typeof t == "string" && r.push([e, t]);
+		else if (lt(i) && n && typeof n == "object") for (let [t, i] of Object.entries(n)) r.push([e, t]), typeof i == "string" && r.push([e, i]);
 	}
 	return r;
 }
-function ut(e, t, n) {
+function dt(e, t, n) {
 	let r = { ...t };
 	for (let [i, a] of Object.entries(e.schema.fields)) {
 		let e = t?.[i];
-		st(a) && Array.isArray(e) ? r[i] = e.filter((e) => !(typeof e == "string" && n.has(e))) : ct(a) && e && typeof e == "object" && (r[i] = Object.fromEntries(Object.entries(e).filter(([e, t]) => !n.has(e) && !(typeof t == "string" && n.has(t)))));
+		ct(a) && Array.isArray(e) ? r[i] = e.filter((e) => !(typeof e == "string" && n.has(e))) : lt(a) && e && typeof e == "object" && (r[i] = Object.fromEntries(Object.entries(e).filter(([e, t]) => !n.has(e) && !(typeof t == "string" && n.has(t)))));
 	}
 	return r;
 }
-var dt = (e) => ({
+var ft = (e) => ({
 	value: e.constructor?.metadata?.dataModels?.value,
 	configuration: e.constructor?.metadata?.dataModels?.configuration
-}), ft = (e, t) => {
-	let n = dt(e).value;
+}), pt = (e, t) => {
+	let n = ft(e).value;
 	return !!n?.schema?.fields && !!t && typeof t == "object" && Object.keys(t).every((e) => e in n.schema.fields);
 };
-function pt(e, t) {
-	let n = dt(e), r = [...lt(n.value, it(e.value)) ?? [], ...lt(n.configuration, it(e.configuration)) ?? []].map(([, e]) => e), i = typeof e.storagePath == "function" ? e.storagePath(t) : null, a = i ? it(et.foundry.utils.getProperty(e, i)) : null, o = a && typeof a == "object" ? Object.values(a).filter((e) => typeof e == "string") : [];
+function mt(e, t) {
+	let n = ft(e), r = [...ut(n.value, at(e.value)) ?? [], ...ut(n.configuration, at(e.configuration)) ?? []].map(([, e]) => e), i = typeof e.storagePath == "function" ? e.storagePath(t) : null, a = i ? at(tt.foundry.utils.getProperty(e, i)) : null, o = a && typeof a == "object" ? Object.values(a).filter((e) => typeof e == "string") : [];
 	return [.../* @__PURE__ */ new Set([...r, ...o])];
 }
-function mt(e, t) {
+function ht(e, t) {
 	let n = [], r = (i, a) => {
 		for (let [o, s] of Object.entries(i ?? {})) {
 			let i = a ? `${a}.${o}` : o;
-			s instanceof ot().DocumentIdField && s.model?.documentName === "Item" && et.foundry.utils.getProperty(e._source.system, i) === t ? n.push(`system.${i}`) : s.fields && r(s.fields, i);
+			s instanceof st().DocumentIdField && s.model?.documentName === "Item" && tt.foundry.utils.getProperty(e._source.system, i) === t ? n.push(`system.${i}`) : s.fields && r(s.fields, i);
 		}
 	};
 	return r(e.system.schema?.fields, ""), n;
 }
-var ht = (e, t) => t.ref === e.key && t.advancement === e.adv.id && (t.level === void 0 || t.level === e.level), gt = (e) => e.advancement === void 0 && e.effect === void 0 && e.part !== void 0, _t = (e) => e.advancement === void 0 && e.effect === void 0 && e.part === void 0;
-function vt(e, t, n) {
+var gt = (e, t) => t.ref === e.key && t.advancement === e.adv.id && (t.level === void 0 || t.level === e.level), _t = (e) => e.advancement === void 0 && e.effect === void 0 && e.part !== void 0, vt = (e) => e.advancement === void 0 && e.effect === void 0 && e.part === void 0;
+function yt(e, t, n) {
 	let r = [];
 	for (let i of n) {
-		let n = [...e.items].find((e) => nt(e) === i.ref);
+		let n = [...e.items].find((e) => rt(e) === i.ref);
 		if (!n) {
 			r.push({
 				off: i,
@@ -1011,7 +985,7 @@ function vt(e, t, n) {
 			});
 			continue;
 		}
-		if (gt(i)) {
+		if (_t(i)) {
 			i.part.startsWith("system.") && n.system.schema?.getField?.(i.part.slice(7)) || r.push({
 				off: i,
 				reason: "这件条目的数据里没有这一项"
@@ -1019,8 +993,8 @@ function vt(e, t, n) {
 			continue;
 		}
 		if (i.advancement === void 0) continue;
-		let a = t.filter((e) => ht(e, i));
-		a.length ? i.part !== void 0 && !a.some((e) => pt(e.adv, e.level).includes(i.part)) && r.push({
+		let a = t.filter((e) => gt(e, i));
+		a.length ? i.part !== void 0 && !a.some((e) => mt(e.adv, e.level).includes(i.part)) && r.push({
 			off: i,
 			reason: "这条成长的记录里没有这一项"
 		}) : r.push({
@@ -1030,22 +1004,22 @@ function vt(e, t, n) {
 	}
 	return r;
 }
-async function yt(e, t) {
+async function bt(e, t) {
 	if (!t?.length) return {
 		applied: !1,
 		choices: {},
 		problems: []
 	};
-	let n = at(e), r = vt(e, n, t);
+	let n = ot(e), r = yt(e, n, t);
 	if (r.length) return {
 		applied: !1,
 		choices: {},
 		problems: r
 	};
-	let i = new Set(t.filter(_t).map((e) => e.ref)), a = (e) => i.has(e.key) ? [{ ref: e.key }] : t.filter((t) => ht(e, t)), o = (e) => new Set(a(e).flatMap((e) => e.part === void 0 ? [] : [e.part])), s = (e) => a(e).some((e) => e.part === void 0), c = new Set(n.filter((e) => a(e).length).map((e) => e.adv.constructor)), l = n.filter((e) => c.has(e.adv.constructor)), u = [];
+	let i = new Set(t.filter(vt).map((e) => e.ref)), a = (e) => i.has(e.key) ? [{ ref: e.key }] : t.filter((t) => gt(e, t)), o = (e) => new Set(a(e).flatMap((e) => e.part === void 0 ? [] : [e.part])), s = (e) => a(e).some((e) => e.part === void 0), c = new Set(n.filter((e) => a(e).length).map((e) => e.adv.constructor)), l = n.filter((e) => c.has(e.adv.constructor)), u = [];
 	for (let e of [...l].reverse()) u.unshift({
 		...e,
-		data: it(await e.adv.reverse(e.level))
+		data: at(await e.adv.reverse(e.level))
 	});
 	let d = {};
 	for (let e of u) {
@@ -1055,31 +1029,31 @@ async function yt(e, t) {
 			level: e.level,
 			data: e.data
 		}), s(e)) continue;
-		let t = o(e), n = t.size > 0 && ft(e.adv, e.data);
-		if (await e.adv.restore(e.level, n ? ut(dt(e.adv).value, e.data, t) : e.data), !n) for (let n of t) await e.adv.reverse(e.level, {
+		let t = o(e), n = t.size > 0 && pt(e.adv, e.data);
+		if (await e.adv.restore(e.level, n ? dt(ft(e.adv).value, e.data, t) : e.data), !n) for (let n of t) await e.adv.reverse(e.level, {
 			key: n,
 			uuid: n
 		});
 	}
 	for (let e of u) {
 		if (s(e)) continue;
-		let t = dt(e.adv).value, n = await e.adv.automaticApplicationValue(e.level, { initial: !0 });
+		let t = ft(e.adv).value, n = await e.adv.automaticApplicationValue(e.level, { initial: !0 });
 		if (!t?.schema?.fields || !n || typeof n != "object") continue;
-		let r = new Set((lt(t, it(e.adv.value)) ?? []).map(([, e]) => e)), i = o(e), a = (lt(t, it(n)) ?? []).filter(([, e]) => !r.has(e) && !i.has(e));
+		let r = new Set((ut(t, at(e.adv.value)) ?? []).map(([, e]) => e)), i = o(e), a = (ut(t, at(n)) ?? []).filter(([, e]) => !r.has(e) && !i.has(e));
 		if (!a.length) continue;
 		let c = {};
 		for (let [e, t] of a) (c[e] ??= []).push(t);
 		await e.adv.apply(e.level, c);
 	}
-	for (let n of t.filter(gt)) [...e.items].find((e) => nt(e) === n.ref)?.updateSource({ [n.part]: null });
-	for (let n of t) n.effect !== void 0 && [...e.items].find((e) => nt(e) === n.ref)?.effects.get(n.effect)?.updateSource({ disabled: !0 });
-	let f = [...e.items].filter((e) => i.has(nt(e) ?? ""));
+	for (let n of t.filter(_t)) [...e.items].find((e) => rt(e) === n.ref)?.updateSource({ [n.part]: null });
+	for (let n of t) n.effect !== void 0 && [...e.items].find((e) => rt(e) === n.ref)?.effects.get(n.effect)?.updateSource({ disabled: !0 });
+	let f = [...e.items].filter((e) => i.has(rt(e) ?? ""));
 	for (let t of f) {
-		for (let n of mt(e, t.id)) e.updateSource({ [n]: null });
+		for (let n of ht(e, t.id)) e.updateSource({ [n]: null });
 		for (let e of t.effects) e.updateSource({ disabled: !0 });
 	}
 	return f.length && await e.createEmbeddedDocuments("ActiveEffect", [{
-		_id: tt,
+		_id: nt,
 		name: "TRPG 已取下",
 		type: "base",
 		transfer: !1,
@@ -1097,21 +1071,21 @@ async function yt(e, t) {
 	};
 }
 // src/rules/kernel/frame/actor-state.ts
-async function bt(e, t, n) {
-	let r = await yt(e, t);
+async function xt(e, t, n) {
+	let r = await bt(e, t);
 	if (r.problems.length) return {
 		view: null,
 		choices: {},
 		problems: r.problems
 	};
 	let i = e.toObject();
-	return await xt(e, n), {
+	return await St(e, n), {
 		view: i,
 		choices: r.choices,
 		problems: []
 	};
 }
-async function xt(e, t) {
+async function St(e, t) {
 	if (t) {
 		t.actor && Object.keys(t.actor).length && await e.update(t.actor);
 		for (let [r, i] of Object.entries(t.items ?? {})) {
@@ -1134,8 +1108,8 @@ async function xt(e, t) {
 	}
 }
 // src/rules/kernel/frame/commands-monsters.ts
-var St = globalThis;
-function Ct(e) {
+var Ct = globalThis;
+function wt(e) {
 	return Object.fromEntries(Object.entries(e.abilities ?? {}).map(([e, t]) => [e, {
 		value: t.value ?? null,
 		mod: t.mod ?? null,
@@ -1143,22 +1117,22 @@ function Ct(e) {
 		proficient: t.proficient ?? null
 	}]));
 }
-function wt(e) {
+function Tt(e) {
 	return Object.fromEntries(Object.entries(e.skills ?? {}).map(([e, t]) => [e, {
 		total: t.total ?? null,
 		passive: t.passive ?? null,
 		proficient: t.proficient ?? null
 	}]));
 }
-function Tt(e) {
+function Et(e) {
 	return e ? Array.isArray(e) ? e : typeof e[Symbol.iterator] == "function" ? [...e] : Object.values(e) : [];
 }
-function Et(e) {
+function Dt(e) {
 	return {
 		id: e.id ?? e._id ?? null,
 		name: e.name,
 		type: e.type,
-		activities: Tt(e.system?.activities).map((e) => ({
+		activities: Et(e.system?.activities).map((e) => ({
 			id: e.id ?? e._id,
 			type: e.type,
 			name: e.name
@@ -1169,7 +1143,7 @@ function Et(e) {
 		} : null
 	};
 }
-function Dt(e) {
+function Ot(e) {
 	let t = e.toObject ? e.toObject() : e, n = e.system ?? t.system ?? {}, r = e.items?.contents ?? e.items ?? t.items ?? [];
 	return {
 		name: e.name ?? t.name,
@@ -1179,8 +1153,8 @@ function Dt(e) {
 			value: n.attributes.hp.value ?? null,
 			max: n.attributes.hp.max ?? null
 		} : null,
-		abilities: Ct(n),
-		skills: wt(n),
+		abilities: wt(n),
+		skills: Tt(n),
 		cr: n.details?.cr ?? null,
 		legendary: {
 			actions: n.resources?.legact ? {
@@ -1192,28 +1166,28 @@ function Dt(e) {
 				max: n.resources.legres.max ?? null
 			} : null
 		},
-		items: [...r].map(Et),
+		items: [...r].map(Dt),
 		validation: e.validationFailures ?? []
 	};
 }
-async function Ot(e) {
-	let t = await F("monster", e);
+async function kt(e) {
+	let t = await P("monster", e);
 	return {
 		status: "complete",
 		entity: {
 			name: e.name,
 			source: e.source
 		},
-		...Dt(t)
+		...Ot(t)
 	};
 }
-function kt(e) {
+function At(e) {
 	return {
-		importMonster: (t) => e([], async () => Ot(t)),
+		importMonster: (t) => e([], async () => kt(t)),
 		importMonsters: (t) => e([], async () => {
 			let e = [];
 			for (let n of t) try {
-				e.push(await Ot(n));
+				e.push(await kt(n));
 			} catch (t) {
 				e.push({
 					status: "error",
@@ -1228,10 +1202,10 @@ function kt(e) {
 		}),
 		rebuildMonster: (t) => e([], async () => {
 			let e;
-			e = t.data ? structuredClone(t.data) : await F("monster", t.entry), delete e._id;
+			e = t.data ? structuredClone(t.data) : await P("monster", t.entry), delete e._id;
 			for (let t of e.items ?? []) delete t._id;
 			for (let t of e.effects ?? []) delete t._id;
-			let n = St.CONFIG.Actor.documentClass, r = t.id ? await n.create({
+			let n = Ct.CONFIG.Actor.documentClass, r = t.id ? await n.create({
 				...e,
 				_id: t.id,
 				name: t.name
@@ -1239,88 +1213,88 @@ function kt(e) {
 				...e,
 				name: t.name
 			}), i = r.toObject();
-			return await xt(r, t.state), {
+			return await St(r, t.state), {
 				status: "complete",
 				id: r.id,
-				...Dt(r),
+				...Ot(r),
 				data: r.toObject(),
 				base: i
 			};
 		}),
 		importMonsterData: (t) => e([], async () => ({
 			status: "complete",
-			data: await F("monster", t)
+			data: await P("monster", t)
 		})),
 		createActorFromData: (t) => e([], async () => {
 			let e = structuredClone(t);
 			delete e._id;
 			for (let t of e.items ?? []) delete t._id;
 			for (let t of e.effects ?? []) delete t._id;
-			let n = await St.CONFIG.Actor.documentClass.create(e);
+			let n = await Ct.CONFIG.Actor.documentClass.create(e);
 			return {
 				status: "complete",
 				id: n.id,
-				...Dt(n)
+				...Ot(n)
 			};
 		}),
 		importMonsterActor: (t) => e([], async () => {
-			let e = await F("monster", t);
+			let e = await P("monster", t);
 			delete e._id;
 			for (let t of e.items ?? []) delete t._id;
 			for (let t of e.effects ?? []) delete t._id;
-			let n = await St.CONFIG.Actor.documentClass.create(e);
+			let n = await Ct.CONFIG.Actor.documentClass.create(e);
 			return {
 				status: "complete",
 				id: n.id,
-				...Dt(n)
+				...Ot(n)
 			};
 		})
 	};
 }
 // src/rules/kernel/frame/system-text.ts
-var At = globalThis, jt = null, Mt = /* @__PURE__ */ new Map(), Nt = (e) => e.trim().toLowerCase();
-function Pt() {
-	let e = At.game.i18n;
-	if (jt === e) return;
-	jt = e, Mt.clear();
+var jt = globalThis, Mt = null, Nt = /* @__PURE__ */ new Map(), Pt = (e) => e.trim().toLowerCase();
+function Ft() {
+	let e = jt.game.i18n;
+	if (Mt === e) return;
+	Mt = e, Nt.clear();
 	let t = (e, n = []) => {
 		for (let [r, i] of Object.entries(e ?? {})) {
 			let e = [...n, r];
 			if (typeof i == "string") {
-				let t = Nt(i);
-				Mt.set(t, [...Mt.get(t) ?? [], e.join(".")]);
+				let t = Pt(i);
+				Nt.set(t, [...Nt.get(t) ?? [], e.join(".")]);
 			} else i && typeof i == "object" && t(i, e);
 		}
 	};
 	t(e.translations), t(e._fallback);
 }
-function I(e, t) {
-	Pt();
-	let n = At.game.i18n, i = (t ? [t] : [...new Set(Mt.get(Nt(e)) ?? [])]).filter((e) => n.has(e)), a = new Set(i.map((e) => n.localize(e)));
+function F(e, t) {
+	Ft();
+	let n = jt.game.i18n, i = (t ? [t] : [...new Set(Nt.get(Pt(e)) ?? [])]).filter((e) => n.has(e)), a = new Set(i.map((e) => n.localize(e)));
 	if (i.length && a.size === 1) return {
 		$t: "system",
 		key: i[0],
 		text: e
 	};
 	let o = e.split("、");
-	return o.length > 1 ? r(o.map((e) => I(e)), "、") : s(e, null);
+	return o.length > 1 ? r(o.map((e) => F(e)), "、") : s(e, null);
 }
-function Ft(e) {
+function It(e) {
 	return {
 		$t: "system",
-		key: `TRPGAssistant.UpstreamText.${h(Nt(e)).slice(0, 24)}`,
+		key: `TRPGAssistant.UpstreamText.${h(Pt(e)).slice(0, 24)}`,
 		text: e
 	};
 }
-function It(e) {
-	let t = At.game.i18n;
+function Lt(e) {
+	let t = jt.game.i18n;
 	return t.has(e) ? {
 		$t: "system",
 		key: e,
 		text: t.localize(e)
 	} : null;
 }
-function Lt(e, t) {
+function Rt(e, t) {
 	return e.reduceRight((e, n) => ({
 		$t: "system",
 		key: n,
@@ -1328,71 +1302,71 @@ function Lt(e, t) {
 		...e ? { fallback: e } : {}
 	}), null);
 }
-var Rt = "TRPGAssistant.UpstreamSource.", zt = null, Bt = [];
-function Vt() {
-	let e = At.game.i18n;
-	if (zt === e) return Bt;
-	zt = e;
-	let t = At.foundry?.utils?.flattenObject?.(e.translations ?? {}) ?? {};
-	return Bt = Object.entries(t).filter(([e, t]) => e.startsWith(Rt) && typeof t == "string" && t.includes("{}")).map(([e, t]) => ({
+var zt = "TRPGAssistant.UpstreamSource.", Bt = null, Vt = [];
+function Ht() {
+	let e = jt.game.i18n;
+	if (Bt === e) return Vt;
+	Bt = e;
+	let t = jt.foundry?.utils?.flattenObject?.(e.translations ?? {}) ?? {};
+	return Vt = Object.entries(t).filter(([e, t]) => e.startsWith(zt) && typeof t == "string" && t.includes("{}")).map(([e, t]) => ({
 		key: `TRPGAssistant.UpstreamText.${e.slice(29)}`,
 		pattern: RegExp(`^${String(t).trim().split("{}").map((e) => e.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("(.+?)")}$`, "i")
-	})), Bt;
+	})), Vt;
 }
-function Ht(e) {
-	let t = e.trim(), n = Ft(t);
-	if (At.game.i18n.has(n.key)) return n;
-	for (let e of Vt()) {
+function Ut(e) {
+	let t = e.trim(), n = It(t);
+	if (jt.game.i18n.has(n.key)) return n;
+	for (let e of Ht()) {
 		let n = e.pattern.exec(t);
-		if (n && At.game.i18n.has(e.key)) return {
+		if (n && jt.game.i18n.has(e.key)) return {
 			$t: "system",
 			key: e.key,
 			text: t,
 			args: n.slice(1).map((e) => d(e))
 		};
 	}
-	return I(t);
+	return F(t);
 }
-var L = (e) => typeof e == "string" && e.trim() ? Ht(e) : null, Ut = globalThis, Wt = (e) => e ? Ut.game.i18n.localize(e) : null, Gt = (e) => {
+var I = (e) => typeof e == "string" && e.trim() ? Ut(e) : null, Wt = globalThis, Gt = (e) => e ? Wt.game.i18n.localize(e) : null, Kt = (e) => {
 	let t = [...new Set(e.filter((e) => !!e))];
 	return t.length ? t.join("、") : null;
 };
-function Kt(e) {
-	let t = Ut.CONFIG?.DND5E?.[e] ?? {}, n = (e) => Wt(typeof e == "string" ? e : e?.label) ?? "";
+function qt(e) {
+	let t = Wt.CONFIG?.DND5E?.[e] ?? {}, n = (e) => Gt(typeof e == "string" ? e : e?.label) ?? "";
 	return Object.fromEntries(Object.entries(t).map(([e, t]) => [e, n(t) || e]));
 }
-function qt(e) {
-	return Wt(e ? Ut.CONFIG?.DND5E?.traits?.[e]?.labels?.title : void 0);
-}
 function Jt(e) {
-	return e && e !== "default" ? Wt(Ut.CONFIG?.DND5E?.traitModes?.[e]?.label) : null;
+	return Gt(e ? Wt.CONFIG?.DND5E?.traits?.[e]?.labels?.title : void 0);
 }
 function Yt(e) {
-	let t = Ut.dnd5e?.documents?.Trait;
-	if (!e?.length || !t) return null;
-	let n = e.join(".");
-	return Object.keys(Ut.CONFIG?.DND5E?.traits ?? {}).find((e) => t.actorKeyPath(e) === n) ?? null;
+	return e && e !== "default" ? Gt(Wt.CONFIG?.DND5E?.traitModes?.[e]?.label) : null;
 }
 function Xt(e) {
-	let t = Yt(e);
-	if (t) return qt(t);
-	let n = e?.at(-1), r = Yt(e?.slice(0, -1));
-	return r && n && Ut.CONFIG.DND5E.traits[r][n] === !0 ? Jt(n) : null;
+	let t = Wt.dnd5e?.documents?.Trait;
+	if (!e?.length || !t) return null;
+	let n = e.join(".");
+	return Object.keys(Wt.CONFIG?.DND5E?.traits ?? {}).find((e) => t.actorKeyPath(e) === n) ?? null;
 }
 function Zt(e) {
-	return Gt([...new Set([...e].map((e) => String(e).split(":")[0]).filter(Boolean))].map(qt));
+	let t = Xt(e);
+	if (t) return Jt(t);
+	let n = e?.at(-1), r = Xt(e?.slice(0, -1));
+	return r && n && Wt.CONFIG.DND5E.traits[r][n] === !0 ? Yt(n) : null;
 }
-function Qt(e, t = [], n = []) {
+function Qt(e) {
+	return Kt([...new Set([...e].map((e) => String(e).split(":")[0]).filter(Boolean))].map(Jt));
+}
+function $t(e, t = [], n = []) {
 	let r = e._subComps?.[0]?._getAllPossibleProps?.() ?? [];
-	return Xt(e._propPathActorExistingProficiencies) || Jt(e._prop) || Gt(r.map((n) => Xt(t.find((t) => t !== e && t._prop === n)?._propPathActorExistingProficiencies))) || Zt(n);
+	return Zt(e._propPathActorExistingProficiencies) || Yt(e._prop) || Kt(r.map((n) => Zt(t.find((t) => t !== e && t._prop === n)?._propPathActorExistingProficiencies))) || Qt(n);
 }
-function $t(e) {
+function en(e) {
 	let t = e.configuration ?? {};
-	return Jt(t.mode) || (t.type ? qt(t.type) : Zt([...t.grants ?? [], ...[...t.choices ?? []].flatMap((e) => [...e?.pool ?? []])]));
+	return Yt(t.mode) || (t.type ? Jt(t.type) : Qt([...t.grants ?? [], ...[...t.choices ?? []].flatMap((e) => [...e?.pool ?? []])]));
 }
 // src/rules/kernel/frame/asi.ts
-var en = globalThis;
-function tn(e) {
+var tn = globalThis;
+function nn(e) {
 	let t = e.configuration ?? {}, n = Number(t.points) || 0;
 	return {
 		points: n,
@@ -1401,18 +1375,18 @@ function tn(e) {
 		locked: /* @__PURE__ */ new Set([...t.locked ?? []])
 	};
 }
-function nn(e, t) {
-	let n = tn(e), r = {}, i = 0;
+function rn(e, t) {
+	let n = nn(e), r = {}, i = 0;
 	for (let [e, a] of Object.entries(t ?? {})) if (a) {
-		if (!Number.isInteger(a) || a < 0 || a > n.cap || n.locked.has(e) || !(e in (en.CONFIG?.DND5E?.abilities ?? {}))) return null;
+		if (!Number.isInteger(a) || a < 0 || a > n.cap || n.locked.has(e) || !(e in (tn.CONFIG?.DND5E?.abilities ?? {}))) return null;
 		r[e] = a, i += a;
 	}
 	return i <= n.points ? r : null;
 }
-function rn(e, t) {
-	let n = tn(e);
+function an(e, t) {
+	let n = nn(e);
 	if (!n.points) return null;
-	let r = nn(e, t?.chosen) ?? {}, i = n.points - Object.values(r).reduce((e, t) => e + t, 0), a = Kt("abilities");
+	let r = rn(e, t?.chosen) ?? {}, i = n.points - Object.values(r).reduce((e, t) => e + t, 0), a = qt("abilities");
 	return {
 		kind: "asi",
 		points: n.points,
@@ -1422,7 +1396,7 @@ function rn(e, t) {
 			let t = r[e] ?? 0;
 			return {
 				key: e,
-				label: I(a[e]),
+				label: F(a[e]),
 				fixed: n.fixed[e] ?? 0,
 				chosen: t,
 				canAdd: !n.locked.has(e) && i > 0 && t < n.cap,
@@ -1431,14 +1405,14 @@ function rn(e, t) {
 		})
 	};
 }
-function an(e, t) {
+function on(e, t) {
 	if (t.assignments && !t.chosen) return {
 		type: "asi",
 		assignments: t.assignments
 	};
-	let n = nn(e, t.chosen);
+	let n = rn(e, t.chosen);
 	if (!n) return null;
-	let r = { ...tn(e).fixed };
+	let r = { ...nn(e).fixed };
 	for (let [e, t] of Object.entries(n)) r[e] = (r[e] ?? 0) + t;
 	return {
 		type: "asi",
@@ -1446,14 +1420,14 @@ function an(e, t) {
 	};
 }
 // src/rules/kernel/frame/actor-types.ts
-var on = globalThis, sn = "character";
-async function cn(e, t) {
-	let n = Object.keys(on.game.system?.documentTypes?.Actor ?? {}), r = (e) => {
-		let t = on.CONFIG?.Actor?.typeLabels?.[e] ?? `TYPES.Actor.${e}`;
-		return on.game.i18n?.localize?.(t) ?? e;
-	}, i = await $e([e]), a = /* @__PURE__ */ new Set();
+var sn = globalThis, cn = "character";
+async function ln(e, t) {
+	let n = Object.keys(sn.game.system?.documentTypes?.Actor ?? {}), r = (e) => {
+		let t = sn.CONFIG?.Actor?.typeLabels?.[e] ?? `TYPES.Actor.${e}`;
+		return sn.game.i18n?.localize?.(t) ?? e;
+	}, i = await et([e]), a = /* @__PURE__ */ new Set();
 	if (i.some((e) => e.folderType === "Actor")) for (let n of t) {
-		let t = await F(e, n);
+		let t = await P(e, n);
 		typeof t?.type == "string" && a.add(t.type);
 	}
 	return {
@@ -1462,11 +1436,11 @@ async function cn(e, t) {
 			label: r(e)
 		})),
 		fromStore: [...a],
-		build: sn
+		build: cn
 	};
 }
 // src/rules/kernel/frame/commands-restore.ts
-async function ln(e, t, n = []) {
+async function un(e, t, n = []) {
 	for (let r of e.items) {
 		let e = r.flags?.plutonium;
 		if (!e?.propDroppable || !e.source || !e.hash) continue;
@@ -1480,8 +1454,8 @@ async function ln(e, t, n = []) {
 	}
 }
 // src/rules/kernel/frame/commands-choice.ts
-var un = globalThis;
-async function dn(e) {
+var dn = globalThis;
+async function fn(e) {
 	let t = e.advancement, n = t.constructor?.typeName ?? t.type;
 	if (n === "Trait") {
 		let n = await t.automaticApplicationValue?.(e.level);
@@ -1498,7 +1472,7 @@ async function dn(e) {
 	}
 	if (n === "ItemChoice") return { selected: [] };
 }
-async function fn(e) {
+async function pn(e) {
 	let t = e.advancement, n = t.constructor?.typeName ?? t.type;
 	if (n === "HitPoints") return { [e.level]: "avg" };
 	if (n === "ItemGrant") {
@@ -1515,7 +1489,7 @@ async function fn(e) {
 		return { selected: (t.configuration?.pool ?? []).map((e) => e.uuid).slice(0, n) };
 	}
 	if (n === "Subclass") {
-		let e = un.game.packs.get("dnd5e.subclasses");
+		let e = dn.game.packs.get("dnd5e.subclasses");
 		if (!e) return;
 		let n = (await e.getIndex({ fields: ["system.classIdentifier", "type"] })).contents?.find((e) => e.type === "subclass" && e.system?.classIdentifier === t.item?.system?.identifier);
 		return n ? `Compendium.${e.metadata.id}.Item.${n._id}` : void 0;
@@ -1537,7 +1511,7 @@ async function fn(e) {
 			assignments: Object.fromEntries(n)
 		};
 		let r = t.configuration?.points ?? 0, i = t.configuration?.cap || r, a = {}, o = r;
-		for (let n of Object.keys(e.actor?.system?.abilities ?? t.actor?.system?.abilities ?? un.CONFIG?.DND5E?.abilities ?? {})) {
+		for (let n of Object.keys(e.actor?.system?.abilities ?? t.actor?.system?.abilities ?? dn.CONFIG?.DND5E?.abilities ?? {})) {
 			if (o <= 0) break;
 			if (t.canImprove?.(n) === !1) continue;
 			let e = Math.min(i, o);
@@ -1552,60 +1526,97 @@ async function fn(e) {
 	if (n === "ScaleValue") return {};
 }
 // src/rules/kernel/frame/commands-equipment.ts
-var R = globalThis, pn = (e) => R.DataUtil.proxy.getUid("item", e), mn = (e, t, n) => c(e, {
+var L = globalThis, mn = (e) => L.DataUtil.proxy.getUid("item", e), hn = (e, t, n) => c(e, {
 	propDroppable: "item",
 	source: t,
 	hash: n
-}), hn = (e) => {
+}), gn = (e) => {
 	let [t, n] = e.split("|");
-	return R.UrlUtil.URL_TO_HASH_BUILDER[R.UrlUtil.PG_ITEMS]({
+	return L.UrlUtil.URL_TO_HASH_BUILDER[L.UrlUtil.PG_ITEMS]({
 		name: t,
 		source: n
 	});
-}, gn = (e) => {
-	let t = R.UrlUtil.URL_TO_HASH_BUILDER[R.UrlUtil.PG_ITEMS](e);
+}, _n = (e) => {
+	let t = L.UrlUtil.URL_TO_HASH_BUILDER[L.UrlUtil.PG_ITEMS](e);
 	return {
-		uid: pn(e),
-		name: mn(e.name, e.source, t),
+		uid: mn(e),
+		name: hn(e.name, e.source, t),
 		source: e.source,
 		hash: t
 	};
-}, _n = (e) => R.Renderer.stripTags(e).toTitleCase(), vn = [
+}, vn = (e) => L.Renderer.stripTags(e).toTitleCase(), yn = [
 	"pCacheAndGetAllSite",
 	"pCacheAndGetAllPrerelease",
 	"pCacheAndGetAllBrew"
-], yn = null, bn = async () => yn ??= (await Promise.all(vn.map(async (e) => await R.DataLoader[e]("item") ?? []))).flat(), xn = async () => (await bn()).length, Sn = (e) => {
-	let t = P?.EQUIPMENT_TYPE_EXPANDERS;
+], bn = null;
+function xn() {
+	if (bn) return bn;
+	let e = Promise.all(yn.map(async (e) => await L.DataLoader[e]("item") ?? [])).then((e) => e.flat());
+	return bn = e, e.catch(() => {
+		bn === e && (bn = null);
+	}), e;
+}
+var Sn = async () => {
+	let e = await xn();
+	for (let e of ["dnd5e.classes24", "dnd5e.equipment24"]) await L.game.packs.get(e)?.getDocuments?.();
+	let t = N?.IconProviderDdbImporter;
+	await Promise.all([t?._FILE_ADAPTER_ITEMS?.pInit?.(), t?._FILE_ADAPTER_CLASS_FEATURES?.pInit?.()]);
+	for (let e of ["item", "classFeature"]) await N?.IconProviderDndStar?.pGetIconPath?.({
+		__prop: e,
+		name: "",
+		source: "PHB"
+	});
+	let n = L.CONFIG.Item.documentClass, r = [];
+	for (let t of [
+		"Battleaxe",
+		"Chain Mail",
+		"Backpack",
+		"Torch",
+		"Crowbar"
+	]) {
+		let i = e.find((e) => e.name === t && e.source === "PHB"), a = i ? await N?.DataConverterItem?.pGetDocumentJson?.(structuredClone(i), {}) : null;
+		a && (new n(a), r.push(a));
+	}
+	return r.length && new L.CONFIG.Actor.documentClass({
+		name: "warm",
+		type: "character",
+		items: r.map((e) => ({
+			...e,
+			_id: L.foundry.utils.randomID()
+		}))
+	}), e.length;
+}, Cn = (e) => {
+	let t = N?.EQUIPMENT_TYPE_EXPANDERS;
 	return t && Object.hasOwn(t, e) ? t[e] : null;
 };
-function Cn(e) {
-	let t = `TRPGAssistant.EquipmentType.${e}`, n = R.game.i18n.localize(t);
-	return n === t ? s(String(Sn(e)?.name ?? e), null) : I(n);
+function wn(e) {
+	let t = `TRPGAssistant.EquipmentType.${e}`, n = L.game.i18n.localize(t);
+	return n === t ? s(String(Cn(e)?.name ?? e), null) : F(n);
 }
-async function wn(e) {
-	let t = Sn(e);
+async function Tn(e) {
+	let t = Cn(e);
 	if (!t) return [];
-	let n = (await bn()).filter((e) => P.UtilEntityItem.isStartingEquipmentItem(e));
-	return t._getAvailableItems({ itemDatas: n }).sort((e, t) => String(e.name).localeCompare(String(t.name))).map(gn);
+	let n = (await xn()).filter((e) => N.UtilEntityItem.isStartingEquipmentItem(e));
+	return t._getAvailableItems({ itemDatas: n }).sort((e, t) => String(e.name).localeCompare(String(t.name))).map(_n);
 }
-var Tn = (e) => {
+var En = (e) => {
 	let t = e?.startingEquipment;
 	return Array.isArray(t) ? t : Array.isArray(t?.defaultData) ? t.defaultData : [];
 };
-function En(e) {
+function Dn(e) {
 	let t = e?.startingEquipment?.goldAlternative;
 	if (!t) return null;
 	let n = /{@dice ([^|]+)/.exec(t);
 	return n ? n[1].replace(/×/g, "*") : Number.isNaN(Number(`${t}`.trim())) ? null : `${t}`.trim();
 }
-async function Dn(e) {
+async function On(e) {
 	let n = async (e) => {
-		let [t, n] = e.split("|"), r = await R.DataLoader.pCacheAndGetHash(R.UrlUtil.PG_ITEMS, hn(e));
+		let [t, n] = e.split("|"), r = await L.DataLoader.pCacheAndGetHash(L.UrlUtil.PG_ITEMS, gn(e));
 		return {
 			uid: e,
-			name: mn(r?.name ?? t, r?.source ?? n, hn(e)),
+			name: hn(r?.name ?? t, r?.source ?? n, gn(e)),
 			source: r?.source ?? n,
-			hash: hn(e),
+			hash: gn(e),
 			found: !!r
 		};
 	};
@@ -1620,19 +1631,19 @@ async function Dn(e) {
 		kind: "item",
 		quantity: e.quantity || 1,
 		...await n(e.item),
-		...e.displayName ? { displayName: t(_n(e.displayName)) } : {},
+		...e.displayName ? { displayName: t(vn(e.displayName)) } : {},
 		...e.containsValue ? { cp: e.containsValue } : {}
 	};
 	let r = e.equipmentTypes ?? (e.equipmentType ? [e.equipmentType] : []);
 	if (r.length) {
-		if (!r.every(Sn)) return { unsupported: r.filter((e) => !Sn(e)).join("、") };
-		let t = /* @__PURE__ */ new Set(), n = (await Promise.all(r.map(wn))).flat().filter((e) => !t.has(e.uid) && !!t.add(e.uid));
+		if (!r.every(Cn)) return { unsupported: r.filter((e) => !Cn(e)).join("、") };
+		let t = /* @__PURE__ */ new Set(), n = (await Promise.all(r.map(Tn))).flat().filter((e) => !t.has(e.uid) && !!t.add(e.uid));
 		return n.length ? {
 			raw: e,
 			kind: "category",
 			quantity: e.quantity || 1,
 			types: r,
-			typeNames: r.map(Cn),
+			typeNames: r.map(wn),
 			candidates: n
 		} : null;
 	}
@@ -1640,7 +1651,7 @@ async function Dn(e) {
 		raw: e,
 		kind: "special",
 		quantity: e.quantity || 1,
-		text: t(_n(e.special)),
+		text: t(vn(e.special)),
 		...e.containsValue ? { cp: e.containsValue } : {}
 	} : e.value ? {
 		raw: e,
@@ -1649,12 +1660,12 @@ async function Dn(e) {
 		cp: e.value
 	} : { unsupported: JSON.stringify(e).slice(0, 120) };
 }
-async function On(e) {
-	let n = [], r = [], a = Tn(e.entry);
+async function kn(e) {
+	let n = [], r = [], a = En(e.entry);
 	for (let o = 0; o < a.length; o++) {
 		let s = [];
 		for (let [n, c] of Object.entries(a[o])) {
-			let a = await Promise.all(c.map(Dn));
+			let a = await Promise.all(c.map(On));
 			for (let n of a) n && "unsupported" in n && r.push(i("{0}：{1}", t(String(e.entry.name)), d(n.unsupported)));
 			let o = a.flatMap((e, t) => e && !("unsupported" in e) ? [{
 				...e,
@@ -1670,7 +1681,7 @@ async function On(e) {
 			choices: s
 		});
 	}
-	let o = En(e.entry);
+	let o = Dn(e.entry);
 	return {
 		refKey: e.refKey,
 		prop: e.prop,
@@ -1682,7 +1693,7 @@ async function On(e) {
 		goldCoin: o ? "gp" : null
 	};
 }
-function kn(e, t, n = /* @__PURE__ */ new Set()) {
+function An(e, t, n = /* @__PURE__ */ new Set()) {
 	let r = [], i = 0;
 	if (t?.gold != null) return {
 		granted: r,
@@ -1702,17 +1713,17 @@ function kn(e, t, n = /* @__PURE__ */ new Set()) {
 			...o ? { displayName: o } : {}
 		});
 	};
-	return Tn(e.entry).forEach((e, r) => {
+	return En(e.entry).forEach((e, r) => {
 		let o = Object.keys(e), s = t?.choice?.[String(r)] ?? (o.length === 1 ? o[0] : void 0);
 		s !== void 0 && Array.isArray(e[s]) && e[s].forEach((e, o) => {
 			if (typeof e == "string") return a(e, void 0, 1);
-			if (e.item) return e.containsValue && !n.has(e.item) && (i += e.containsValue), a(e.item, void 0, e.quantity || 1, e.displayName ? _n(e.displayName) : void 0);
+			if (e.item) return e.containsValue && !n.has(e.item) && (i += e.containsValue), a(e.item, void 0, e.quantity || 1, e.displayName ? vn(e.displayName) : void 0);
 			if (e.equipmentType || e.equipmentTypes) for (let n = 0; n < (e.quantity || 1); n++) {
 				let e = t?.pick?.[`${r}.${s}.${o}.${n}`];
 				e && a(e, void 0, 1);
 			}
 			else {
-				if (e.special) return e.containsValue && (i += e.containsValue), a(void 0, _n(e.special), e.quantity || 1);
+				if (e.special) return e.containsValue && (i += e.containsValue), a(void 0, vn(e.special), e.quantity || 1);
 				e.value && (i += e.value);
 			}
 		});
@@ -1721,17 +1732,17 @@ function kn(e, t, n = /* @__PURE__ */ new Set()) {
 		cp: i
 	};
 }
-function An(e) {
-	let t = R.CONFIG.DND5E.currencies, n = t.cp?.conversion ?? 100, r = Object.entries(t).filter(([, e]) => e.conversion != null && e.conversion > 0).map(([e, t]) => ({
+function jn(e) {
+	let t = L.CONFIG.DND5E.currencies, n = t.cp?.conversion ?? 100, r = Object.entries(t).filter(([, e]) => e.conversion != null && e.conversion > 0).map(([e, t]) => ({
 		coin: e,
 		mult: t.conversion / n
-	})).sort((e, t) => t.mult - e.mult), i = R.CurrencyUtil.doSimplifyCoins({ cp: e }, { currencyConversionTable: r });
+	})).sort((e, t) => t.mult - e.mult), i = L.CurrencyUtil.doSimplifyCoins({ cp: e }, { currencyConversionTable: r });
 	return Object.fromEntries(Object.keys(t).map((e) => [e, i[e] || 0]));
 }
-async function jn(e, t, n = {}) {
+async function Mn(e, t, n = {}) {
 	let r = [], i = [], a = [], o = 0;
 	for (let s of e) {
-		let { granted: e, cp: c } = kn(s, t[s.refKey], new Set(n[s.refKey] ?? []));
+		let { granted: e, cp: c } = An(s, t[s.refKey], new Set(n[s.refKey] ?? []));
 		o += c;
 		for (let t of e) {
 			let e;
@@ -1739,14 +1750,14 @@ async function jn(e, t, n = {}) {
 				name: t.special,
 				source: t.source,
 				page: t.page,
-				type: R.Parser.ITM_TYP__OTHER,
+				type: L.Parser.ITM_TYP__OTHER,
 				rarity: "unknown"
 			};
-			else if (e = await R.DataLoader.pCacheAndGetHash(R.UrlUtil.PG_ITEMS, hn(t.uid)), !e) {
+			else if (e = await L.DataLoader.pCacheAndGetHash(L.UrlUtil.PG_ITEMS, gn(t.uid)), !e) {
 				a.push(t.uid);
 				continue;
 			}
-			let n = await F("item", e);
+			let n = await P("item", e);
 			n.system = {
 				...n.system,
 				quantity: t.quantity
@@ -1756,14 +1767,14 @@ async function jn(e, t, n = {}) {
 	return {
 		equipment: r,
 		specials: i,
-		currency: o > 0 ? An(o) : null,
+		currency: o > 0 ? jn(o) : null,
 		skipped: a
 	};
 }
-async function Mn(e, n, r = {}) {
+async function Nn(e, n, r = {}) {
 	let i = [], a = 0;
 	for (let o of e) {
-		let { granted: e, cp: s } = kn(o, n[o.refKey], new Set(r[o.refKey] ?? []));
+		let { granted: e, cp: s } = An(o, n[o.refKey], new Set(r[o.refKey] ?? []));
 		a += s;
 		let c = [];
 		for (let n of e) {
@@ -1775,10 +1786,10 @@ async function Mn(e, n, r = {}) {
 				});
 				continue;
 			}
-			let e = await R.DataLoader.pCacheAndGetHash(R.UrlUtil.PG_ITEMS, hn(n.uid)), r = e ? R.UrlUtil.URL_TO_HASH_BUILDER[R.UrlUtil.PG_ITEMS](e) : void 0;
+			let e = await L.DataLoader.pCacheAndGetHash(L.UrlUtil.PG_ITEMS, gn(n.uid)), r = e ? L.UrlUtil.URL_TO_HASH_BUILDER[L.UrlUtil.PG_ITEMS](e) : void 0;
 			c.push(e ? {
 				uid: n.uid,
-				name: mn(e.name, e.source, r),
+				name: hn(e.name, e.source, r),
 				source: e.source,
 				hash: r,
 				quantity: n.quantity,
@@ -1797,25 +1808,25 @@ async function Mn(e, n, r = {}) {
 	}
 	return {
 		sections: i,
-		currency: a > 0 ? An(a) : null
+		currency: a > 0 ? jn(a) : null
 	};
 }
-function Nn(e) {
+function Pn(e) {
 	return {
 		startingEquipment: (t) => e([], async () => ({
-			sections: await Promise.all(t.map(On)),
-			coins: [...R.Parser?.COIN_ABVS ?? []]
+			sections: await Promise.all(t.map(kn)),
+			coins: [...L.Parser?.COIN_ABVS ?? []]
 		})),
-		startingPreview: (t, n, r) => e([], async () => Mn(t, n, r))
+		startingPreview: (t, n, r) => e([], async () => Nn(t, n, r))
 	};
 }
 // src/rules/kernel/frame/author-ids.ts
-var Pn = globalThis, Fn = /* @__PURE__ */ new Set([
+var Fn = globalThis, In = /* @__PURE__ */ new Set([
 	"skills",
 	"tool",
 	"saves"
 ]);
-function In(e, t) {
+function Ln(e, t) {
 	let n = document.createElement("div");
 	n.innerHTML = e;
 	let r = [...n.querySelectorAll("[data-vet-page][data-vet-hash]")];
@@ -1828,24 +1839,24 @@ function In(e, t) {
 		propDroppable: s
 	} : null;
 }
-async function Ln(e) {
-	let t = P, n = Pn.dnd5e?.documents?.Trait;
+async function Rn(e) {
+	let t = N, n = Fn.dnd5e?.documents?.Trait;
 	if (!t || !n) return {};
-	let r = t.Charactermancer_OtherProficiencySelect, i = await t.Charactermancer_AvailableProficiencyManager.pGetInstance(), a = new Pn.CONFIG.Actor.documentClass({
+	let r = t.Charactermancer_OtherProficiencySelect, i = await t.Charactermancer_AvailableProficiencyManager.pGetInstance(), a = new Fn.CONFIG.Actor.documentClass({
 		name: "Author ids",
-		type: sn
+		type: cn
 	}), o = {};
 	for (let t of new Set(e)) try {
 		let e = t.split(":")[0], s = n.changeKeyPath(t);
 		if (!s) continue;
-		let c = t.split(":").pop(), l = a.clone(Pn.foundry.utils.expandObject({ [s]: Fn.has(e) ? 1 : [c] })), u = r.getExisting(r.getExistingFvttFromActor(l), { availableProficiencyManager: i }), d = Object.entries(u ?? {}).flatMap(([e, t]) => Object.entries(t ?? {}).filter(([e, t]) => e !== "other" && t).map(([t]) => ({
+		let c = t.split(":").pop(), l = a.clone(Fn.foundry.utils.expandObject({ [s]: In.has(e) ? 1 : [c] })), u = r.getExisting(r.getExistingFvttFromActor(l), { availableProficiencyManager: i }), d = Object.entries(u ?? {}).flatMap(([e, t]) => Object.entries(t ?? {}).filter(([e, t]) => e !== "other" && t).map(([t]) => ({
 			prop: e,
 			name: t
 		}))).flatMap((e) => {
 			let t = r._getRenderedStatic({
 				...e,
 				availableProficiencyManager: i
-			}), n = typeof t == "string" ? In(t, Pn.UrlUtil.PAGE_TO_PROPS ?? {}) : null;
+			}), n = typeof t == "string" ? Ln(t, Fn.UrlUtil.PAGE_TO_PROPS ?? {}) : null;
 			return n ? [n] : [];
 		});
 		d.length && (o[t] = d);
@@ -1855,28 +1866,28 @@ async function Ln(e) {
 	return o;
 }
 // src/rules/kernel/frame/proficiency-text.ts
-var Rn = globalThis;
-function zn(e, t, n) {
-	if (Rn.Renderer.generic.getMappedAnyProficiency({
+var zn = globalThis;
+function Bn(e, t, n) {
+	if (zn.Renderer.generic.getMappedAnyProficiency({
 		keyAny: n.name,
 		countRaw: 1
 	})) return a(n.name, 1);
 	let r = e.Charactermancer_OtherProficiencySelect._getRenderedStatic({
 		...n,
 		availableProficiencyManager: t
-	}), i = typeof r == "string" ? In(r, Rn.UrlUtil.PAGE_TO_PROPS) : null;
-	return i ? c(n.name, i, !0) : l(n.name, [n.name], I(n.name));
+	}), i = typeof r == "string" ? Ln(r, zn.UrlUtil.PAGE_TO_PROPS) : null;
+	return i ? c(n.name, i, !0) : l(n.name, [n.name], F(n.name));
 }
-function Bn(e, t, n) {
-	let r = n.map((n) => zn(e, t, n));
+function Vn(e, t, n) {
+	let r = n.map((n) => Bn(e, t, n));
 	return r.map((e, t) => e.$t === "value" ? {
 		...e,
 		group: n.filter((e, i) => e.prop === n[t].prop && r[i].$t === "value").map((e) => e.name)
 	} : e);
 }
 // src/rules/kernel/frame/trait-plans.ts
-var Vn = globalThis;
-function Hn(e, t, n, r, i) {
+var Hn = globalThis;
+function Un(e, t, n, r, i) {
 	let a = e._state[t];
 	return {
 		label: r,
@@ -1889,12 +1900,12 @@ function Hn(e, t, n, r, i) {
 		}
 	};
 }
-var Un = (e) => ({
+var Wn = (e) => ({
 	propDroppable: "item",
 	source: e.source,
-	hash: Vn.UrlUtil.URL_TO_HASH_BUILDER[Vn.UrlUtil.PG_ITEMS](e)
+	hash: Hn.UrlUtil.URL_TO_HASH_BUILDER[Hn.UrlUtil.PG_ITEMS](e)
 });
-function Wn(e, t, n, r, i) {
+function Gn(e, t, n, r, i) {
 	return (n.choose ?? []).map((n, a) => {
 		if (n.fromFilter) {
 			let { propState: e } = t._getPropsChooseFromFilter({
@@ -1903,10 +1914,10 @@ function Wn(e, t, n, r, i) {
 			}), r = t._modalFilterItemsFvtt.getEntitiesMatchingFilterExpression({ filterExpression: n.fromFilter });
 			return {
 				count: n.count,
-				options: r.filter((e) => !i || i.has(`${e.name}|${e.source}`.toLowerCase())).map((r) => Hn(t, e, {
+				options: r.filter((e) => !i || i.has(`${e.name}|${e.source}`.toLowerCase())).map((r) => Un(t, e, {
 					prop: n.prop,
-					name: Vn.DataUtil.generic.getUid(r)
-				}, r.name, c(r.name, Un(r), !0)))
+					name: Hn.DataUtil.generic.getUid(r)
+				}, r.name, c(r.name, Wn(r), !0)))
 			};
 		}
 		let { propState: o } = t._getPropsChooseFrom({ ixChoose: a }), s = t._getChooseFromGroupMeta(n), l = e.ComponentUiUtil.getMetaWrpMultipleChoice(t, o, {
@@ -1915,26 +1926,26 @@ function Wn(e, t, n, r, i) {
 			fnDisplay: () => ""
 		});
 		r.push(l.cleanup);
-		let u = s?.valueGroupsFlat ?? n.from, d = Bn(e, t._availableProficiencyManager, u);
+		let u = s?.valueGroupsFlat ?? n.from, d = Vn(e, t._availableProficiencyManager, u);
 		return {
 			count: n.count,
 			hints: s?.valueGroups?.map((e) => e.text).filter(Boolean),
-			options: l.rowMetas.map((e, n) => Hn(t, e.propIsActive, !0, u[n]?.name ?? String(n + 1), d[n]))
+			options: l.rowMetas.map((e, n) => Un(t, e.propIsActive, !0, u[n]?.name ?? String(n + 1), d[n]))
 		};
 	});
 }
-function Gn(e, t, n, r) {
+function Kn(e, t, n, r) {
 	t._stgGroup = e.veE(document.createElement("div"));
 	let i = [];
 	return t._render_renderPtChooseAnyProficient = ({ profSet: e, propProfSet: n, propIxProps: r, fnGetValues: a }) => {
-		let o = t._getProps(n, 0)[r], s = a().map((e) => Hn(t, o, e, e));
+		let o = t._getProps(n, 0)[r], s = a().map((e) => Un(t, o, e, e));
 		i.push({
 			count: Number(e[n] || 1),
 			options: s
 		});
 	}, t._hk_ixSet_renderPts(n), r.push(() => t._lastMeta.cleanup()), i;
 }
-function Kn(e, t) {
+function qn(e, t) {
 	t.render(e.veE(document.createElement("div")));
 	let n = t._lastChoiceMeta.children.filter((e) => e.children);
 	if (n.some((e) => !e.children.every((e) => e.isChoosable))) return null;
@@ -1954,15 +1965,15 @@ function Kn(e, t) {
 		}))
 	}));
 }
-async function qn(e, t, n, r) {
+async function Jn(e, t, n, r) {
 	let i = {}, a = await n._subComps[0].pGetFormData();
 	await e.Charactermancer_FeatureOptionsSelect.pDoApplyProficiencyFormDataToActorUpdate(t, i, { data: { [n._propFormDatas]: [a] } });
-	let o = Vn.dnd5e.documents.Trait, s = Object.keys(Vn.CONFIG.DND5E.traits).filter((e) => Vn.foundry.utils.hasProperty(i, o.actorKeyPath(e))), c = t.clone(i), l = /* @__PURE__ */ new Set(), u = [];
+	let o = Hn.dnd5e.documents.Trait, s = Object.keys(Hn.CONFIG.DND5E.traits).filter((e) => Hn.foundry.utils.hasProperty(i, o.actorKeyPath(e))), c = t.clone(i), l = /* @__PURE__ */ new Set(), u = [];
 	for (let e of s) {
-		let n = o.actorKeyPath(e), a = Vn.foundry.utils.getProperty(i, n)?.custom;
+		let n = o.actorKeyPath(e), a = Hn.foundry.utils.getProperty(i, n)?.custom;
 		a && u.push({
 			label: String(a),
-			text: I(String(a))
+			text: F(String(a))
 		});
 		let s = await o.actorValues(t, e), d = await o.actorValues(c, e);
 		for (let [e, t] of Object.entries(d)) t === r && s[e] !== r && l.add(e);
@@ -1972,15 +1983,15 @@ async function qn(e, t, n, r) {
 		notes: u
 	};
 }
-async function Jn(e, t, n, r, i, a, o) {
-	let s = o ? 2 : 1, u = await qn(e, t, n, s), d = [], f = [...u.notes], p = /* @__PURE__ */ new Map();
+async function Yn(e, t, n, r, i, a, o) {
+	let s = o ? 2 : 1, u = await Jn(e, t, n, s), d = [], f = [...u.notes], p = /* @__PURE__ */ new Map();
 	for (let i of r) {
 		let r = /* @__PURE__ */ new Set();
 		for (let a of i.options) {
-			let o = a.text ?? l(a.label, i.options.map((e) => e.label), I(a.label));
+			let o = a.text ?? l(a.label, i.options.map((e) => e.label), F(a.label));
 			a.select();
 			try {
-				let i = [...(await qn(e, t, n, s)).keys].filter((e) => !u.keys.has(e));
+				let i = [...(await Jn(e, t, n, s)).keys].filter((e) => !u.keys.has(e));
 				if (i.length === 1) {
 					let e = i[0];
 					r.add(e);
@@ -1999,7 +2010,7 @@ async function Jn(e, t, n, r, i, a, o) {
 			pool: [...r].sort()
 		}) : i.options.length && f.push(...i.options.filter((e) => e.label).map((e) => ({
 			label: e.label,
-			text: e.text ?? l(e.label, i.options.map((e) => e.label), I(e.label))
+			text: e.text ?? l(e.label, i.options.map((e) => e.label), F(e.label))
 		})));
 	}
 	return {
@@ -2013,11 +2024,11 @@ async function Jn(e, t, n, r, i, a, o) {
 		withheld: f
 	};
 }
-async function Yn(e, t, n, r, i) {
+async function Xn(e, t, n, r, i) {
 	let a = n._subComps[0];
 	if (a instanceof e.Charactermancer_ImmResVulnSelect) {
-		let r = Kn(e, a);
-		return r ? [await Jn(e, t, n, r, 0, !1, !1)] : [];
+		let r = qn(e, a);
+		return r ? [await Yn(e, t, n, r, 0, !1, !1)] : [];
 	}
 	let o = a instanceof e.Charactermancer_ExpertiseSelect;
 	if (!o && !(a instanceof e.Charactermancer_OtherProficiencySelect)) return [];
@@ -2028,8 +2039,8 @@ async function Yn(e, t, n, r, i) {
 		a._state.ixSet = t, !o && (r.all?.length || r.choose?.some((e) => e.fromFilter)) && await a.pNotRender();
 		let l = [];
 		try {
-			let d = o ? Gn(e, a, r, l) : Wn(e, a, r, l, i);
-			c.push(await Jn(e, s, n, d, t, u, o));
+			let d = o ? Kn(e, a, r, l) : Gn(e, a, r, l, i);
+			c.push(await Yn(e, s, n, d, t, u, o));
 		} finally {
 			for (let e of l) e();
 		}
@@ -2037,32 +2048,32 @@ async function Yn(e, t, n, r, i) {
 	return c;
 }
 // src/rules/kernel/frame/author-text.ts
-var Xn = globalThis, Zn = ["Renderer"], Qn = 8, $n = null;
-function er() {
+var Zn = globalThis, Qn = ["Renderer"], $n = 8, er = null;
+function tr() {
 	let e = /* @__PURE__ */ new Map(), t = /* @__PURE__ */ new WeakSet(), n = (r, i) => {
 		if (typeof r == "string") {
 			let t = e.get(r) ?? [];
 			t.push(i), e.set(r, t);
-		} else if (!(!r || typeof r != "object" && typeof r != "function" || t.has(r) || i.length > Qn)) {
+		} else if (!(!r || typeof r != "object" && typeof r != "function" || t.has(r) || i.length > $n)) {
 			t.add(r);
 			for (let [e, t] of Object.entries(Object.getOwnPropertyDescriptors(r))) "value" in t && e !== "prototype" && n(t.value, [...i, e]);
 		}
 	};
-	for (let e of Zn) n(Xn[e], [e]);
+	for (let e of Qn) n(Zn[e], [e]);
 	return e;
 }
-function tr(e) {
+function nr(e) {
 	if (!e) return null;
-	$n ??= er();
-	let t = $n.get(e);
+	er ??= tr();
+	let t = er.get(e);
 	return t?.length === 1 ? t[0] : null;
 }
 // src/rules/kernel/frame/build-traits.ts
-var nr = globalThis, rr = "P6Tr", ir = (e) => typeof e == "string" && /^P6Tr[0-9a-f]{12}$/.test(e), ar = (...e) => rr + m(e).slice(0, 12);
-function or(e, t) {
-	return ie(`build-traits:check:${e?._id}`, () => sr(e, t));
+var rr = globalThis, ir = "P6Tr", ar = (e) => typeof e == "string" && /^P6Tr[0-9a-f]{12}$/.test(e), or = (...e) => ir + m(e).slice(0, 12);
+function sr(e, t) {
+	return ie(`build-traits:check:${e?._id}`, () => cr(e, t));
 }
-async function sr(e, t) {
+async function cr(e, t) {
 	let { available: n } = await e.unfulfilledChoices(), r = new Set(n.filter((e) => e.type === "grant").flatMap((e) => [...e.choices.asSet()])), i = /* @__PURE__ */ new Set([...r, ...e.configuration.grants ?? []]), a = n.filter((e) => e.type === "choice").map((e) => e.choices.asSet()), o = t?.chosen ?? [];
 	if (!Array.isArray(o)) return null;
 	let s = /* @__PURE__ */ new Map(), c = (e, t) => a.some((n, r) => {
@@ -2073,9 +2084,9 @@ async function sr(e, t) {
 	}), l = o.filter((e) => !i.has(e));
 	return l.length !== new Set(l).size || !l.every((e) => c(e, /* @__PURE__ */ new Set())) ? null : { chosen: [...r, ...l.sort()] };
 }
-var cr = (e) => e.type === "Trait" && !e.configuration?.grants?.length && !e.configuration?.grants?.size && !e.configuration?.choices?.length;
-async function lr(e, t, n) {
-	let r = nr.dnd5e.documents.Trait, i = Object.values(e.system?.advancement ?? {}).filter((e) => e.type === "Trait" && !cr(e) && (e.level ?? 0) === t && (!e.classRestriction || e.classRestriction === (n ? "secondary" : "primary")));
+var lr = (e) => e.type === "Trait" && !e.configuration?.grants?.length && !e.configuration?.grants?.size && !e.configuration?.choices?.length;
+async function ur(e, t, n) {
+	let r = rr.dnd5e.documents.Trait, i = Object.values(e.system?.advancement ?? {}).filter((e) => e.type === "Trait" && !lr(e) && (e.level ?? 0) === t && (!e.classRestriction || e.classRestriction === (n ? "secondary" : "primary")));
 	return Promise.all(i.map(async (e) => ({
 		id: e._id,
 		mode: e.configuration?.mode ?? "default",
@@ -2089,7 +2100,7 @@ async function lr(e, t, n) {
 		}))
 	})));
 }
-function ur(e, t) {
+function dr(e, t) {
 	let n = [...t], r = [];
 	for (let i of e) {
 		let e = n.findIndex((e) => e.count === i.count && e.pool.size === i.pool.length && i.pool.every((t) => e.pool.has(t)));
@@ -2101,8 +2112,8 @@ function ur(e, t) {
 	}
 	return r;
 }
-async function dr(e, t, n, r, i) {
-	let a = e.clone(), o = new nr.CONFIG.Item.documentClass({
+async function fr(e, t, n, r, i) {
+	let a = e.clone(), o = new rr.CONFIG.Item.documentClass({
 		...t,
 		system: {
 			...t.system,
@@ -2111,127 +2122,127 @@ async function dr(e, t, n, r, i) {
 	}, { parent: a });
 	for (let e of o.advancement.byType.Trait ?? []) {
 		if (e.configuration.mode !== "default" || e.level !== i) continue;
-		let t = r.previous?.find((t) => t.id === e.id)?.data, n = r.picks?.find((t) => t.id === e.id)?.value, a = await sr(e, t ?? n);
+		let t = r.previous?.find((t) => t.id === e.id)?.data, n = r.picks?.find((t) => t.id === e.id)?.value, a = await cr(e, t ?? n);
 		a?.chosen.length && await e.apply(i, a);
 	}
 	return a;
 }
-var fr = (e) => s(e, tr(e)), pr = (e, t, n = []) => {
-	let r = Qt(e, t, n);
-	return r ? I(r) : fr(String(e._title || e._subComps[0]?.modalTitle || e._prop));
-}, mr = (e) => [...new Map(e.map((e) => [JSON.stringify(e), e])).values()];
-function hr(e, t, n, r, i = {}) {
-	return ie(`build-traits:fill:${n}:${r}`, () => gr(e, t, n, r, i));
+var pr = (e) => s(e, nr(e)), mr = (e, t, n = []) => {
+	let r = $t(e, t, n);
+	return r ? F(r) : pr(String(e._title || e._subComps[0]?.modalTitle || e._prop));
+}, hr = (e) => [...new Map(e.map((e) => [JSON.stringify(e), e])).values()];
+function gr(e, t, n, r, i = {}) {
+	return ie(`build-traits:fill:${n}:${r}`, () => _r(e, t, n, r, i));
 }
-async function gr(e, t, n, a, o) {
+async function _r(e, t, n, a, o) {
 	let { replay: s, picks: c, plans: l, actor: u, scope: d, expertise: f } = o;
 	if (!t.entry) return [];
-	let p = P;
+	let p = N;
 	if (!p) return [i("当前 Plutonium 版本缺少已验证的建卡接线")];
 	let h = +(t.prop === "class"), g = t.prop === "class" ? p.Charactermancer_Class_Util.getStandardProficiencies(a ? t.entry.multiclassing?.proficienciesGained ?? {} : {
 		proficiency: t.entry.proficiency,
 		...t.entry.startingProficiencies
-	}) : structuredClone(t.entry), _ = new nr.CONFIG.Actor.documentClass({
+	}) : structuredClone(t.entry), _ = new rr.CONFIG.Actor.documentClass({
 		name: "Trait preview",
-		type: sn
+		type: cn
 	}), v = [{ entity: g }], y = await p.Charactermancer_AvailableProficiencyManager.pGetInstance(), b = new p.Charactermancer_FeatureOptionsSelect({
 		actor: _,
 		optionsSet: v,
 		level: h,
 		modalFilterSpells: {},
 		availableProficiencyManager: y
-	}), x = b._subCompManagers.filter((e) => e instanceof p.CharactermancerFeatureSubCompManagerProficiencyOtherBase), ee = await lr(e, h, a), te = He(t.data ?? e), ne = /* @__PURE__ */ new Set(), S = [], C = {};
+	}), x = b._subCompManagers.filter((e) => e instanceof p.CharactermancerFeatureSubCompManagerProficiencyOtherBase), ee = await ur(e, h, a), te = Ue(t.data ?? e), ne = /* @__PURE__ */ new Set(), S = [], C = {};
 	try {
 		for (let y of x) try {
 			if (await y._pInitSubComp({
 				ix: 0,
 				selectedLinkedEntityInfos: v
 			}), !y._subComps[0]) continue;
-			let b = u && y._subComps[0] instanceof p.Charactermancer_ExpertiseSelect, re = b ? await dr(u, e, {
+			let b = u && y._subComps[0] instanceof p.Charactermancer_ExpertiseSelect, re = b ? await fr(u, e, {
 				...Object.fromEntries(Object.entries(e.system?.advancement ?? {}).filter(([e]) => !ne.has(e))),
 				...C
-			}, o, h) : u, w = await Yn(p, _, y, re, d);
+			}, o, h) : u, w = await Xn(p, _, y, re, d);
 			if (!w.length) {
-				S.push(pr(y, x));
+				S.push(mr(y, x));
 				continue;
 			}
-			let T = w.map(({ index: e }) => ar(n, y._prop, h, a, "author-plan", e)), ie = s ?? c?.map((e) => e.id), E = T.findIndex((e) => ie?.includes(e)), D = E < 0 ? 0 : E, O = w[D];
+			let T = w.map(({ index: e }) => or(n, y._prop, h, a, "author-plan", e)), ie = s ?? c?.map((e) => e.id), E = T.findIndex((e) => ie?.includes(e)), D = E < 0 ? 0 : E, O = w[D];
 			if (O.extended && s && E < 0) continue;
 			let ae = w.map((e, t) => ({
 				id: T[t],
-				label: e.choices.length ? r(e.choices.map((e) => i(`{0} ×${e.count}`, Zt(e.pool) ? I(Zt(e.pool)) : pr(y, x))), " + ") : Zt(e.grants) ? I(Zt(e.grants)) : pr(y, x)
+				label: e.choices.length ? r(e.choices.map((e) => i(`{0} ×${e.count}`, Qt(e.pool) ? F(Qt(e.pool)) : mr(y, x))), " + ") : Qt(e.grants) ? F(Qt(e.grants)) : mr(y, x)
 			})), oe = [...new Map(O.withheld.map((e) => [e.label, e])).values()].sort((e, t) => e.label.localeCompare(t.label));
-			oe.length && S.push(i("{0}（暂时无法加到人物卡：{1}）", pr(y, x), r(oe.map((e) => e.text ?? fr(e.label)), "、")));
-			let k = m(g[y._prop] || g.entryData?.[y._prop]), se = ee.filter((e) => e.mode === O.mode), A = se.filter(({ id: e }) => te[e]?.field === y._prop && te[e]?.input === k), ce = new Set(A.flatMap((e) => e.grants)), le = A.flatMap((e) => e.slots), ue = ce.size === O.grants.length && O.grants.every((e) => ce.has(e)) && le.length === O.choices.length && ur(O.choices, le)?.length === 0, de = ar(n, y._prop, h, a, "origin"), j = le.length > 0 && !ue && !O.withheld.length && (!s || s.includes(O.extended ? T[D] : de)), fe = j ? se.filter((e) => !A.includes(e)) : se, pe = new Set(fe.flatMap((e) => e.grants)), me = fe.flatMap((e) => e.slots), he = O.grants.filter((e) => !pe.has(e)), ge = j ? O.choices : ur(O.choices, me);
-			if (j && O.choices.some((e) => me.some((t) => e.pool.some((e) => t.pool.has(e))))) {
-				S.push(i("{0}（与资料附带的进阶重叠，已保留原进阶）", pr(y, x)));
+			oe.length && S.push(i("{0}（暂时无法加到人物卡：{1}）", mr(y, x), r(oe.map((e) => e.text ?? pr(e.label)), "、")));
+			let k = m(g[y._prop] || g.entryData?.[y._prop]), se = ee.filter((e) => e.mode === O.mode), A = se.filter(({ id: e }) => te[e]?.field === y._prop && te[e]?.input === k), ce = new Set(A.flatMap((e) => e.grants)), le = A.flatMap((e) => e.slots), ue = ce.size === O.grants.length && O.grants.every((e) => ce.has(e)) && le.length === O.choices.length && dr(O.choices, le)?.length === 0, de = or(n, y._prop, h, a, "origin"), fe = le.length > 0 && !ue && !O.withheld.length && (!s || s.includes(O.extended ? T[D] : de)), pe = fe ? se.filter((e) => !A.includes(e)) : se, me = new Set(pe.flatMap((e) => e.grants)), he = pe.flatMap((e) => e.slots), ge = O.grants.filter((e) => !me.has(e)), _e = fe ? O.choices : dr(O.choices, he);
+			if (fe && O.choices.some((e) => he.some((t) => e.pool.some((e) => t.pool.has(e))))) {
+				S.push(i("{0}（与资料附带的进阶重叠，已保留原进阶）", mr(y, x)));
 				continue;
 			}
-			if (!ge) {
-				S.push(pr(y, x));
+			if (!_e) {
+				S.push(mr(y, x));
 				continue;
 			}
-			if (!he.length && !ge.length) {
+			if (!ge.length && !_e.length) {
 				for (let e of A) l?.set(e.id, {
 					choices: [],
 					names: O.names
 				});
 				continue;
 			}
-			if (j) for (let e of A) ne.add(e.id);
-			let M = O.extended ? T[D] : j ? de : ar(n, y._prop, h, a);
-			if (l?.set(M, {
+			if (fe) for (let e of A) ne.add(e.id);
+			let j = O.extended ? T[D] : fe ? de : or(n, y._prop, h, a);
+			if (l?.set(j, {
 				choices: ae.length > 1 ? ae : [],
 				names: O.names
-			}), C[M] = {
-				_id: M,
+			}), C[j] = {
+				_id: j,
 				type: "Trait",
 				level: h,
 				...t.prop === "class" ? { classRestriction: a ? "secondary" : "primary" } : {},
-				...j && O.hints.length ? { hint: O.hints.join("\n") } : {},
+				...fe && O.hints.length ? { hint: O.hints.join("\n") } : {},
 				configuration: {
 					mode: O.mode,
-					grants: he,
-					choices: ge,
+					grants: ge,
+					choices: _e,
 					allowReplacements: !1
 				},
 				value: {}
 			}, b && f) {
-				let t = new nr.CONFIG.Item.documentClass({
+				let t = new rr.CONFIG.Item.documentClass({
 					...e,
 					system: {
 						...e.system,
-						advancement: { [M]: C[M] }
+						advancement: { [j]: C[j] }
 					}
 				}, { parent: re });
-				f.set(M, t.advancement.byId[M]);
+				f.set(j, t.advancement.byId[j]);
 			}
 		} catch (e) {
-			console.warn("[trpg-assistant] 建卡进阶暂无法处理", n, y._prop, e), S.push(pr(y, x));
+			console.warn("[trpg-assistant] 建卡进阶暂无法处理", n, y._prop, e), S.push(mr(y, x));
 		}
 	} finally {
 		b.unregisterSourceTracking();
 	}
 	if (e.system) {
-		let t = Object.fromEntries(Object.entries(e.system.advancement ?? {}).filter(([e, t]) => !ne.has(e) && !cr(t)));
+		let t = Object.fromEntries(Object.entries(e.system.advancement ?? {}).filter(([e, t]) => !ne.has(e) && !lr(t)));
 		e.system.advancement = {
 			...t,
 			...C
 		};
 	}
-	return mr(S);
+	return hr(S);
 }
 // src/rules/kernel/frame/commands-level.ts
-var z = globalThis;
-function _r() {
-	let e = z.dnd5e?.applications?.advancement?.AdvancementManager;
+var R = globalThis;
+function vr() {
+	let e = R.dnd5e?.applications?.advancement?.AdvancementManager;
 	if (!e) throw Error("dnd5e AdvancementManager is not available");
 	return e;
 }
-function vr(e, t, n, r = {}) {
-	return _r().forLevelChange(e, t, n, r);
+function yr(e, t, n, r = {}) {
+	return vr().forLevelChange(e, t, n, r);
 }
-function B(e) {
+function z(e) {
 	return {
 		level: e.system.details?.level ?? null,
 		hp: e.system.attributes?.hp?.toObject?.() ?? e.system.attributes?.hp ?? null,
@@ -2252,7 +2263,7 @@ function B(e) {
 		})) ?? []
 	};
 }
-function yr(e) {
+function br(e) {
 	let t = e?.toObject ? e.toObject() : structuredClone(e);
 	for (let e of [
 		"_id",
@@ -2262,37 +2273,37 @@ function yr(e) {
 		"ownership",
 		"_stats"
 	]) delete t[e];
-	return t.system && "container" in t.system && (t.system.container = null), Ue(t), t;
+	return t.system && "container" in t.system && (t.system.container = null), We(t), t;
 }
-function br(e) {
+function xr(e) {
 	let t = e?.toObject ? e.toObject() : structuredClone(e);
 	return t.flags ??= {}, t.flags.plutonium ??= {}, t.flags.plutonium.isStandardDragDrop = !0, t;
 }
-function xr(e) {
+function Sr(e) {
 	let t = e?.flags?.plutonium;
 	return t?.propDroppable && t.source && t.hash ? `${t.propDroppable}|${t.source}|${t.hash}` : null;
 }
-function Sr(e) {
+function Cr(e) {
 	return JSON.parse(JSON.stringify(e, (e, t) => t instanceof Set ? [...t] : t));
 }
-async function Cr(e, t, { strict: n = !1, picks: r, blank: i = !1, expertise: a } = {}) {
+async function wr(e, t, { strict: n = !1, picks: r, blank: i = !1, expertise: a } = {}) {
 	if (!e.steps.length) return { finished: !0 };
 	for (let o of e.steps) {
 		if (o.automatic || !o.flow) continue;
 		let e = o.flow.advancement, s = t?.find((t) => t.id === e.id && t.level === o.flow.level), c = r?.find((t) => t.id === e.id && (t.level ?? null) === (o.flow.level ?? null));
-		if (ir(e.id)) {
+		if (ar(e.id)) {
 			if (s?.error || n && !s) return {
 				finished: !1,
 				step: {
-					...wr(o),
+					...Tr(o),
 					error: s?.error
 				}
 			};
-			let t = await or(a?.get(e.id) ?? e, s?.data ?? c?.value);
+			let t = await sr(a?.get(e.id) ?? e, s?.data ?? c?.value);
 			if (!t) return {
 				finished: !1,
 				step: {
-					...wr(o),
+					...Tr(o),
 					error: "建卡选择已不在当前候选内"
 				}
 			};
@@ -2303,7 +2314,7 @@ async function Cr(e, t, { strict: n = !1, picks: r, blank: i = !1, expertise: a 
 			if (s.error) return {
 				finished: !1,
 				step: {
-					...wr(o),
+					...Tr(o),
 					error: s.error
 				}
 			};
@@ -2312,11 +2323,11 @@ async function Cr(e, t, { strict: n = !1, picks: r, blank: i = !1, expertise: a 
 		}
 		if (await o.flow.getAutomaticApplicationValue() !== !1) continue;
 		if (c) {
-			let t = c.value?.type === "asi" ? an(e, c.value) : c.value;
+			let t = c.value?.type === "asi" ? on(e, c.value) : c.value;
 			if (!t) return {
 				finished: !1,
 				step: {
-					...wr(o),
+					...Tr(o),
 					error: "属性提升的选择不合规"
 				}
 			};
@@ -2325,27 +2336,27 @@ async function Cr(e, t, { strict: n = !1, picks: r, blank: i = !1, expertise: a 
 		}
 		if (n) return {
 			finished: !1,
-			step: wr(o)
+			step: Tr(o)
 		};
-		let l = (i ? await dn(o.flow) : void 0) ?? await fn(o.flow);
+		let l = (i ? await fn(o.flow) : void 0) ?? await pn(o.flow);
 		l !== void 0 && (o.flow.getAutomaticApplicationValue = async () => l);
 	}
 	let o = new Promise((t) => {
-		let n = z.Hooks.on("dnd5e.advancementManagerComplete", (r) => {
-			r === e && (z.Hooks.off(n), t(!0));
+		let n = R.Hooks.on("dnd5e.advancementManagerComplete", (r) => {
+			r === e && (R.Hooks.off(n), t(!0));
 		});
 		setTimeout(() => {
-			z.Hooks.off(n), t(!1);
+			R.Hooks.off(n), t(!1);
 		}, 3e3);
 	});
 	await e.render();
 	let s = await o;
 	return s && await C(), s ? { finished: !0 } : {
 		finished: !1,
-		step: wr(e.step)
+		step: Tr(e.step)
 	};
 }
-function wr(e) {
+function Tr(e) {
 	if (!e) return null;
 	let t = e.flow, n = t?.advancement;
 	return {
@@ -2361,7 +2372,7 @@ function wr(e) {
 		} : null
 	};
 }
-async function Tr(e) {
+async function Er(e) {
 	let t = [];
 	for (let n of e.steps) {
 		let e = n.flow, r = e?.advancement, i = null;
@@ -2388,21 +2399,21 @@ async function Tr(e) {
 	}
 	return t;
 }
-function Er(e) {
+function Dr(e) {
 	return Object.fromEntries(Object.entries(e.system?.abilities ?? {}).map(([e, t]) => [e, t.value]));
 }
-async function Dr(e, t, n, r = {}, { strict: i = !1, seed: a, id: o, picks: s, blank: c = !1, traitScope: l, onManager: u } = {}) {
+async function Or(e, t, n, r = {}, { strict: i = !1, seed: a, id: o, picks: s, blank: c = !1, traitScope: l, onManager: u } = {}) {
 	a !== void 0 && k(a);
-	let d = await z.CONFIG.Actor.documentClass.create({
+	let d = await R.CONFIG.Actor.documentClass.create({
 		...o ? { _id: o } : {},
 		name: e,
-		type: sn,
+		type: cn,
 		system: { details: { level: 1 } }
-	}, { keepId: !!o }), f = l ? new Set(l) : void 0, p = Er(d), m = [];
+	}, { keepId: !!o }), f = l ? new Set(l) : void 0, p = Dr(d), m = [];
 	for (let e of t) {
-		let t = yr(e?.data ?? e);
-		z.CONFIG.Item.dataModels[t.type]?.resetData?.(t.system);
-		let n = e?.refKey ?? xr(t), a = n ? r[n] : void 0, o = n && (!i || a?.some((e) => ir(e.id))), l = /* @__PURE__ */ new Map(), h = /* @__PURE__ */ new Map(), g = n ? s?.[n] : void 0, _ = o ? await hr(t, e, n, d.items.some((e) => e.type === "class"), {
+		let t = br(e?.data ?? e);
+		R.CONFIG.Item.dataModels[t.type]?.resetData?.(t.system);
+		let n = e?.refKey ?? Sr(t), a = n ? r[n] : void 0, o = n && (!i || a?.some((e) => ar(e.id))), l = /* @__PURE__ */ new Map(), h = /* @__PURE__ */ new Map(), g = n ? s?.[n] : void 0, _ = o ? await gr(t, e, n, d.items.some((e) => e.type === "class"), {
 			actor: d,
 			plans: l,
 			scope: f,
@@ -2415,7 +2426,7 @@ async function Dr(e, t, n, r = {}, { strict: i = !1, seed: a, id: o, picks: s, b
 			refKey: n,
 			titles: _
 		});
-		let v = [...a ?? [], ...n ? s?.[n] ?? [] : []].find((e) => ir(e.id) && !(e.id in (t.system?.advancement ?? {})));
+		let v = [...a ?? [], ...n ? s?.[n] ?? [] : []].find((e) => ar(e.id) && !(e.id in (t.system?.advancement ?? {})));
 		if (v) return {
 			pending: !0,
 			step: {
@@ -2423,12 +2434,12 @@ async function Dr(e, t, n, r = {}, { strict: i = !1, seed: a, id: o, picks: s, b
 				id: v.id,
 				refKey: n
 			},
-			built: B(d),
+			built: z(d),
 			actor: d,
 			initial: p,
 			missingTraits: m
 		};
-		let y = _r().forNewItem(d, t, { automaticApplication: !0 });
+		let y = vr().forNewItem(d, t, { automaticApplication: !0 });
 		await u?.({
 			manager: y,
 			key: n,
@@ -2437,7 +2448,7 @@ async function Dr(e, t, n, r = {}, { strict: i = !1, seed: a, id: o, picks: s, b
 			traitPlans: l,
 			expertise: h
 		});
-		let b = await Cr(y, a, {
+		let b = await wr(y, a, {
 			strict: i,
 			blank: c,
 			picks: g,
@@ -2446,31 +2457,31 @@ async function Dr(e, t, n, r = {}, { strict: i = !1, seed: a, id: o, picks: s, b
 		if (!b.finished) return {
 			pending: !0,
 			step: b.step,
-			built: B(d),
+			built: z(d),
 			actor: d,
 			initial: p,
 			missingTraits: m
 		};
-		d.items.contents.some((e) => e.type === t.type && e.flags?.plutonium?.hash === t.flags?.plutonium?.hash) || await d.createEmbeddedDocuments("Item", [br(yr(t))]);
+		d.items.contents.some((e) => e.type === t.type && e.flags?.plutonium?.hash === t.flags?.plutonium?.hash) || await d.createEmbeddedDocuments("Item", [xr(br(t))]);
 	}
-	return n.length && await d.createEmbeddedDocuments("Item", n.map((e) => br(yr(e?.data ?? e)))), {
+	return n.length && await d.createEmbeddedDocuments("Item", n.map((e) => xr(br(e?.data ?? e)))), {
 		actor: d,
 		initial: p,
 		missingTraits: m
 	};
 }
-function Or(e, t) {
+function kr(e, t) {
 	return {
 		levelUpSteps: (n, r, i = 1) => e([], async () => {
-			let e = await Tr(vr(t(n), r, i));
+			let e = await Er(yr(t(n), r, i));
 			return {
 				status: e.length ? "pending" : "complete",
 				steps: e
 			};
 		}, [n]),
 		levelUpApply: (n, r, i = 1, a) => e([], async () => {
-			let e = t(n), o = vr(e, r, i, { automaticApplication: !0 }), s = await Cr(o, a);
-			return s.finished ? B(e) : {
+			let e = t(n), o = yr(e, r, i, { automaticApplication: !0 }), s = await wr(o, a);
+			return s.finished ? z(e) : {
 				kernelStatus: "pending",
 				reason: o.step ? "awaiting-choice" : "advancement-manager-not-complete",
 				step: s.step
@@ -2478,7 +2489,7 @@ function Or(e, t) {
 		}, [n]),
 		captureChoices: (n) => e([], async () => {
 			let e = t(n).clone(), r = {};
-			for (let t of at(e)) {
+			for (let t of ot(e)) {
 				let e = t.item.advancement.byId[t.adv.id];
 				try {
 					let n = await e.reverse(t.level);
@@ -2486,7 +2497,7 @@ function Or(e, t) {
 						id: t.adv.id,
 						type: t.type,
 						level: t.level,
-						data: Sr(n)
+						data: Cr(n)
 					});
 				} catch (e) {
 					(r[t.key] ??= []).push({
@@ -2504,22 +2515,22 @@ function Or(e, t) {
 			return await e.update({
 				name: r,
 				"prototypeToken.name": r
-			}), B(e);
+			}), z(e);
 		}, [n]),
 		createActorsFromBase: (t) => e([], async () => {
-			let e = z.CONFIG.Actor.documentClass, n = await e.createDocuments(t.map((e) => ({
+			let e = R.CONFIG.Actor.documentClass, n = await e.createDocuments(t.map((e) => ({
 				...structuredClone(e.base),
 				...e.id ? { _id: e.id } : {}
 			})), { keepId: !0 }), r = [];
 			for (let i = 0; i < n.length; i++) {
-				let a = await bt(n[i], t[i].off, t[i].state);
+				let a = await xt(n[i], t[i].off, t[i].state);
 				if (a.problems.length) return await e.deleteDocuments(n.map((e) => e.id)), {
 					kernelStatus: "error",
 					problems: a.problems
 				};
 				r.push({
 					id: n[i].id,
-					...B(n[i]),
+					...z(n[i]),
 					data: n[i].toObject(),
 					base: t[i].base,
 					view: a.view,
@@ -2532,14 +2543,14 @@ function Or(e, t) {
 			let e = t.seed ?? oe(), n = [];
 			for (let e of t.items) n.push({
 				...e,
-				data: e.data ?? await F(e.prop, e.entry)
+				data: e.data ?? await P(e.prop, e.entry)
 			});
 			let r = [];
 			for (let e of t.equipment ?? []) r.push({
-				data: e.data ?? await F(e.prop, e.entry),
+				data: e.data ?? await P(e.prop, e.entry),
 				refKey: e.refKey
 			});
-			let i = t.starting ? await jn(t.items.filter((e) => e.entry?.startingEquipment), t.starting, t.startingExcluded) : null, a = await Dr(t.name, n, [...r, ...i?.equipment ?? []], t.choices ?? {}, {
+			let i = t.starting ? await Mn(t.items.filter((e) => e.entry?.startingEquipment), t.starting, t.startingExcluded) : null, a = await Or(t.name, n, [...r, ...i?.equipment ?? []], t.choices ?? {}, {
 				strict: !1,
 				seed: e,
 				picks: t.picks,
@@ -2558,39 +2569,39 @@ function Or(e, t) {
 				initial: a.initial,
 				skipped: i?.skipped ?? [],
 				missingTraits: a.missingTraits,
-				...B(a.actor)
+				...z(a.actor)
 			});
 		}),
 		buildSteps: (t) => e([], async () => {
-			let e = z.CONFIG.Actor.documentClass, n = new e({
+			let e = R.CONFIG.Actor.documentClass, n = new e({
 				name: "Build preview",
-				type: sn,
+				type: cn,
 				system: { details: { level: 1 } }
-			}), r = await Tr(_r().forNewItem(n, t));
+			}), r = await Er(vr().forNewItem(n, t));
 			return {
 				status: r.length ? "pending" : "complete",
 				steps: r
 			};
 		}),
-		importForBuild: (t, n) => e([], async () => F(t, n)),
-		importerProps: Qe,
-		importerMeta: $e,
-		actorTypes: (t, n) => e([], async () => cn(t, n)),
+		importForBuild: (t, n) => e([], async () => P(t, n)),
+		importerProps: $e,
+		importerMeta: et,
+		actorTypes: (t, n) => e([], async () => ln(t, n)),
 		rebuildCharacter: (t) => e([], async () => {
 			let e = t.seed?.trim() || t.name;
 			k(e);
 			let n = [];
 			for (let e of t.items) n.push({
 				...e,
-				data: e.data ?? await F(e.prop, e.entry)
+				data: e.data ?? await P(e.prop, e.entry)
 			});
 			let r = [];
 			for (let e of t.equipment) r.push({
-				data: e.data ?? await F(e.prop, e.entry),
+				data: e.data ?? await P(e.prop, e.entry),
 				refKey: e.refKey,
 				itemId: e.itemId
 			});
-			let i = await Dr(t.name, n, r, t.choices, {
+			let i = await Or(t.name, n, r, t.choices, {
 				strict: !0,
 				seed: e,
 				id: t.id
@@ -2601,15 +2612,15 @@ function Or(e, t) {
 				step: i.step,
 				built: i.built
 			};
-			[...i.actor.items].filter((e) => e.type === "class").length > 1 && await ln(i.actor, t.choices, [...t.items, ...t.equipment]);
-			let a = i.actor.toObject(), o = await bt(i.actor, t.off, t.state);
+			[...i.actor.items].filter((e) => e.type === "class").length > 1 && await un(i.actor, t.choices, [...t.items, ...t.equipment]);
+			let a = i.actor.toObject(), o = await xt(i.actor, t.off, t.state);
 			return o.problems.length ? (await i.actor.delete(), {
 				kernelStatus: "error",
 				problems: o.problems
 			}) : {
 				id: i.actor.id,
 				seed: e,
-				...B(i.actor),
+				...z(i.actor),
 				data: i.actor.toObject(),
 				base: a,
 				view: o.view,
@@ -2619,31 +2630,31 @@ function Or(e, t) {
 	};
 }
 // src/rules/kernel/frame/commands-add.ts
-var kr = globalThis;
-function Ar(e) {
+var Ar = globalThis;
+function jr(e) {
 	let t = e?.flags?.plutonium;
 	return t?.propDroppable && t.source && t.hash ? `${t.propDroppable}|${t.source}|${t.hash}` : null;
 }
-async function jr(e, t) {
+async function Mr(e, t) {
 	let n = e.items.get(t);
 	if (!n) throw Error(`人物身上没有这件：${t}`);
-	let r = _r().forDeletedItem(e, t, { automaticApplication: !0 });
+	let r = vr().forDeletedItem(e, t, { automaticApplication: !0 });
 	if (r.steps.length) {
-		let e = await Cr(r, void 0);
+		let e = await wr(r, void 0);
 		return e.finished ? null : e.step;
 	}
 	return await n.delete(), null;
 }
-function Mr(e, t) {
+function Nr(e, t) {
 	return {
 		addToActor: (n, r) => e([], async () => {
 			let e = t(n), i = e.sheet;
 			if (!i?._onDropSingleItem) throw Error(`人物 ${n} 没有官方人物表单实例`);
 			let a = [];
 			for (let t of r) {
-				let n = br(yr(t.data ? structuredClone(t.data) : await F(t.prop, t.entry))), r = new Set(e.items.map((e) => e.id)), o = _r().forNewItem(e, n, { automaticApplication: !0 });
+				let n = xr(br(t.data ? structuredClone(t.data) : await P(t.prop, t.entry))), r = new Set(e.items.map((e) => e.id)), o = vr().forNewItem(e, n, { automaticApplication: !0 });
 				if (o.steps.length) {
-					let e = await Cr(o, t.choices, { strict: !1 });
+					let e = await wr(o, t.choices, { strict: !1 });
 					if (!e.finished) return {
 						kernelStatus: "pending",
 						reason: "add-step-not-complete",
@@ -2651,49 +2662,49 @@ function Mr(e, t) {
 						pending: { step: e.step }
 					};
 				} else {
-					let t = await i._onDropSingleItem({ target: kr.document.createElement("div") }, n);
+					let t = await i._onDropSingleItem({ target: Ar.document.createElement("div") }, n);
 					if (t === !1 || t === void 0) continue;
 					let r = await e.createEmbeddedDocuments("Item", [t], { keepId: !0 });
 					a.push(...r.map((e) => e.toObject()));
 				}
-				for (let t of e.items) !r.has(t.id) && Ar(t) && a.push(t.toObject());
+				for (let t of e.items) !r.has(t.id) && jr(t) && a.push(t.toObject());
 			}
 			return {
-				...B(e),
+				...z(e),
 				added: a
 			};
 		}, [n]),
 		removeItem: (n, r) => e([], async () => {
-			let e = t(n), i = await jr(e, r);
+			let e = t(n), i = await Mr(e, r);
 			return i ? {
 				kernelStatus: "pending",
 				reason: "remove-step-not-complete",
 				step: i,
 				pending: { step: i }
 			} : {
-				...B(e),
+				...z(e),
 				removed: r
 			};
 		}, [n])
 	};
 }
 // src/rules/kernel/frame/commands-batch.ts
-var Nr = globalThis;
-function Pr(e, t) {
+var Pr = globalThis;
+function Fr(e, t) {
 	let n = structuredClone(e);
 	delete n._id;
 	for (let e of n.items ?? []) delete e._id;
 	for (let e of n.effects ?? []) delete e._id;
 	return t && (n.name = t), n;
 }
-function Fr(e) {
+function Ir(e) {
 	return { createActorsBatch: (t) => e([], async () => {
 		let e = [];
 		for (let n of t) {
-			let t = n.data ?? await F(n.prop, n.entry);
-			e.push(Pr(t, n.name));
+			let t = n.data ?? await P(n.prop, n.entry);
+			e.push(Fr(t, n.name));
 		}
-		return (await Nr.CONFIG.Actor.documentClass.createDocuments(e)).map((e) => ({
+		return (await Pr.CONFIG.Actor.documentClass.createDocuments(e)).map((e) => ({
 			id: e.id,
 			name: e.name,
 			type: e.type,
@@ -2702,7 +2713,7 @@ function Fr(e) {
 	}) };
 }
 // src/rules/kernel/frame/build-extras.ts
-var V = globalThis, Ir = (e) => (t) => V.UrlUtil.URL_TO_HASH_BUILDER[e](t), Lr = (e, t) => new Map(e.map((e) => [t(e.entry), e])), Rr = [{
+var B = globalThis, Lr = (e) => (t) => B.UrlUtil.URL_TO_HASH_BUILDER[e](t), Rr = (e, t) => new Map(e.map((e) => [t(e.entry), e])), zr = [{
 	field: "featProgression",
 	kind: "feat",
 	primer: "DataPrimerFauxFeatureClassSubclassFeat"
@@ -2711,7 +2722,7 @@ var V = globalThis, Ir = (e) => (t) => V.UrlUtil.URL_TO_HASH_BUILDER[e](t), Lr =
 	kind: "optionalfeature",
 	primer: "DataPrimerFauxFeatureClassSubclassOptionalfeature"
 }];
-function zr(e, t) {
+function Br(e, t) {
 	let n = "dataSources", r = "isGmUseBlocklist", i = e.Config.get(n, r);
 	e.Config.setTemp(n, r, !1, { isSkipPermissionCheck: !0 });
 	try {
@@ -2720,38 +2731,38 @@ function zr(e, t) {
 		e.Config.setTemp(n, r, i, { isSkipPermissionCheck: !0 });
 	}
 }
-function Br(e, t) {
-	let n = t === "classFeature" ? V.DataUtil.class.unpackUidClassFeature : V.DataUtil.class.unpackUidSubclassFeature;
+function Vr(e, t) {
+	let n = t === "classFeature" ? B.DataUtil.class.unpackUidClassFeature : B.DataUtil.class.unpackUidSubclassFeature;
 	return (e[`${t}s`] ?? []).flat(Infinity).map((e) => {
 		let r = e?.[t] ?? e;
 		return typeof r == "string" ? {
-			...n.call(V.DataUtil.class, r),
+			...n.call(B.DataUtil.class, r),
 			...typeof e == "object" ? e : {},
 			[t]: r
 		} : e;
 	});
 }
-function Vr(e, n, r, i, a, o) {
+function Hr(e, n, r, i, a, o) {
 	let s = structuredClone(n.entry);
-	if (s.classFeatures = Br(s, "classFeature"), s.subclasses = [], e.Charactermancer_Class_Util.getAllFeatures(s).find((e) => e.gainSubclassFeature)?.level === i) {
-		let e = new Set([s, o].filter(Boolean).map((e) => V.UrlUtil.URL_TO_HASH_BUILDER.class(e))), c = (r.subclass ?? []).filter((t) => [t.entry, t.local].filter(Boolean).some((t) => e.has(V.UrlUtil.URL_TO_HASH_BUILDER.class({
+	if (s.classFeatures = Vr(s, "classFeature"), s.subclasses = [], e.Charactermancer_Class_Util.getAllFeatures(s).find((e) => e.gainSubclassFeature)?.level === i) {
+		let e = new Set([s, o].filter(Boolean).map((e) => B.UrlUtil.URL_TO_HASH_BUILDER.class(e))), c = (r.subclass ?? []).filter((t) => [t.entry, t.local].filter(Boolean).some((t) => e.has(B.UrlUtil.URL_TO_HASH_BUILDER.class({
 			name: t.className,
 			source: t.classSource
 		}))));
 		a.extras.push({
 			id: `${n.refKey}|subclass|${i}`,
 			kind: "subclass",
-			title: s.subclassTitle ? t(String(s.subclassTitle)) : I(V.game.i18n.localize("DND5E.ADVANCEMENT.Subclass.Title")),
+			title: s.subclassTitle ? t(String(s.subclassTitle)) : F(B.game.i18n.localize("DND5E.ADVANCEMENT.Subclass.Title")),
 			count: 1,
 			candidates: c.map(({ key: e }) => ({ key: e }))
 		});
 	}
 }
-function Hr(e, n, r, a, o) {
+function Ur(e, n, r, a, o) {
 	let s = n.entry;
-	for (let { field: c, kind: l, primer: u } of Rr) {
+	for (let { field: c, kind: l, primer: u } of zr) {
 		if (!s[c]?.length) continue;
-		let d = new e[u](), f = Ir(l), p = Lr(r[l] ?? [], f), m = d._addFauxFeatureFeatures_getFauxFeature, h = 0;
+		let d = new e[u](), f = Lr(l), p = Rr(r[l] ?? [], f), m = d._addFauxFeatureFeatures_getFauxFeature, h = 0;
 		d._addFauxFeatureFeatures_getFauxFeature = function(...e) {
 			let r = m.apply(this, e);
 			return r.level === a && e[5] > 0 && (e[6].length ? o.blocked.push(i("{0}：这组包含固定选项，暂时无法在这里应用", t(String(r.name)))) : o.extras.push({
@@ -2769,36 +2780,36 @@ function Hr(e, n, r, a, o) {
 			...structuredClone(s),
 			subclasses: []
 		};
-		if (n.prop === "class" && (g.classFeatures = Br(g, "classFeature")), n.prop === "subclass") {
-			g.subclassFeatures = Br(g, "subclassFeature");
+		if (n.prop === "class" && (g.classFeatures = Vr(g, "classFeature")), n.prop === "subclass") {
+			g.subclassFeatures = Vr(g, "subclassFeature");
 			let t = {
 				name: g.className,
 				source: g.classSource,
 				subclasses: [g]
 			};
-			zr(e, () => d.addFauxFeatureFeatures([t], [...p.values()].map(({ entry: e }) => e)));
-		} else n.prop === "class" && zr(e, () => d.addFauxFeatureFeatures([g], [...p.values()].map(({ entry: e }) => e)));
+			Br(e, () => d.addFauxFeatureFeatures([t], [...p.values()].map(({ entry: e }) => e)));
+		} else n.prop === "class" && Br(e, () => d.addFauxFeatureFeatures([g], [...p.values()].map(({ entry: e }) => e)));
 	}
 }
-async function Ur(e, t, n, a, o) {
+async function Wr(e, t, n, a, o) {
 	let c = t.entry.feats;
 	if (e.StatGenUtilAdditionalFeats.isNoChoice(c)) return;
 	if (c.length !== 1) {
 		o.blocked.push(i("专长有多套备选方案，建卡暂时无法在方案间切换"));
 		return;
 	}
-	let l = await a(), u = Lr(n, Ir("feat")), d = new e.Charactermancer_AdditionalFeatsSelect({
+	let l = await a(), u = Rr(n, Lr("feat")), d = new e.Charactermancer_AdditionalFeatsSelect({
 		available: c,
 		modalFilterFeats: l,
 		modalFilterSpells: {},
 		availableProficiencyManager: {}
 	});
 	d._render_renderPtStatic = () => void 0, d._render_renderPtChooseFromFilter = ({ count: e, filterExpression: n, titleNote: i, featsAdditionType: a }) => {
-		let c = l.getEntitiesMatchingFilterExpression({ filterExpression: n }), d = i ? [...new Set(c.map((e) => e.category).filter((e) => !!e))] : [], f = r([s(V.Parser.getPropDisplayName("feat"), [
+		let c = l.getEntitiesMatchingFilterExpression({ filterExpression: n }), d = i ? [...new Set(c.map((e) => e.category).filter((e) => !!e))] : [], f = r([s(B.Parser.getPropDisplayName("feat"), [
 			"Parser",
 			"CAT_ID_TO_FULL",
-			String(V.Parser.CAT_ID_FEAT)
-		]), ...d.map((e) => s(V.Parser.featCategoryToFull(e), [
+			String(B.Parser.CAT_ID_FEAT)
+		]), ...d.map((e) => s(B.Parser.featCategoryToFull(e), [
 			"Parser",
 			"FEAT_CATEGORY_TO_FULL",
 			e
@@ -2809,7 +2820,7 @@ async function Ur(e, t, n, a, o) {
 			title: f,
 			count: e,
 			candidates: c.flatMap((e) => {
-				let t = u.get(Ir("feat")(e));
+				let t = u.get(Lr("feat")(e));
 				return t ? [{ key: t.key }] : [];
 			})
 		});
@@ -2821,14 +2832,14 @@ async function Ur(e, t, n, a, o) {
 		featSet: c[0]
 	});
 }
-function Wr(e, t, n, r) {
+function Gr(e, t, n, r) {
 	t.candidates = t.candidates.filter((t) => {
 		let i = r.get(t.key)?.entry, a = i?.prerequisite;
 		if (!Array.isArray(a) || !a.length) return !0;
 		let [o] = a;
 		if (a.length === 1 && typeof o?.level == "number" && Object.keys(o).length === 1) {
 			let t = e.UtilDataConverter.getPrerequisiteLevelNumber({ prereqs: a });
-			return new V.CONFIG.Item.documentClass({
+			return new B.CONFIG.Item.documentClass({
 				name: i?.name,
 				type: "feat",
 				system: { prerequisites: { level: t } }
@@ -2837,40 +2848,40 @@ function Wr(e, t, n, r) {
 		return t.needsCheck = !0, !0;
 	});
 }
-async function Gr(e, t, n, r) {
-	if (!P) throw Error("此版本 Plutonium 缺少建卡选择入口");
-	let i = P, a = t.feat ?? [], o = new Map(Object.values(t).flat().map((e) => [e.key, e])), s, c = () => s ??= i.Charactermancer_AdditionalFeatsSelect._pGetUserInput_pGetModalFilterFeats({ allData: { feat: a.map(({ entry: { prerequisite: e, ...t } }) => t) } }), l = [];
+async function Kr(e, t, n, r) {
+	if (!N) throw Error("此版本 Plutonium 缺少建卡选择入口");
+	let i = N, a = t.feat ?? [], o = new Map(Object.values(t).flat().map((e) => [e.key, e])), s, c = () => s ??= i.Charactermancer_AdditionalFeatsSelect._pGetUserInput_pGetModalFilterFeats({ allData: { feat: a.map(({ entry: { prerequisite: e, ...t } }) => t) } }), l = [];
 	for (let s of e) {
 		let e = {
 			refKey: s.refKey,
 			extras: [],
 			blocked: []
 		};
-		s.prop === "class" && Vr(i, s, t, 1, e, r[s.refKey]), (s.prop === "class" || s.prop === "subclass") && Hr(i, s, t, 1, e), s.entry.feats?.length && await Ur(i, s, a, c, e);
-		for (let t of e.extras) Wr(i, t, n, o);
+		s.prop === "class" && Hr(i, s, t, 1, e, r[s.refKey]), (s.prop === "class" || s.prop === "subclass") && Ur(i, s, t, 1, e), s.entry.feats?.length && await Wr(i, s, a, c, e);
+		for (let t of e.extras) Gr(i, t, n, o);
 		l.push(e);
 	}
 	return l;
 }
 // src/rules/kernel/frame/commands-options.ts
-var Kr = (e, t = []) => Object.entries(e ?? {}).flatMap(([e, n]) => n?.children ? Kr(n.children, [...t, I(String(n.label ?? e))]) : [{
+var qr = (e, t = []) => Object.entries(e ?? {}).flatMap(([e, n]) => n?.children ? qr(n.children, [...t, F(String(n.label ?? e))]) : [{
 	value: e,
 	label: String(n?.label ?? e),
 	path: t
-}]), qr = {
+}]), Jr = {
 	Trait: async (e, t, n) => {
-		let { available: r } = await e.unfulfilledChoices(), i = r.filter((e) => e.type === "grant").flatMap((e) => Kr(e.choices)), a = /* @__PURE__ */ new Map();
+		let { available: r } = await e.unfulfilledChoices(), i = r.filter((e) => e.type === "grant").flatMap((e) => qr(e.choices)), a = /* @__PURE__ */ new Map();
 		for (let e of r.filter((e) => e.type === "choice")) {
 			let t = a.get(e.choiceIdx) ?? {
 				count: 0,
-				options: Kr(e.choices)
+				options: qr(e.choices)
 			};
 			t.count++, a.set(e.choiceIdx, t);
 		}
 		let o = i[0]?.value ?? [...a.values()][0]?.options[0]?.value, s = n.get(e.id), l = s?.choices.length ? s.choices : void 0;
 		if (!a.size && !l) return null;
-		let u = [...a.values()], d = await Ln([...i, ...u.flatMap((e) => e.options)].map((e) => e.value)), f = (e) => {
-			let t = s?.names.get(e.value) ?? (d[e.value] ? c(e.label, d[e.value], !0) : I(e.label)), n = t.$t === "name" ? t.ids : [];
+		let u = [...a.values()], d = await Rn([...i, ...u.flatMap((e) => e.options)].map((e) => e.value)), f = (e) => {
+			let t = s?.names.get(e.value) ?? (d[e.value] ? c(e.label, d[e.value], !0) : F(e.label)), n = t.$t === "name" ? t.ids : [];
 			return {
 				...e,
 				label: t,
@@ -2888,22 +2899,22 @@ var Kr = (e, t = []) => Object.entries(e ?? {}).flatMap(([e, n]) => n?.children 
 			...l ? { plans: l } : {}
 		};
 	},
-	AbilityScoreImprovement: async (e, t) => rn(e, t)
-}, Jr = /* @__PURE__ */ new Set([
+	AbilityScoreImprovement: async (e, t) => an(e, t)
+}, Yr = /* @__PURE__ */ new Set([
 	"HitPoints",
 	"ScaleValue",
 	"Size",
 	"ItemGrant",
 	"Subclass"
 ]);
-async function Yr(e, n = [], i, a) {
+async function Xr(e, n = [], i, a) {
 	let o = [];
 	for (let c of e.steps) {
 		let e = c.flow?.advancement;
 		if (!e) continue;
 		let l = e.constructor?.typeName ?? e.type, u = await c.flow.getAutomaticApplicationValue?.() !== !1, d = null, f = !1, p = n.find((t) => t.id === e.id && (t.level ?? null) === (c.flow.level ?? null))?.value;
-		qr[l] ? d = await qr[l](a.get(e.id) ?? e, p, i) : !u && !Jr.has(l) && (f = !0);
-		let m = l === "Trait" ? $t(e) : null, h = e._source?.name || e._source?.title, g = e.name ?? e.title, _ = m ? I(m) : h ? t(String(h), Ft(String(h))) : g ? I(String(g)) : null, v = l === "Trait" && e.hint ? r(String(e.hint).split("\n").map((e) => s(e, tr(e))), "\n") : void 0;
+		Jr[l] ? d = await Jr[l](a.get(e.id) ?? e, p, i) : !u && !Yr.has(l) && (f = !0);
+		let m = l === "Trait" ? en(e) : null, h = e._source?.name || e._source?.title, g = e.name ?? e.title, _ = m ? F(m) : h ? t(String(h), It(String(h))) : g ? F(String(g)) : null, v = l === "Trait" && e.hint ? r(String(e.hint).split("\n").map((e) => s(e, nr(e))), "\n") : void 0;
 		o.push({
 			id: e.id,
 			level: c.flow.level ?? null,
@@ -2917,14 +2928,14 @@ async function Yr(e, n = [], i, a) {
 	}
 	return o;
 }
-function Xr(e) {
+function Zr(e) {
 	return { buildOptions: (t) => e([], async () => {
 		let e = [];
 		for (let n of t.items) e.push({
 			...n,
-			data: n.data ?? await F(n.prop, n.entry)
+			data: n.data ?? await P(n.prop, n.entry)
 		});
-		let n = [], r = await Dr("选项预览", e, [], t.choices ?? {}, {
+		let n = [], r = await Or("选项预览", e, [], t.choices ?? {}, {
 			strict: !1,
 			picks: t.picks,
 			blank: t.blank,
@@ -2932,13 +2943,13 @@ function Xr(e) {
 			onManager: async ({ manager: e, key: t, unsupported: r, picks: i, traitPlans: a, expertise: o }) => {
 				n.push({
 					refKey: t,
-					steps: await Yr(e, i, a, o),
+					steps: await Xr(e, i, a, o),
 					unsupported: r
 				});
 			}
 		}), i = r.actor ?? r.created;
 		try {
-			let e = t.extraPools && Object.keys(t.extraPools).length ? await Gr(t.items, t.extraPools, i, t.local ?? {}) : [], a = new Map(n.map((e) => [e.refKey, e]));
+			let e = t.extraPools && Object.keys(t.extraPools).length ? await Kr(t.items, t.extraPools, i, t.local ?? {}) : [], a = new Map(n.map((e) => [e.refKey, e]));
 			return {
 				items: e.length ? e.map((e) => ({
 					steps: [],
@@ -2949,9 +2960,9 @@ function Xr(e) {
 				complete: !r.pending && !r.missingTraits.length,
 				abilities: {
 					initial: r.initial,
-					auto: Er(i),
+					auto: Dr(i),
 					cap: globalThis.CONFIG?.DND5E?.maxAbilityScore ?? null,
-					labels: Object.fromEntries(Object.entries(Kt("abilities")).map(([e, t]) => [e, I(t)]))
+					labels: Object.fromEntries(Object.entries(qt("abilities")).map(([e, t]) => [e, F(t)]))
 				}
 			};
 		} finally {
@@ -2960,63 +2971,63 @@ function Xr(e) {
 	}) };
 }
 // src/rules/kernel/frame/registry-keys.ts
-var Zr = globalThis, Qr = null, $r = (e) => typeof e?.label == "string" ? e.label : typeof e?.name == "string" ? e.name : typeof e?.labels?.title == "string" ? e.labels.title : null;
-function ei(e, t = []) {
+var Qr = globalThis, $r = null, ei = (e) => typeof e?.label == "string" ? e.label : typeof e?.name == "string" ? e.name : typeof e?.labels?.title == "string" ? e.labels.title : null;
+function ti(e, t = []) {
 	if (!e || typeof e != "object" || Array.isArray(e)) return t;
-	for (let [n, r] of Object.entries(e)) t.push([n, r]), r?.children && ei(r.children, t);
+	for (let [n, r] of Object.entries(e)) t.push([n, r]), r?.children && ti(r.children, t);
 	return t;
 }
-function ti() {
-	let e = (e) => typeof e == "string" ? e : $r(e);
-	Qr = {
-		tables: Object.fromEntries(Object.entries(Zr.CONFIG.DND5E ?? {}).map(([t, n]) => [t, Object.fromEntries(ei(n).flatMap(([t, n]) => {
+function ni() {
+	let e = (e) => typeof e == "string" ? e : ei(e);
+	$r = {
+		tables: Object.fromEntries(Object.entries(Qr.CONFIG.DND5E ?? {}).map(([t, n]) => [t, Object.fromEntries(ti(n).flatMap(([t, n]) => {
 			let r = e(n);
 			return r ? [[t, r]] : [];
 		}))])),
-		statuses: Object.fromEntries((Zr.CONFIG.statusEffects ?? []).filter((e) => typeof e?.name == "string").map((e) => [e.id, e.name]))
+		statuses: Object.fromEntries((Qr.CONFIG.statusEffects ?? []).filter((e) => typeof e?.name == "string").map((e) => [e.id, e.name]))
 	};
 }
-var ni = () => Qr !== null, ri = null;
-function ii(e) {
-	let t = Zr.game.i18n, n = ri;
+var ri = () => $r !== null, ii = null;
+function ai(e) {
+	let t = Qr.game.i18n, n = ii;
 	if (!n || n.i18n !== t) {
 		let e = /* @__PURE__ */ new Map(), r = (t, n) => {
 			for (let [i, a] of Object.entries(t ?? {})) typeof a == "string" ? e.set(a, [...e.get(a) ?? [], [...n, i].join(".")]) : a && typeof a == "object" && r(a, [...n, i]);
 		};
-		r(t.translations, []), r(t._fallback, []), n = ri = {
+		r(t.translations, []), r(t._fallback, []), n = ii = {
 			i18n: t,
 			byText: e
 		};
 	}
 	return (n.byText.get(e) ?? []).filter((e) => t.has(e));
 }
-function H(e, t) {
-	return Lt([.../* @__PURE__ */ new Set([...t && Zr.game.i18n.has(t) ? [t] : [], ...ii(e)])], e);
+function V(e, t) {
+	return Rt([.../* @__PURE__ */ new Set([...t && Qr.game.i18n.has(t) ? [t] : [], ...ai(e)])], e);
 }
-function ai(e, t) {
+function oi(e, t) {
 	let n = {};
-	for (let [r, i] of ei(t)) {
-		let t = Qr?.tables[e]?.[r] ?? null, a = t && Zr.game.i18n.has(t) ? t : null, o = typeof i == "string" ? i : $r(i);
+	for (let [r, i] of ti(t)) {
+		let t = $r?.tables[e]?.[r] ?? null, a = t && Qr.game.i18n.has(t) ? t : null, o = typeof i == "string" ? i : ei(i);
 		if (!o || !a && typeof i == "string") continue;
-		let s = H(a ? Zr.game.i18n.localize(a) : o, a);
+		let s = V(a ? Qr.game.i18n.localize(a) : o, a);
 		s && (n[r] = s);
 	}
 	return n;
 }
-function oi() {
-	return Qr ? /* @__PURE__ */ new Set([...Object.values(Qr.tables).flatMap((e) => Object.keys(e)), ...Object.keys(Qr.statuses)]) : /* @__PURE__ */ new Set();
+function si() {
+	return $r ? /* @__PURE__ */ new Set([...Object.values($r.tables).flatMap((e) => Object.keys(e)), ...Object.keys($r.statuses)]) : /* @__PURE__ */ new Set();
 }
-var si = (e) => Qr?.statuses[e] ?? null, ci = globalThis;
-function li(e, t, n) {
-	let r = [], i = [], a = [], o = (e) => String(ci.UrlUtil.encodeForHash(e)), s = n.replace(/\s*\.\.\.$/, "").trim().toLowerCase(), c = (e, n, l, u = !1) => {
+var ci = (e) => $r?.statuses[e] ?? null, li = globalThis;
+function ui(e, t, n) {
+	let r = [], i = [], a = [], o = (e) => String(li.UrlUtil.encodeForHash(e)), s = n.replace(/\s*\.\.\.$/, "").trim().toLowerCase(), c = (e, n, l, u = !1) => {
 		if (Array.isArray(e)) e.forEach((e, t) => c(e, n, [...l, t], u));
-		else if (typeof e == "string") u && s.length >= 8 && String(ci.Renderer.stripTags(e)).trim().toLowerCase().startsWith(s) && a.push({
+		else if (typeof e == "string") u && s.length >= 8 && String(li.Renderer.stripTags(e)).trim().toLowerCase().startsWith(s) && a.push({
 			entry: n,
 			path: l
 		});
 		else if (e && typeof e == "object") {
 			if (l.length && typeof e.name == "string") {
-				let a = String(ci.Renderer.stripTags(e.name)), s = a.replace(/\s*\([^()]*\)\s*$/, "").replace(/\s*[.?!]$/, ""), c = P?.UtilEntityBackgroundFeature?._getEntityAliases_name_noFeature?.({ name: a }) ?? null;
+				let a = String(li.Renderer.stripTags(e.name)), s = a.replace(/\s*\([^()]*\)\s*$/, "").replace(/\s*[.?!]$/, ""), c = N?.UtilEntityBackgroundFeature?._getEntityAliases_name_noFeature?.({ name: a }) ?? null;
 				t.startsWith(`${o(a)}_`) ? r.push({
 					entry: n,
 					path: [...l, "name"]
@@ -3030,8 +3041,8 @@ function li(e, t, n) {
 	};
 	return e.forEach((e, t) => c(e, t, [])), r.length ? r.length === 1 ? r[0] : null : i.length ? i.length === 1 ? i[0] : null : a.length === 1 ? a[0] : null;
 }
-function ui(e, n) {
-	let r = e.flags?.plutonium, i = r && !r.propDroppable && typeof r.page == "string" && r.page.endsWith(".html") ? ci.UrlUtil?.PAGE_TO_PROPS?.[r.page]?.[0] : null, a = i ? {
+function di(e, n) {
+	let r = e.flags?.plutonium, i = r && !r.propDroppable && typeof r.page == "string" && r.page.endsWith(".html") ? li.UrlUtil?.PAGE_TO_PROPS?.[r.page]?.[0] : null, a = i ? {
 		...r,
 		propDroppable: i
 	} : r, o = !!a?.propDroppable && typeof a.page == "string" && a.page.endsWith(".html") && !a.isDirectImport, s = e.flags?.["tavern-trpg"]?.named === !0;
@@ -3045,16 +3056,16 @@ function ui(e, n) {
 			name: d(String(e.name ?? "")),
 			author: n
 		} : {
-			name: o ? t(e.name, p(e.name, n, H(String(e.name ?? ""), null) ?? Ht(String(e.name ?? "")))) : c(e.name, n),
+			name: o ? t(e.name, p(e.name, n, V(String(e.name ?? ""), null) ?? Ut(String(e.name ?? "")))) : c(e.name, n),
 			author: n
 		};
 	}
 	if (s) return { name: d(String(e.name ?? "")) };
-	let l = typeof a?.hash == "string" ? li(n, a.hash, String(e.name ?? "")) : null;
-	return l ? { name: t(e.name, void 0, l) } : { name: H(String(e.name ?? ""), null) ?? t(e.name, Ht(String(e.name ?? ""))) };
+	let l = typeof a?.hash == "string" ? ui(n, a.hash, String(e.name ?? "")) : null;
+	return l ? { name: t(e.name, void 0, l) } : { name: V(String(e.name ?? ""), null) ?? t(e.name, Ut(String(e.name ?? ""))) };
 }
 // src/rules/kernel/frame/action-list.ts
-var di = globalThis, fi = [
+var fi = globalThis, pi = [
 	"action",
 	"bonus",
 	"reaction",
@@ -3063,48 +3074,48 @@ var di = globalThis, fi = [
 	"lair",
 	"crew",
 	"special"
-], pi = (e) => e.system.activities?.contents?.[0]?.activation?.type, mi = (e) => !!e && ![
+], mi = (e) => e.system.activities?.contents?.[0]?.activation?.type, hi = (e) => !!e && ![
 	"minute",
 	"hour",
 	"day",
 	"none"
-].includes(e), hi = (e) => !!(e.system.hasLimitedUses && e.system.uses?.recovery?.length), gi = (e) => String(e.system.method ?? e.system.preparation?.mode ?? ""), _i = () => di.CONFIG.DND5E.spellPreparationStates ?? {};
-function vi(e) {
+].includes(e), gi = (e) => !!(e.system.hasLimitedUses && e.system.uses?.recovery?.length), _i = (e) => String(e.system.method ?? e.system.preparation?.mode ?? ""), vi = () => fi.CONFIG.DND5E.spellPreparationStates ?? {};
+function yi(e) {
 	if (!(e.system.level > 0)) return !1;
 	let t = e.system.prepared;
-	return e.system.canPrepare && t === _i().prepared?.value || e.system.canPrepare && t === _i().always?.value || gi(e) === "atwill" && !hi(e) || gi(e) === "innate" && !hi(e) || hi(e) && e.system.uses?.value > 0 || !!e.system.linkedActivity?.item;
+	return e.system.canPrepare && t === vi().prepared?.value || e.system.canPrepare && t === vi().always?.value || _i(e) === "atwill" && !gi(e) || _i(e) === "innate" && !gi(e) || gi(e) && e.system.uses?.value > 0 || !!e.system.linkedActivity?.item;
 }
-function yi(e) {
+function bi(e) {
 	let t = e.system.activities;
 	return !!(t?.getByType?.("attack")?.[0] ?? t?.getByType?.("damage")?.[0] ?? t?.getByType?.("save")?.[0])?.damage?.parts?.length;
 }
-function bi(e) {
+function xi(e) {
 	let t = e.flags?.["tavern-trpg"]?.actionList;
 	if (t === !0 || t === !1) return t;
 	switch (e.type) {
 		case "weapon": return !!e.system.equipped;
-		case "equipment": return !!e.system.equipped && mi(pi(e));
-		case "consumable": return mi(pi(e));
+		case "equipment": return !!e.system.equipped && hi(mi(e));
+		case "consumable": return hi(mi(e));
 		case "spell": {
 			let t = e.system.linkedActivity?.item, n = !!t && (t.system.attunement !== "required" || t.system.attuned), r = e.system.level === 0;
-			if (!r && !(vi(e) || n) || t && r && !n) return !1;
-			let i = pi(e), a = e.system.duration ?? {};
-			return i === "reaction" || i === "bonus" || yi(e) || a.units === "minute" && Number(a.value) === 1 || a.units === "round" && Number(a.value) === 1 || !!e.effects?.size;
+			if (!r && !(yi(e) || n) || t && r && !n) return !1;
+			let i = mi(e), a = e.system.duration ?? {};
+			return i === "reaction" || i === "bonus" || bi(e) || a.units === "minute" && Number(a.value) === 1 || a.units === "round" && Number(a.value) === 1 || !!e.effects?.size;
 		}
-		case "feat": return !!pi(e);
+		case "feat": return !!mi(e);
 		default: return !1;
 	}
 }
-function xi(e) {
-	let t = new Map(fi.map((e) => [e, []]));
+function Si(e) {
+	let t = new Map(pi.map((e) => [e, []]));
 	for (let n of e.items) {
-		if (!bi(n)) continue;
-		let e = pi(n), r = e && fi.includes(e) ? e : "other";
+		if (!xi(n)) continue;
+		let e = mi(n), r = e && pi.includes(e) ? e : "other";
 		t.set(r, [...t.get(r) ?? [], n]);
 	}
 	let n = (e) => {
-		let t = di.CONFIG.DND5E.activityActivationTypes?.[e]?.label;
-		return I(t ? di.game.i18n.localize(t) : e === "other" ? "Other" : e);
+		let t = fi.CONFIG.DND5E.activityActivationTypes?.[e]?.label;
+		return F(t ? fi.game.i18n.localize(t) : e === "other" ? "Other" : e);
 	};
 	return [...t.entries()].filter(([, e]) => e.length).map(([e, t]) => ({
 		id: e,
@@ -3113,46 +3124,46 @@ function xi(e) {
 	}));
 }
 // src/rules/kernel/frame/sheet-view.ts
-var U = globalThis, Si = (e) => !!e && e.constructor === U.foundry.data.fields.StringField;
-function Ci(e, t, n) {
+var H = globalThis, Ci = (e) => !!e && e.constructor === H.foundry.data.fields.StringField;
+function wi(e, t, n) {
 	if (e == null || !t) return n;
-	if (typeof e == "string") return Si(t) && e.trim() && n.add(e), n;
+	if (typeof e == "string") return Ci(t) && e.trim() && n.add(e), n;
 	if (typeof e != "object") return n;
-	let r = t.element ?? (t.model instanceof U.foundry.data.fields.DataField ? t.model : null), i = t.fields;
+	let r = t.element ?? (t.model instanceof H.foundry.data.fields.DataField ? t.model : null), i = t.fields;
 	for (let [t, a] of Object.entries(e)) {
 		let e = i ? i[t] : r;
-		e && Ci(a, e, n);
+		e && wi(a, e, n);
 	}
 	return n;
 }
-function wi(e, t, n, r = /* @__PURE__ */ new Set(), i = 0) {
+function Ti(e, t, n, r = /* @__PURE__ */ new Set(), i = 0) {
 	if (typeof e == "function") return;
 	if (typeof e != "object" || !e) return e;
-	if (i > 10 || r.has(e) || e === U.CONFIG || e === U.CONFIG?.DND5E || e === U.game || n.has(e)) return;
-	let a = U.foundry;
+	if (i > 10 || r.has(e) || e === H.CONFIG || e === H.CONFIG?.DND5E || e === H.game || n.has(e)) return;
+	let a = H.foundry;
 	if (e instanceof a.abstract.Document) {
 		if (e.documentName !== "Item") return {
 			documentName: e.documentName,
 			id: e.id ?? null
 		};
-		let a = e.labels ? wi(e.labels, t, n, r, i + 1) : void 0;
+		let a = e.labels ? Ti(e.labels, t, n, r, i + 1) : void 0;
 		return {
 			documentName: "Item",
 			id: e.id,
-			...ui(e, t),
+			...di(e, t),
 			...a ? { labels: a } : {}
 		};
 	}
 	if (!(e instanceof a.data.fields.DataField || e instanceof a.applications.api.ApplicationV2)) {
 		r.add(e);
 		try {
-			if (e instanceof Set) return [...e].map((e) => wi(e, t, n, r, i + 1));
-			if (e instanceof Map) return Object.fromEntries([...Map.prototype.entries.call(e)].map(([e, a]) => [e, wi(a, t, n, r, i + 1)]));
-			if (Array.isArray(e)) return e.map((e) => wi(e, t, n, r, i + 1));
+			if (e instanceof Set) return [...e].map((e) => Ti(e, t, n, r, i + 1));
+			if (e instanceof Map) return Object.fromEntries([...Map.prototype.entries.call(e)].map(([e, a]) => [e, Ti(a, t, n, r, i + 1)]));
+			if (Array.isArray(e)) return e.map((e) => Ti(e, t, n, r, i + 1));
 			let a = {};
 			for (let o of Object.keys(e)) {
 				if (o.startsWith("_")) continue;
-				let s = wi(e[o], t, n, r, i + 1);
+				let s = Ti(e[o], t, n, r, i + 1);
 				s !== void 0 && (a[o] = s);
 			}
 			return a;
@@ -3161,21 +3172,21 @@ function wi(e, t, n, r = /* @__PURE__ */ new Set(), i = 0) {
 		}
 	}
 }
-function Ti(e, t) {
+function Ei(e, t) {
 	let n = /* @__PURE__ */ new Set();
 	return [...e.items].map((e) => String(e.name ?? "")).filter((e) => e.length >= 3 && /[A-Za-z]/.test(e) && !n.has(e) && n.add(e)).sort((e, t) => t.length - e.length).map((n) => ({
 		re: RegExp(`(?<![A-Za-z])${n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![A-Za-z])`),
-		text: ui([...e.items].find((e) => e.name === n), t).name
+		text: di([...e.items].find((e) => e.name === n), t).name
 	}));
 }
-async function Ei(e) {
-	let t = U.CONFIG.DND5E, n = U.dnd5e.documents.Trait, r = /* @__PURE__ */ new Set([
+async function Di(e) {
+	let t = H.CONFIG.DND5E, n = H.dnd5e.documents.Trait, r = /* @__PURE__ */ new Set([
 		...[...e.system.traits?.weaponProf?.value ?? []].filter((e) => t.weaponIds?.[e]),
 		...[...e.system.traits?.armorProf?.value ?? []].filter((e) => t.armorIds?.[e] || t.shieldIds?.[e]),
 		...Object.keys(e.system.tools ?? {}).filter((e) => t.tools?.[e])
 	]);
 	if (!r.size) return [];
-	let i = await Te(), a = [];
+	let i = await Ee(), a = [];
 	for (let e of r) {
 		let r = String(n.getBaseItem(t.weaponIds?.[e] ?? t.armorIds?.[e] ?? t.shieldIds?.[e] ?? t.tools?.[e]?.id ?? e, { indexOnly: !0 })?.name ?? ""), o = i.get(e);
 		r && /[A-Za-z]/.test(r) && o && a.push({
@@ -3185,12 +3196,12 @@ async function Ei(e) {
 	}
 	return a;
 }
-function Di(e, t) {
+function Oi(e, t) {
 	if (!/[A-Za-z]/.test(e)) return null;
 	for (let { re: n, text: i } of t) {
 		let a = n.exec(e);
 		if (!a) continue;
-		let o = e.slice(0, a.index), s = e.slice(a.index + a[0].length), c = (e) => e ? [Di(e, t) ?? d(e)] : [];
+		let o = e.slice(0, a.index), s = e.slice(a.index + a[0].length), c = (e) => e ? [Oi(e, t) ?? d(e)] : [];
 		return r([
 			...c(o),
 			i,
@@ -3199,48 +3210,48 @@ function Di(e, t) {
 	}
 	return null;
 }
-function Oi(e, n, r, i) {
+function ki(e, n, r, i) {
 	if (typeof e == "string") {
 		if (e.includes(".") && !/\s/.test(e) || /^[A-Z][A-Za-z]{2,}$/.test(e)) {
-			let t = It(e);
+			let t = Lt(e);
 			if (t) return t;
 		}
-		return n.has(e) && !r.has(e) && /\p{L}/u.test(e) ? H(e, null) ?? t(e) : Di(e, i) ?? e;
+		return n.has(e) && !r.has(e) && /\p{L}/u.test(e) ? V(e, null) ?? t(e) : Oi(e, i) ?? e;
 	}
-	return !e || typeof e != "object" || typeof e.$t == "string" ? e : Array.isArray(e) ? e.map((e) => Oi(e, n, r, i)) : Object.fromEntries(Object.entries(e).map(([e, t]) => [e, e === "author" ? t : Oi(t, n, r, i)]));
+	return !e || typeof e != "object" || typeof e.$t == "string" ? e : Array.isArray(e) ? e.map((e) => ki(e, n, r, i)) : Object.fromEntries(Object.entries(e).map(([e, t]) => [e, e === "author" ? t : ki(t, n, r, i)]));
 }
-async function ki(e, t) {
+async function Ai(e, t) {
 	let n = e.sheet, r = (e) => JSON.parse(JSON.stringify(e)), i = Object.keys(n.constructor.PARTS ?? {}), a = await n._prepareContext(r({ parts: i })), o = {};
 	for (let e of i) {
 		let t = await n._preparePartContext(e, Object.assign({}, a), r({}));
 		o[e] = Object.fromEntries(Object.entries(t).filter(([e]) => !(e in a)));
 	}
-	let s = Ci(e.toObject().system, e.system.schema, /* @__PURE__ */ new Set());
-	for (let t of e.items) Ci(t.toObject().system, t.system.schema, s);
-	let c = oi(), l = new Set([e._source].filter(Boolean));
-	o.actions = await Ai(e, n, o), await ji(e, a.itemContext);
-	let u = [...Ti(e, t), ...await Ei(e)];
+	let s = wi(e.toObject().system, e.system.schema, /* @__PURE__ */ new Set());
+	for (let t of e.items) wi(t.toObject().system, t.system.schema, s);
+	let c = si(), l = new Set([e._source].filter(Boolean));
+	o.actions = await ji(e, n, o), await Mi(e, a.itemContext);
+	let u = [...Ei(e, t), ...await Di(e)];
 	return {
 		sheet: n.constructor.name,
-		base: Oi(wi(a, t, l), s, c, u),
-		parts: Oi(wi(o, t, l), s, c, u)
+		base: ki(Ti(a, t, l), s, c, u),
+		parts: ki(Ti(o, t, l), s, c, u)
 	};
 }
-async function Ai(e, t, n) {
-	return t instanceof U.dnd5e.applications.actor.NPCActorSheet ? { sections: n.features?.sections ?? [] } : { sections: xi(e) };
+async function ji(e, t, n) {
+	return t instanceof H.dnd5e.applications.actor.NPCActorSheet ? { sections: n.features?.sections ?? [] } : { sections: Si(e) };
 }
-async function ji(e, t) {
+async function Mi(e, t) {
 	if (!t) return;
 	let n = new Set([...e.items].filter((e) => e.type === "subclass").map((e) => e.system?.classIdentifier));
 	for (let r of [...e.items].filter((e) => e.type === "class")) {
 		let e = t[r.id], i = r.flags?.plutonium;
 		if (!e || e.needsSubclass || n.has(r.system?.identifier) || !i?.source || !i?.hash) continue;
-		let a = [(await U.DataLoader.pCacheAndGet(U.UrlUtil.PG_CLASSES, i.source, i.hash).catch(() => null))?.classFeatures ?? []].flat(2).filter((e) => e?.gainSubclassFeature).map((e) => Number(e.level ?? U.DataUtil.class.unpackUidClassFeature(String(e.classFeature ?? ""))?.level)).filter((e) => Number.isFinite(e));
+		let a = [(await H.DataLoader.pCacheAndGet(H.UrlUtil.PG_CLASSES, i.source, i.hash).catch(() => null))?.classFeatures ?? []].flat(2).filter((e) => e?.gainSubclassFeature).map((e) => Number(e.level ?? H.DataUtil.class.unpackUidClassFeature(String(e.classFeature ?? ""))?.level)).filter((e) => Number.isFinite(e));
 		a.length && Number(r.system?.levels ?? 0) >= Math.min(...a) && (e.needsSubclass = !0);
 	}
 }
 // src/rules/kernel/frame/commands-sheet.ts
-var W = globalThis, Mi = { configure: !1 }, Ni = { create: !1 }, Pi = [
+var U = globalThis, Ni = { configure: !1 }, Pi = { create: !1 }, Fi = [
 	/^_id$/,
 	/^_stats(\.|$)/,
 	/^type$/,
@@ -3249,35 +3260,35 @@ var W = globalThis, Mi = { configure: !1 }, Ni = { create: !1 }, Pi = [
 	/^flags\.plutonium(\.|$)/,
 	/^system\.advancement(\.|$)/
 ];
-function Fi(e, t) {
-	return !t || Pi.some((e) => e.test(t)) ? !1 : t.startsWith("flags.") ? t.split(".").length >= 3 : t.startsWith("system.") ? !!e.system?.schema?.getField?.(t.slice(7)) : !!e.schema?.getField?.(t);
+function Ii(e, t) {
+	return !t || Fi.some((e) => e.test(t)) ? !1 : t.startsWith("flags.") ? t.split(".").length >= 3 : t.startsWith("system.") ? !!e.system?.schema?.getField?.(t.slice(7)) : !!e.schema?.getField?.(t);
 }
-function Ii(e, t, n, r) {
-	if (!Fi(e, t)) throw Error(`不能改这个字段：${t}`);
+function Li(e, t, n, r) {
+	if (!Ii(e, t)) throw Error(`不能改这个字段：${t}`);
 	if (!r) return { [t]: n };
 	let i = t.lastIndexOf(".");
 	return { [`${t.slice(0, i)}.-=${t.slice(i + 1)}`]: null };
 }
-var Li = (e, t) => t ? e.items.get(t, { strict: !0 }) : e, Ri = (e) => JSON.parse(JSON.stringify(e ?? null, (e, t) => e === "document" || e === "anchor" || e === "fields" || e === "field" || e === "parent" ? void 0 : t));
-function zi(e) {
-	let t = /* @__PURE__ */ new Set([Object.prototype, W.foundry.abstract.DataModel.prototype]), n = [];
+var Ri = (e, t) => t ? e.items.get(t, { strict: !0 }) : e, zi = (e) => JSON.parse(JSON.stringify(e ?? null, (e, t) => e === "document" || e === "anchor" || e === "fields" || e === "field" || e === "parent" ? void 0 : t));
+function Bi(e) {
+	let t = /* @__PURE__ */ new Set([Object.prototype, U.foundry.abstract.DataModel.prototype]), n = [];
 	for (let r = Object.getPrototypeOf(e); r && !t.has(r); r = Object.getPrototypeOf(r)) for (let [e, t] of Object.entries(Object.getOwnPropertyDescriptors(r))) t.get && !n.some(([t]) => t === e) && n.push([e, t.get]);
 	return n;
 }
-function Bi(e, t = 0, n = /* @__PURE__ */ new WeakSet()) {
+function W(e, t = 0, n = /* @__PURE__ */ new WeakSet()) {
 	if (typeof e == "function") return;
 	if (typeof e != "object" || !e) return e;
-	if (t > 12 || n.has(e) || e instanceof W.foundry.abstract.Document) return;
-	if (n.add(e), e instanceof Set) return [...e].map((e) => Bi(e, t + 1, n));
-	if (e instanceof Map) return Object.fromEntries([...Map.prototype.entries.call(e)].map(([e, r]) => [e, Bi(r, t + 1, n)]));
-	if (Array.isArray(e)) return e.map((e) => Bi(e, t + 1, n));
+	if (t > 12 || n.has(e) || e instanceof U.foundry.abstract.Document) return;
+	if (n.add(e), e instanceof Set) return [...e].map((e) => W(e, t + 1, n));
+	if (e instanceof Map) return Object.fromEntries([...Map.prototype.entries.call(e)].map(([e, r]) => [e, W(r, t + 1, n)]));
+	if (Array.isArray(e)) return e.map((e) => W(e, t + 1, n));
 	let r = {};
 	for (let i of Object.keys(e)) {
 		if (i === "parent" || i.startsWith("_")) continue;
-		let a = Bi(e[i], t + 1, n);
+		let a = W(e[i], t + 1, n);
 		a !== void 0 && (r[i] = a);
 	}
-	for (let [i, a] of zi(e)) {
+	for (let [i, a] of Bi(e)) {
 		if (i in r || i === "parent" || i.startsWith("_")) continue;
 		let o;
 		try {
@@ -3285,7 +3296,7 @@ function Bi(e, t = 0, n = /* @__PURE__ */ new WeakSet()) {
 		} catch {
 			o = void 0;
 		}
-		let s = Bi(o, t + 1, n);
+		let s = W(o, t + 1, n);
 		s !== void 0 && (r[i] = s);
 	}
 	return r;
@@ -3293,13 +3304,13 @@ function Bi(e, t = 0, n = /* @__PURE__ */ new WeakSet()) {
 async function Vi(e, t, n) {
 	if (!e) return null;
 	let r = new e({ document: t }), i = await r._prepareContext({ parts: [] }), a = await r._preparePartContext(Object.keys(e.PARTS ?? {})[0] ?? "config", i, {});
-	return Object.fromEntries(n.filter((e) => e in a).map((e) => [e, Ri(a[e])]));
+	return Object.fromEntries(n.filter((e) => e in a).map((e) => [e, zi(a[e])]));
 }
 var Hi = {
-	ability: (e, t) => e.rollAbilityCheck({ ability: t }, Mi, Ni),
-	tool: (e, t) => e.rollToolCheck({ tool: t }, Mi, Ni),
-	death: (e) => e.rollDeathSave({}, Mi, Ni),
-	hitDie: (e, t) => e.rollHitDie(t ? { denomination: t } : {}, Mi, Ni),
+	ability: (e, t) => e.rollAbilityCheck({ ability: t }, Ni, Pi),
+	tool: (e, t) => e.rollToolCheck({ tool: t }, Ni, Pi),
+	death: (e) => e.rollDeathSave({}, Ni, Pi),
+	hitDie: (e, t) => e.rollHitDie(t ? { denomination: t } : {}, Ni, Pi),
 	initiative: async (e) => {
 		let t = e.getInitiativeRoll();
 		return t ? (await t.evaluate({ allowInteractive: !1 }), [t]) : null;
@@ -3308,22 +3319,22 @@ var Hi = {
 function Ui(e, r, i) {
 	return {
 		sheet: (n, i = []) => e([], async () => {
-			let e = r(n), a = W.dnd5e?.applications?.actor ?? {};
+			let e = r(n), a = U.dnd5e?.applications?.actor ?? {};
 			return {
 				id: e.id,
 				name: e.name,
 				img: e.img,
 				type: e.type,
-				flags: Ri(e.flags ?? {}),
-				system: Bi(e.system),
+				flags: zi(e.flags ?? {}),
+				system: W(e.system),
 				statuses: [...e.statuses ?? []],
 				items: [...e.items].map((e) => ({
-					..._e(e),
+					...ve(e),
 					img: e.img,
 					sort: e.sort,
-					flags: Ri(e.flags ?? {}),
-					system: Bi(e.system),
-					labels: Ri(e.labels ?? {})
+					flags: zi(e.flags ?? {}),
+					system: W(e.system),
+					labels: zi(e.labels ?? {})
 				})),
 				effects: [...e.allApplicableEffects()].map((e) => ({
 					id: e.id,
@@ -3337,21 +3348,21 @@ function Ui(e, r, i) {
 						name: e.parent.name
 					} : null,
 					statuses: [...e.statuses ?? []],
-					duration: Ri(e.duration),
-					durationSource: Ri(e._source?.duration ?? null),
-					changes: Ri(e.system?.changes ?? e.changes ?? [])
+					duration: zi(e.duration),
+					durationSource: zi(e._source?.duration ?? null),
+					changes: zi(e.system?.changes ?? e.changes ?? [])
 				})),
 				shown: {
 					items: [...e.items].map((e) => ({
 						id: e.id,
-						...ui(e, i)
+						...di(e, i)
 					})),
 					effects: [...e.allApplicableEffects()].map((e) => ({
 						id: e.id,
-						name: H(String(e.name ?? ""), null) ?? t(e.name)
+						name: V(String(e.name ?? ""), null) ?? t(e.name)
 					}))
 				},
-				view: await ki(e, i),
+				view: await Ai(e, i),
 				breakdown: {
 					hp: await Vi(a.HitPointsConfig, e, [
 						"classes",
@@ -3363,12 +3374,12 @@ function Ui(e, r, i) {
 				}
 			};
 		}),
-		roster: (t) => e([], async () => [...W.game.actors].filter((e) => !t || t.includes(e.id)).map((e) => ({
+		roster: (t) => e([], async () => [...U.game.actors].filter((e) => !t || t.includes(e.id)).map((e) => ({
 			id: e.id,
 			name: e.name,
 			img: e.img,
 			type: e.type,
-			system: Bi(e.system),
+			system: W(e.system),
 			items: [...e.items].filter((e) => [
 				"class",
 				"race",
@@ -3383,16 +3394,16 @@ function Ui(e, r, i) {
 		}))),
 		edit: (t, n) => e([], async () => {
 			let e = r(t);
-			for (let t of n) if (t.kind === "set") await e.update(Ii(e, t.path, t.value, t.remove));
+			for (let t of n) if (t.kind === "set") await e.update(Li(e, t.path, t.value, t.remove));
 			else if (t.kind === "item") {
 				let n = e.items.get(t.itemId, { strict: !0 });
-				await n.update(Ii(n, t.path, t.value, t.remove));
+				await n.update(Li(n, t.path, t.value, t.remove));
 			} else if (t.kind === "itemDelete") await e.deleteEmbeddedDocuments("Item", [t.itemId]);
 			else if (t.kind === "effect") {
-				let n = Li(e, t.itemId).effects.get(t.effectId, { strict: !0 });
-				await n.update(Ii(n, t.path, t.value, t.remove));
-			} else if (t.kind === "effectCreate") await Li(e, t.itemId).createEmbeddedDocuments("ActiveEffect", [t.data]);
-			else if (t.kind === "effectDelete") await Li(e, t.itemId).deleteEmbeddedDocuments("ActiveEffect", [t.effectId]);
+				let n = Ri(e, t.itemId).effects.get(t.effectId, { strict: !0 });
+				await n.update(Li(n, t.path, t.value, t.remove));
+			} else if (t.kind === "effectCreate") await Ri(e, t.itemId).createEmbeddedDocuments("ActiveEffect", [t.data]);
+			else if (t.kind === "effectDelete") await Ri(e, t.itemId).deleteEmbeddedDocuments("ActiveEffect", [t.effectId]);
 			else if (t.kind === "status") await e.toggleStatusEffect(t.statusId, t.levels === void 0 ? { active: t.active ?? !0 } : { levels: t.levels });
 			else throw Error(`不认识的改动：${t.kind}`);
 			return { edits: n.length };
@@ -3403,18 +3414,18 @@ function Ui(e, r, i) {
 			return (await e(r(t), a))?.map(i) ?? null;
 		}, [t]),
 		glossary: () => e([], async () => {
-			if (!ni()) throw Error("开机时没有记下登记表原值（registry-keys.ts）");
+			if (!ri()) throw Error("开机时没有记下登记表原值（registry-keys.ts）");
 			return {
-				tables: Object.fromEntries(Object.entries(W.CONFIG.DND5E ?? {}).map(([e, t]) => [e, ai(e, t)]).filter(([, e]) => Object.keys(e).length)),
-				statuses: (W.CONFIG.statusEffects ?? []).flatMap((e) => typeof e?.name == "string" ? [{
+				tables: Object.fromEntries(Object.entries(U.CONFIG.DND5E ?? {}).map(([e, t]) => [e, oi(e, t)]).filter(([, e]) => Object.keys(e).length)),
+				statuses: (U.CONFIG.statusEffects ?? []).flatMap((e) => typeof e?.name == "string" ? [{
 					id: e.id,
-					name: H(e.name, si(e.id)) ?? s(e.name, null),
+					name: V(e.name, ci(e.id)) ?? s(e.name, null),
 					img: e.img ?? null
 				}] : [])
 			};
 		}),
 		fieldLabels: (t) => e([], async () => t.map(({ actorId: e, path: t }) => {
-			let r = W.game.actors.get(e), i = /^state\.(?:actor|items\.(.+?))\.((?:system|name|img|flags)(?:\..*)?)$/.exec(t);
+			let r = U.game.actors.get(e), i = /^state\.(?:actor|items\.(.+?))\.((?:system|name|img|flags)(?:\..*)?)$/.exec(t);
 			if (!r || !i) return null;
 			let a = i[1] ? n([...r.items], i[1]) : r;
 			if (!a) return null;
@@ -3422,22 +3433,22 @@ function Ui(e, r, i) {
 			for (let e = o.length; e > 0; e--) {
 				let t = o.slice(0, e).join("."), n = (t.startsWith("system.") ? a.system?.schema?.getField(t.slice(7)) : a.schema?.getField(t))?.label;
 				if (typeof n == "string" && n) return {
-					field: It(n) ?? H(n, null) ?? s(n, null),
-					...i[1] ? { item: ui(a, []).name } : {}
+					field: Lt(n) ?? V(n, null) ?? s(n, null),
+					...i[1] ? { item: di(a, []).name } : {}
 				};
 			}
 			return null;
 		})),
 		deleteActors: (t) => e([], async () => {
-			let e = t.filter((e) => W.game.actors.get(e));
-			return e.length && await W.CONFIG.Actor.documentClass.deleteDocuments(e), { deleted: e };
+			let e = t.filter((e) => U.game.actors.get(e));
+			return e.length && await U.CONFIG.Actor.documentClass.deleteDocuments(e), { deleted: e };
 		})
 	};
 }
 // src/rules/kernel/frame/commands-fields.ts
 var G = globalThis;
 function K(e) {
-	return typeof e != "string" || !e.trim() ? null : It(e) || (H(e, null) ?? s(e, null));
+	return typeof e != "string" || !e.trim() ? null : Lt(e) || (V(e, null) ?? s(e, null));
 }
 var Wi = [
 	{
@@ -3552,7 +3563,7 @@ function Zi(e, t) {
 			return {
 				tree: s,
 				effects: r.itemId ? [] : [...e.allApplicableEffects?.() ?? []].flatMap((t) => [...t.system?.changes ?? t.changes ?? []].filter((e) => e.key === a || e.key.startsWith(`${a}.`) || a.startsWith(`${e.key}.`)).map((n) => {
-					let r = t.parent && t.parent !== e ? ui(t.parent, []).name : null, i = l(n);
+					let r = t.parent && t.parent !== e ? di(t.parent, []).name : null, i = l(n);
 					return {
 						effect: t.id,
 						itemId: t.parent && t.parent !== e ? t.parent.id : null,
@@ -3609,7 +3620,7 @@ function Zi(e, t) {
 				"weapon",
 				"armor",
 				"tool"
-			].includes(t) ? await Te() : /* @__PURE__ */ new Map(), r = (e) => e.split(":").pop() ?? e, i = [], a = (e, t) => {
+			].includes(t) ? await Ee() : /* @__PURE__ */ new Map(), r = (e) => e.split(":").pop() ?? e, i = [], a = (e, t) => {
 				for (let [o, s] of Object.entries(e ?? {})) {
 					if (s?.wildcard) continue;
 					let e = String(s.label ?? o), l = n.get(r(o));
@@ -3648,27 +3659,27 @@ function Zi(e, t) {
 // src/rules/kernel/frame/author-ask-forms.ts
 var Qi = globalThis;
 async function $i(e, t) {
-	let n = P, r = [];
+	let n = N, r = [];
 	if (e instanceof n.Charactermancer_ImmResVulnSelect) return {
-		slots: Kn(n, e) ?? [],
+		slots: qn(n, e) ?? [],
 		cleanup: r
 	};
 	let i = (e._available ?? [])[t];
 	return e._state.ixSet = t, e instanceof n.Charactermancer_ExpertiseSelect ? {
-		slots: Gn(n, e, i, r),
+		slots: Kn(n, e, i, r),
 		cleanup: r
 	} : ((i?.all?.length || i?.choose?.some((e) => e.fromFilter)) && await e.pNotRender(), {
-		slots: Wn(n, e, i ?? {}, r),
+		slots: Gn(n, e, i ?? {}, r),
 		cleanup: r
 	});
 }
 var ea = (e) => ({
-	title: e.hints?.length ? L(e.hints.join(" ")) : null,
+	title: e.hints?.length ? I(e.hints.join(" ")) : null,
 	count: e.count,
-	options: e.options.map((t) => ({ label: t.text ?? l(t.label, e.options.map((e) => e.label), I(t.label)) }))
+	options: e.options.map((t) => ({ label: t.text ?? l(t.label, e.options.map((e) => e.label), F(t.label)) }))
 }), ta = {
 	async read({ comp: e, opts: t }, n) {
-		let r = P.Charactermancer_ImmResVulnSelect && e instanceof P.Charactermancer_ImmResVulnSelect ? 1 : Math.max(1, (e._available ?? []).length), a = [];
+		let r = N.Charactermancer_ImmResVulnSelect && e instanceof N.Charactermancer_ImmResVulnSelect ? 1 : Math.max(1, (e._available ?? []).length), a = [];
 		for (let t = 0; t < r; t++) {
 			let { slots: n, cleanup: o } = await $i(e, t);
 			try {
@@ -3682,7 +3693,7 @@ var ea = (e) => ({
 		}
 		return {
 			kind: n,
-			title: L(e.modalTitle),
+			title: I(e.modalTitle),
 			note: null,
 			form: {
 				type: "choose",
@@ -3716,7 +3727,7 @@ var ea = (e) => ({
 		let i = e.constructor, a = i._PROP_METAS.map((n) => {
 			let r = e._tables[n.prop];
 			return {
-				title: L(i._PROP_TO_FULL?.[n.prop]),
+				title: I(i._PROP_TO_FULL?.[n.prop]),
 				count: n.count || 1,
 				custom: !0,
 				options: (r?.rows ?? []).map((e) => ({ label: t(Qi.Renderer.stripTags(String(e?.[1] ?? ""))) }))
@@ -3724,7 +3735,7 @@ var ea = (e) => ({
 		});
 		return {
 			kind: r,
-			title: L(e.modalTitle),
+			title: I(e.modalTitle),
 			note: null,
 			form: {
 				type: "texts",
@@ -3752,7 +3763,7 @@ function ra(e) {
 		page: e.page
 	}) : t(n);
 }
-var ia = (e) => I(Kt("abilities")[e] ?? e), aa = {
+var ia = (e) => F(qt("abilities")[e] ?? e), aa = {
 	read({ comp: e, opts: n }, r) {
 		let { count: a, required: o } = e._getOptionsNameAndCount(), s = e._optionsSet.map((e, t) => ({
 			label: ra(e),
@@ -3779,7 +3790,7 @@ var ia = (e) => I(Kt("abilities")[e] ?? e), aa = {
 	},
 	async write({ comp: e }, t) {
 		if (t.default) return e.pGetFormData();
-		let { count: n, required: r } = e._getOptionsNameAndCount(), i = P.ComponentUiUtil.getMetaWrpMultipleChoice(e, "ixsChosen", {
+		let { count: n, required: r } = e._getOptionsNameAndCount(), i = N.ComponentUiUtil.getMetaWrpMultipleChoice(e, "ixsChosen", {
 			values: e._optionsSet,
 			ixsRequired: r,
 			count: n,
@@ -3801,7 +3812,7 @@ var ia = (e) => I(Kt("abilities")[e] ?? e), aa = {
 }, oa = {
 	read({ comp: e, opts: t }, n) {
 		let a = e.constructor, o = e._ability.map((t, n) => {
-			let o = Object.keys(Kt("abilities")).filter((e) => t[e]).map((e) => i("{0} {1}", ia(e), d(`${t[e] > 0 ? "+" : ""}${t[e]}`))), s = [];
+			let o = Object.keys(qt("abilities")).filter((e) => t[e]).map((e) => i("{0} {1}", ia(e), d(`${t[e] > 0 ? "+" : ""}${t[e]}`))), s = [];
 			if (t.choose?.from) s.push({
 				title: i("选 {0} 项，各 +{1}", d(String(t.choose.count || 1)), d(String(t.choose.amount || 1))),
 				count: t.choose.count || 1,
@@ -3822,7 +3833,7 @@ var ia = (e) => I(Kt("abilities")[e] ?? e), aa = {
 		});
 		return {
 			kind: n,
-			title: L(e.modalTitle),
+			title: I(e.modalTitle),
 			note: null,
 			form: {
 				type: "choose",
@@ -3836,7 +3847,7 @@ var ia = (e) => I(Kt("abilities")[e] ?? e), aa = {
 		if (t.default) return e.pGetFormData();
 		let n = t.set ?? 0, r = e._ability[n];
 		if (!r) throw Error("方案不在作者给的范围里");
-		if (e._state.ixSet = n, e.render(P.veE(document.createElement("div"))), r.choose?.from) {
+		if (e._state.ixSet = n, e.render(N.veE(document.createElement("div"))), r.choose?.from) {
 			let n = e._lastMeta?.rowMetas ?? [];
 			for (let r of t.picks?.[0] ?? []) {
 				if (!n[r]) throw Error("选项不在作者给的范围里");
@@ -3861,7 +3872,7 @@ var ia = (e) => I(Kt("abilities")[e] ?? e), aa = {
 		}));
 		return {
 			kind: t,
-			title: L("Ability Score Improvement"),
+			title: I("Ability Score Improvement"),
 			note: null,
 			form: {
 				type: "asi",
@@ -3910,7 +3921,7 @@ var ua = {
 		let r = la(e), i = Number(e._state.maxLearnedCantrips ?? 0) - Number(e._state.cntLearnedCantrips ?? 0);
 		return {
 			kind: n,
-			title: L(e.modalTitle),
+			title: I(e.modalTitle),
 			note: null,
 			form: {
 				type: "choose",
@@ -3940,7 +3951,7 @@ var ua = {
 };
 // src/rules/kernel/frame/author-ask-equipment.ts
 async function da(e) {
-	let t = await Dn(e);
+	let t = await On(e);
 	return t ? "unsupported" in t ? {
 		kind: "special",
 		quantity: 1,
@@ -3975,7 +3986,7 @@ var fa = {
 		let i = e._compGold?.isAvailable ? e._compCurrency.rollableExpressionGold ?? null : null;
 		return {
 			kind: t,
-			title: L(e._compCurrency.rollableExpressionGold ? "Starting Equipment" : "Equipment"),
+			title: I(e._compCurrency.rollableExpressionGold ? "Starting Equipment" : "Equipment"),
 			note: null,
 			form: {
 				type: "equipment",
@@ -4013,8 +4024,8 @@ var fa = {
 }, pa = (e) => typeof e == "string" ? e.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() : "", ma = {
 	read: ({ comp: e, opts: t }, n) => ({
 		kind: n,
-		title: L(e?.modalTitle ?? t?.title),
-		note: L(pa(t?.htmlDescription)),
+		title: I(e?.modalTitle ?? t?.title),
+		note: I(pa(t?.htmlDescription)),
 		form: { type: "unknown" },
 		skippable: !t?.isUnskippable,
 		raw: e ? {
@@ -4030,21 +4041,21 @@ var fa = {
 }, ha = globalThis, ga = (e, t, n, r, i) => ({
 	kind: e,
 	title: t,
-	note: L(pa(i ?? r?.htmlDescription)),
+	note: I(pa(i ?? r?.htmlDescription)),
 	form: n,
 	skippable: !!r?.isSkippable || (r && "isUnskippable" in r ? !r.isUnskippable : !1)
 });
 function _a(e) {
 	let t = document.createElement("div");
-	return e.render(P.veE(t)), t;
+	return e.render(N.veE(t)), t;
 }
 var va = (e) => [...e.querySelectorAll("select")], ya = {
 	read: ({ comp: e, opts: t }, n) => {
 		let r = va(_a(e))[0];
-		return r ? ga(n, L(e.modalTitle), {
+		return r ? ga(n, I(e.modalTitle), {
 			type: "enum",
 			options: [...r.options].map((e) => ({
-				label: L(e.text) ?? d(e.text),
+				label: I(e.text) ?? d(e.text),
 				disabled: e.disabled
 			})),
 			selected: r.selectedIndex
@@ -4075,23 +4086,23 @@ var va = (e) => [...e.querySelectorAll("select")], ya = {
 		source: i.source,
 		hash: a,
 		page: t
-	}, !0) : L(o) ?? d(o);
+	}, !0) : I(o) ?? d(o);
 }, xa = {
 	"*": ma,
 	"InputUiUtil.pGetUserBoolean": {
-		read: ({ opts: e }, t) => ga(t, L(e.title), {
+		read: ({ opts: e }, t) => ga(t, I(e.title), {
 			type: "boolean",
-			yes: L(e.textYes ?? "Yes"),
-			no: L(e.textNo ?? "No")
+			yes: I(e.textYes ?? "Yes"),
+			no: I(e.textNo ?? "No")
 		}, e),
 		write: (e, t) => t.default ? !0 : !!t.value
 	},
 	"InputUiUtil.pGetUserEnum": {
-		read: ({ opts: e }, t) => ga(t, L(e.title), {
+		read: ({ opts: e }, t) => ga(t, I(e.title), {
 			type: "enum",
 			options: (e.values ?? []).map((t) => {
 				let n = e.fnDisplay ? e.fnDisplay(t) : t;
-				return { label: typeof n == "string" ? L(n) ?? d(n) : d(String(n)) };
+				return { label: typeof n == "string" ? I(n) ?? d(n) : d(String(n)) };
 			}),
 			selected: Number.isInteger(e.default) ? e.default : null
 		}, e),
@@ -4102,7 +4113,7 @@ var va = (e) => [...e.querySelectorAll("select")], ya = {
 		}
 	},
 	"InputUiUtil.pGetUserNumber": {
-		read: ({ opts: e }, t) => ga(t, L(e.title), {
+		read: ({ opts: e }, t) => ga(t, I(e.title), {
 			type: "number",
 			min: e.min ?? null,
 			max: e.max ?? null,
@@ -4115,7 +4126,7 @@ var va = (e) => [...e.querySelectorAll("select")], ya = {
 		}
 	},
 	"InputUiUtil.pGetUserString": {
-		read: ({ opts: e }, t) => ga(t, L(e.title), {
+		read: ({ opts: e }, t) => ga(t, I(e.title), {
 			type: "string",
 			value: String(e.default ?? "")
 		}, e),
@@ -4143,7 +4154,7 @@ var va = (e) => [...e.querySelectorAll("select")], ya = {
 				note: t.length ? r(t.map(ba), "、") : null,
 				disabled: !e._isSubclass && n < a
 			}));
-			return ga(n, L(e.modalTitle), {
+			return ga(n, I(e.modalTitle), {
 				type: "levels",
 				levels: o,
 				radio: e._isRadio,
@@ -4179,17 +4190,15 @@ var va = (e) => [...e.querySelectorAll("select")], ya = {
 	"pGetUserGenericButton"
 ], Ta = ["EquipmentApp", "ActorAbilityScoreIncrease"];
 async function Ea(e, t) {
-	let n = P;
+	let n = N;
 	if (!n?.UtilApplications || !n?.InputUiUtil) throw Error("此版本 Plutonium 缺少提问入口（UtilApplications / InputUiUtil）");
-	let r = [], i = null, a = async (t, n) => {
+	let r = 0, i = null, a = async (t, n) => {
 		if (i) return null;
-		let a = xa[t] ?? xa["*"], o = r.length, s = {
+		let a = xa[t] ?? xa["*"], o = r++, s = e[o];
+		return s === void 0 ? (i = {
 			index: o,
 			...await a.read(n, t)
-		};
-		r.push(s);
-		let c = e[o];
-		return c === void 0 ? (i = s, null) : c.skip ? a.skip ? a.skip() : Ca() : a.write(n, c);
+		}, null) : s.skip ? a.skip ? a.skip() : Ca() : a.write(n, s);
 	}, o = n.UtilApplications, s = n.InputUiUtil, c = o.pGetImportCompApplicationFormData, l = Object.fromEntries(wa.map((e) => [e, s[e]]));
 	o.pGetImportCompApplicationFormData = (e) => a(e?.comp?.constructor?.name ?? "?", {
 		comp: e.comp,
@@ -4214,10 +4223,7 @@ async function Ea(e, t) {
 	try {
 		let e = await t();
 		if (i) throw new Sa(i);
-		return {
-			value: e,
-			asked: r
-		};
+		return e;
 	} finally {
 		o.pGetImportCompApplicationFormData = c;
 		for (let e of wa) s[e] = l[e];
@@ -4235,7 +4241,7 @@ function ka(e, t) {
 			let e = await Oa().create({
 				...t.id ? { _id: t.id } : {},
 				name: t.name,
-				type: sn
+				type: cn
 			}, { keepId: !!t.id });
 			return {
 				id: e.id,
@@ -4253,7 +4259,7 @@ function ka(e, t) {
 		importToActor: (n, r, i = [], a) => e([], async () => {
 			let e = t(n);
 			if (a) {
-				let t = await jr(e, a);
+				let t = await Mr(e, a);
 				if (t) return {
 					kernelStatus: "pending",
 					reason: "remove-step-not-complete",
@@ -4264,26 +4270,25 @@ function ka(e, t) {
 			if (!s) throw Error(`作者没有「${r.prop}」的导入器`);
 			let c = new Set(e.items.map((e) => e.id));
 			try {
-				let { value: t, asked: n } = await Ea(i, () => s.pImportEntry(structuredClone(r.entry), new o.importer.ImportOpts({ actor: e }))), a = e.items.filter((e) => !c.has(e.id)).flatMap((e) => {
+				let t = await Ea(i, () => s.pImportEntry(structuredClone(r.entry), new o.importer.ImportOpts({ actor: e }))), n = e.items.filter((e) => !c.has(e.id)).flatMap((e) => {
 					let t = e.flags?.plutonium, n = t && !t.propDroppable && typeof t.page == "string" && t.page.endsWith(".html") ? Da.UrlUtil?.PAGE_TO_PROPS?.[t.page]?.[0] : null;
 					return n ? [{
 						_id: e.id,
 						"flags.plutonium.propDroppable": n
 					}] : [];
 				});
-				a.length && await e.updateEmbeddedDocuments("Item", a);
-				let l = e.items.filter((e) => !c.has(e.id)).map((e) => ({
+				n.length && await e.updateEmbeddedDocuments("Item", n);
+				let a = e.items.filter((e) => !c.has(e.id)).map((e) => ({
 					_id: e.id,
 					name: e.name,
-					label: ui(e, [r.entry]).name,
+					label: di(e, [r.entry]).name,
 					type: e.type,
-					typeLabel: It(String(Da.CONFIG.Item.typeLabels?.[e.type] ?? "")),
+					typeLabel: Lt(String(Da.CONFIG.Item.typeLabels?.[e.type] ?? "")),
 					flags: { plutonium: e.flags?.plutonium ?? null }
 				}));
 				return {
 					exit: typeof t?.status == "symbol" ? t.status.description ?? null : null,
-					asked: n,
-					added: l
+					added: a
 				};
 			} catch (e) {
 				if (e instanceof Sa) return {
@@ -4362,7 +4367,7 @@ function Pa(e, t) {
 	i || (i = /* @__PURE__ */ new Map(), Na.set(t, i));
 	let a = i.get(e);
 	if (a !== void 0) return a;
-	for (let { $t: t, ...n } of [Ft(e), I(e)]) {
+	for (let { $t: t, ...n } of [It(e), F(e)]) {
 		if (t !== "system" || !("key" in n) || !ja.game.i18n.has(n.key)) continue;
 		let r = ja.game.i18n.localize(n.key);
 		if (r !== e) return i.set(e, r), r;
@@ -4903,11 +4908,11 @@ function eo(e) {
 		if (typeof e?.charactermancer?.pOpen != "function") throw Error("这份 Plutonium 没有完整建卡器（需要本机私人完整版，放在 vendor/private/modules/plutonium/）");
 		let n = Y.game.actors.get(t.id);
 		if (!n) throw Error(`草稿人不在：${t.id}`);
-		if (t.presentation && !Le) throw Error("当前私人完整版和分步建卡支持的版本不一致");
+		if (t.presentation && !Re) throw Error("当前私人完整版和分步建卡支持的版本不一致");
 		await Y.ExcludeUtil.pInitialise(), await Y.ExcludeUtil.pSetList([...Y.ExcludeUtil.getList(), ...structuredClone(t.excludes)]);
 		let r = new URL(".", location.href).href;
 		if (await e.config.setValue("dataSources", "localHomebrew", t.brewFiles.map((e) => r + e)) === !1) throw Error("作者不让登记本战役自制包（dataSources.localHomebrew）");
-		let i = JSON.stringify(n.toObject()), a = Le && Qa(Le, t.presentation), o = /* @__PURE__ */ new Set(), s = () => void 0, c = Y.Hooks.on("renderApplicationV2", (e) => {
+		let i = JSON.stringify(n.toObject()), a = Re && Qa(Re, t.presentation), o = /* @__PURE__ */ new Set(), s = () => void 0, c = Y.Hooks.on("renderApplicationV2", (e) => {
 			o.add(e);
 		}), l = Y.Hooks.on("closeApplicationV2", (e) => {
 			o.delete(e), o.size || s();
@@ -5051,7 +5056,7 @@ async function Q(e, t, n = [], { ui: r = !1 } = {}) {
 			changes: a
 		};
 	}
-	let o = n.flatMap((e) => he(Z(e))), s = i.value;
+	let o = n.flatMap((e) => ge(Z(e))), s = i.value;
 	return {
 		status: i.needs ? "missing" : i.input ? "pending" : s?.kernelStatus ?? (o.length ? "unsupported" : "complete"),
 		result: s ?? null,
@@ -5063,8 +5068,8 @@ async function Q(e, t, n = [], { ui: r = !1 } = {}) {
 		unsupported: o
 	};
 }
-var co = be(Q, Z), lo = Me(Q, Z), uo = kt(Q), fo = Or(Q, Z), po = Mr(Q, Z), mo = Fr(Q), ho = Ui(Q, Z, oo), go = Zi(Q, Z), _o = Xr(Q), vo = Nn(Q), yo = ka(Q, Z), bo = eo(Q), xo = { configure: !1 }, So = 15e3, Co = { create: !1 }, wo = {
-	warmImport: () => xn(),
+var co = xe(Q, Z), lo = Ne(Q, Z), uo = At(Q), fo = kr(Q, Z), po = Nr(Q, Z), mo = Ir(Q), ho = Ui(Q, Z, oo), go = Zi(Q, Z), _o = Zr(Q), vo = Pn(Q), yo = ka(Q, Z), bo = eo(Q), xo = { configure: !1 }, So = 15e3, Co = { create: !1 }, wo = {
+	warmImport: () => Sn(),
 	...yo,
 	...bo,
 	...co,
@@ -5113,9 +5118,9 @@ var co = be(Q, Z), lo = Me(Q, Z), uo = kt(Q), fo = Or(Q, Z), po = Mr(Q, Z), mo =
 		mode: e.mode,
 		value: e.value
 	}))])),
-	unsupported: () => X.game.actors.contents.flatMap((e) => he(e)),
+	unsupported: () => X.game.actors.contents.flatMap((e) => ge(e)),
 	convert: async (e, t, n = {}) => {
-		let r = await Ce(), i = {
+		let r = await we(), i = {
 			classFeature: r.DataConverterClassSubclassFeature,
 			subclassFeature: r.DataConverterClassSubclassFeature,
 			feat: r.DataConverterFeat,
@@ -5462,9 +5467,9 @@ async function $o(e) {
 		t.push("omit usability warnings");
 	}, $.game.nue && ($.game.nue.initialize = () => void 0), $.game.settings.storage.get("client").setItem("core.noCanvas", "true"), e.display && $.game.settings.storage.get("client").setItem("core.uiConfig", Io), await rs(`systems/${i.system.id}/dnd5e.js`);
 	let c = !!e.moduleRoots?.plutonium && e.language === "zh.core";
-	for (let e of i.modules) for (let t of e.esmodules ?? []) await Re(new URL(t, location.href), c);
-	r.once("init", ti), r.once("setup", () => {
-		$.CONFIG.DND5E?.calendar && ($.CONFIG.DND5E.calendar.application = null), me();
+	for (let e of i.modules) for (let t of e.esmodules ?? []) await ze(new URL(t, location.href), c);
+	r.once("init", ni), r.once("setup", () => {
+		$.CONFIG.DND5E?.calendar && ($.CONFIG.DND5E.calendar.application = null), he();
 	}), await $.game.initialize(), e.display && await qo(e.display, e.moduleRoots);
 	let l = Date.now() + 3e4;
 	for (; i.modules.some((e) => e.id === "plutonium") && typeof $.game.modules.get("plutonium")?.api != "object";) {

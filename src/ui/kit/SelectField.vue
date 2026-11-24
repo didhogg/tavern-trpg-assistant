@@ -8,6 +8,8 @@ import Icon from './Icon.vue'
 type Option = string | { value: string; label: string }
 
 const props = defineProps<{ options: Option[]; placeholder?: string; label: string; prefix?: string; disabled?: boolean }>()
+// 最外层 SelectRoot 不产生页面元素：外面给的属性（测试编号、样式类）转给真正画出来的按钮
+defineOptions({ inheritAttrs: false })
 const model = defineModel<string>()
 const portalTarget = inject<HTMLElement | undefined>('portalTarget', undefined)
 const normalized = computed(() => props.options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o)))
@@ -15,7 +17,7 @@ const normalized = computed(() => props.options.map((o) => (typeof o === 'string
 
 <template>
   <SelectRoot v-model="model" :disabled="disabled">
-    <SelectTrigger class="trpg-select-trigger" :disabled="disabled" :aria-label="label">
+    <SelectTrigger class="trpg-select-trigger" :disabled="disabled" :aria-label="label" v-bind="$attrs">
       <span class="trpg-select-trigger__text"><span v-if="prefix" class="trpg-select-trigger__prefix">{{ prefix }}</span><SelectValue :placeholder="placeholder ?? '请选择'" /></span>
       <Icon name="caret-down" :size="14" />
     </SelectTrigger>

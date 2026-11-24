@@ -24455,10 +24455,13 @@ var HE = class {
 }, JE = "brews/";
 function YE(e, t) {
 	let n = i();
-	return (r) => e.get(n, r, {
-		allowNetwork: !1,
-		...t ? { view: t } : {}
-	});
+	return async (r) => {
+		let i = await e.get(n, r, {
+			allowNetwork: !1,
+			...t ? { view: t } : {}
+		});
+		return i === null || !t ? i : t.filterIndex(r, i, n.codeSet);
+	};
 }
 function XE({ pluginRoot: e, data: t, fetchImpl: n = fetch, moduleRoots: r = {}, brewFiles: i }) {
 	let a = async (t) => {
@@ -26685,15 +26688,21 @@ var lO = (e) => e.replace(/ \d+$/, ""), uO = (e, t) => t.split(".").reduce((e, t
 		this.deps = e;
 	}
 	async step(e, t, n, r, i) {
-		let a = performance.now(), o = () => Math.round(performance.now() - a), s = await this.run(e, t, n, r, i);
+		let a = performance.now(), o = () => Math.round(performance.now() - a);
+		r.length || this.deps.runtime.session(e).then(({ session: e }) => e.call("warmImport")).catch((e) => console.warn("[trpg-assistant] 预读物品资料没成功", e));
+		let s = await this.run(e, t, n, r, i), c = o();
 		if (s.status === "pending" && s.question) {
-			r.length || this.deps.runtime.session(e).then(({ session: e }) => e.call("warmImport")).catch((e) => console.warn("[trpg-assistant] 预读物品资料没成功", e)), await this.deps.people.cancel(e, [t]);
-			let i = await (await this.deps.runtime.displayFor(e, [n])).show(s.question);
+			await this.deps.people.cancel(e, [t]);
+			let r = await (await this.deps.runtime.displayFor(e, [n])).show(s.question), i = o();
 			return {
 				status: "question",
-				question: i.value,
-				ms: o(),
-				missed: i.missed
+				question: r.value,
+				ms: i,
+				missed: r.missed,
+				split: {
+					run: c,
+					display: i - c
+				}
 			};
 		}
 		if (s.status !== "complete") return s.changes?.length && await this.deps.people.cancel(e, [t]), {
@@ -26701,25 +26710,25 @@ var lO = (e) => e.replace(/ \d+$/, ""), uO = (e, t) => t.split(".").reduce((e, t
 			error: s.error ?? `导入没有完成（${s.status}）`,
 			ms: o()
 		};
-		let c = String(s.result?.exit ?? "");
-		if (c === "taskExitCancelled" || c === "taskExitCompleteFailed") return s.changes?.length && await this.deps.people.cancel(e, [t]), {
+		let l = String(s.result?.exit ?? "");
+		if (l === "taskExitCancelled" || l === "taskExitCompleteFailed") return s.changes?.length && await this.deps.people.cancel(e, [t]), {
 			status: "error",
-			error: c === "taskExitCancelled" ? "作者导入被取消" : "作者导入失败（详见控制台）",
+			error: l === "taskExitCancelled" ? "作者导入被取消" : "作者导入失败（详见控制台）",
 			ms: o()
 		};
-		let l = s.result?.added ?? [], u = l.map((e) => e.label ?? ae(e.name, [])), d = await (await this.deps.runtime.displayFor(e, [n])).show({
-			names: u,
-			types: l.map((e) => e.typeLabel ?? ae(e.type, []))
+		let u = s.result?.added ?? [], d = u.map((e) => e.label ?? ae(e.name, [])), f = await (await this.deps.runtime.displayFor(e, [n])).show({
+			names: d,
+			types: u.map((e) => e.typeLabel ?? ae(e.type, []))
 		});
 		return {
 			status: "ready",
 			changes: s.changes ?? [],
 			ms: o(),
-			added: l.map((e, t) => ({
+			added: u.map((e, t) => ({
 				id: e._id,
 				type: e.type,
-				typeLabel: String(d.value.types[t] ?? e.type),
-				name: String(d.value.names[t] ?? e.name)
+				typeLabel: String(f.value.types[t] ?? e.type),
+				name: String(f.value.names[t] ?? e.name)
 			}))
 		};
 	}
@@ -39743,6 +39752,7 @@ var PF = /* @__PURE__ */ I({
 	key: 0,
 	class: "trpg-select-trigger__prefix"
 }, WF = /* @__PURE__ */ I({
+	inheritAttrs: !1,
 	__name: "SelectField",
 	props: /*@__PURE__*/ qo({
 		options: {},
@@ -39765,17 +39775,17 @@ var PF = /* @__PURE__ */ I({
 			"onUpdate:modelValue": a[0] ||= (e) => n.value = e,
 			disabled: e.disabled
 		}, {
-			default: P(() => [W(N(EF), {
+			default: P(() => [W(N(EF), kc({
 				class: "trpg-select-trigger",
 				disabled: e.disabled,
 				"aria-label": e.label
-			}, {
+			}, t.$attrs), {
 				default: P(() => [U("span", HF, [e.prefix ? (B(), V("span", UF, A(e.prefix), 1)) : K("", !0), W(N(DF), { placeholder: e.placeholder ?? "请选择" }, null, 8, ["placeholder"])]), W(Z, {
 					name: "caret-down",
 					size: 14
 				})]),
 				_: 1
-			}, 8, ["disabled", "aria-label"]), W(N(TF), { to: N(r) }, {
+			}, 16, ["disabled", "aria-label"]), W(N(TF), { to: N(r) }, {
 				default: P(() => [W(N(bF), {
 					class: "trpg-select-content",
 					position: "popper",
@@ -65647,8 +65657,8 @@ var rve = {
 	}
 }), F8 = (e) => `${e.ref.set}:${e.ref.prop}:${e.ref.hash}:${e.pack?.docIdLocal ?? ""}`;
 function I8(e, t, n, r) {
-	let i = Uk(), a = Wk(), o = OA(), s = /* @__PURE__ */ M(null), c = /* @__PURE__ */ j(null), l = /* @__PURE__ */ j(""), u = /* @__PURE__ */ j(null);
-	async function d() {
+	let i = Uk(), a = Wk(), o = OA(), s = /* @__PURE__ */ M(null), c = /* @__PURE__ */ j(null), l = /* @__PURE__ */ j(""), u = /* @__PURE__ */ j("all"), d = /* @__PURE__ */ j(null);
+	async function f() {
 		c.value = null;
 		try {
 			let t = a.owner?.ownerKey;
@@ -65663,27 +65673,44 @@ function I8(e, t, n, r) {
 		}
 	}
 	L(() => {
-		d(), o.campaignLib && o.bound || o.load(i.svc(), a.owner?.ownerKey ?? null);
+		f(), o.campaignLib && o.bound || o.load(i.svc(), a.owner?.ownerKey ?? null);
 	});
-	let f = q(() => {
+	let p = q(() => {
+		let e = new Set((s.value ?? []).flatMap(({ row: e }) => e.source ? [e.source] : [])), t = /* @__PURE__ */ new Map();
+		for (let e of o.shelf?.groups ?? []) for (let n of [...e.books, ...e.adventures]) t.set(n.source, n.name);
+		return [{
+			value: "all",
+			label: "全部来源"
+		}, ...[...e].sort().map((e) => ({
+			value: e,
+			label: t.has(e) ? `${t.get(e)}（${e}）` : e
+		}))];
+	}), m = q(() => {
 		let e = l.value.trim().toLowerCase();
-		return (s.value ?? []).filter((t) => !e || t.name.toLowerCase().includes(e));
-	}), p = q(() => f.value.find((e) => F8(e.row) === u.value) ?? null);
-	F(f, (e) => {
-		e.some((e) => F8(e.row) === u.value) || (u.value = e[0] ? F8(e[0].row) : null);
+		return (s.value ?? []).filter(({ name: t, row: n }) => {
+			if (u.value !== "all" && n.source !== u.value) return !1;
+			if (!e) return !0;
+			let r = n.item?.ENG_name;
+			return t.toLowerCase().includes(e) || typeof r == "string" && r.toLowerCase().includes(e);
+		});
+	}), h = q(() => m.value.find((e) => F8(e.row) === d.value) ?? null);
+	F(m, (e) => {
+		e.some((e) => F8(e.row) === d.value) || (d.value = e[0] ? F8(e[0].row) : null);
 	}, { immediate: !0 });
-	let { range: m } = n8(t, q(() => f.value.length));
-	return {
+	let { range: g, toTop: _ } = n8(t, q(() => m.value.length));
+	return F([l, u], _), {
 		rows: s,
 		error: c,
 		q: l,
-		picked: u,
-		load: d,
-		shown: f,
-		current: p,
-		range: m,
-		visible: q(() => f.value.slice(m.value.start, m.value.end)),
-		ref_: q(() => p.value?.row.ref ?? null),
+		source: u,
+		sources: p,
+		picked: d,
+		load: f,
+		shown: m,
+		current: h,
+		range: g,
+		visible: q(() => m.value.slice(g.value.start, g.value.end)),
+		ref_: q(() => h.value?.row.ref ?? null),
 		lib: o
 	};
 }
@@ -67666,20 +67693,24 @@ var abe = ["data-testid"], obe = { class: "ps-drawer-label" }, sbe = ["disabled"
 	key: 1,
 	class: "tp",
 	"data-testid": "item-pick"
-}, TSe = { class: "tp-list" }, ESe = { class: "lib-filter" }, DSe = ["placeholder", "aria-label"], OSe = {
+}, TSe = { class: "tp-list" }, ESe = { class: "lib-filter tp-search" }, DSe = ["placeholder", "aria-label"], OSe = {
 	key: 1,
 	class: "lib-skel",
 	"aria-busy": "true"
 }, kSe = {
 	key: 0,
 	class: "lib-state"
-}, ASe = ["data-picked", "onClick"], jSe = { class: "lib-name" }, MSe = { class: "lib-src lib-end" }, NSe = { class: "lib-count" }, PSe = {
+}, ASe = ["aria-label"], jSe = [
+	"aria-pressed",
+	"data-picked",
+	"onClick"
+], MSe = { class: "lib-name" }, NSe = { class: "lib-src lib-end" }, PSe = { class: "lib-count" }, FSe = {
 	key: 0,
 	class: "tp-card"
-}, FSe = { class: "tp-bar" }, ISe = {
+}, ISe = { class: "tp-bar" }, LSe = {
 	key: 0,
 	class: "tp-added"
-}, LSe = ["disabled"], RSe = ["disabled"], zSe = /* @__PURE__ */ I({
+}, RSe = ["disabled"], zSe = ["disabled"], BSe = /* @__PURE__ */ I({
 	__name: "ItemPickPage",
 	props: {
 		kind: { default: "items" },
@@ -67726,25 +67757,25 @@ var abe = ["data-testid"], obe = { class: "ps-drawer-label" }, sbe = ["disabled"
 				verb: "选这个子职业",
 				eg: "冠军"
 			}
-		}, r = q(() => n[t.kind]), i = R8(), a = mA(), o = /* @__PURE__ */ j(null), s = q(() => a.layout === "wide"), { rows: c, error: l, q: u, picked: d, load: f, shown: p, current: m, range: h, visible: g, ref_: _, lib: v } = I8((e) => {
+		}, r = q(() => n[t.kind]), i = R8(), a = mA(), o = /* @__PURE__ */ j(null), s = q(() => a.layout === "wide"), { rows: c, error: l, q: u, source: d, sources: f, picked: p, load: m, shown: h, current: g, range: _, visible: v, ref_: y, lib: b } = I8((e) => {
 			let r = kO(e.rule, t.kind);
 			if (!r) throw Error(`这个规则没有${n[t.kind].what}类条目`);
 			return r;
-		}, o, n[t.kind].what, t.keep), y = /* @__PURE__ */ M(null);
-		function b() {
-			let e = m.value;
-			e && !i.readOnly && (y.value = {
+		}, o, n[t.kind].what, t.keep), x = /* @__PURE__ */ M(null);
+		function S() {
+			let e = g.value;
+			e && !i.readOnly && (x.value = {
 				ref: e.row.ref,
 				name: String(e.name)
 			});
 		}
-		let x = jr(s8);
-		return (t, n) => y.value ? (B(), H(Q8, {
+		let C = jr(s8);
+		return (t, n) => x.value ? (B(), H(Q8, {
 			key: 0,
-			"entry-ref": y.value.ref,
-			name: y.value.name,
+			"entry-ref": x.value.ref,
+			name: x.value.name,
 			replace: e.replace,
-			onBack: n[0] ||= (e) => y.value = null
+			onBack: n[0] ||= (e) => x.value = null
 		}, null, 8, [
 			"entry-ref",
 			"name",
@@ -67755,69 +67786,84 @@ var abe = ["data-testid"], obe = { class: "ps-drawer-label" }, sbe = ["disabled"
 					"onUpdate:modelValue": n[1] ||= (e) => /* @__PURE__ */ Pr(u) ? u.value = e : null,
 					class: "trpg-input",
 					type: "search",
-					placeholder: `搜${r.value.what}（如 ${r.value.eg}）`,
-					"aria-label": `搜${r.value.what}`,
+					placeholder: `搜中英文名（如 ${r.value.eg}）`,
+					"aria-label": `搜${r.value.what}的中英文名`,
 					"data-autofocus": "",
 					"data-testid": "ip-search"
-				}, null, 8, DSe), [[Ru, N(u)]])]),
+				}, null, 8, DSe), [[Ru, N(u)]]), N(f).length > 2 ? (B(), H(WF, {
+					key: 0,
+					modelValue: N(d),
+					"onUpdate:modelValue": n[2] ||= (e) => /* @__PURE__ */ Pr(d) ? d.value = e : null,
+					options: N(f),
+					label: "按来源筛选",
+					"data-testid": "ip-source"
+				}, null, 8, ["modelValue", "options"])) : K("", !0)]),
 				N(l) ? (B(), H(kA, {
 					key: 0,
 					text: `没读出来：${N(l)}`,
 					what: "读取物品",
 					actions: [{
 						label: "重试",
-						run: N(f)
+						run: N(m)
 					}]
 				}, null, 8, ["text", "actions"])) : N(c) ? (B(), V("div", {
 					key: 2,
 					ref_key: "scrollEl",
 					ref: o,
 					class: "lib-mscroll"
-				}, [N(p).length ? (B(), V("div", {
+				}, [N(h).length ? (B(), V("div", {
 					key: 1,
 					class: "lib-list",
-					role: "list",
+					role: "group",
+					"aria-label": `${r.value.what}搜索结果`,
 					style: Ft({
-						paddingTop: `${N(h).padTop}px`,
-						paddingBottom: `${N(h).padBottom}px`
+						paddingTop: `${N(_).padTop}px`,
+						paddingBottom: `${N(_).padBottom}px`
 					})
-				}, [(B(!0), V(z, null, R(N(g), (e) => (B(), V("button", {
+				}, [(B(!0), V(z, null, R(N(v), (e) => (B(), V("button", {
 					key: N(F8)(e.row),
 					class: "lib-list__row tp-row",
 					type: "button",
-					role: "listitem",
-					"data-picked": N(F8)(e.row) === N(d) || void 0,
+					"aria-pressed": N(F8)(e.row) === N(p),
+					"data-picked": N(F8)(e.row) === N(p) || void 0,
 					"data-testid": "ip-row",
-					onClick: (t) => d.value = N(F8)(e.row)
-				}, [U("span", jSe, A(e.name), 1), U("span", MSe, A(e.row.source ?? ""), 1)], 8, ASe))), 128))], 4)) : (B(), V("div", kSe, [U("h3", null, A(N(u).trim() ? `没找到「${N(u).trim()}」` : `库里还没有${r.value.what}`), 1)]))], 512)) : (B(), V("div", OSe, [...n[3] ||= [U("i", null, null, -1), U("i", { style: { width: "80%" } }, null, -1)]])),
-				U("div", NSe, A(N(c) ? `共 ${N(p).length} 条` : "正在读取…"), 1)
+					onClick: (t) => p.value = N(F8)(e.row)
+				}, [U("span", MSe, A(e.name), 1), U("span", NSe, A(e.row.source ?? ""), 1)], 8, jSe))), 128))], 12, ASe)) : (B(), V("div", kSe, [U("h3", null, A(N(u).trim() ? `没找到「${N(u).trim()}」` : `库里还没有${r.value.what}`), 1), N(u) || N(d) !== "all" ? (B(), V("button", {
+					key: 0,
+					type: "button",
+					class: "trpg-btn trpg-btn--small",
+					onClick: n[3] ||= (e) => {
+						u.value = "", d.value = "all";
+					}
+				}, "清空筛选")) : K("", !0)]))], 512)) : (B(), V("div", OSe, [...n[5] ||= [U("i", null, null, -1), U("i", { style: { width: "80%" } }, null, -1)]])),
+				U("div", PSe, A(N(c) ? `共 ${N(h).length} 条` : "正在读取…"), 1)
 			]),
-			s.value ? (B(), V("div", PSe, [N(_) && N(v).campaignLib ? (B(), H(Co(N(x)), {
-				key: N(d) ?? "",
-				"entry-ref": N(_),
-				"page-key": `item:${N(d)}`,
+			s.value ? (B(), V("div", FSe, [N(y) && N(b).campaignLib ? (B(), H(Co(N(C)), {
+				key: N(p) ?? "",
+				"entry-ref": N(y),
+				"page-key": `item:${N(p)}`,
 				"body-only": ""
 			}, null, 8, ["entry-ref", "page-key"])) : K("", !0)])) : K("", !0),
-			U("div", FSe, [
-				N(m) ? (B(), V("span", ISe, A(N(m).name), 1)) : K("", !0),
-				n[4] ||= U("span", { class: "tp-gap" }, null, -1),
+			U("div", ISe, [
+				N(g) ? (B(), V("span", LSe, A(N(g).name), 1)) : K("", !0),
+				n[6] ||= U("span", { class: "tp-gap" }, null, -1),
 				s.value ? K("", !0) : (B(), V("button", {
 					key: 1,
 					class: "trpg-btn trpg-btn--small",
 					type: "button",
-					disabled: !N(_),
-					onClick: n[2] ||= (e) => N(_) && N(T8)(N(_), N(m)?.name)
-				}, "看资料卡", 8, LSe)),
+					disabled: !N(y),
+					onClick: n[4] ||= (e) => N(y) && N(T8)(N(y), N(g)?.name)
+				}, "看资料卡", 8, RSe)),
 				U("button", {
 					class: "trpg-btn trpg-btn--primary",
 					type: "button",
-					disabled: !N(_) || N(i).readOnly,
+					disabled: !N(y) || N(i).readOnly,
 					"data-testid": "ip-add",
-					onClick: b
+					onClick: S
 				}, [W(Z, {
 					name: "plus",
 					size: 14
-				}), G(A(r.value.verb), 1)], 8, RSe)
+				}), G(A(r.value.verb), 1)], 8, zSe)
 			])
 		]));
 	}
@@ -67852,7 +67898,7 @@ function e5(e, t, n) {
 	hA().open({
 		key: `person-pick:${e}`,
 		title: r,
-		component: jr(zSe),
+		component: jr(BSe),
 		props: {
 			kind: e,
 			replace: t,
@@ -67880,14 +67926,14 @@ function t5(e, t, n, r) {
 	});
 }
 // src/ui/person/IdentityDrawer.vue?vue&type=script&setup=true&lang.ts
-var BSe = { class: "pf-body" }, VSe = { class: "pf-card" }, HSe = {
+var VSe = { class: "pf-body" }, HSe = { class: "pf-card" }, USe = {
 	class: "pf-fields",
 	style: { padding: "var(--sp-3)" }
-}, USe = { class: "pf-row" }, WSe = { class: "pf-control" }, GSe = ["disabled"], KSe = { class: "pf-row" }, qSe = { class: "pf-control" }, JSe = ["disabled"], YSe = { class: "pf-row" }, XSe = { class: "pf-control" }, ZSe = ["disabled"], QSe = { id: "ps-align-list" }, $Se = ["value"], eCe = {
+}, WSe = { class: "pf-row" }, GSe = { class: "pf-control" }, KSe = ["disabled"], qSe = { class: "pf-row" }, JSe = { class: "pf-control" }, YSe = ["disabled"], XSe = { class: "pf-row" }, ZSe = { class: "pf-control" }, QSe = ["disabled"], $Se = { id: "ps-align-list" }, eCe = ["value"], tCe = {
 	key: 0,
 	class: "pf-card",
 	"data-testid": "ps-id-origins"
-}, tCe = { class: "pf-entry" }, nCe = ["disabled"], rCe = { class: "pf-entry" }, iCe = ["disabled"], aCe = { class: "pf-id-actions" }, oCe = ["disabled"], sCe = { class: "pf-foot" }, cCe = ["disabled"], lCe = /* @__PURE__ */ I({
+}, nCe = { class: "pf-entry" }, rCe = ["disabled"], iCe = { class: "pf-entry" }, aCe = ["disabled"], oCe = { class: "pf-id-actions" }, sCe = ["disabled"], cCe = { class: "pf-foot" }, lCe = ["disabled"], uCe = /* @__PURE__ */ I({
 	__name: "IdentityDrawer",
 	setup(e) {
 		let t = R8(), n = hA(), r = q(() => t.sheet), i = /* @__PURE__ */ j(String(r.value?.name ?? "")), a = /* @__PURE__ */ j(String(t.row?.adjustments.englishName ?? "")), o = /* @__PURE__ */ j(r.value ? K8(r.value) : ""), s = q(() => Object.values(t.glossary?.tables.alignments ?? {}).map(String)), c = /* @__PURE__ */ j(!1), l = q(() => r.value ? V8(r.value) : !1), u = (e) => (r.value?.items ?? []).find((t) => t.type === e), d = q(() => r.value ? W8(r.value) : null), f = q(() => r.value ? G8(r.value) : null), p = q(() => r.value ? U8(r.value) : []);
@@ -67923,46 +67969,46 @@ var BSe = { class: "pf-body" }, VSe = { class: "pf-card" }, HSe = {
 			class: "pf",
 			"data-testid": "ps-drawer-identity",
 			onSubmit: J(h, ["prevent"])
-		}, [U("div", BSe, [U("section", VSe, [U("div", HSe, [
-			U("div", USe, [r[7] ||= U("label", {
+		}, [U("div", VSe, [U("section", HSe, [U("div", USe, [
+			U("div", WSe, [r[7] ||= U("label", {
 				class: "pf-label",
 				for: "id-name"
-			}, "名字", -1), U("div", WSe, [Vi(U("input", {
+			}, "名字", -1), U("div", GSe, [Vi(U("input", {
 				id: "id-name",
 				"onUpdate:modelValue": r[0] ||= (e) => i.value = e,
 				class: "trpg-input",
 				maxlength: "80",
 				disabled: N(t).readOnly,
 				"data-testid": "ps-id-name"
-			}, null, 8, GSe), [[Ru, i.value]])])]),
-			U("div", KSe, [r[8] ||= U("label", {
+			}, null, 8, KSe), [[Ru, i.value]])])]),
+			U("div", qSe, [r[8] ||= U("label", {
 				class: "pf-label",
 				for: "id-en"
-			}, [G("英文名"), U("small", { class: "pf-hint" }, "选填")], -1), U("div", qSe, [Vi(U("input", {
+			}, [G("英文名"), U("small", { class: "pf-hint" }, "选填")], -1), U("div", JSe, [Vi(U("input", {
 				id: "id-en",
 				"onUpdate:modelValue": r[1] ||= (e) => a.value = e,
 				class: "trpg-input",
 				maxlength: "80",
 				disabled: N(t).readOnly
-			}, null, 8, JSe), [[Ru, a.value]])])]),
-			U("div", YSe, [r[9] ||= U("label", {
+			}, null, 8, YSe), [[Ru, a.value]])])]),
+			U("div", XSe, [r[9] ||= U("label", {
 				class: "pf-label",
 				for: "id-align"
-			}, "阵营", -1), U("div", XSe, [Vi(U("input", {
+			}, "阵营", -1), U("div", ZSe, [Vi(U("input", {
 				id: "id-align",
 				"onUpdate:modelValue": r[2] ||= (e) => o.value = e,
 				class: "trpg-input",
 				list: "ps-align-list",
 				maxlength: "60",
 				disabled: N(t).readOnly
-			}, null, 8, ZSe), [[Ru, o.value]])])]),
-			U("datalist", QSe, [(B(!0), V(z, null, R(s.value, (e) => (B(), V("option", {
+			}, null, 8, QSe), [[Ru, o.value]])])]),
+			U("datalist", $Se, [(B(!0), V(z, null, R(s.value, (e) => (B(), V("option", {
 				key: e,
 				value: e
-			}, null, 8, $Se))), 128))])
-		])]), l.value ? K("", !0) : (B(), V("section", eCe, [
+			}, null, 8, eCe))), 128))])
+		])]), l.value ? K("", !0) : (B(), V("section", tCe, [
 			r[17] ||= U("h4", null, [G("来源条目"), U("small", null, "换掉旧的会把它带来的东西一起退回")], -1),
-			U("div", tCe, [
+			U("div", nCe, [
 				r[10] ||= U("span", null, "种族", -1),
 				U("b", null, A(d.value?.name || "—"), 1),
 				r[11] ||= U("span", null, null, -1),
@@ -67972,9 +68018,9 @@ var BSe = { class: "pf-body" }, VSe = { class: "pf-card" }, HSe = {
 					disabled: N(t).readOnly,
 					"data-testid": "ps-id-race",
 					onClick: r[3] ||= (e) => m("races", "race", d.value?.name)
-				}, A(d.value ? "换…" : "选…"), 9, nCe)
+				}, A(d.value ? "换…" : "选…"), 9, rCe)
 			]),
-			U("div", rCe, [
+			U("div", iCe, [
 				r[12] ||= U("span", null, "背景", -1),
 				U("b", null, A(f.value?.name || "—"), 1),
 				r[13] ||= U("span", null, null, -1),
@@ -67984,7 +68030,7 @@ var BSe = { class: "pf-body" }, VSe = { class: "pf-card" }, HSe = {
 					disabled: N(t).readOnly,
 					"data-testid": "ps-id-bg",
 					onClick: r[4] ||= (e) => m("backgrounds", "background", f.value?.name)
-				}, A(f.value ? "换…" : "选…"), 9, iCe)
+				}, A(f.value ? "换…" : "选…"), 9, aCe)
 			]),
 			(B(!0), V(z, null, R(p.value, (e) => (B(), V("div", {
 				key: e.id,
@@ -67995,7 +68041,7 @@ var BSe = { class: "pf-body" }, VSe = { class: "pf-card" }, HSe = {
 				r[15] ||= U("span", null, null, -1),
 				r[16] ||= U("span", null, null, -1)
 			]))), 128)),
-			U("div", aCe, [U("button", {
+			U("div", oCe, [U("button", {
 				class: "trpg-btn trpg-btn--small pf-add",
 				type: "button",
 				disabled: N(t).readOnly,
@@ -68004,9 +68050,9 @@ var BSe = { class: "pf-body" }, VSe = { class: "pf-card" }, HSe = {
 			}, [W(Z, {
 				name: "plus",
 				size: 14
-			}), G(A(p.value.length ? "兼职（再加一个职业）…" : "选职业…"), 1)], 8, oCe)]),
+			}), G(A(p.value.length ? "兼职（再加一个职业）…" : "选职业…"), 1)], 8, sCe)]),
 			r[18] ||= U("p", { class: "pf-intro pf-id-note" }, "选或换种族、背景、职业时，它带来的特性、熟练和起始装备会一起加上，要做的选择会一题一题问；换掉的会把它带来的东西一起退回。", -1)
-		]))]), U("div", sCe, [
+		]))]), U("div", cCe, [
 			r[19] ||= U("span", { class: "pf-gap" }, null, -1),
 			U("button", {
 				class: "trpg-btn",
@@ -68017,16 +68063,16 @@ var BSe = { class: "pf-body" }, VSe = { class: "pf-card" }, HSe = {
 				class: "trpg-btn trpg-btn--primary",
 				type: "submit",
 				disabled: N(t).readOnly || c.value
-			}, "保存", 8, cCe)
+			}, "保存", 8, lCe)
 		])], 32));
 	}
-}), uCe = { class: "ps-avatar-fields" }, dCe = { class: "ps-field" }, fCe = ["disabled"], pCe = {
+}), dCe = { class: "ps-avatar-fields" }, fCe = { class: "ps-field" }, pCe = ["disabled"], mCe = {
 	key: 0,
 	class: "ps-drawer-note"
-}, mCe = {
+}, hCe = {
 	key: 1,
 	class: "ps-drawer-note ps-drawer-note--warn"
-}, hCe = { class: "ps-avatar-preview" }, gCe = ["src"], _Ce = { class: "ps-drawer-actions" }, vCe = ["disabled"], yCe = /* @__PURE__ */ I({
+}, gCe = { class: "ps-avatar-preview" }, _Ce = ["src"], vCe = { class: "ps-drawer-actions" }, yCe = ["disabled"], bCe = /* @__PURE__ */ I({
 	__name: "AvatarDrawer",
 	setup(e) {
 		let t = R8(), n = hA(), r = /* @__PURE__ */ j(String(t.sheet?.img ?? "")), i = /* @__PURE__ */ j(!1), a = q(() => /^https?:\/\/\S+$/i.test(r.value.trim()));
@@ -68042,21 +68088,21 @@ var BSe = { class: "pf-body" }, VSe = { class: "pf-card" }, HSe = {
 			"data-testid": "ps-drawer-avatar",
 			onSubmit: J(o, ["prevent"])
 		}, [
-			U("div", uCe, [U("label", dCe, [s[4] ||= U("span", null, "图片链接", -1), Vi(U("input", {
+			U("div", dCe, [U("label", fCe, [s[4] ||= U("span", null, "图片链接", -1), Vi(U("input", {
 				"onUpdate:modelValue": s[0] ||= (e) => r.value = e,
 				class: "trpg-input",
 				inputmode: "url",
 				placeholder: "https://…",
 				disabled: N(t).readOnly,
 				onInput: s[1] ||= (e) => i.value = !1
-			}, null, 40, fCe), [[Ru, r.value]])]), r.value && !a.value ? (B(), V("p", pCe, "要以 http:// 或 https:// 开头的网址。")) : i.value ? (B(), V("p", mCe, "这张图加载不出来：网址打不开，或者不是图片。")) : K("", !0)]),
-			U("div", hCe, [a.value && !i.value ? (B(), V("img", {
+			}, null, 40, pCe), [[Ru, r.value]])]), r.value && !a.value ? (B(), V("p", mCe, "要以 http:// 或 https:// 开头的网址。")) : i.value ? (B(), V("p", hCe, "这张图加载不出来：网址打不开，或者不是图片。")) : K("", !0)]),
+			U("div", gCe, [a.value && !i.value ? (B(), V("img", {
 				key: 0,
 				src: r.value.trim(),
 				alt: "头像预览",
 				onError: s[2] ||= (e) => i.value = !0
-			}, null, 40, gCe)) : K("", !0)]),
-			U("div", _Ce, [U("button", {
+			}, null, 40, _Ce)) : K("", !0)]),
+			U("div", vCe, [U("button", {
 				class: "trpg-btn",
 				type: "button",
 				onClick: s[3] ||= (e) => N(n).close()
@@ -68064,11 +68110,11 @@ var BSe = { class: "pf-body" }, VSe = { class: "pf-card" }, HSe = {
 				class: "trpg-btn trpg-btn--primary",
 				type: "submit",
 				disabled: N(t).readOnly || !a.value || i.value
-			}, "使用这张", 8, vCe)])
+			}, "使用这张", 8, yCe)])
 		], 32));
 	}
 }), n5 = (e) => e.view?.parts ?? {}, r5 = (e) => Array.isArray(e) ? e : e && typeof e == "object" ? Object.values(e) : [], i5 = (e, t) => Number(e.system.spells?.[t]?.value ?? 0);
-function bCe(e) {
+function xCe(e) {
 	return Object.entries(n5(e).effects?.effects ?? {}).filter(([, e]) => !e.hidden).map(([e, t]) => ({
 		key: e,
 		label: String(t.label ?? ""),
@@ -68084,7 +68130,7 @@ function bCe(e) {
 		}))
 	}));
 }
-function xCe(e) {
+function SCe(e) {
 	return r5(n5(e).effects?.conditions).map((e) => ({
 		id: String(e.id),
 		name: String(e.name ?? ""),
@@ -68093,11 +68139,11 @@ function xCe(e) {
 		ref: String(e.reference ?? "")
 	}));
 }
-var SCe = (e) => r5(n5(e).biography?.characteristics).map((e) => ({
+var CCe = (e) => r5(n5(e).biography?.characteristics).map((e) => ({
 	path: String(e.name),
 	label: String(e.label ?? ""),
 	value: String(e.value ?? "")
-})), CCe = (e, t) => e.shown?.items?.find?.((e) => e.id === t)?.name, wCe = (e, t) => e.shown?.items?.find?.((e) => e.id === t)?.ref;
+})), wCe = (e, t) => e.shown?.items?.find?.((e) => e.id === t)?.name, TCe = (e, t) => e.shown?.items?.find?.((e) => e.id === t)?.ref;
 function a5(e) {
 	let t = e.view?.base?.itemContext ?? {}, n = r5(e.view?.base?.itemCategories?.subclasses), r = (t) => (e.items ?? []).find((e) => e.id === t);
 	return r5(e.view?.base?.itemCategories?.classes).map((i) => {
@@ -68114,14 +68160,14 @@ function a5(e) {
 			})),
 			subclass: o ? {
 				id: String(o.id),
-				name: String(s?.name ?? CCe(e, String(o.id)) ?? o.name ?? ""),
-				ref: s?.ref ?? wCe(e, String(o.id))
+				name: String(s?.name ?? wCe(e, String(o.id)) ?? o.name ?? ""),
+				ref: s?.ref ?? TCe(e, String(o.id))
 			} : null,
 			needsSubclass: !!t[i.id]?.needsSubclass || !!n5(e).features?.classes?.find?.((e) => e.id === i.id)?.needsSubclass
 		};
 	}).sort((e, t) => t.levels - e.levels);
 }
-var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = ["data-step"], ECe = ["disabled", "aria-label"], DCe = ["aria-label", "disabled"], OCe = ["disabled", "aria-label"], s5 = /* @__PURE__ */ I({
+var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, ECe = ["data-step"], DCe = ["disabled", "aria-label"], OCe = ["aria-label", "disabled"], kCe = ["disabled", "aria-label"], s5 = /* @__PURE__ */ I({
 	__name: "NumIn",
 	props: {
 		value: {},
@@ -68165,7 +68211,7 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 			}, [W(Z, {
 				name: "minus",
 				size: 12
-			})], 8, ECe)) : K("", !0),
+			})], 8, DCe)) : K("", !0),
 			Vi(U("input", {
 				"onUpdate:modelValue": n[1] ||= (e) => i.value = e,
 				class: "ps-num-in",
@@ -68177,7 +68223,7 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 				onFocus: n[3] ||= (e) => e.target.select(),
 				onKeydown: [n[4] ||= ed(J((e) => e.target.blur(), ["prevent"]), ["enter"]), n[5] ||= ed((t) => i.value = String(e.value), ["esc"])],
 				onBlur: o
-			}, null, 40, DCe), [[Ru, i.value]]),
+			}, null, 40, OCe), [[Ru, i.value]]),
 			e.step ? (B(), V("button", {
 				key: 1,
 				class: "ps-num-btn",
@@ -68188,81 +68234,81 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 			}, [W(Z, {
 				name: "plus",
 				size: 12
-			})], 8, OCe)) : K("", !0)
-		], 8, TCe));
+			})], 8, kCe)) : K("", !0)
+		], 8, ECe));
 	}
-}), kCe = {
+}), ACe = {
 	class: "ps-head",
 	"data-testid": "ps-head"
-}, ACe = { class: "ps-top" }, jCe = ["disabled"], MCe = ["src"], NCe = {
+}, jCe = { class: "ps-top" }, MCe = ["disabled"], NCe = ["src"], PCe = {
 	class: "ps-portrait-badge",
 	"aria-hidden": "true"
-}, PCe = { class: "ps-ident" }, FCe = { class: "ps-name-line" }, ICe = ["onKeydown"], LCe = {
+}, FCe = { class: "ps-ident" }, ICe = { class: "ps-name-line" }, LCe = ["onKeydown"], RCe = {
 	key: 1,
 	class: "ps-name",
 	"data-testid": "ps-name"
-}, RCe = ["disabled"], zCe = [
+}, zCe = ["disabled"], BCe = [
 	"aria-pressed",
 	"aria-label",
 	"disabled"
-], BCe = {
+], VCe = {
 	key: 2,
 	class: "ps-english"
-}, VCe = ["disabled"], HCe = { class: "ps-rests" }, UCe = ["disabled"], WCe = ["disabled"], GCe = {
+}, HCe = ["disabled"], UCe = { class: "ps-rests" }, WCe = ["disabled"], GCe = ["disabled"], KCe = {
 	key: 0,
 	class: "ps-sub",
 	"data-testid": "ps-sub"
-}, KCe = {
+}, qCe = {
 	class: "ps-facts",
 	"data-testid": "ps-facts"
-}, qCe = [
+}, JCe = [
 	"disabled",
 	"aria-label",
 	"onClick"
-], JCe = {
+], YCe = {
 	key: 1,
 	class: "ps-blank-cta",
 	"data-testid": "ps-blank-build"
-}, YCe = { class: "ps-blank-steps" }, XCe = ["disabled"], ZCe = ["disabled"], QCe = ["disabled"], $Ce = {
+}, XCe = { class: "ps-blank-steps" }, ZCe = ["disabled"], QCe = ["disabled"], $Ce = ["disabled"], ewe = {
 	class: "ps-card ps-level",
 	"data-testid": "ps-level"
-}, ewe = ["aria-label", "disabled"], twe = { class: "ps-level-nums" }, nwe = { key: 0 }, rwe = { class: "ps-num-md" }, iwe = ["aria-pressed", "disabled"], awe = {
+}, twe = ["aria-label", "disabled"], nwe = { class: "ps-level-nums" }, rwe = { key: 0 }, iwe = { class: "ps-num-md" }, awe = ["aria-pressed", "disabled"], owe = {
 	key: 0,
 	class: "ps-xp"
-}, owe = {
+}, swe = {
 	class: "ps-meter",
 	"aria-hidden": "true"
-}, swe = {
+}, cwe = {
 	key: 1,
 	class: "ps-leg"
-}, cwe = { key: 0 }, lwe = ["data-on", "title"], uwe = { key: 1 }, dwe = ["data-on", "title"], fwe = {
+}, lwe = { key: 0 }, uwe = ["data-on", "title"], dwe = { key: 1 }, fwe = ["data-on", "title"], pwe = {
 	key: 2,
 	class: "ps-level-foot"
-}, pwe = { class: "ps-mid" }, mwe = { class: "ps-card ps-vitals" }, hwe = ["disabled"], gwe = { class: "ps-vital-rows" }, _we = {
+}, mwe = { class: "ps-mid" }, hwe = { class: "ps-card ps-vitals" }, gwe = ["disabled"], _we = { class: "ps-vital-rows" }, vwe = {
 	class: "ps-vital-row ps-vital-row--pips",
 	"data-testid": "ps-exh"
-}, vwe = {
+}, ywe = {
 	class: "ps-pips",
 	role: "group",
 	"aria-label": "力竭等级"
-}, ywe = [
+}, bwe = [
 	"data-on",
 	"aria-label",
 	"disabled",
 	"onClick"
-], bwe = ["data-alert"], xwe = ["aria-label"], Swe = [
+], xwe = ["data-alert"], Swe = ["aria-label"], Cwe = [
 	"data-kind",
 	"data-on",
 	"aria-label",
 	"disabled",
 	"onClick"
-], Cwe = {
+], wwe = {
 	class: "ps-card ps-combat",
 	"data-testid": "ps-combat"
-}, wwe = ["disabled"], Twe = {
+}, Twe = ["disabled"], Ewe = {
 	class: "ps-card ps-abilities",
 	"data-testid": "ps-abilities"
-}, Ewe = ["disabled"], Dwe = ["data-testid"], Owe = ["title", "onClick"], kwe = ["data-prof", "title"], Awe = /* @__PURE__ */ I({
+}, Dwe = ["disabled"], Owe = ["data-testid"], kwe = ["title", "onClick"], Awe = ["data-prof", "title"], jwe = /* @__PURE__ */ I({
 	__name: "PersonHeader",
 	setup(e) {
 		let t = R8(), n = hA(), r = CA(), i = q(() => t.sheet), a = q(() => t.glossary), o = q(() => i.value.system), s = q(() => V8(i.value)), c = q(() => t.readOnly), l = q(() => String(t.row?.adjustments.englishName ?? "")), u = q(() => !!t.row?.adjustments.pinned), d = /* @__PURE__ */ j(!1), f = q(() => !d.value && /^(https?:|data:|blob:)/.test(String(i.value.img ?? "")) ? String(i.value.img) : null), p = q(() => Object.fromEntries(Object.keys(a.value?.tables.abilities ?? {}).map((e) => [e, H8(a.value, "abilities", e)]))), m = q(() => [...U8(i.value).map((e) => e.levels ? `${e.name} ${e.levels}` : e.name), K8(i.value)].filter(Boolean)), h = q(() => {
@@ -68332,14 +68378,14 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 		}), w = () => n.open({
 			key: "person-identity",
 			title: "身份",
-			component: jr(lCe),
+			component: jr(uCe),
 			variant: "dialog",
 			width: 560,
 			height: 620
 		}), T = () => n.open({
 			key: "person-avatar",
 			title: "人物头像",
-			component: jr(yCe),
+			component: jr(bCe),
 			variant: "dialog",
 			width: 560,
 			height: 420
@@ -68449,7 +68495,7 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 			let [n, r] = e.split(":"), a = a5(i.value).find((e) => e.id === r);
 			a && (n === "up" && a.ref ? t5(a.ref, a.name, `${a.name}升级`, a.levels + 1) : t.level(`${a.name}降一级`, r, -1));
 		}
-		return (e, n) => (B(), V("section", kCe, [U("div", ACe, [
+		return (e, n) => (B(), V("section", ACe, [U("div", jCe, [
 			U("button", {
 				class: "ps-portrait",
 				type: "button",
@@ -68462,16 +68508,16 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 				src: f.value,
 				alt: "",
 				onError: n[0] ||= (e) => d.value = !0
-			}, null, 40, MCe)) : (B(), H(Z, {
+			}, null, 40, NCe)) : (B(), H(Z, {
 				key: 1,
 				name: "user",
 				size: 44
-			})), U("span", NCe, [W(Z, {
+			})), U("span", PCe, [W(Z, {
 				name: "image",
 				size: 12
-			})])], 8, jCe),
-			U("div", PCe, [
-				U("div", FCe, [
+			})])], 8, MCe),
+			U("div", FCe, [
+				U("div", ICe, [
 					O.value ? Vi((B(), V("input", {
 						key: 0,
 						ref_key: "nameInput",
@@ -68483,13 +68529,13 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 						"data-testid": "ps-name-input",
 						onKeydown: [ed(J(ie, ["prevent"]), ["enter"]), n[2] ||= ed(J((e) => O.value = !1, ["prevent"]), ["esc"])],
 						onBlur: ie
-					}, null, 40, ICe)), [[Ru, ee.value]]) : (B(), V("h2", LCe, [U("button", {
+					}, null, 40, LCe)), [[Ru, ee.value]]) : (B(), V("h2", RCe, [U("button", {
 						class: "ps-name-btn",
 						type: "button",
 						disabled: c.value,
 						title: "点了改名字",
 						onClick: re
-					}, A(i.value.name), 9, RCe)])),
+					}, A(i.value.name), 9, zCe)])),
 					U("button", {
 						class: "ps-pin",
 						type: "button",
@@ -68511,8 +68557,8 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 					}, [W(Z, {
 						name: u.value ? "star-fill" : "star",
 						size: 16
-					}, null, 8, ["name"])], 8, zCe),
-					l.value ? (B(), V("small", BCe, A(l.value), 1)) : K("", !0),
+					}, null, 8, ["name"])], 8, BCe),
+					l.value ? (B(), V("small", VCe, A(l.value), 1)) : K("", !0),
 					U("button", {
 						class: "ps-pen ps-pen--inline",
 						type: "button",
@@ -68523,8 +68569,8 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 					}, [W(Z, {
 						name: "pencil-simple",
 						size: 14
-					})], 8, VCe),
-					U("span", HCe, [U("button", {
+					})], 8, HCe),
+					U("span", UCe, [U("button", {
 						class: "trpg-btn trpg-btn--small",
 						type: "button",
 						disabled: c.value,
@@ -68533,7 +68579,7 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 					}, [W(Z, {
 						name: "hourglass",
 						size: 13
-					}), n[11] ||= G("短休", -1)], 8, UCe), U("button", {
+					}), n[11] ||= G("短休", -1)], 8, WCe), U("button", {
 						class: "trpg-btn trpg-btn--small",
 						type: "button",
 						disabled: c.value,
@@ -68542,13 +68588,13 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 					}, [W(Z, {
 						name: "moon",
 						size: 13
-					}), n[12] ||= G("长休", -1)], 8, WCe)])
+					}), n[12] ||= G("长休", -1)], 8, GCe)])
 				]),
-				m.value.length ? (B(), V("p", GCe, [(B(!0), V(z, null, R(m.value, (e, t) => (B(), V("span", {
+				m.value.length ? (B(), V("p", KCe, [(B(!0), V(z, null, R(m.value, (e, t) => (B(), V("span", {
 					key: e,
 					class: Bt({ "ps-sub-strong": t === 0 })
 				}, A(e), 3))), 128))])) : K("", !0),
-				U("dl", KCe, [(B(!0), V(z, null, R(h.value, (e) => (B(), V("div", {
+				U("dl", qCe, [(B(!0), V(z, null, R(h.value, (e) => (B(), V("div", {
 					key: e.label,
 					class: "ps-fact"
 				}, [U("dt", null, A(e.label), 1), U("dd", null, [e.ref ? (B(), H(iI, {
@@ -68568,14 +68614,14 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 				}, [e.parts?.length ? (B(!0), V(z, { key: 0 }, R(e.parts, (e, t) => (B(), V("span", {
 					key: t,
 					class: "ps-fact-part"
-				}, A(e), 1))), 128)) : (B(), V(z, { key: 1 }, [G(A(e.text), 1)], 64))], 8, qCe)) : (B(), V(z, { key: 2 }, [G(A(e.text), 1)], 64))])]))), 128))]),
-				!s.value && !N(U8)(i.value).length ? (B(), V("div", JCe, [
+				}, A(e), 1))), 128)) : (B(), V(z, { key: 1 }, [G(A(e.text), 1)], 64))], 8, JCe)) : (B(), V(z, { key: 2 }, [G(A(e.text), 1)], 64))])]))), 128))]),
+				!s.value && !N(U8)(i.value).length ? (B(), V("div", YCe, [
 					U("b", null, [W(Z, {
 						name: "sparkle",
 						size: 15
 					}), n[13] ||= G("从空白开始", -1)]),
 					n[17] ||= U("span", null, "依次选种族、背景、职业，特性、熟练和起始装备会一起加上；属性值在下面直接填。", -1),
-					U("span", YCe, [
+					U("span", XCe, [
 						U("button", {
 							class: "trpg-btn trpg-btn--small",
 							type: "button",
@@ -68585,7 +68631,7 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 						}, [W(Z, {
 							name: "plus",
 							size: 13
-						}), n[14] ||= G("选种族", -1)], 8, XCe),
+						}), n[14] ||= G("选种族", -1)], 8, ZCe),
 						U("button", {
 							class: "trpg-btn trpg-btn--small",
 							type: "button",
@@ -68595,7 +68641,7 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 						}, [W(Z, {
 							name: "plus",
 							size: 13
-						}), n[15] ||= G("选背景", -1)], 8, ZCe),
+						}), n[15] ||= G("选背景", -1)], 8, QCe),
 						U("button", {
 							class: "trpg-btn trpg-btn--primary trpg-btn--small",
 							type: "button",
@@ -68605,11 +68651,11 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 						}, [W(Z, {
 							name: "plus",
 							size: 13
-						}), n[16] ||= G("选职业", -1)], 8, QCe)
+						}), n[16] ||= G("选职业", -1)], 8, $Ce)
 					])
 				])) : K("", !0)
 			]),
-			U("div", $Ce, [
+			U("div", ewe, [
 				U("button", {
 					class: "ps-pen",
 					type: "button",
@@ -68619,11 +68665,11 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 				}, [W(Z, {
 					name: "pencil-simple",
 					size: 14
-				})], 8, ewe),
-				U("div", twe, [s.value ? (B(), V(z, { key: 0 }, [
+				})], 8, twe),
+				U("div", nwe, [s.value ? (B(), V(z, { key: 0 }, [
 					U("div", null, [n[18] ||= U("small", null, "挑战等级", -1), U("b", null, A(N(nbe)(o.value.details.cr)), 1)]),
 					U("div", null, [n[19] ||= U("small", null, "熟练加值", -1), U("b", null, A(N(X8)(o.value.attributes.prof)), 1)]),
-					x.value?.value ? (B(), V("div", nwe, [n[20] ||= U("small", null, "经验", -1), U("b", rwe, A(Number(x.value.value).toLocaleString("zh-CN")), 1)])) : K("", !0)
+					x.value?.value ? (B(), V("div", rwe, [n[20] ||= U("small", null, "经验", -1), U("b", iwe, A(Number(x.value.value).toLocaleString("zh-CN")), 1)])) : K("", !0)
 				], 64)) : (B(), V(z, { key: 1 }, [
 					U("div", null, [n[21] ||= U("small", null, "等级", -1), U("b", null, A(o.value.details.level), 1)]),
 					U("div", null, [n[22] ||= U("small", null, "熟练加值", -1), U("b", null, A(N(X8)(o.value.attributes.prof)), 1)]),
@@ -68637,33 +68683,33 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 					}, [W(Z, {
 						name: o.value.attributes.inspiration ? "star-fill" : "star",
 						size: 14
-					}, null, 8, ["name"]), n[23] ||= G("灵感", -1)], 8, iwe)
+					}, null, 8, ["name"]), n[23] ||= G("灵感", -1)], 8, awe)
 				], 64))]),
-				!s.value && N(tbe)(i.value) && x.value ? (B(), V("div", awe, [U("small", null, [
+				!s.value && N(tbe)(i.value) && x.value ? (B(), V("div", owe, [U("small", null, [
 					n[24] ||= G("经验 ", -1),
 					U("b", null, A(Number(x.value.value).toLocaleString("zh-CN")), 1),
 					G(" / " + A(Number(x.value.max).toLocaleString("zh-CN")), 1)
-				]), U("span", owe, [U("i", { style: Ft({ width: `${x.value.pct ?? 0}%` }) }, null, 4)])])) : K("", !0),
-				b.value.act.length || b.value.res.length ? (B(), V("div", swe, [b.value.act.length ? (B(), V("span", cwe, [n[25] ||= U("small", null, "传奇动作", -1), (B(!0), V(z, null, R(b.value.act, (e) => (B(), V("i", {
+				]), U("span", swe, [U("i", { style: Ft({ width: `${x.value.pct ?? 0}%` }) }, null, 4)])])) : K("", !0),
+				b.value.act.length || b.value.res.length ? (B(), V("div", cwe, [b.value.act.length ? (B(), V("span", lwe, [n[25] ||= U("small", null, "传奇动作", -1), (B(!0), V(z, null, R(b.value.act, (e) => (B(), V("i", {
 					key: e.n,
 					class: "ps-dot",
 					"data-on": e.filled || void 0,
 					title: e.label
-				}, null, 8, lwe))), 128))])) : K("", !0), b.value.res.length ? (B(), V("span", uwe, [n[26] ||= U("small", null, "传奇抗性", -1), (B(!0), V(z, null, R(b.value.res, (e) => (B(), V("i", {
+				}, null, 8, uwe))), 128))])) : K("", !0), b.value.res.length ? (B(), V("span", dwe, [n[26] ||= U("small", null, "传奇抗性", -1), (B(!0), V(z, null, R(b.value.res, (e) => (B(), V("i", {
 					key: e.n,
 					class: "ps-dot",
 					"data-on": e.filled || void 0,
 					title: e.label
-				}, null, 8, dwe))), 128))])) : K("", !0)])) : K("", !0),
-				s.value ? K("", !0) : (B(), V("div", fwe, [W(RF, {
+				}, null, 8, fwe))), 128))])) : K("", !0)])) : K("", !0),
+				s.value ? K("", !0) : (B(), V("div", pwe, [W(RF, {
 					label: "等级管理",
 					text: "等级管理",
 					items: ve.value,
 					onSelect: ye
 				}, null, 8, ["items"])]))
 			])
-		]), U("div", pwe, [
-			U("div", mwe, [
+		]), U("div", mwe, [
+			U("div", hwe, [
 				U("button", {
 					class: "ps-pen",
 					type: "button",
@@ -68674,10 +68720,10 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 				}, [W(Z, {
 					name: "pencil-simple",
 					size: 14
-				})], 8, hwe),
+				})], 8, gwe),
 				n[28] ||= U("small", { class: "ps-card-label" }, "生命值", -1),
 				W(Yye),
-				U("div", gwe, [
+				U("div", _we, [
 					_.value && _.value.max ? (B(), V("button", {
 						key: 0,
 						class: "ps-vital-row",
@@ -68685,14 +68731,14 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 						"data-testid": "ps-hd",
 						onClick: n[8] ||= (e) => C("hitDice")
 					}, [n[27] ||= U("span", null, "生命骰", -1), U("b", null, A(_.value.value) + "/" + A(_.value.max), 1)])) : K("", !0),
-					U("div", _we, [
+					U("div", vwe, [
 						U("button", {
 							class: "ps-vital-name",
 							type: "button",
 							title: "力竭每一级的效果",
 							onClick: n[9] ||= (e) => C("exhaustion")
 						}, "力竭"),
-						U("span", vwe, [(B(!0), V(z, null, R(se.value, (e) => (B(), V("button", {
+						U("span", ywe, [(B(!0), V(z, null, R(se.value, (e) => (B(), V("button", {
 							key: e,
 							type: "button",
 							class: "ps-pip ps-pip--sq",
@@ -68700,7 +68746,7 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 							"aria-label": `力竭 ${e} 级`,
 							disabled: c.value,
 							onClick: (t) => ce(e)
-						}, null, 8, ywe))), 128))]),
+						}, null, 8, bwe))), 128))]),
 						U("b", null, A(o.value.attributes.exhaustion ?? 0), 1)
 					]),
 					N(J8)(i.value) ? (B(), V("div", {
@@ -68727,10 +68773,10 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 						"aria-label": `${e === "success" ? "成功" : "失败"} ${t}`,
 						disabled: c.value,
 						onClick: (n) => le(e, t)
-					}, null, 8, Swe)), 64))], 8, xwe)), 64))], 8, bwe)) : K("", !0)
+					}, null, 8, Cwe)), 64))], 8, Swe)), 64))], 8, xwe)) : K("", !0)
 				])
 			]),
-			U("div", Cwe, [
+			U("div", wwe, [
 				U("button", {
 					class: "ps-pen",
 					type: "button",
@@ -68740,7 +68786,7 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 				}, [W(Z, {
 					name: "pencil-simple",
 					size: 14
-				})], 8, wwe),
+				})], 8, Twe),
 				U("button", {
 					class: "ps-box",
 					type: "button",
@@ -68761,7 +68807,7 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 					onClick: me
 				}, [n[31] ||= U("small", null, "专注", -1), U("b", null, A(N(X8)(o.value.attributes.concentration?.save)), 1)])) : K("", !0)
 			]),
-			U("div", Twe, [U("button", {
+			U("div", Ewe, [U("button", {
 				class: "ps-pen",
 				type: "button",
 				"aria-label": "改属性值",
@@ -68771,7 +68817,7 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 			}, [W(Z, {
 				name: "pencil-simple",
 				size: 14
-			})], 8, Ewe), (B(!0), V(z, null, R(g.value, (e) => (B(), V("div", {
+			})], 8, Dwe), (B(!0), V(z, null, R(g.value, (e) => (B(), V("div", {
 				key: e.key,
 				class: "ps-ability",
 				"data-testid": `ps-ability-${e.key}`
@@ -68781,7 +68827,7 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 					type: "button",
 					title: `${e.label}设置（加值、豁免熟练）`,
 					onClick: (t) => he(e.key)
-				}, [U("small", null, A(e.label), 1), U("b", null, A(N(X8)(e.mod)), 1)], 8, Owe),
+				}, [U("small", null, A(e.label), 1), U("b", null, A(N(X8)(e.mod)), 1)], 8, kwe),
 				W(s5, {
 					class: "ps-ability-score",
 					value: Number(e.value ?? 0),
@@ -68798,23 +68844,23 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 				U("em", {
 					"data-prof": e.proficient || void 0,
 					title: e.proficient ? "豁免熟练" : void 0
-				}, "豁免 " + A(N(X8)(e.save)), 9, kwe)
-			], 8, Dwe))), 128))])
+				}, "豁免 " + A(N(X8)(e.save)), 9, Awe)
+			], 8, Owe))), 128))])
 		])]));
 	}
-}), jwe = {
+}), Mwe = {
 	class: "ps-drawer ps-history",
 	"data-testid": "ps-drawer-history"
-}, Mwe = { class: "ps-drawer-row" }, Nwe = {
+}, Nwe = { class: "ps-drawer-row" }, Pwe = {
 	key: 0,
 	class: "ps-drawer-note"
-}, Pwe = {
+}, Fwe = {
 	key: 1,
 	class: "ps-drawer-note"
-}, Fwe = {
+}, Iwe = {
 	key: 2,
 	class: "ps-history-list"
-}, Iwe = { class: "ps-history-head" }, Lwe = ["disabled", "onClick"], Rwe = { key: 0 }, zwe = { key: 0 }, Bwe = /* @__PURE__ */ I({
+}, Lwe = { class: "ps-history-head" }, Rwe = ["disabled", "onClick"], zwe = { key: 0 }, Bwe = { key: 0 }, Vwe = /* @__PURE__ */ I({
 	__name: "HistoryDrawer",
 	setup(e) {
 		let t = {
@@ -68858,41 +68904,41 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 				confirmLabel: `撤销 ${e.steps} 条`
 			}) && (await r.undoTo(e.revision), i.close());
 		}
-		return (e, t) => (B(), V("div", jwe, [U("div", Mwe, [t[1] ||= U("span", { class: "ps-drawer-label" }, "只看这个人物", -1), W(VF, {
+		return (e, t) => (B(), V("div", Mwe, [U("div", Nwe, [t[1] ||= U("span", { class: "ps-drawer-label" }, "只看这个人物", -1), W(VF, {
 			modelValue: o.value,
 			"onUpdate:modelValue": t[0] ||= (e) => o.value = e,
 			label: "只看这个人物"
-		}, null, 8, ["modelValue"])]), a.value === null ? (B(), V("p", Nwe, "正在读取…")) : s.value.length ? (B(), V("ol", Fwe, [(B(!0), V(z, null, R(s.value, (e) => (B(), V("li", {
+		}, null, 8, ["modelValue"])]), a.value === null ? (B(), V("p", Pwe, "正在读取…")) : s.value.length ? (B(), V("ol", Iwe, [(B(!0), V(z, null, R(s.value, (e) => (B(), V("li", {
 			key: e.revision,
 			class: "ps-history-row"
-		}, [U("div", Iwe, [U("time", null, A(u(e.at)), 1), U("button", {
+		}, [U("div", Lwe, [U("time", null, A(u(e.at)), 1), U("button", {
 			class: "trpg-btn trpg-btn--small trpg-btn--quiet",
 			type: "button",
 			disabled: N(r).readOnly,
 			onClick: (t) => d(e)
-		}, "撤销到这里", 8, Lwe)]), (B(!0), V(z, null, R(e.actors, (e) => (B(), V("div", {
+		}, "撤销到这里", 8, Rwe)]), (B(!0), V(z, null, R(e.actors, (e) => (B(), V("div", {
 			key: e.id,
 			class: "ps-history-actor"
 		}, [
 			U("b", null, A(e.name), 1),
 			t[2] ||= G(),
 			U("span", null, A(n[e.kind] ?? e.kind), 1),
-			e.fields.length ? (B(), V("ul", Rwe, [(B(!0), V(z, null, R(e.fields.slice(0, 6), (e, t) => (B(), V("li", { key: t }, A(c(e)) + "：" + A(l(e.from, e)) + " → " + A(l(e.to, e)), 1))), 128)), e.fields.length > 6 ? (B(), V("li", zwe, "还有 " + A(e.fields.length - 6) + " 处", 1)) : K("", !0)])) : K("", !0)
-		]))), 128))]))), 128))])) : (B(), V("p", Pwe, "还没有改动记录。"))]));
+			e.fields.length ? (B(), V("ul", zwe, [(B(!0), V(z, null, R(e.fields.slice(0, 6), (e, t) => (B(), V("li", { key: t }, A(c(e)) + "：" + A(l(e.from, e)) + " → " + A(l(e.to, e)), 1))), 128)), e.fields.length > 6 ? (B(), V("li", Bwe, "还有 " + A(e.fields.length - 6) + " 处", 1)) : K("", !0)])) : K("", !0)
+		]))), 128))]))), 128))])) : (B(), V("p", Fwe, "还没有改动记录。"))]));
 	}
-}), Vwe = ["data-testid"], Hwe = ["title", "data-key"], Uwe = [
+}), Hwe = ["data-testid"], Uwe = ["title", "data-key"], Wwe = [
 	"data-level",
 	"disabled",
 	"aria-label",
 	"data-testid",
 	"onClick",
 	"onContextmenu"
-], Wwe = { class: "ps-skill-ab" }, Gwe = { class: "ps-skill-name" }, Kwe = { class: "ps-skill-aux" }, qwe = [
+], Gwe = { class: "ps-skill-ab" }, Kwe = { class: "ps-skill-name" }, qwe = { class: "ps-skill-aux" }, Jwe = [
 	"data-on",
 	"aria-label",
 	"disabled",
 	"onClick"
-], Jwe = [
+], Ywe = [
 	"aria-label",
 	"disabled",
 	"onClick"
@@ -68959,8 +69005,8 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 				"data-testid": `ps-prof-${t.key}`,
 				onClick: (e) => c(t, !0),
 				onContextmenu: J((e) => c(t, !1), ["prevent"])
-			}, A(o(t.proficient)), 41, Uwe),
-			U("span", Wwe, [W(RF, {
+			}, A(o(t.proficient)), 41, Wwe),
+			U("span", Gwe, [W(RF, {
 				label: `${t.label}的关联属性`,
 				text: N(H8)(N(n).glossary, "abilities", t.baseAbility),
 				items: l.value.map((e) => ({
@@ -68975,9 +69021,9 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 				"items",
 				"onSelect"
 			])]),
-			U("span", Gwe, A(t.label), 1),
+			U("span", Kwe, A(t.label), 1),
 			U("b", null, A(N(X8)(t.total)), 1),
-			U("span", Kwe, [U("button", {
+			U("span", qwe, [U("button", {
 				class: "ps-skill-icon",
 				type: "button",
 				"data-on": p(t.key) || void 0,
@@ -68987,7 +69033,7 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 			}, [W(Z, {
 				name: p(t.key) ? "star-fill" : "star",
 				size: 12
-			}, null, 8, ["name"])], 8, qwe), U("button", {
+			}, null, 8, ["name"])], 8, Jwe), U("button", {
 				class: "ps-skill-icon",
 				type: "button",
 				"aria-label": `${t.label}设置`,
@@ -68996,37 +69042,37 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 			}, [W(Z, {
 				name: "gear",
 				size: 12
-			})], 8, Jwe)]),
+			})], 8, Ywe)]),
 			U("small", null, A(e.passive === !1 ? "" : t.passive), 1)
-		], 8, Hwe))), 128))], 8, Vwe));
+		], 8, Uwe))), 128))], 8, Hwe));
 	}
-}), Ywe = {
+}), Xwe = {
 	key: 0,
 	class: "ps-drawer-note"
-}, Xwe = {
+}, Zwe = {
 	key: 1,
 	class: "ps-favs",
 	"data-testid": "ps-favs"
-}, Zwe = ["data-type", "data-off"], Qwe = { class: "ps-fav-main" }, $we = { class: "ps-fav-name" }, eTe = {
+}, Qwe = ["data-type", "data-off"], $we = { class: "ps-fav-main" }, eTe = { class: "ps-fav-name" }, tTe = {
 	key: 0,
 	class: "dt-qty"
-}, tTe = { key: 0 }, nTe = { class: "ps-fav-val" }, rTe = {
+}, nTe = { key: 0 }, rTe = { class: "ps-fav-val" }, iTe = {
 	key: 0,
 	class: "ps-uses"
-}, iTe = {
+}, aTe = {
 	key: 1,
 	class: "ps-mod"
-}, aTe = {
+}, oTe = {
 	key: 0,
 	class: "ps-fav-passive"
-}, oTe = {
+}, sTe = {
 	key: 2,
 	class: "ps-stack"
-}, sTe = { key: 3 }, cTe = [
+}, cTe = { key: 3 }, lTe = [
 	"aria-label",
 	"disabled",
 	"onClick"
-], lTe = /* @__PURE__ */ I({
+], uTe = /* @__PURE__ */ I({
 	__name: "FavoritesList",
 	setup(e) {
 		let t = R8(), n = q(() => t.readOnly), r = q(() => t.sheet?.view?.parts?.sidebar?.favorites ?? []), i = (e) => String(e ?? "").replace(/&bull;/g, "·").replace(/<[^>]+>/g, "").trim();
@@ -69070,14 +69116,14 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 				value: n
 			}]);
 		}
-		return (e, t) => r.value.length ? (B(), V("ul", Xwe, [(B(!0), V(z, null, R(r.value, (e) => (B(), V("li", {
+		return (e, t) => r.value.length ? (B(), V("ul", Zwe, [(B(!0), V(z, null, R(r.value, (e) => (B(), V("li", {
 			key: e.id,
 			class: "ps-fav",
 			"data-type": e.type,
 			"data-off": e.toggle && !e.toggle.value || void 0
 		}, [
-			U("span", Qwe, [U("b", $we, [G(A(i(e.title)), 1), e.quantity ? (B(), V("small", eTe, "×" + A(e.quantity), 1)) : K("", !0)]), i(e.subtitle) ? (B(), V("small", tTe, A(i(e.subtitle)), 1)) : K("", !0)]),
-			U("span", nTe, [e.uses?.max ? (B(), V("span", rTe, [W(s5, {
+			U("span", $we, [U("b", eTe, [G(A(i(e.title)), 1), e.quantity ? (B(), V("small", tTe, "×" + A(e.quantity), 1)) : K("", !0)]), i(e.subtitle) ? (B(), V("small", nTe, A(i(e.subtitle)), 1)) : K("", !0)]),
+			U("span", rTe, [e.uses?.max ? (B(), V("span", iTe, [W(s5, {
 				value: Number(e.uses.value ?? 0),
 				max: Number(e.uses.max),
 				label: `${i(e.title)}剩余`,
@@ -69089,7 +69135,7 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 				"label",
 				"disabled",
 				"onSet"
-			]), U("small", null, "/ " + A(e.uses.max), 1)])) : e.modifier !== void 0 && e.modifier !== null && e.modifier !== "" ? (B(), V("b", iTe, [G(A(typeof e.modifier == "number" ? N(X8)(e.modifier) : e.modifier), 1), e.passive ? (B(), V("small", aTe, "(" + A(e.passive) + ")", 1)) : K("", !0)])) : e.save?.dc ? (B(), V("span", oTe, [U("small", null, A(e.save.ability), 1), U("b", null, A(e.save.dc), 1)])) : e.value !== void 0 && e.value !== null && e.value !== "" ? (B(), V("b", sTe, A(e.value), 1)) : K("", !0), e.toggle?.applicable ? (B(), H(VF, {
+			]), U("small", null, "/ " + A(e.uses.max), 1)])) : e.modifier !== void 0 && e.modifier !== null && e.modifier !== "" ? (B(), V("b", aTe, [G(A(typeof e.modifier == "number" ? N(X8)(e.modifier) : e.modifier), 1), e.passive ? (B(), V("small", oTe, "(" + A(e.passive) + ")", 1)) : K("", !0)])) : e.save?.dc ? (B(), V("span", sTe, [U("small", null, A(e.save.ability), 1), U("b", null, A(e.save.dc), 1)])) : e.value !== void 0 && e.value !== null && e.value !== "" ? (B(), V("b", cTe, A(e.value), 1)) : K("", !0), e.toggle?.applicable ? (B(), H(VF, {
 				key: 4,
 				"model-value": !!e.toggle.value,
 				label: `${i(e.title)}开关`,
@@ -69110,8 +69156,8 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 			}, [W(Z, {
 				name: "x",
 				size: 12
-			})], 8, cTe)
-		], 8, Zwe))), 128))])) : (B(), V("p", Ywe, "还没有收藏。物品、法术、特性在各页 ⋯ 里「收藏到侧栏」；技能、工具在属性页悬停点 ★。"));
+			})], 8, lTe)
+		], 8, Qwe))), 128))])) : (B(), V("p", Xwe, "还没有收藏。物品、法术、特性在各页 ⋯ 里「收藏到侧栏」；技能、工具在属性页悬停点 ★。"));
 	}
 });
 // src/ui/person/bag-actions.ts
@@ -69131,40 +69177,40 @@ function l5() {
 	};
 }
 // src/ui/person/table/Cell.vue?vue&type=script&setup=true&lang.ts
-var uTe = {
+var dTe = {
 	key: 0,
 	class: "ps-dim"
-}, dTe = ["data-cooldown", "title"], fTe = {
+}, fTe = ["data-cooldown", "title"], pTe = {
 	key: 2,
 	class: "ps-uses"
-}, pTe = {
+}, mTe = {
 	key: 3,
 	class: "ps-dim"
-}, mTe = {
+}, hTe = {
 	key: 0,
 	class: "ps-mod"
-}, hTe = {
+}, gTe = {
 	key: 1,
 	class: "ps-stack"
-}, gTe = {
+}, _Te = {
 	key: 2,
 	class: "ps-dim"
-}, _Te = ["title"], vTe = { key: 0 }, yTe = {
+}, vTe = ["title"], yTe = { key: 0 }, bTe = {
 	key: 1,
 	class: "ps-dim"
-}, bTe = ["title"], xTe = { class: "ps-cap-bar" }, STe = {
+}, xTe = ["title"], STe = { class: "ps-cap-bar" }, CTe = {
 	key: 1,
 	class: "ps-dim"
-}, CTe = {
+}, wTe = {
 	key: 0,
 	class: "ps-comps"
-}, wTe = ["data-special"], TTe = {
+}, TTe = ["data-special"], ETe = {
 	key: 1,
 	class: "ps-dim"
-}, ETe = ["title"], DTe = {
+}, DTe = ["title"], OTe = {
 	key: 14,
 	class: "ps-dim"
-}, OTe = /* @__PURE__ */ I({
+}, kTe = /* @__PURE__ */ I({
 	__name: "Cell",
 	props: {
 		col: {},
@@ -69212,12 +69258,12 @@ var uTe = {
 				special: !!e.tag
 			}));
 		}), v = q(() => o.value.school ? H8(i.value, "spellSchools", o.value.school) : "");
-		return (t, n) => e.col === "uses" || e.col === "charges" ? (B(), V(z, { key: 0 }, [l.value ? (B(), V("span", uTe, "?")) : u.value && "recharge" in u.value ? (B(), V("span", {
+		return (t, n) => e.col === "uses" || e.col === "charges" ? (B(), V(z, { key: 0 }, [l.value ? (B(), V("span", dTe, "?")) : u.value && "recharge" in u.value ? (B(), V("span", {
 			key: 1,
 			class: "ps-recharge",
 			"data-cooldown": u.value.cooldown || void 0,
 			title: u.value.cooldown ? "在充能中（掷充能骰在后续版本）" : "已充能"
-		}, A(u.value.recharge || "充能"), 9, dTe)) : u.value && "max" in u.value ? (B(), V("span", fTe, [W(s5, {
+		}, A(u.value.recharge || "充能"), 9, fTe)) : u.value && "max" in u.value ? (B(), V("span", pTe, [W(s5, {
 			value: u.value.value,
 			max: u.value.max,
 			label: `${e.row.name}剩余次数`,
@@ -69228,11 +69274,11 @@ var uTe = {
 			"max",
 			"label",
 			"disabled"
-		]), U("small", null, "/ " + A(u.value.max), 1)])) : (B(), V("span", pTe, "—"))], 64)) : e.col === "roll" ? (B(), V(z, { key: 1 }, [d.value?.hit ? (B(), V("b", mTe, A(d.value.hit), 1)) : d.value ? (B(), V("span", hTe, [U("small", null, A(d.value.ability), 1), U("b", null, A(d.value.dc), 1)])) : (B(), V("span", gTe, "—"))], 64)) : e.col === "formula" ? (B(), V(z, { key: 2 }, [f.value.length ? (B(), V("span", {
+		]), U("small", null, "/ " + A(u.value.max), 1)])) : (B(), V("span", mTe, "—"))], 64)) : e.col === "roll" ? (B(), V(z, { key: 1 }, [d.value?.hit ? (B(), V("b", hTe, A(d.value.hit), 1)) : d.value ? (B(), V("span", gTe, [U("small", null, A(d.value.ability), 1), U("b", null, A(d.value.dc), 1)])) : (B(), V("span", _Te, "—"))], 64)) : e.col === "formula" ? (B(), V(z, { key: 2 }, [f.value.length ? (B(), V("span", {
 			key: 0,
 			class: "ps-formula",
 			title: f.value.join("、")
-		}, [G(A(f.value.slice(0, 2).join(" · ")), 1), f.value.length > 2 ? (B(), V("small", vTe, " +" + A(f.value.length - 2), 1)) : K("", !0)], 8, _Te)) : (B(), V("span", yTe, "—"))], 64)) : e.col === "range" ? (B(), V("span", {
+		}, [G(A(f.value.slice(0, 2).join(" · ")), 1), f.value.length > 2 ? (B(), V("small", yTe, " +" + A(f.value.length - 2), 1)) : K("", !0)], 8, vTe)) : (B(), V("span", bTe, "—"))], 64)) : e.col === "range" ? (B(), V("span", {
 			key: 3,
 			class: Bt({ "ps-dim": !p.value })
 		}, A(p.value || "—"), 3)) : e.col === "target" ? (B(), V("span", {
@@ -69268,18 +69314,18 @@ var uTe = {
 			key: 0,
 			class: "ps-cap",
 			title: `${g.value.value} / ${g.value.max} ${g.value.units}`
-		}, [U("span", xTe, [U("i", { style: Ft({ width: `${g.value.pct}%` }) }, null, 4)]), U("small", null, A(g.value.value) + " / " + A(g.value.max), 1)], 8, bTe)) : (B(), V("span", STe, "—"))], 64)) : e.col === "components" ? (B(), V(z, { key: 12 }, [_.value.length ? (B(), V("span", CTe, [(B(!0), V(z, null, R(_.value, (e) => (B(), V("span", {
+		}, [U("span", STe, [U("i", { style: Ft({ width: `${g.value.pct}%` }) }, null, 4)]), U("small", null, A(g.value.value) + " / " + A(g.value.max), 1)], 8, xTe)) : (B(), V("span", CTe, "—"))], 64)) : e.col === "components" ? (B(), V(z, { key: 12 }, [_.value.length ? (B(), V("span", wTe, [(B(!0), V(z, null, R(_.value, (e) => (B(), V("span", {
 			key: e.abbr,
 			class: "ps-comp",
 			"data-special": e.special || void 0
-		}, A(e.abbr), 9, wTe))), 128))])) : (B(), V("span", TTe, "—"))], 64)) : e.col === "school" ? (B(), V("span", {
+		}, A(e.abbr), 9, TTe))), 128))])) : (B(), V("span", ETe, "—"))], 64)) : e.col === "school" ? (B(), V("span", {
 			key: 13,
 			class: "ps-school",
 			title: v.value
-		}, A(v.value ? v.value.slice(0, 2) : "—"), 9, ETe)) : (B(), V("span", DTe, "—"));
+		}, A(v.value ? v.value.slice(0, 2) : "—"), 9, DTe)) : (B(), V("span", OTe, "—"));
 	}
 }), u5 = (e) => Array.isArray(e) ? e : e && typeof e == "object" ? Object.values(e) : [], d5 = (e) => e.view?.parts ?? {};
-function kTe(e, t) {
+function ATe(e, t) {
 	let n = d5(e)[t]?.listControls;
 	if (!n) return null;
 	let r = (e) => u5(e).map((e) => ({
@@ -69293,7 +69339,7 @@ function kTe(e, t) {
 		filters: r(n.filters)
 	};
 }
-function ATe(e, t, n) {
+function jTe(e, t, n) {
 	let r = d5(e)[t] ?? {}, i = e.view?.base?.itemContext ?? {}, a = new Map((e.items ?? []).map((e) => [e.id, e])), o = u5(r.sections), s = /* @__PURE__ */ new Map();
 	for (let e of o) for (let t of u5(e.items)) s.set(t.id, t);
 	for (let e of u5(r.containers)) s.set(e.id, e);
@@ -69323,7 +69369,7 @@ function ATe(e, t, n) {
 	return f.length ? f.sort((e, t) => Number(e.order ?? 0) - Number(t.order ?? 0)).map((e) => u(e, l.filter((t) => i[t]?.groups?.[d] === e.groups[d]).map(c))).filter((e) => e.rows.length) : o.map((e) => u(e, u5(e.items).map((e) => c(String(e.id))))).filter((e) => e.rows.length || e.usesSlots);
 }
 var f5 = (e) => String(e?.flags?.["tavern-trpg"]?.section ?? "").trim();
-function jTe(e) {
+function MTe(e) {
 	let t = /* @__PURE__ */ new Map(), n = (e) => f5(e.item), r = e.map((e) => ({
 		...e,
 		rows: e.rows.filter((e) => {
@@ -69342,7 +69388,7 @@ function jTe(e) {
 	}));
 	return [...r.filter((e) => e.rows.length || e.usesSlots), ...i];
 }
-function MTe(e, t, n, r = null) {
+function NTe(e, t, n, r = null) {
 	let i = t.trim().toLowerCase(), a = (e) => (!i || e.name.toLowerCase().includes(i)) && (!r || r.has(e.id)) || e.children.some(a), o = (e) => n === "a" ? [...e].sort((e, t) => e.name.localeCompare(t.name, "zh-Hans-CN")) : e;
 	return e.map((e) => ({
 		...e,
@@ -69359,20 +69405,20 @@ function p5(e, t) {
 	}
 	return String((e.items ?? []).find((e) => e.id === t)?.name ?? "");
 }
-function NTe(e, t) {
+function PTe(e, t) {
 	for (let n of Object.values(d5(e))) {
 		for (let e of u5(n?.sections)) for (let n of u5(e.items)) if (n.id === t && n.ref) return n.ref;
 		for (let e of u5(n?.containers)) if (e.id === t && e.ref) return e.ref;
 	}
 }
-var m5 = "flags.tavern-trpg.pins", h5 = (e, t) => u5(e.flags?.["tavern-trpg"]?.pins?.[t]).map(String), PTe = ["data-testid"], FTe = { class: "ps-pin-name" }, ITe = {
+var m5 = "flags.tavern-trpg.pins", h5 = (e, t) => u5(e.flags?.["tavern-trpg"]?.pins?.[t]).map(String), FTe = ["data-testid"], ITe = { class: "ps-pin-name" }, LTe = {
 	key: 0,
 	class: "ps-uses"
-}, LTe = [
+}, RTe = [
 	"aria-label",
 	"disabled",
 	"onClick"
-], RTe = /* @__PURE__ */ I({
+], zTe = /* @__PURE__ */ I({
 	__name: "PinStrip",
 	props: { tab: {} },
 	setup(e) {
@@ -69414,8 +69460,8 @@ var m5 = "flags.tavern-trpg.pins", h5 = (e, t) => u5(e.flags?.["tavern-trpg"]?.p
 				size: 13,
 				class: "ps-pin-icon"
 			}),
-			U("b", FTe, A(e.name), 1),
-			e.uses ? (B(), V("span", ITe, [W(s5, {
+			U("b", ITe, A(e.name), 1),
+			e.uses ? (B(), V("span", LTe, [W(s5, {
 				value: e.uses.value,
 				max: e.uses.max,
 				label: `${e.name}剩余次数`,
@@ -69449,8 +69495,8 @@ var m5 = "flags.tavern-trpg.pins", h5 = (e, t) => u5(e.flags?.["tavern-trpg"]?.p
 			}, [W(Z, {
 				name: "x",
 				size: 12
-			})], 8, LTe)
-		]))), 128))], 8, PTe)) : K("", !0);
+			})], 8, RTe)
+		]))), 128))], 8, FTe)) : K("", !0);
 	}
 }), g5 = {
 	charges: {
@@ -69584,14 +69630,14 @@ var m5 = "flags.tavern-trpg.pins", h5 = (e, t) => u5(e.flags?.["tavern-trpg"]?.p
 		duration: [200, 200]
 	}) }
 };
-function zTe(e, t) {
+function BTe(e, t) {
 	let n = t && v5[e][t] || v5[e].default, r = Object.keys(n);
 	return {
 		sorted: [...r].sort((e, t) => n[e].order - n[t].order),
 		dropOrder: [...r].sort((e, t) => n[e].priority - n[t].priority)
 	};
 }
-function BTe(e, t, n, r) {
+function VTe(e, t, n, r) {
 	let i = n.sorted.reduce((e, t) => e + g5[t].rem, 0) + 15 + r, a = e / t, o = /* @__PURE__ */ new Set();
 	for (let e of n.dropOrder) {
 		if (i <= a) break;
@@ -69599,7 +69645,7 @@ function BTe(e, t, n, r) {
 	}
 	return o;
 }
-var VTe = {
+var HTe = {
 	action: ["menu"],
 	feature: ["menu"],
 	inventory: [
@@ -69609,7 +69655,7 @@ var VTe = {
 	],
 	spell: ["prepare", "menu"],
 	effect: ["menu"]
-}, HTe = { class: "pf-body" }, UTe = { class: "pf-intro" }, WTe = { class: "pf-name" }, GTe = { class: "pf-intro" }, KTe = { class: "pf-foot" }, qTe = /* @__PURE__ */ I({
+}, UTe = { class: "pf-body" }, WTe = { class: "pf-intro" }, GTe = { class: "pf-name" }, KTe = { class: "pf-intro" }, qTe = { class: "pf-foot" }, JTe = /* @__PURE__ */ I({
 	__name: "SplitPage",
 	props: {
 		itemId: {},
@@ -69625,9 +69671,9 @@ var VTe = {
 			class: "pf",
 			"data-testid": "split-page",
 			onSubmit: J(a, ["prevent"])
-		}, [U("div", HTe, [
-			U("p", UTe, "现在一共 " + A(e.quantity) + " 个。拆出来的放成新的一堆，原来这堆留下其余的。", 1),
-			U("div", WTe, [n[2] ||= U("span", null, "拆出几个", -1), U("span", null, [W(s5, {
+		}, [U("div", UTe, [
+			U("p", WTe, "现在一共 " + A(e.quantity) + " 个。拆出来的放成新的一堆，原来这堆留下其余的。", 1),
+			U("div", GTe, [n[2] ||= U("span", null, "拆出几个", -1), U("span", null, [W(s5, {
 				value: i.value,
 				min: 1,
 				max: e.quantity - 1,
@@ -69635,8 +69681,8 @@ var VTe = {
 				label: "拆出几个",
 				onSet: n[0] ||= (e) => i.value = e
 			}, null, 8, ["value", "max"])])]),
-			U("p", GTe, "拆完：原来这堆 " + A(e.quantity - i.value) + " 个 · 新的一堆 " + A(i.value) + " 个", 1)
-		]), U("div", KTe, [
+			U("p", KTe, "拆完：原来这堆 " + A(e.quantity - i.value) + " 个 · 新的一堆 " + A(i.value) + " 个", 1)
+		]), U("div", qTe, [
 			n[3] ||= U("span", { class: "pf-gap" }, null, -1),
 			U("button", {
 				class: "trpg-btn",
@@ -69651,7 +69697,7 @@ var VTe = {
 		])], 32));
 	}
 }), y5 = (e) => `.Item.${e}`;
-function JTe() {
+function YTe() {
 	let e = R8(), t = hA(), n = (t) => (e.sheet?.view?.parts?.actions?.sections ?? []).some((e) => (e.items ?? []).some((e) => e.id === t.id)), r = () => e.sheet?.system.favorites ?? [], i = (e) => r().some((t) => t.id === y5(e.id)), a = (t, n, r, i) => e.edit(t, [{
 		kind: "item",
 		itemId: n.id,
@@ -69779,7 +69825,7 @@ function JTe() {
 			case "split": return Number(c.quantity) === 2 ? e.splitStack(`把${o.name}拆出 1 个`, o.id, 1) : t.open({
 				key: `person-split:${o.id}`,
 				title: `拆分「${o.name}」`,
-				component: jr(qTe),
+				component: jr(JTe),
 				props: {
 					itemId: o.id,
 					name: o.name,
@@ -69817,43 +69863,36 @@ function JTe() {
 	};
 }
 // src/ui/person/table/DocTable.vue?vue&type=script&setup=true&lang.ts
-var YTe = ["data-testid"], XTe = ["data-collapsed", "data-testid"], ZTe = { class: "dt-head" }, QTe = [
+var XTe = ["data-testid"], ZTe = ["data-collapsed", "data-testid"], QTe = { class: "dt-head" }, $Te = [
 	"aria-expanded",
 	"aria-label",
 	"onClick"
-], $Te = {
+], eEe = {
 	class: "dt-cols",
 	"aria-hidden": "true"
-}, eEe = [
+}, tEe = [
 	"disabled",
 	"aria-label",
 	"onClick"
-], tEe = {
+], nEe = {
 	key: 0,
 	class: "dt-rows"
-}, nEe = [
+}, rEe = [
 	"data-open",
 	"data-depth",
 	"data-id"
-], rEe = { class: "dt-main" }, iEe = [
+], iEe = { class: "dt-main" }, aEe = [
 	"aria-expanded",
 	"aria-label",
 	"onClick"
-], aEe = {
+], oEe = {
 	key: 2,
 	class: "dt-initial",
 	"aria-hidden": "true"
-}, oEe = { class: "dt-name" }, sEe = ["aria-expanded", "onClick"], cEe = {
+}, sEe = { class: "dt-name" }, cEe = ["aria-expanded", "onClick"], lEe = {
 	key: 0,
 	class: "dt-qty"
-}, lEe = { key: 0 }, uEe = ["data-col"], dEe = { class: "dt-acts" }, fEe = [
-	"data-on",
-	"aria-pressed",
-	"aria-label",
-	"title",
-	"disabled",
-	"onClick"
-], pEe = [
+}, uEe = { key: 0 }, dEe = ["data-col"], fEe = { class: "dt-acts" }, pEe = [
 	"data-on",
 	"aria-pressed",
 	"aria-label",
@@ -69867,24 +69906,31 @@ var YTe = ["data-testid"], XTe = ["data-collapsed", "data-testid"], ZTe = { clas
 	"title",
 	"disabled",
 	"onClick"
-], hEe = {
+], hEe = [
+	"data-on",
+	"aria-pressed",
+	"aria-label",
+	"title",
+	"disabled",
+	"onClick"
+], gEe = {
 	key: 1,
 	class: "dt-act-gap",
 	"aria-hidden": "true"
-}, gEe = {
+}, _Ee = {
 	key: 0,
 	class: "dt-detail"
-}, _Ee = {
+}, vEe = {
 	key: 1,
 	class: "dt-desc"
-}, vEe = {
+}, yEe = {
 	key: 2,
 	class: "ps-drawer-note"
-}, yEe = {
+}, bEe = {
 	key: 3,
 	class: "dt-activities",
 	"aria-label": "活动"
-}, bEe = { key: 0 }, xEe = { key: 1 }, SEe = { key: 2 }, CEe = { key: 3 }, wEe = { key: 4 }, b5 = /* @__PURE__ */ I({
+}, xEe = { key: 0 }, SEe = { key: 1 }, CEe = { key: 2 }, wEe = { key: 3 }, TEe = { key: 4 }, b5 = /* @__PURE__ */ I({
 	__name: "DocTable",
 	props: {
 		domain: {},
@@ -69902,7 +69948,7 @@ var YTe = ["data-testid"], XTe = ["data-collapsed", "data-testid"], ZTe = { clas
 	},
 	emits: ["create", "section"],
 	setup(e, { emit: t }) {
-		let n = e, r = t, i = R8(), a = JTe(), o = q(() => i.readOnly), s = /* @__PURE__ */ j(null), c = /* @__PURE__ */ j(800), l = null;
+		let n = e, r = t, i = R8(), a = YTe(), o = q(() => i.readOnly), s = /* @__PURE__ */ j(null), c = /* @__PURE__ */ j(800), l = null;
 		L(() => {
 			s.value && (l = new ResizeObserver((e) => {
 				c.value = e[0].contentRect.width;
@@ -69915,11 +69961,11 @@ var YTe = ["data-testid"], XTe = ["data-collapsed", "data-testid"], ZTe = { clas
 		let m = (e, t) => {
 			let n = new Set(e);
 			return n.has(t) ? n.delete(t) : n.add(t), n;
-		}, h = q(() => VTe[n.domain]), g = (e, t) => {
+		}, h = q(() => HTe[n.domain]), g = (e, t) => {
 			let n = e.item?.system ?? {};
 			return t === "equip" ? "equipped" in n : t === "attune" ? !!n.attunement && n.identified !== !1 : t === "prepare" && !!e.ctx?.preparation?.applicable;
 		}, _ = (e) => {
-			let t = zTe(n.domain, e.type), r = 2.5 + h.value.filter((t) => t !== "menu" && e.rows.some((e) => g(e, t))).length * 1.9 + (e.usesSlots ? e.pips.length * 1.15 + 6 : 0), i = BTe(c.value, u.value, t, r);
+			let t = BTe(n.domain, e.type), r = 2.5 + h.value.filter((t) => t !== "menu" && e.rows.some((e) => g(e, t))).length * 1.9 + (e.usesSlots ? e.pips.length * 1.15 + 6 : 0), i = VTe(c.value, u.value, t, r);
 			return t.sorted.filter((e) => !i.has(e));
 		}, v = (e) => {
 			let t = [], n = (e, r) => {
@@ -69939,7 +69985,7 @@ var YTe = ["data-testid"], XTe = ["data-collapsed", "data-testid"], ZTe = { clas
 			ref: s,
 			class: "dt",
 			"data-testid": e.testid
-		}, [e.tab ? (B(), H(RTe, {
+		}, [e.tab ? (B(), H(zTe, {
 			key: 0,
 			tab: e.tab
 		}, null, 8, ["tab"])) : K("", !0), (B(!0), V(z, null, R(e.groups, (n) => (B(), V("section", {
@@ -69947,7 +69993,7 @@ var YTe = ["data-testid"], XTe = ["data-collapsed", "data-testid"], ZTe = { clas
 			class: "dt-grp",
 			"data-collapsed": d.value.has(n.key) || void 0,
 			"data-testid": `${e.testid}-${n.key}`
-		}, [U("header", ZTe, [
+		}, [U("header", QTe, [
 			U("button", {
 				class: "dt-fold",
 				type: "button",
@@ -69961,9 +70007,9 @@ var YTe = ["data-testid"], XTe = ["data-collapsed", "data-testid"], ZTe = { clas
 				}),
 				U("b", null, A(n.label), 1),
 				U("small", null, A(n.rows.length), 1)
-			], 8, QTe),
+			], 8, $Te),
 			Do(t.$slots, "group", { group: n }),
-			U("span", $Te, [(B(!0), V(z, null, R(_(n), (e) => (B(), V("span", {
+			U("span", eEe, [(B(!0), V(z, null, R(_(n), (e) => (B(), V("span", {
 				key: e,
 				style: Ft({ width: x(e) })
 			}, A(N(g5)[e].label), 5))), 128)), U("span", {
@@ -69979,15 +70025,15 @@ var YTe = ["data-testid"], XTe = ["data-collapsed", "data-testid"], ZTe = { clas
 			}, [W(Z, {
 				name: "plus",
 				size: 14
-			})], 8, eEe)) : K("", !0)], 4)])
-		]), d.value.has(n.key) ? K("", !0) : (B(), V("ul", tEe, [(B(!0), V(z, null, R(v(n), (t) => (B(), V("li", {
+			})], 8, tEe)) : K("", !0)], 4)])
+		]), d.value.has(n.key) ? K("", !0) : (B(), V("ul", nEe, [(B(!0), V(z, null, R(v(n), (t) => (B(), V("li", {
 			key: t.id,
 			class: "dt-row",
 			"data-open": f.value.has(t.id) || void 0,
 			"data-depth": t.depth || void 0,
 			"data-testid": "ps-row",
 			"data-id": t.id
-		}, [U("div", rEe, [
+		}, [U("div", iEe, [
 			t.depth ? (B(), V("span", {
 				key: 0,
 				class: "dt-indent",
@@ -70007,23 +70053,23 @@ var YTe = ["data-testid"], XTe = ["data-collapsed", "data-testid"], ZTe = { clas
 			}, [W(Z, {
 				name: "caret-right",
 				size: 12
-			})], 8, iEe)) : (B(), V("span", aEe, A(t.name.slice(0, 1)), 1)),
-			U("div", oEe, [U("button", {
+			})], 8, aEe)) : (B(), V("span", oEe, A(t.name.slice(0, 1)), 1)),
+			U("div", sEe, [U("button", {
 				type: "button",
 				class: "dt-title",
 				"aria-expanded": f.value.has(t.id),
 				onClick: (e) => f.value = m(f.value, t.id)
-			}, [G(A(t.name), 1), Number(t.item?.system?.quantity) > 1 ? (B(), V("small", cEe, "×" + A(t.item.system.quantity), 1)) : K("", !0)], 8, sEe), t.subtitle ? (B(), V("small", lEe, A(t.subtitle), 1)) : K("", !0)]),
+			}, [G(A(t.name), 1), Number(t.item?.system?.quantity) > 1 ? (B(), V("small", lEe, "×" + A(t.item.system.quantity), 1)) : K("", !0)], 8, cEe), t.subtitle ? (B(), V("small", uEe, A(t.subtitle), 1)) : K("", !0)]),
 			(B(!0), V(z, null, R(_(n), (e) => (B(), V("span", {
 				key: e,
 				class: "dt-cell",
 				style: Ft({ width: x(e) }),
 				"data-col": e
-			}, [W(OTe, {
+			}, [W(kTe, {
 				col: e,
 				row: t
-			}, null, 8, ["col", "row"])], 12, uEe))), 128)),
-			U("span", dEe, [(B(!0), V(z, null, R(h.value, (e) => (B(), V(z, { key: e }, [e !== "menu" && g(t, e) ? (B(), V(z, { key: 0 }, [e === "equip" ? (B(), V("button", {
+			}, null, 8, ["col", "row"])], 12, dEe))), 128)),
+			U("span", fEe, [(B(!0), V(z, null, R(h.value, (e) => (B(), V(z, { key: e }, [e !== "menu" && g(t, e) ? (B(), V(z, { key: 0 }, [e === "equip" ? (B(), V("button", {
 				key: 0,
 				class: "dt-act",
 				type: "button",
@@ -70036,7 +70082,7 @@ var YTe = ["data-testid"], XTe = ["data-collapsed", "data-testid"], ZTe = { clas
 			}, [W(Z, {
 				name: "hand-fist",
 				size: 15
-			})], 8, fEe)) : e === "attune" ? (B(), V("button", {
+			})], 8, pEe)) : e === "attune" ? (B(), V("button", {
 				key: 1,
 				class: "dt-act",
 				type: "button",
@@ -70049,7 +70095,7 @@ var YTe = ["data-testid"], XTe = ["data-collapsed", "data-testid"], ZTe = { clas
 			}, [W(Z, {
 				name: "sun",
 				size: 15
-			})], 8, pEe)) : e === "prepare" ? (B(), V("button", {
+			})], 8, mEe)) : e === "prepare" ? (B(), V("button", {
 				key: 2,
 				class: "dt-act",
 				type: "button",
@@ -70062,7 +70108,7 @@ var YTe = ["data-testid"], XTe = ["data-collapsed", "data-testid"], ZTe = { clas
 			}, [W(Z, {
 				name: "book-open-text",
 				size: 15
-			})], 8, mEe)) : K("", !0)], 64)) : e === "menu" ? K("", !0) : (B(), V("span", hEe))], 64))), 128)), W(RF, {
+			})], 8, hEe)) : K("", !0)], 64)) : e === "menu" ? K("", !0) : (B(), V("span", gEe))], 64))), 128)), W(RF, {
 				label: t.name,
 				items: N(a).entries(t, {
 					open: f.value.has(t.id),
@@ -70074,36 +70120,36 @@ var YTe = ["data-testid"], XTe = ["data-collapsed", "data-testid"], ZTe = { clas
 				"items",
 				"onSelect"
 			])])
-		]), f.value.has(t.id) ? (B(), V("div", gEe, [t.ref ? (B(), H(s8, {
+		]), f.value.has(t.id) ? (B(), V("div", _Ee, [t.ref ? (B(), H(s8, {
 			key: 0,
 			"entry-ref": t.ref,
 			"body-only": ""
-		}, null, 8, ["entry-ref"])) : b(t.item?.system?.description?.value) ? (B(), V("p", _Ee, A(b(t.item.system.description.value)), 1)) : (B(), V("p", vEe, "这一项没有说明文字。")), Array.isArray(t.ctx?.activities) && t.ctx.activities.length ? (B(), V("ul", yEe, [(B(!0), V(z, null, R(t.ctx.activities, (e, t) => (B(), V("li", { key: t }, [
+		}, null, 8, ["entry-ref"])) : b(t.item?.system?.description?.value) ? (B(), V("p", vEe, A(b(t.item.system.description.value)), 1)) : (B(), V("p", yEe, "这一项没有说明文字。")), Array.isArray(t.ctx?.activities) && t.ctx.activities.length ? (B(), V("ul", bEe, [(B(!0), V(z, null, R(t.ctx.activities, (e, t) => (B(), V("li", { key: t }, [
 			U("b", null, A(e.name), 1),
-			e.labels?.activation ? (B(), V("span", bEe, A(e.labels.activation), 1)) : K("", !0),
-			e.labels?.toHit ? (B(), V("span", xEe, "命中 " + A(e.labels.toHit), 1)) : K("", !0),
-			e.labels?.save ? (B(), V("span", SEe, A(e.labels.save), 1)) : K("", !0),
-			e.labels?.range ? (B(), V("span", CEe, A(e.labels.range), 1)) : K("", !0),
-			e.labels?.target ? (B(), V("span", wEe, A(e.labels.target), 1)) : K("", !0)
-		]))), 128))])) : K("", !0)])) : K("", !0)], 8, nEe))), 128))]))], 8, XTe))), 128))], 8, YTe));
+			e.labels?.activation ? (B(), V("span", xEe, A(e.labels.activation), 1)) : K("", !0),
+			e.labels?.toHit ? (B(), V("span", SEe, "命中 " + A(e.labels.toHit), 1)) : K("", !0),
+			e.labels?.save ? (B(), V("span", CEe, A(e.labels.save), 1)) : K("", !0),
+			e.labels?.range ? (B(), V("span", wEe, A(e.labels.range), 1)) : K("", !0),
+			e.labels?.target ? (B(), V("span", TEe, A(e.labels.target), 1)) : K("", !0)
+		]))), 128))])) : K("", !0)])) : K("", !0)], 8, rEe))), 128))]))], 8, ZTe))), 128))], 8, XTe));
 	}
-}), TEe = ["data-testid"], EEe = { class: "dt-search" }, DEe = [
+}), EEe = ["data-testid"], DEe = { class: "dt-search" }, OEe = [
 	"placeholder",
 	"aria-label",
 	"data-testid"
-], OEe = ["aria-label", "data-testid"], kEe = [
+], kEe = ["aria-label", "data-testid"], AEe = [
 	"aria-expanded",
 	"data-on",
 	"data-testid"
-], AEe = {
+], jEe = {
 	key: 0,
 	class: "dt-filter-count"
-}, jEe = {
+}, MEe = {
 	key: 3,
 	class: "dt-filters",
 	role: "group",
 	"aria-label": "筛选（点一下只看这类，再点排除这类）"
-}, MEe = [
+}, NEe = [
 	"data-state",
 	"aria-pressed",
 	"title",
@@ -70163,7 +70209,7 @@ var YTe = ["data-testid"], XTe = ["data-collapsed", "data-testid"], ZTe = { clas
 			class: "dt-bar",
 			"data-testid": `${e.testid}-bar`
 		}, [
-			U("span", EEe, [
+			U("span", DEe, [
 				W(Z, {
 					name: "magnifying-glass",
 					size: 14
@@ -70175,7 +70221,7 @@ var YTe = ["data-testid"], XTe = ["data-collapsed", "data-testid"], ZTe = { clas
 					placeholder: e.placeholder,
 					"aria-label": e.placeholder,
 					"data-testid": `${e.testid}-search`
-				}, null, 8, DEe), [[Ru, n.value]]),
+				}, null, 8, OEe), [[Ru, n.value]]),
 				n.value ? (B(), V("button", {
 					key: 0,
 					class: "trpg-icon-btn",
@@ -70210,7 +70256,7 @@ var YTe = ["data-testid"], XTe = ["data-collapsed", "data-testid"], ZTe = { clas
 			}, [W(Z, {
 				name: a.value ? "arrows-in-line-vertical" : "arrows-out-line-vertical",
 				size: 14
-			}, null, 8, ["name"]), G(A(a.value ? "全部收起" : "全部展开"), 1)], 8, OEe),
+			}, null, 8, ["name"]), G(A(a.value ? "全部收起" : "全部展开"), 1)], 8, kEe),
 			e.controls?.filters.length ? (B(), V("button", {
 				key: 2,
 				class: "trpg-btn trpg-btn--small trpg-btn--quiet",
@@ -70225,11 +70271,11 @@ var YTe = ["data-testid"], XTe = ["data-collapsed", "data-testid"], ZTe = { clas
 					size: 14
 				}),
 				u[7] ||= G("筛选", -1),
-				o.value.length ? (B(), V("b", AEe, A(o.value.length), 1)) : K("", !0)
-			], 8, kEe)) : K("", !0),
+				o.value.length ? (B(), V("b", jEe, A(o.value.length), 1)) : K("", !0)
+			], 8, AEe)) : K("", !0),
 			u[8] ||= U("span", { class: "dt-bar-gap" }, null, -1),
 			Do(t.$slots, "default"),
-			e.controls?.filters.length && (s.value || o.value.length) ? (B(), V("div", jEe, [(B(!0), V(z, null, R(e.controls.filters, (t) => (B(), V("button", {
+			e.controls?.filters.length && (s.value || o.value.length) ? (B(), V("div", MEe, [(B(!0), V(z, null, R(e.controls.filters, (t) => (B(), V("button", {
 				key: t.key,
 				class: "dt-filter",
 				type: "button",
@@ -70242,18 +70288,18 @@ var YTe = ["data-testid"], XTe = ["data-collapsed", "data-testid"], ZTe = { clas
 				key: 0,
 				name: "x",
 				size: 11
-			})) : K("", !0), G(A(t.label), 1)], 8, MEe))), 128)), o.value.length ? (B(), V("button", {
+			})) : K("", !0), G(A(t.label), 1)], 8, NEe))), 128)), o.value.length ? (B(), V("button", {
 				key: 0,
 				class: "trpg-btn trpg-btn--small trpg-btn--quiet",
 				type: "button",
 				onClick: u[6] ||= (e) => o.value = []
 			}, "清除筛选")) : K("", !0)])) : K("", !0)
-		], 8, TEe));
+		], 8, EEe));
 	}
-}), NEe = { class: "pf-body" }, PEe = { class: "pf-name" }, FEe = { id: "ps-section-list" }, IEe = ["value"], LEe = {
+}), PEe = { class: "pf-body" }, FEe = { class: "pf-name" }, IEe = { id: "ps-section-list" }, LEe = ["value"], REe = {
 	key: 0,
 	class: "pf-chips"
-}, REe = ["aria-pressed", "onClick"], zEe = { class: "pf-foot" }, BEe = ["disabled"], VEe = /* @__PURE__ */ I({
+}, zEe = ["aria-pressed", "onClick"], BEe = { class: "pf-foot" }, VEe = ["disabled"], HEe = /* @__PURE__ */ I({
 	__name: "SectionPage",
 	props: {
 		itemId: {},
@@ -70276,9 +70322,9 @@ var YTe = ["data-testid"], XTe = ["data-collapsed", "data-testid"], ZTe = { clas
 			class: "pf",
 			"data-testid": "section-page",
 			onSubmit: n[3] ||= J((e) => o(i.value), ["prevent"])
-		}, [U("div", NEe, [
+		}, [U("div", PEe, [
 			n[5] ||= U("p", { class: "pf-intro" }, "分组只影响这一页怎么排，不改规则。", -1),
-			U("label", PEe, [n[4] ||= U("span", null, "分组名", -1), Vi(U("input", {
+			U("label", FEe, [n[4] ||= U("span", null, "分组名", -1), Vi(U("input", {
 				"onUpdate:modelValue": n[0] ||= (e) => i.value = e,
 				class: "trpg-input",
 				list: "ps-section-list",
@@ -70286,18 +70332,18 @@ var YTe = ["data-testid"], XTe = ["data-collapsed", "data-testid"], ZTe = { clas
 				placeholder: "例如：常用、战斗前准备",
 				"data-testid": "section-name"
 			}, null, 512), [[Ru, i.value]])]),
-			U("datalist", FEe, [(B(!0), V(z, null, R(a.value, (e) => (B(), V("option", {
+			U("datalist", IEe, [(B(!0), V(z, null, R(a.value, (e) => (B(), V("option", {
 				key: e,
 				value: e
-			}, null, 8, IEe))), 128))]),
-			a.value.length ? (B(), V("div", LEe, [(B(!0), V(z, null, R(a.value, (e) => (B(), V("button", {
+			}, null, 8, LEe))), 128))]),
+			a.value.length ? (B(), V("div", REe, [(B(!0), V(z, null, R(a.value, (e) => (B(), V("button", {
 				key: e,
 				class: "trpg-btn trpg-btn--small pf-chip",
 				type: "button",
 				"aria-pressed": i.value === e,
 				onClick: (t) => i.value = e
-			}, A(e), 9, REe))), 128))])) : K("", !0)
-		]), U("div", zEe, [
+			}, A(e), 9, zEe))), 128))])) : K("", !0)
+		]), U("div", BEe, [
 			e.current ? (B(), V("button", {
 				key: 0,
 				class: "trpg-btn",
@@ -70314,7 +70360,7 @@ var YTe = ["data-testid"], XTe = ["data-collapsed", "data-testid"], ZTe = { clas
 				class: "trpg-btn trpg-btn--primary",
 				type: "submit",
 				disabled: !i.value.trim()
-			}, "移过去", 8, BEe)
+			}, "移过去", 8, VEe)
 		])], 32));
 	}
 });
@@ -70324,12 +70370,12 @@ function S5(e) {
 	F([s, () => t.sheet], async ([e]) => {
 		c.value = e.length ? await t.filterIds(e) : null;
 	}, { deep: !0 });
-	let l = q(() => t.sheet ? kTe(t.sheet, e) : null), u = q(() => t.sheet ? MTe(jTe(ATe(t.sheet, e, a.value || void 0)), r.value, i.value || l.value?.sorting[0]?.key || "", c.value) : []), d = q(() => u.value.reduce((e, t) => e + t.rows.length, 0));
+	let l = q(() => t.sheet ? ATe(t.sheet, e) : null), u = q(() => t.sheet ? NTe(MTe(jTe(t.sheet, e, a.value || void 0)), r.value, i.value || l.value?.sorting[0]?.key || "", c.value) : []), d = q(() => u.value.reduce((e, t) => e + t.rows.length, 0));
 	function f(e) {
 		n.open({
 			key: `person-section:${e.id}`,
 			title: `「${e.name}」放进哪个分组`,
-			component: jr(VEe),
+			component: jr(HEe),
 			props: {
 				itemId: e.id,
 				name: e.name,
@@ -70362,17 +70408,17 @@ function S5(e) {
 	};
 }
 // src/ui/person/ActionsTab.vue?vue&type=script&setup=true&lang.ts
-var HEe = {
+var UEe = {
 	class: "ps-actions",
 	"data-testid": "ps-actions"
-}, UEe = {
+}, WEe = {
 	key: 0,
 	class: "ps-drawer-note"
-}, WEe = /* @__PURE__ */ I({
+}, GEe = /* @__PURE__ */ I({
 	__name: "ActionsTab",
 	setup(e) {
 		let t = S5("actions"), n = q(() => [...t.groups.value.filter((e) => e.key !== "passive"), ...t.groups.value.filter((e) => e.key === "passive")]);
-		return (e, r) => (B(), V("div", HEe, [
+		return (e, r) => (B(), V("div", UEe, [
 			W(x5, {
 				query: N(t).query.value,
 				"onUpdate:query": r[0] ||= (e) => N(t).query.value = e,
@@ -70395,7 +70441,7 @@ var HEe = {
 				"filters",
 				"controls"
 			]),
-			n.value.length ? K("", !0) : (B(), V("p", UEe, A(N(t).query.value ? "没有符合的行动。" : "还没有行动。武器、法术、特性带来的动作会出现在这里。"), 1)),
+			n.value.length ? K("", !0) : (B(), V("p", WEe, A(N(t).query.value ? "没有符合的行动。" : "还没有行动。武器、法术、特性带来的动作会出现在这里。"), 1)),
 			W(b5, {
 				domain: "action",
 				tab: "action",
@@ -70410,28 +70456,28 @@ var HEe = {
 			])
 		]));
 	}
-}), GEe = {
+}), KEe = {
 	key: 0,
 	class: "pf-body"
-}, KEe = {
+}, qEe = {
 	key: 1,
 	class: "pf-body"
-}, qEe = { class: "pf-card" }, JEe = { key: 0 }, YEe = { class: "pf-tree" }, XEe = ["data-cat"], ZEe = {
+}, JEe = { class: "pf-card" }, YEe = { key: 0 }, XEe = { class: "pf-tree" }, ZEe = ["data-cat"], QEe = {
 	key: 2,
 	class: "pf-tree-label"
-}, QEe = {
+}, $Ee = {
 	key: 0,
 	class: "pf-card"
-}, $Ee = {
+}, eDe = {
 	class: "pf-chips",
 	style: { padding: "var(--sp-3)" }
-}, eDe = {
+}, tDe = {
 	key: 1,
 	class: "pf-card"
-}, tDe = {
+}, nDe = {
 	key: 2,
 	class: "pf-card"
-}, nDe = { style: { padding: "var(--sp-3)" } }, rDe = ["disabled"], iDe = { class: "pf-foot" }, aDe = ["disabled"], oDe = /* @__PURE__ */ I({
+}, rDe = { style: { padding: "var(--sp-3)" } }, iDe = ["disabled"], aDe = { class: "pf-foot" }, oDe = ["disabled"], sDe = /* @__PURE__ */ I({
 	__name: "TraitPage",
 	props: { trait: {} },
 	setup(e) {
@@ -70514,8 +70560,8 @@ var HEe = {
 			class: "pf",
 			"data-testid": "trait-page",
 			onSubmit: J(p, ["prevent"])
-		}, [i.value ? (B(), V("div", KEe, [
-			U("section", qEe, [U("h4", null, [G(A(u.value ? "每种伤害减少 / 增加多少" : "选择"), 1), u.value ? K("", !0) : (B(), V("small", JEe, "灰字是类别"))]), U("ul", YEe, [(B(!0), V(z, null, R(i.value.rows, (e) => (B(), V("li", {
+		}, [i.value ? (B(), V("div", qEe, [
+			U("section", JEe, [U("h4", null, [G(A(u.value ? "每种伤害减少 / 增加多少" : "选择"), 1), u.value ? K("", !0) : (B(), V("small", YEe, "灰字是类别"))]), U("ul", XEe, [(B(!0), V(z, null, R(i.value.rows, (e) => (B(), V("li", {
 				key: e.key,
 				style: Ft({ paddingLeft: `${e.depth * 1.25 + .75}rem` }),
 				"data-cat": !e.selectable || void 0
@@ -70545,8 +70591,8 @@ var HEe = {
 				"label",
 				"disabled",
 				"onUpdate:modelValue"
-			])) : K("", !0), !e.selectable || u.value ? (B(), V("span", ZEe, A(e.label), 1)) : K("", !0)], 12, XEe))), 128))])]),
-			i.value.bypasses.length ? (B(), V("section", QEe, [t[3] ||= U("h4", null, [G("无视条件"), U("small", null, "例如“非魔法、非镀银武器的伤害”")], -1), U("div", $Ee, [(B(!0), V(z, null, R(i.value.bypasses, (e) => (B(), H(mR, {
+			])) : K("", !0), !e.selectable || u.value ? (B(), V("span", QEe, A(e.label), 1)) : K("", !0)], 12, ZEe))), 128))])]),
+			i.value.bypasses.length ? (B(), V("section", $Ee, [t[3] ||= U("h4", null, [G("无视条件"), U("small", null, "例如“非魔法、非镀银武器的伤害”")], -1), U("div", eDe, [(B(!0), V(z, null, R(i.value.bypasses, (e) => (B(), H(mR, {
 				key: e.key,
 				"model-value": s.bypasses.has(e.key),
 				label: e.label,
@@ -70561,7 +70607,7 @@ var HEe = {
 				"disabled",
 				"onUpdate:modelValue"
 			]))), 128))])])) : K("", !0),
-			i.value.communication.length ? (B(), V("section", eDe, [t[6] ||= U("h4", null, [G("交流方式"), U("small", null, "距离（尺），0 = 没有")], -1), (B(!0), V(z, null, R(i.value.communication, (e) => (B(), V("div", {
+			i.value.communication.length ? (B(), V("section", tDe, [t[6] ||= U("h4", null, [G("交流方式"), U("small", null, "距离（尺），0 = 没有")], -1), (B(!0), V(z, null, R(i.value.communication, (e) => (B(), V("div", {
 				key: e.key,
 				class: "pf-entry"
 			}, [
@@ -70580,21 +70626,21 @@ var HEe = {
 				t[4] ||= U("span", null, null, -1),
 				t[5] ||= U("span", null, null, -1)
 			]))), 128))])) : K("", !0),
-			l.value ? K("", !0) : (B(), V("section", tDe, [t[7] ||= U("h4", null, [G("自定义"), U("small", null, "官方选项里没有的，用分号隔开")], -1), U("div", nDe, [Vi(U("input", {
+			l.value ? K("", !0) : (B(), V("section", nDe, [t[7] ||= U("h4", null, [G("自定义"), U("small", null, "官方选项里没有的，用分号隔开")], -1), U("div", rDe, [Vi(U("input", {
 				"onUpdate:modelValue": t[0] ||= (e) => s.custom = e,
 				class: "trpg-input",
 				disabled: N(n).readOnly,
 				"aria-label": "自定义",
 				"data-testid": "trait-custom"
-			}, null, 8, rDe), [[Ru, s.custom]])])]))
-		])) : (B(), V("div", GEe, [...t[2] ||= [U("div", {
+			}, null, 8, iDe), [[Ru, s.custom]])])]))
+		])) : (B(), V("div", KEe, [...t[2] ||= [U("div", {
 			class: "lib-skel",
 			"aria-busy": "true"
 		}, [
 			U("i"),
 			U("i", { style: { width: "80%" } }),
 			U("i", { style: { width: "60%" } })
-		], -1)]])), U("div", iDe, [
+		], -1)]])), U("div", aDe, [
 			t[8] ||= U("span", { class: "pf-gap" }, null, -1),
 			U("button", {
 				class: "trpg-btn",
@@ -70606,30 +70652,30 @@ var HEe = {
 				type: "submit",
 				disabled: N(n).readOnly || a.value || !i.value,
 				"data-testid": "trait-save"
-			}, "保存", 8, aDe)
+			}, "保存", 8, oDe)
 		])], 32));
 	}
-}), sDe = {
+}), cDe = {
 	key: 0,
-	class: "pf-body"
-}, cDe = {
-	key: 1,
 	class: "pf-body"
 }, lDe = {
+	key: 1,
+	class: "pf-body"
+}, uDe = {
 	class: "pf-fields",
 	style: { padding: "var(--sp-2) var(--sp-3) var(--sp-3)" }
-}, uDe = ["data-kind"], dDe = { class: "pf-label" }, fDe = {
+}, dDe = ["data-kind"], fDe = { class: "pf-label" }, pDe = {
 	key: 0,
 	class: "pf-hint"
-}, pDe = { class: "pf-control" }, mDe = [
+}, mDe = { class: "pf-control" }, hDe = [
 	"onUpdate:modelValue",
 	"aria-label",
 	"disabled"
-], hDe = [
+], gDe = [
 	"onUpdate:modelValue",
 	"aria-label",
 	"disabled"
-], gDe = { class: "pf-foot" }, _De = ["disabled"], vDe = /* @__PURE__ */ I({
+], _De = { class: "pf-foot" }, vDe = ["disabled"], yDe = /* @__PURE__ */ I({
 	__name: "SpecialTraitsPage",
 	setup(e) {
 		let t = R8(), n = hA(), r = /* @__PURE__ */ j(null), i = /* @__PURE__ */ xr({}), a = {}, o = /* @__PURE__ */ j(!1);
@@ -70677,14 +70723,14 @@ var HEe = {
 			class: "pf",
 			"data-testid": "special-traits",
 			onSubmit: J(s, ["prevent"])
-		}, [r.value ? (B(), V("div", cDe, [(B(!0), V(z, null, R(r.value.sections, (e) => (B(), V("section", {
+		}, [r.value ? (B(), V("div", lDe, [(B(!0), V(z, null, R(r.value.sections, (e) => (B(), V("section", {
 			key: e.label,
 			class: "pf-card"
-		}, [U("h4", null, A(e.label), 1), U("div", lDe, [(B(!0), V(z, null, R(e.fields, (e) => (B(), V("div", {
+		}, [U("h4", null, A(e.label), 1), U("div", uDe, [(B(!0), V(z, null, R(e.fields, (e) => (B(), V("div", {
 			key: e.key,
 			class: "pf-row",
 			"data-kind": e.type
-		}, [U("span", dDe, [G(A(e.name), 1), e.hint ? (B(), V("small", fDe, A(e.hint), 1)) : K("", !0)]), U("div", pDe, [e.type === "boolean" ? (B(), H(VF, {
+		}, [U("span", fDe, [G(A(e.name), 1), e.hint ? (B(), V("small", pDe, A(e.hint), 1)) : K("", !0)]), U("div", mDe, [e.type === "boolean" ? (B(), H(VF, {
 			key: 0,
 			modelValue: i[e.path],
 			"onUpdate:modelValue": (t) => i[e.path] = t,
@@ -70718,20 +70764,20 @@ var HEe = {
 			inputmode: "numeric",
 			"aria-label": e.name,
 			disabled: N(t).readOnly
-		}, null, 8, mDe)), [[Ru, i[e.path]]]) : Vi((B(), V("input", {
+		}, null, 8, hDe)), [[Ru, i[e.path]]]) : Vi((B(), V("input", {
 			key: 3,
 			"onUpdate:modelValue": (t) => i[e.path] = t,
 			class: "trpg-input",
 			"aria-label": e.name,
 			disabled: N(t).readOnly
-		}, null, 8, hDe)), [[Ru, i[e.path]]])])], 8, uDe))), 128))])]))), 128))])) : (B(), V("div", sDe, [...a[1] ||= [U("div", {
+		}, null, 8, gDe)), [[Ru, i[e.path]]])])], 8, dDe))), 128))])]))), 128))])) : (B(), V("div", cDe, [...a[1] ||= [U("div", {
 			class: "lib-skel",
 			"aria-busy": "true"
 		}, [
 			U("i"),
 			U("i", { style: { width: "80%" } }),
 			U("i", { style: { width: "60%" } })
-		], -1)]])), U("div", gDe, [
+		], -1)]])), U("div", _De, [
 			a[2] ||= U("span", { class: "pf-gap" }, null, -1),
 			U("button", {
 				class: "trpg-btn",
@@ -70743,37 +70789,37 @@ var HEe = {
 				type: "submit",
 				disabled: N(t).readOnly || o.value || !r.value,
 				"data-testid": "special-save"
-			}, "保存", 8, _De)
+			}, "保存", 8, vDe)
 		])], 32));
 	}
-}), yDe = {
+}), bDe = {
 	class: "ps-build",
 	"data-testid": "ps-build"
-}, bDe = {
+}, xDe = {
 	key: 0,
 	class: "ps-build-row",
 	"data-testid": "ps-build-class-empty"
-}, xDe = { class: "ps-build-main" }, SDe = ["disabled"], CDe = ["disabled"], wDe = ["data-id"], TDe = { class: "ps-build-label" }, EDe = { class: "ps-build-main" }, DDe = { class: "ps-build-name" }, ODe = { key: 1 }, kDe = { class: "ps-build-level" }, ADe = [
+}, SDe = { class: "ps-build-main" }, CDe = ["disabled"], wDe = ["disabled"], TDe = ["data-id"], EDe = { class: "ps-build-label" }, DDe = { class: "ps-build-main" }, ODe = { class: "ps-build-name" }, kDe = { key: 1 }, ADe = { class: "ps-build-level" }, jDe = [
 	"disabled",
 	"aria-label",
 	"onClick"
-], jDe = {
+], MDe = {
 	key: 0,
 	class: "ps-build-row ps-build-sub",
 	"data-testid": "ps-build-subclass"
-}, MDe = { class: "ps-build-main" }, NDe = { key: 1 }, PDe = {
+}, NDe = { class: "ps-build-main" }, PDe = { key: 1 }, FDe = {
 	key: 1,
 	class: "ps-build-row ps-build-sub",
 	"data-testid": "ps-build-needs-sub"
-}, FDe = { class: "ps-build-main" }, IDe = ["disabled", "onClick"], LDe = {
+}, IDe = { class: "ps-build-main" }, LDe = ["disabled", "onClick"], RDe = {
 	key: 1,
 	class: "ps-build-row ps-build-sub",
 	"data-testid": "ps-build-class-add"
-}, RDe = { class: "ps-build-main" }, zDe = ["disabled"], BDe = ["data-testid"], VDe = { class: "ps-build-label" }, HDe = { class: "ps-build-main" }, UDe = { key: 1 }, WDe = [
+}, zDe = { class: "ps-build-main" }, BDe = ["disabled"], VDe = ["data-testid"], HDe = { class: "ps-build-label" }, UDe = { class: "ps-build-main" }, WDe = { key: 1 }, GDe = [
 	"disabled",
 	"data-testid",
 	"onClick"
-], GDe = ["disabled", "onClick"], KDe = { key: 1 }, qDe = /* @__PURE__ */ I({
+], KDe = ["disabled", "onClick"], qDe = { key: 1 }, JDe = /* @__PURE__ */ I({
 	__name: "BuildRows",
 	setup(e) {
 		let t = R8(), n = q(() => t.sheet), r = q(() => t.readOnly), i = q(() => a5(n.value)), a = q(() => [{
@@ -70866,10 +70912,10 @@ var HEe = {
 				name: e.row?.name ?? e.label
 			} : void 0) : n === "remove" && e.id && t.remove(`删除了${e.label}${e.row?.name ?? ""}`, e.id);
 		}
-		return (e, t) => (B(), V("div", yDe, [
-			i.value.length ? K("", !0) : (B(), V("div", bDe, [
+		return (e, t) => (B(), V("div", bDe, [
+			i.value.length ? K("", !0) : (B(), V("div", xDe, [
 				t[4] ||= U("span", { class: "ps-build-label" }, "职业", -1),
-				U("span", xDe, [U("button", {
+				U("span", SDe, [U("button", {
 					class: "trpg-btn trpg-btn--primary trpg-btn--small",
 					type: "button",
 					disabled: r.value,
@@ -70878,12 +70924,12 @@ var HEe = {
 				}, [W(Z, {
 					name: "plus",
 					size: 14
-				}), t[3] ||= G("选职业", -1)], 8, SDe), U("button", {
+				}), t[3] ||= G("选职业", -1)], 8, CDe), U("button", {
 					class: "trpg-btn trpg-btn--small trpg-btn--quiet",
 					type: "button",
 					disabled: r.value,
 					onClick: t[1] ||= (e) => l("class", "职业")
-				}, "新建自定义职业", 8, CDe)]),
+				}, "新建自定义职业", 8, wDe)]),
 				t[5] ||= U("span", null, null, -1)
 			])),
 			(B(!0), V(z, null, R(i.value, (e, n) => (B(), V(z, { key: e.id }, [U("div", {
@@ -70891,23 +70937,23 @@ var HEe = {
 				"data-testid": "ps-build-class",
 				"data-id": e.id
 			}, [
-				U("span", TDe, A(n ? "" : "职业"), 1),
-				U("span", EDe, [
-					U("span", DDe, [e.ref ? (B(), H(iI, {
+				U("span", EDe, A(n ? "" : "职业"), 1),
+				U("span", DDe, [
+					U("span", ODe, [e.ref ? (B(), H(iI, {
 						key: 0,
 						label: `查看${e.name}`,
 						onOpen: (t) => o(e.ref, e.name)
 					}, {
 						default: P(() => [G(A(e.name), 1)]),
 						_: 2
-					}, 1032, ["label", "onOpen"])) : (B(), V("b", ODe, A(e.name), 1)), c.value === e.id ? (B(), H(Z, {
+					}, 1032, ["label", "onOpen"])) : (B(), V("b", kDe, A(e.name), 1)), c.value === e.id ? (B(), H(Z, {
 						key: 2,
 						name: "crown",
 						size: 13,
 						class: "ps-build-crown",
 						title: "原始职业"
 					})) : K("", !0)]),
-					U("span", kDe, [W(RF, {
+					U("span", ADe, [W(RF, {
 						label: `${e.name}改到几级`,
 						text: `${e.levels} 级`,
 						items: u(e),
@@ -70928,7 +70974,7 @@ var HEe = {
 					}, [W(Z, {
 						name: "arrow-fat-up",
 						size: 13
-					}), t[6] ||= G("升一级", -1)], 8, ADe)
+					}), t[6] ||= G("升一级", -1)], 8, jDe)
 				]),
 				W(RF, {
 					label: e.name,
@@ -70939,9 +70985,9 @@ var HEe = {
 					"items",
 					"onSelect"
 				])
-			], 8, wDe), e.subclass ? (B(), V("div", jDe, [
+			], 8, TDe), e.subclass ? (B(), V("div", MDe, [
 				t[7] ||= U("span", { class: "ps-build-label" }, null, -1),
-				U("span", MDe, [W(Z, {
+				U("span", NDe, [W(Z, {
 					name: "arrow-elbow-down-right",
 					size: 13,
 					class: "ps-build-turn"
@@ -70952,7 +70998,7 @@ var HEe = {
 				}, {
 					default: P(() => [G(A(e.subclass.name), 1)]),
 					_: 2
-				}, 1032, ["label", "onOpen"])) : (B(), V("span", NDe, A(e.subclass.name), 1))]),
+				}, 1032, ["label", "onOpen"])) : (B(), V("span", PDe, A(e.subclass.name), 1))]),
 				W(RF, {
 					label: e.subclass.name,
 					items: [
@@ -70979,9 +71025,9 @@ var HEe = {
 					"items",
 					"onSelect"
 				])
-			])) : e.needsSubclass ? (B(), V("div", PDe, [
+			])) : e.needsSubclass ? (B(), V("div", FDe, [
 				t[8] ||= U("span", { class: "ps-build-label" }, null, -1),
-				U("span", FDe, [W(Z, {
+				U("span", IDe, [W(Z, {
 					name: "arrow-elbow-down-right",
 					size: 13,
 					class: "ps-build-turn"
@@ -70991,12 +71037,12 @@ var HEe = {
 					disabled: r.value,
 					"data-testid": "ps-build-pick-sub",
 					onClick: (t) => p(e)
-				}, "选子职业", 8, IDe)]),
+				}, "选子职业", 8, LDe)]),
 				t[9] ||= U("span", null, null, -1)
 			])) : K("", !0)], 64))), 128)),
-			i.value.length ? (B(), V("div", LDe, [
+			i.value.length ? (B(), V("div", RDe, [
 				t[11] ||= U("span", { class: "ps-build-label" }, null, -1),
-				U("span", RDe, [U("button", {
+				U("span", zDe, [U("button", {
 					class: "trpg-btn trpg-btn--small",
 					type: "button",
 					disabled: r.value,
@@ -71005,7 +71051,7 @@ var HEe = {
 				}, [W(Z, {
 					name: "plus",
 					size: 13
-				}), t[10] ||= G("兼职（再加一个职业）", -1)], 8, zDe)]),
+				}), t[10] ||= G("兼职（再加一个职业）", -1)], 8, BDe)]),
 				t[12] ||= U("span", null, null, -1)
 			])) : K("", !0),
 			(B(!0), V(z, null, R(a.value, (e) => (B(), V("div", {
@@ -71013,15 +71059,15 @@ var HEe = {
 				class: "ps-build-row",
 				"data-testid": `ps-build-${e.key}`
 			}, [
-				U("span", VDe, A(e.label), 1),
-				U("span", HDe, [e.row ? (B(), V(z, { key: 0 }, [e.row.ref ? (B(), H(iI, {
+				U("span", HDe, A(e.label), 1),
+				U("span", UDe, [e.row ? (B(), V(z, { key: 0 }, [e.row.ref ? (B(), H(iI, {
 					key: 0,
 					label: `查看${e.row.name}`,
 					onOpen: (t) => o(e.row.ref, e.row.name)
 				}, {
 					default: P(() => [G(A(e.row.name), 1)]),
 					_: 2
-				}, 1032, ["label", "onOpen"])) : (B(), V("span", UDe, A(e.row.name), 1))], 64)) : (B(), V(z, { key: 1 }, [U("button", {
+				}, 1032, ["label", "onOpen"])) : (B(), V("span", WDe, A(e.row.name), 1))], 64)) : (B(), V(z, { key: 1 }, [U("button", {
 					class: "trpg-btn trpg-btn--primary trpg-btn--small",
 					type: "button",
 					disabled: r.value,
@@ -71030,12 +71076,12 @@ var HEe = {
 				}, [W(Z, {
 					name: "plus",
 					size: 13
-				}), G("选" + A(e.label), 1)], 8, WDe), U("button", {
+				}), G("选" + A(e.label), 1)], 8, GDe), U("button", {
 					class: "trpg-btn trpg-btn--small trpg-btn--quiet",
 					type: "button",
 					disabled: r.value,
 					onClick: (t) => l(e.key, e.label)
-				}, "新建自定义" + A(e.label), 9, GDe)], 64))]),
+				}, "新建自定义" + A(e.label), 9, KDe)], 64))]),
 				e.row ? (B(), H(RF, {
 					key: 0,
 					label: e.label,
@@ -71045,52 +71091,52 @@ var HEe = {
 					"label",
 					"items",
 					"onSelect"
-				])) : (B(), V("span", KDe))
-			], 8, BDe))), 128))
+				])) : (B(), V("span", qDe))
+			], 8, VDe))), 128))
 		]));
 	}
-}), JDe = {
+}), YDe = {
 	class: "ps-attr",
 	"data-testid": "ps-attr"
-}, YDe = { class: "ps-attr-col" }, XDe = {
+}, XDe = { class: "ps-attr-col" }, ZDe = {
 	class: "ps-card",
 	"data-testid": "ps-attr-skills"
-}, ZDe = {
+}, QDe = {
 	key: 0,
 	class: "ps-drawer-note"
-}, QDe = {
+}, $De = {
 	class: "ps-card",
 	"data-testid": "ps-attr-tools"
-}, $De = ["disabled"], eOe = {
+}, eOe = ["disabled"], tOe = {
 	key: 0,
 	class: "ps-drawer-note"
-}, tOe = { class: "ps-attr-col" }, nOe = {
+}, nOe = { class: "ps-attr-col" }, rOe = {
 	class: "ps-card",
 	"data-testid": "ps-attr-saves"
-}, rOe = { class: "ps-saves" }, iOe = [
+}, iOe = { class: "ps-saves" }, aOe = [
 	"data-level",
 	"disabled",
 	"aria-label",
 	"data-testid",
 	"onClick"
-], aOe = { class: "ps-save-name" }, oOe = [
+], oOe = { class: "ps-save-name" }, sOe = [
 	"aria-label",
 	"disabled",
 	"onClick"
-], sOe = {
+], cOe = {
 	key: 0,
 	class: "ps-saves-wide"
-}, cOe = ["disabled"], lOe = {
+}, lOe = ["disabled"], uOe = {
 	key: 1,
 	class: "ps-prof"
-}, uOe = ["disabled"], dOe = {
+}, dOe = ["disabled"], fOe = {
 	class: "ps-card",
 	"data-testid": "ps-attr-traits"
-}, fOe = { class: "ps-card-head" }, pOe = { class: "ps-card-head-acts" }, mOe = ["disabled"], hOe = ["disabled"], gOe = { class: "ps-traits" }, _Oe = [
+}, pOe = { class: "ps-card-head" }, mOe = { class: "ps-card-head-acts" }, hOe = ["disabled"], gOe = ["disabled"], _Oe = { class: "ps-traits" }, vOe = [
 	"aria-label",
 	"disabled",
 	"onClick"
-], vOe = { class: "ps-trait-add" }, yOe = ["disabled", "onClick"], bOe = /* @__PURE__ */ I({
+], yOe = { class: "ps-trait-add" }, bOe = ["disabled", "onClick"], xOe = /* @__PURE__ */ I({
 	__name: "AttributesTab",
 	setup(e) {
 		let t = R8(), n = hA(), r = q(() => t.sheet), i = q(() => t.glossary), a = q(() => t.readOnly), o = q(() => q8(r.value)), s = q(() => rbe(r.value)), c = q(() => ibe(r.value, i.value)), l = q(() => Object.keys(i.value?.tables.abilities ?? {}).filter((e) => r.value.system.abilities?.[e]).map((e) => {
@@ -71130,18 +71176,18 @@ var HEe = {
 			m.has(e) ? n.open({
 				key: `person-trait:${e}`,
 				title: t,
-				component: jr(oDe),
+				component: jr(sDe),
 				props: { trait: e },
 				variant: "dialog",
 				width: 560,
 				height: 680
 			}) : $8(t, { path: h[e] ?? "system.traits" });
 		}
-		return (e, t) => (B(), V("div", JDe, [U("div", YDe, [U("section", XDe, [t[4] ||= U("h3", null, "技能", -1), o.value.length ? (B(), H(c5, {
+		return (e, t) => (B(), V("div", YDe, [U("div", XDe, [U("section", ZDe, [t[4] ||= U("h3", null, "技能", -1), o.value.length ? (B(), H(c5, {
 			key: 1,
 			rows: o.value,
 			kind: "skills"
-		}, null, 8, ["rows"])) : (B(), V("p", ZDe, "没有列出的技能。"))]), U("section", QDe, [
+		}, null, 8, ["rows"])) : (B(), V("p", QDe, "没有列出的技能。"))]), U("section", $De, [
 			U("button", {
 				class: "ps-pen",
 				type: "button",
@@ -71152,16 +71198,16 @@ var HEe = {
 			}, [W(Z, {
 				name: "gear",
 				size: 14
-			})], 8, $De),
+			})], 8, eOe),
 			t[5] ||= U("h3", null, "工具熟练", -1),
-			s.value.length ? K("", !0) : (B(), V("p", eOe, "没有工具熟练。")),
+			s.value.length ? K("", !0) : (B(), V("p", tOe, "没有工具熟练。")),
 			s.value.length ? (B(), H(c5, {
 				key: 1,
 				rows: s.value,
 				passive: !1,
 				kind: "tools"
 			}, null, 8, ["rows"])) : K("", !0)
-		])]), U("div", tOe, [U("section", nOe, [t[7] ||= U("h3", null, "豁免", -1), U("ul", rOe, [(B(!0), V(z, null, R(l.value, (e) => (B(), V("li", { key: e.key }, [
+		])]), U("div", nOe, [U("section", rOe, [t[7] ||= U("h3", null, "豁免", -1), U("ul", iOe, [(B(!0), V(z, null, R(l.value, (e) => (B(), V("li", { key: e.key }, [
 			U("button", {
 				class: "ps-prof ps-prof-btn",
 				type: "button",
@@ -71170,8 +71216,8 @@ var HEe = {
 				"aria-label": `${e.label}豁免${e.proficient ? "熟练（点了取消）" : "不熟练（点了设为熟练）"}`,
 				"data-testid": `ps-save-prof-${e.key}`,
 				onClick: (t) => f(e.key, e.label, e.proficient)
-			}, A(e.proficient ? "●" : "○"), 9, iOe),
-			U("span", aOe, A(e.label), 1),
+			}, A(e.proficient ? "●" : "○"), 9, aOe),
+			U("span", oOe, A(e.label), 1),
 			U("b", null, A(N(X8)(e.save)), 1),
 			U("button", {
 				class: "ps-skill-icon",
@@ -71182,8 +71228,8 @@ var HEe = {
 			}, [W(Z, {
 				name: "gear",
 				size: 12
-			})], 8, oOe)
-		]))), 128)), u.value !== void 0 && u.value !== null ? (B(), V("li", sOe, [
+			})], 8, sOe)
+		]))), 128)), u.value !== void 0 && u.value !== null ? (B(), V("li", cOe, [
 			d.value.length ? (B(), V("button", {
 				key: 0,
 				class: "ps-conc-on",
@@ -71195,7 +71241,7 @@ var HEe = {
 			}, [W(Z, {
 				name: "sparkle",
 				size: 12
-			})], 8, cOe)) : (B(), V("span", lOe)),
+			})], 8, lOe)) : (B(), V("span", uOe)),
 			t[6] ||= U("span", { class: "ps-save-name" }, "专注", -1),
 			U("b", null, A(N(X8)(u.value)), 1),
 			U("button", {
@@ -71207,9 +71253,9 @@ var HEe = {
 			}, [W(Z, {
 				name: "gear",
 				size: 12
-			})], 8, uOe)
-		])) : K("", !0)])]), U("section", dOe, [
-			U("div", fOe, [t[9] ||= U("h3", null, "特质", -1), U("span", pOe, [U("button", {
+			})], 8, dOe)
+		])) : K("", !0)])]), U("section", fOe, [
+			U("div", pOe, [t[9] ||= U("h3", null, "特质", -1), U("span", mOe, [U("button", {
 				class: "trpg-btn trpg-btn--small trpg-btn--quiet",
 				type: "button",
 				disabled: a.value,
@@ -71217,7 +71263,7 @@ var HEe = {
 				onClick: t[2] ||= (e) => N(n).open({
 					key: "person-special-traits",
 					title: "特殊特质",
-					component: jr(vDe),
+					component: jr(yDe),
 					variant: "dialog",
 					width: 620,
 					height: 720
@@ -71225,15 +71271,15 @@ var HEe = {
 			}, [W(Z, {
 				name: "sparkle",
 				size: 13
-			}), t[8] ||= G("特殊特质", -1)], 8, mOe), U("button", {
+			}), t[8] ||= G("特殊特质", -1)], 8, hOe), U("button", {
 				class: "trpg-btn trpg-btn--small trpg-btn--quiet",
 				type: "button",
 				disabled: a.value,
 				"data-testid": "ps-global-bonuses",
 				onClick: t[3] ||= (e) => N($8)("全局加值", { path: "system.bonuses" }, { hint: "对所有攻击、检定、豁免、技能、法术 DC 生效的加值（官方「特殊特质」里的全局加值）。" })
-			}, "全局加值", 8, hOe)])]),
-			N(V8)(r.value) ? K("", !0) : (B(), H(qDe, { key: 0 })),
-			U("dl", gOe, [(B(!0), V(z, null, R(c.value, (e) => (B(), V(z, { key: e.key }, [U("dt", null, A(e.label), 1), U("dd", null, [U("span", null, A(e.items.join("、")), 1), U("button", {
+			}, "全局加值", 8, gOe)])]),
+			N(V8)(r.value) ? K("", !0) : (B(), H(JDe, { key: 0 })),
+			U("dl", _Oe, [(B(!0), V(z, null, R(c.value, (e) => (B(), V(z, { key: e.key }, [U("dt", null, A(e.label), 1), U("dd", null, [U("span", null, A(e.items.join("、")), 1), U("button", {
 				class: "ps-skill-icon",
 				type: "button",
 				"aria-label": `改${e.label}`,
@@ -71242,8 +71288,8 @@ var HEe = {
 			}, [W(Z, {
 				name: "gear",
 				size: 12
-			})], 8, _Oe)])], 64))), 128))]),
-			U("div", vOe, [(B(!0), V(z, null, R([
+			})], 8, vOe)])], 64))), 128))]),
+			U("div", yOe, [(B(!0), V(z, null, R([
 				"languages",
 				"dr",
 				"di",
@@ -71258,23 +71304,23 @@ var HEe = {
 				type: "button",
 				disabled: a.value,
 				onClick: (t) => g(e, N(H8)(i.value, "traits", e) || e)
-			}, "+ " + A(N(H8)(i.value, "traits", e) || e), 9, yOe))), 128))])
+			}, "+ " + A(N(H8)(i.value, "traits", e) || e), 9, bOe))), 128))])
 		])])]));
 	}
-}), xOe = {
+}), SOe = {
 	class: "ps-bag",
 	"data-testid": "ps-bag"
-}, SOe = ["disabled"], COe = ["data-level"], wOe = ["aria-valuenow", "aria-valuemax"], TOe = ["disabled"], EOe = {
+}, COe = ["disabled"], wOe = ["data-level"], TOe = ["aria-valuenow", "aria-valuemax"], EOe = ["disabled"], DOe = {
 	key: 1,
 	class: "ps-drawer-note"
-}, DOe = {
+}, OOe = {
 	class: "dt-foot ps-bag-foot",
 	"data-testid": "ps-bag-foot"
-}, OOe = {
+}, kOe = {
 	class: "ps-coins",
 	role: "group",
 	"aria-label": "钱币"
-}, kOe = ["data-coin"], AOe = ["disabled"], jOe = ["data-over"], MOe = ["disabled"], NOe = /* @__PURE__ */ I({
+}, AOe = ["data-coin"], jOe = ["disabled"], MOe = ["data-over"], NOe = ["disabled"], POe = /* @__PURE__ */ I({
 	__name: "BagTab",
 	setup(e) {
 		let t = R8(), n = S5("inventory"), r = q(() => t.readOnly), i = q(() => t.sheet?.system.attributes?.encumbrance ?? null), a = q(() => i.value && Number(i.value.max) ? Math.min(100, Math.round(Number(i.value.value) / Number(i.value.max) * 100)) : 0), o = q(() => {
@@ -71296,7 +71342,7 @@ var HEe = {
 		}))), d = (e) => {
 			e.type && n.create(e.type, e.label);
 		}, f = (e) => n.create(e, u.value.find((t) => t.key === e)?.label ?? "物品");
-		return (e, p) => (B(), V("div", xOe, [
+		return (e, p) => (B(), V("div", SOe, [
 			W(x5, {
 				query: N(n).query.value,
 				"onUpdate:query": p[1] ||= (e) => N(n).query.value = e,
@@ -71321,7 +71367,7 @@ var HEe = {
 				}, [W(Z, {
 					name: "plus",
 					size: 14
-				}), p[9] ||= G("从库里加物品", -1)], 8, SOe)]),
+				}), p[9] ||= G("从库里加物品", -1)], 8, COe)]),
 				_: 1
 			}, 8, [
 				"query",
@@ -71347,7 +71393,7 @@ var HEe = {
 					"aria-valuenow": Number(i.value.value),
 					"aria-valuemax": Number(i.value.max),
 					"aria-label": "负重"
-				}, [U("i", { style: Ft({ width: `${a.value}%` }) }, null, 4)], 8, wOe),
+				}, [U("i", { style: Ft({ width: `${a.value}%` }) }, null, 4)], 8, TOe),
 				U("b", null, A(Math.round(Number(i.value.value) * 100) / 100) + " / " + A(i.value.max) + " " + A(o.value), 1),
 				U("button", {
 					class: "trpg-icon-btn",
@@ -71358,9 +71404,9 @@ var HEe = {
 				}, [W(Z, {
 					name: "gear",
 					size: 14
-				})], 8, TOe)
-			], 8, COe)) : K("", !0),
-			N(n).groups.value.length ? K("", !0) : (B(), V("p", EOe, A(N(n).query.value ? "没有符合的物品。" : "背包是空的。从库里加，或页底「新建物品」。"), 1)),
+				})], 8, EOe)
+			], 8, wOe)) : K("", !0),
+			N(n).groups.value.length ? K("", !0) : (B(), V("p", DOe, A(N(n).query.value ? "没有符合的物品。" : "背包是空的。从库里加，或页底「新建物品」。"), 1)),
 			W(b5, {
 				domain: "inventory",
 				tab: "bag",
@@ -71375,8 +71421,8 @@ var HEe = {
 				"expand",
 				"onSection"
 			]),
-			U("footer", DOe, [
-				U("span", OOe, [(B(!0), V(z, null, R(c.value, (e) => (B(), V("label", {
+			U("footer", OOe, [
+				U("span", kOe, [(B(!0), V(z, null, R(c.value, (e) => (B(), V("label", {
 					key: e.key,
 					class: "ps-coin",
 					"data-coin": e.key
@@ -71390,7 +71436,7 @@ var HEe = {
 					"label",
 					"disabled",
 					"onSet"
-				])], 8, kOe))), 128)), U("button", {
+				])], 8, AOe))), 128)), U("button", {
 					class: "trpg-icon-btn",
 					type: "button",
 					"aria-label": "钱币换算成最少枚数",
@@ -71401,7 +71447,7 @@ var HEe = {
 				}, [W(Z, {
 					name: "coins",
 					size: 15
-				})], 8, AOe)]),
+				})], 8, jOe)]),
 				s.value && s.value.max ? (B(), V("span", {
 					key: 0,
 					class: "ps-attune-count",
@@ -71422,8 +71468,8 @@ var HEe = {
 					}, [W(Z, {
 						name: "gear",
 						size: 13
-					})], 8, MOe)
-				], 8, jOe)) : K("", !0),
+					})], 8, NOe)
+				], 8, MOe)) : K("", !0),
 				p[10] ||= U("span", { class: "dt-bar-gap" }, null, -1),
 				W(RF, {
 					label: "新建物品",
@@ -71438,31 +71484,31 @@ var HEe = {
 			])
 		]));
 	}
-}), POe = {
+}), FOe = {
 	class: "ps-spells",
 	"data-testid": "ps-spells"
-}, FOe = {
+}, IOe = {
 	key: 0,
 	class: "ps-casting"
-}, IOe = ["disabled"], LOe = { class: "ps-casting-title" }, ROe = ["disabled", "onClick"], zOe = {
+}, LOe = ["disabled"], ROe = { class: "ps-casting-title" }, zOe = ["disabled", "onClick"], BOe = {
 	key: 1,
 	class: "ps-tag"
-}, BOe = { key: 0 }, VOe = ["disabled"], HOe = {
+}, VOe = { key: 0 }, HOe = ["disabled"], UOe = {
 	key: 1,
 	class: "ps-drawer-note"
-}, UOe = ["aria-label"], WOe = [
+}, WOe = ["aria-label"], GOe = [
 	"data-on",
 	"aria-label",
 	"disabled",
 	"onClick"
-], GOe = [
+], KOe = [
 	"aria-label",
 	"disabled",
 	"onClick"
-], KOe = {
+], qOe = {
 	class: "dt-foot",
 	"data-testid": "ps-spells-foot"
-}, qOe = ["disabled"], JOe = ["disabled"], YOe = /* @__PURE__ */ I({
+}, JOe = ["disabled"], YOe = ["disabled"], XOe = /* @__PURE__ */ I({
 	__name: "SpellsTab",
 	setup(e) {
 		let t = R8(), n = S5("spells"), r = q(() => t.readOnly), i = q(() => (t.sheet?.view?.parts?.spells?.spellcasting ?? []).map((e) => ({
@@ -71498,8 +71544,8 @@ var HEe = {
 				effectId: String(e._id ?? e.id)
 			})));
 		};
-		return (e, o) => (B(), V("div", POe, [
-			i.value.length ? (B(), V("div", FOe, [(B(!0), V(z, null, R(i.value, (e) => (B(), V("div", {
+		return (e, o) => (B(), V("div", FOe, [
+			i.value.length ? (B(), V("div", IOe, [(B(!0), V(z, null, R(i.value, (e) => (B(), V("div", {
 				key: e.label,
 				class: "ps-card ps-casting-card",
 				"data-testid": "ps-casting"
@@ -71513,23 +71559,23 @@ var HEe = {
 				}, [W(Z, {
 					name: "pencil-simple",
 					size: 14
-				})], 8, IOe),
-				U("b", LOe, A(e.label), 1),
+				})], 8, LOe),
+				U("b", ROe, A(e.label), 1),
 				U("span", null, [
 					o[8] ||= U("small", null, "施法属性", -1),
 					G(A(e.abilityName) + " ", 1),
-					e.primary ? (B(), V("em", zOe, "主施法")) : (B(), V("button", {
+					e.primary ? (B(), V("em", BOe, "主施法")) : (B(), V("button", {
 						key: 0,
 						class: "ps-link-btn",
 						type: "button",
 						disabled: r.value,
 						"data-testid": "ps-casting-primary",
 						onClick: (t) => u(e.ability, e.abilityName)
-					}, "设为主施法属性", 8, ROe))
+					}, "设为主施法属性", 8, zOe))
 				]),
 				U("span", null, [o[9] ||= U("small", null, "法术攻击", -1), G(A(a(e.attack)), 1)]),
 				U("span", null, [o[10] ||= U("small", null, "豁免 DC", -1), G(A(e.save), 1)]),
-				e.prepared ? (B(), V("span", BOe, [o[11] ||= U("small", null, "已准备", -1), G(A(e.prepared), 1)])) : K("", !0)
+				e.prepared ? (B(), V("span", VOe, [o[11] ||= U("small", null, "已准备", -1), G(A(e.prepared), 1)])) : K("", !0)
 			]))), 128))])) : K("", !0),
 			W(x5, {
 				query: N(n).query.value,
@@ -71555,7 +71601,7 @@ var HEe = {
 				}, [W(Z, {
 					name: "plus",
 					size: 14
-				}), o[12] ||= G("从库里加法术", -1)], 8, VOe)]),
+				}), o[12] ||= G("从库里加法术", -1)], 8, HOe)]),
 				_: 1
 			}, 8, [
 				"query",
@@ -71565,7 +71611,7 @@ var HEe = {
 				"filters",
 				"controls"
 			]),
-			N(n).groups.value.length ? K("", !0) : (B(), V("p", HOe, A(N(n).query.value ? "没有符合的法术。" : "还没有法术。点「从库里加法术」或页底「新建法术」。"), 1)),
+			N(n).groups.value.length ? K("", !0) : (B(), V("p", UOe, A(N(n).query.value ? "没有符合的法术。" : "还没有法术。点「从库里加法术」或页底「新建法术」。"), 1)),
 			W(b5, {
 				domain: "spell",
 				tab: "spell",
@@ -71589,7 +71635,7 @@ var HEe = {
 					"aria-label": `剩 ${t.n} 个`,
 					disabled: r.value,
 					onClick: (n) => c(e, t.n)
-				}, null, 8, WOe))), 128)), U("small", null, A(N(i5)(N(t).sheet, e.slot)) + " / " + A(e.pips.length), 1)], 8, UOe)) : K("", !0), e.usesSlots ? (B(), V("button", {
+				}, null, 8, GOe))), 128)), U("small", null, A(N(i5)(N(t).sheet, e.slot)) + " / " + A(e.pips.length), 1)], 8, WOe)) : K("", !0), e.usesSlots ? (B(), V("button", {
 					key: 1,
 					class: "trpg-icon-btn",
 					type: "button",
@@ -71599,14 +71645,14 @@ var HEe = {
 				}, [W(Z, {
 					name: "gear",
 					size: 13
-				})], 8, GOe)) : K("", !0)]),
+				})], 8, KOe)) : K("", !0)]),
 				_: 1
 			}, 8, [
 				"groups",
 				"expand",
 				"onSection"
 			]),
-			U("footer", KOe, [
+			U("footer", qOe, [
 				s.value ? (B(), V("button", {
 					key: 0,
 					class: "trpg-btn trpg-btn--small dt-conc",
@@ -71618,7 +71664,7 @@ var HEe = {
 				}, [W(Z, {
 					name: "sparkle",
 					size: 14
-				}), o[13] ||= G("专注中 · 打断", -1)], 8, qOe)) : K("", !0),
+				}), o[13] ||= G("专注中 · 打断", -1)], 8, JOe)) : K("", !0),
 				o[15] ||= U("span", { class: "dt-bar-gap" }, null, -1),
 				U("button", {
 					class: "trpg-btn trpg-btn--small",
@@ -71632,21 +71678,21 @@ var HEe = {
 				}, [W(Z, {
 					name: "plus",
 					size: 14
-				}), o[14] ||= G("新建法术", -1)], 8, JOe)
+				}), o[14] ||= G("新建法术", -1)], 8, YOe)
 			])
 		]));
 	}
-}), XOe = {
+}), ZOe = {
 	class: "ps-features",
 	"data-testid": "ps-features"
-}, ZOe = ["disabled"], QOe = {
+}, QOe = ["disabled"], $Oe = {
 	key: 0,
 	class: "ps-drawer-note"
-}, $Oe = { class: "dt-foot" }, eke = ["disabled"], tke = /* @__PURE__ */ I({
+}, eke = { class: "dt-foot" }, tke = ["disabled"], nke = /* @__PURE__ */ I({
 	__name: "FeaturesTab",
 	setup(e) {
 		let t = R8(), n = S5("features"), r = q(() => t.readOnly);
-		return (e, t) => (B(), V("div", XOe, [
+		return (e, t) => (B(), V("div", ZOe, [
 			W(x5, {
 				query: N(n).query.value,
 				"onUpdate:query": t[1] ||= (e) => N(n).query.value = e,
@@ -71671,7 +71717,7 @@ var HEe = {
 				}, [W(Z, {
 					name: "plus",
 					size: 14
-				}), t[8] ||= G("从库里加专长 / 特性", -1)], 8, ZOe)]),
+				}), t[8] ||= G("从库里加专长 / 特性", -1)], 8, QOe)]),
 				_: 1
 			}, 8, [
 				"query",
@@ -71681,7 +71727,7 @@ var HEe = {
 				"filters",
 				"controls"
 			]),
-			N(n).groups.value.length ? K("", !0) : (B(), V("p", QOe, A(N(n).query.value ? "没有符合的特性。" : "还没有特性。建卡、升级，或从库里加专长后出现在这里。"), 1)),
+			N(n).groups.value.length ? K("", !0) : (B(), V("p", $Oe, A(N(n).query.value ? "没有符合的特性。" : "还没有特性。建卡、升级，或从库里加专长后出现在这里。"), 1)),
 			W(b5, {
 				domain: "feature",
 				tab: "feat",
@@ -71696,7 +71742,7 @@ var HEe = {
 				"expand",
 				"onSection"
 			]),
-			U("footer", $Oe, [t[10] ||= U("span", { class: "dt-bar-gap" }, null, -1), U("button", {
+			U("footer", eke, [t[10] ||= U("span", { class: "dt-bar-gap" }, null, -1), U("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
 				disabled: r.value,
@@ -71705,16 +71751,16 @@ var HEe = {
 			}, [W(Z, {
 				name: "plus",
 				size: 14
-			}), t[9] ||= G("新建特性", -1)], 8, eke)])
+			}), t[9] ||= G("新建特性", -1)], 8, tke)])
 		]));
 	}
-}), nke = {
+}), rke = {
 	class: "trpg-combo__count",
 	role: "status"
-}, rke = {
+}, ike = {
 	key: 0,
 	class: "trpg-row__meta"
-}, ike = {
+}, ake = {
 	key: 0,
 	class: "trpg-badge"
 }, C5 = 200, w5 = /* @__PURE__ */ I({
@@ -71775,7 +71821,7 @@ var HEe = {
 					"side-offset": 4,
 					"collision-padding": 8
 				}, {
-					default: P(() => [U("div", nke, [G("共 " + A(a.value.length) + " 条", 1), a.value.length > C5 ? (B(), V(z, { key: 0 }, [G("，只显示前 " + A(C5) + " 条，继续输入可缩小范围")], 64)) : K("", !0)]), W(N(hP), {
+					default: P(() => [U("div", rke, [G("共 " + A(a.value.length) + " 条", 1), a.value.length > C5 ? (B(), V(z, { key: 0 }, [G("，只显示前 " + A(C5) + " 条，继续输入可缩小范围")], 64)) : K("", !0)]), W(N(hP), {
 						class: "trpg-select-viewport",
 						onMousedown: l[1] ||= J(() => {}, ["prevent"])
 					}, {
@@ -71787,7 +71833,7 @@ var HEe = {
 							value: e.value,
 							class: "trpg-select-item"
 						}, {
-							default: P(() => [U("span", null, [G(A(e.label), 1), e.en ? (B(), V("span", rke, " · " + A(e.en), 1)) : K("", !0)]), e.badge ? (B(), V("span", ike, A(e.badge), 1)) : K("", !0)]),
+							default: P(() => [U("span", null, [G(A(e.label), 1), e.en ? (B(), V("span", ike, " · " + A(e.en), 1)) : K("", !0)]), e.badge ? (B(), V("span", ake, A(e.badge), 1)) : K("", !0)]),
 							_: 2
 						}, 1032, ["value"]))), 128))]),
 						_: 1
@@ -71799,26 +71845,26 @@ var HEe = {
 			_: 1
 		}, 8, ["modelValue", "disabled"]));
 	}
-}), ake = {
+}), oke = {
 	key: 0,
-	class: "pf-body"
-}, oke = {
-	key: 1,
 	class: "pf-body"
 }, ske = {
+	key: 1,
+	class: "pf-body"
+}, cke = {
 	key: 0,
 	class: "pf-intro"
-}, cke = { class: "pf-card" }, lke = {
+}, lke = { class: "pf-card" }, uke = {
 	class: "pf-fields",
 	style: { padding: "var(--sp-3)" }
-}, uke = { class: "pf-row" }, dke = { class: "pf-control" }, fke = { class: "pf-row" }, pke = { class: "pf-control pf-dur" }, mke = { class: "pf-row" }, hke = { class: "pf-control" }, gke = {
+}, dke = { class: "pf-row" }, fke = { class: "pf-control" }, pke = { class: "pf-row" }, mke = { class: "pf-control pf-dur" }, hke = { class: "pf-row" }, gke = { class: "pf-control" }, _ke = {
 	class: "pf-card",
 	"data-testid": "ae-changes"
-}, _ke = ["onUpdate:modelValue", "data-testid"], vke = [
+}, vke = ["onUpdate:modelValue", "data-testid"], yke = [
 	"aria-label",
 	"disabled",
 	"onClick"
-], yke = { class: "pf-foot" }, bke = ["disabled"], xke = /* @__PURE__ */ I({
+], bke = { class: "pf-foot" }, xke = ["disabled"], Ske = /* @__PURE__ */ I({
 	__name: "EffectPage",
 	props: {
 		effectId: {},
@@ -71922,23 +71968,23 @@ var HEe = {
 			class: "pf",
 			"data-testid": "effect-page",
 			onSubmit: J(p, ["prevent"])
-		}, [i.value ? (B(), V("div", oke, [
-			e.effectId ? K("", !0) : (B(), V("p", ske, "给这个人加一条效果，比如法术带来的加值、主持人的临时奖励。改的是哪一项、怎么改，都用官方的写法。")),
-			U("section", cke, [U("div", lke, [
-				U("div", uke, [a[7] ||= U("label", {
+		}, [i.value ? (B(), V("div", ske, [
+			e.effectId ? K("", !0) : (B(), V("p", cke, "给这个人加一条效果，比如法术带来的加值、主持人的临时奖励。改的是哪一项、怎么改，都用官方的写法。")),
+			U("section", lke, [U("div", uke, [
+				U("div", dke, [a[7] ||= U("label", {
 					class: "pf-label",
 					for: "ae-name"
-				}, "名字", -1), U("div", dke, [Vi(U("input", {
+				}, "名字", -1), U("div", fke, [Vi(U("input", {
 					id: "ae-name",
 					"onUpdate:modelValue": a[0] ||= (e) => o.name = e,
 					class: "trpg-input",
 					placeholder: "如：祝福术",
 					"data-testid": "ae-name"
 				}, null, 512), [[Ru, o.name]])])]),
-				U("div", fke, [a[8] ||= U("label", {
+				U("div", pke, [a[8] ||= U("label", {
 					class: "pf-label",
 					for: "ae-rounds"
-				}, [G("持续"), U("small", { class: "pf-hint" }, "不填 = 一直有效")], -1), U("div", pke, [Vi(U("input", {
+				}, [G("持续"), U("small", { class: "pf-hint" }, "不填 = 一直有效")], -1), U("div", mke, [Vi(U("input", {
 					id: "ae-rounds",
 					"onUpdate:modelValue": a[1] ||= (e) => o.rounds = e,
 					class: "trpg-input pf-num",
@@ -71952,13 +71998,13 @@ var HEe = {
 					label: "持续单位",
 					options: u.value
 				}, null, 8, ["modelValue", "options"])) : K("", !0)])]),
-				U("div", mke, [a[9] ||= U("span", { class: "pf-label" }, "停用", -1), U("div", hke, [W(VF, {
+				U("div", hke, [a[9] ||= U("span", { class: "pf-label" }, "停用", -1), U("div", gke, [W(VF, {
 					modelValue: o.disabled,
 					"onUpdate:modelValue": a[3] ||= (e) => o.disabled = e,
 					label: "停用这条效果"
 				}, null, 8, ["modelValue"])])])
 			])]),
-			U("section", gke, [
+			U("section", _ke, [
 				a[11] ||= U("h4", null, [G("改动"), U("small", null, "一条效果可以同时改好几项")], -1),
 				(B(!0), V(z, null, R(o.changes, (e, t) => (B(), V("div", {
 					key: t,
@@ -71991,7 +72037,7 @@ var HEe = {
 						placeholder: "1 或 1d4",
 						"aria-label": "改多少",
 						"data-testid": t ? void 0 : "ae-value"
-					}, null, 8, _ke), [[Ru, e.value]]),
+					}, null, 8, vke), [[Ru, e.value]]),
 					U("button", {
 						class: "trpg-icon-btn pf-x",
 						type: "button",
@@ -72001,7 +72047,7 @@ var HEe = {
 					}, [W(Z, {
 						name: "x",
 						size: 14
-					})], 8, vke)
+					})], 8, yke)
 				]))), 128)),
 				U("button", {
 					class: "trpg-btn trpg-btn--small pf-add",
@@ -72016,14 +72062,14 @@ var HEe = {
 					size: 14
 				}), a[10] ||= G("再加一条改动", -1)])
 			])
-		])) : (B(), V("div", ake, [...a[6] ||= [U("div", {
+		])) : (B(), V("div", oke, [...a[6] ||= [U("div", {
 			class: "lib-skel",
 			"aria-busy": "true"
 		}, [
 			U("i"),
 			U("i", { style: { width: "80%" } }),
 			U("i", { style: { width: "60%" } })
-		], -1)]])), U("div", yke, [
+		], -1)]])), U("div", bke, [
 			a[12] ||= U("span", { class: "pf-gap" }, null, -1),
 			U("button", {
 				class: "trpg-btn",
@@ -72035,59 +72081,59 @@ var HEe = {
 				type: "submit",
 				disabled: !f.value || s.value || N(n).readOnly,
 				"data-testid": "ae-save"
-			}, A(e.effectId ? "保存" : "加上"), 9, bke)
+			}, A(e.effectId ? "保存" : "加上"), 9, xke)
 		])], 32));
 	}
-}), Ske = {
+}), Cke = {
 	class: "ps-effects",
 	"data-testid": "ps-effects"
-}, Cke = {
+}, wke = {
 	class: "dt-grp",
 	"data-testid": "ps-conds-card"
-}, wke = {
+}, Tke = {
 	class: "ps-conds",
 	"data-testid": "ps-conds"
-}, Tke = ["data-on"], Eke = [
+}, Eke = ["data-on"], Dke = [
 	"aria-pressed",
 	"disabled",
 	"data-testid",
 	"onClick"
-], Dke = {
+], Oke = {
 	class: "dt",
 	"data-testid": "ps-effect-tables"
-}, Oke = ["data-testid"], kke = { class: "dt-head" }, Ake = { class: "dt-fold" }, jke = {
+}, kke = ["data-testid"], Ake = { class: "dt-head" }, jke = { class: "dt-fold" }, Mke = {
 	class: "dt-cols",
 	"aria-hidden": "true"
-}, Mke = {
+}, Nke = {
 	class: "dt-acts-col",
 	style: { width: "5rem" }
-}, Nke = [
+}, Pke = [
 	"disabled",
 	"aria-label",
 	"data-testid",
 	"onClick"
-], Pke = {
+], Fke = {
 	key: 0,
 	class: "ps-grp-info"
-}, Fke = {
+}, Ike = {
 	key: 1,
 	class: "dt-rows"
-}, Ike = { class: "dt-main" }, Lke = {
+}, Lke = { class: "dt-main" }, Rke = {
 	class: "dt-initial",
 	"aria-hidden": "true"
-}, Rke = { class: "dt-name" }, zke = ["onClick"], Bke = {
+}, zke = { class: "dt-name" }, Bke = ["onClick"], Vke = {
 	class: "dt-cell dt-opt-1",
 	style: { width: "8rem" }
-}, Vke = {
+}, Hke = {
 	class: "dt-acts",
 	style: {
 		width: "5rem",
 		"justify-content": "flex-end"
 	}
-}, Hke = ["disabled", "onClick"], Uke = /* @__PURE__ */ I({
+}, Uke = ["disabled", "onClick"], Wke = /* @__PURE__ */ I({
 	__name: "EffectsTab",
 	setup(e) {
-		let t = R8(), n = hA(), r = q(() => t.readOnly), i = q(() => t.sheet ? xCe(t.sheet) : []), a = q(() => t.sheet ? bCe(t.sheet) : []), o = (e) => (t.sheet?.effects ?? []).find((t) => t.id === e.id) ?? {}, s = (e) => (o(e).statuses ?? []).includes("concentrating"), c = (e) => e.parentId ? { itemId: e.parentId } : {}, l = (e) => {
+		let t = R8(), n = hA(), r = q(() => t.readOnly), i = q(() => t.sheet ? SCe(t.sheet) : []), a = q(() => t.sheet ? xCe(t.sheet) : []), o = (e) => (t.sheet?.effects ?? []).find((t) => t.id === e.id) ?? {}, s = (e) => (o(e).statuses ?? []).includes("concentrating"), c = (e) => e.parentId ? { itemId: e.parentId } : {}, l = (e) => {
 			t.edit(`${e.on ? "去掉" : "加上"}状态「${e.name}」`, [{
 				kind: "status",
 				statusId: e.id,
@@ -72116,7 +72162,7 @@ var HEe = {
 		}, p = (e) => e.parentId ? `.Item.${e.parentId}.ActiveEffect.${e.id}` : `.ActiveEffect.${e.id}`, m = q(() => t.sheet?.system.favorites ?? []), h = (e) => m.value.some((t) => t.id === p(e)), g = (e, t) => n.open({
 			key: `person-effect:${String(t.effectId ?? "new")}`,
 			title: e,
-			component: jr(xke),
+			component: jr(Ske),
 			props: t,
 			variant: "dialog",
 			width: 640,
@@ -72160,7 +72206,7 @@ var HEe = {
 		function v(e, n) {
 			let r = o(e);
 			if (n === "source" && e.parentId) {
-				let n = NTe(t.sheet, e.parentId), r = p5(t.sheet, e.parentId);
+				let n = PTe(t.sheet, e.parentId), r = p5(t.sheet, e.parentId);
 				n ? T8(n, r) : $8(r, {
 					itemId: e.parentId,
 					path: "system"
@@ -72204,7 +72250,7 @@ var HEe = {
 			}]);
 		}
 		let y = (e, t) => g(`新建${t}`, { preset: e === "temporary" ? { rounds: 1 } : e === "inactive" ? { disabled: !0 } : {} });
-		return (e, t) => (B(), V("div", Ske, [U("section", Cke, [t[0] ||= U("header", { class: "dt-head" }, [U("span", { class: "dt-fold" }, [U("b", null, "状态"), U("small", null, "点一下开 / 关")])], -1), U("div", wke, [(B(!0), V(z, null, R(i.value, (e) => (B(), V(z, { key: e.id }, [e.level === null ? (B(), V("button", {
+		return (e, t) => (B(), V("div", Cke, [U("section", wke, [t[0] ||= U("header", { class: "dt-head" }, [U("span", { class: "dt-fold" }, [U("b", null, "状态"), U("small", null, "点一下开 / 关")])], -1), U("div", Tke, [(B(!0), V(z, null, R(i.value, (e) => (B(), V(z, { key: e.id }, [e.level === null ? (B(), V("button", {
 			key: 1,
 			type: "button",
 			class: "ps-cond",
@@ -72212,7 +72258,7 @@ var HEe = {
 			disabled: r.value,
 			"data-testid": `ps-cond-${e.id}`,
 			onClick: (t) => l(e)
-		}, A(e.name), 9, Eke)) : (B(), V("span", {
+		}, A(e.name), 9, Dke)) : (B(), V("span", {
 			key: 0,
 			class: "ps-cond ps-cond--level",
 			"data-on": e.on || void 0
@@ -72228,12 +72274,12 @@ var HEe = {
 			"value",
 			"label",
 			"disabled"
-		])], 8, Tke))], 64))), 128))])]), U("div", Dke, [(B(!0), V(z, null, R(a.value, (e) => (B(), V("section", {
+		])], 8, Eke))], 64))), 128))])]), U("div", Oke, [(B(!0), V(z, null, R(a.value, (e) => (B(), V("section", {
 			key: e.key,
 			class: "dt-grp",
 			"data-testid": `ps-eff-${e.key}`
 		}, [
-			U("header", kke, [U("span", Ake, [U("b", null, A(e.label), 1), U("small", null, A(e.rows.length), 1)]), U("span", jke, [
+			U("header", Ake, [U("span", jke, [U("b", null, A(e.label), 1), U("small", null, A(e.rows.length), 1)]), U("span", Mke, [
 				t[1] ||= U("span", {
 					class: "dt-opt-1",
 					style: { width: "8rem" }
@@ -72242,7 +72288,7 @@ var HEe = {
 					class: "dt-opt-2",
 					style: { width: "6rem" }
 				}, "持续", -1),
-				U("span", Mke, [U("button", {
+				U("span", Nke, [U("button", {
 					class: "dt-add",
 					type: "button",
 					disabled: r.value,
@@ -72252,26 +72298,26 @@ var HEe = {
 				}, [W(Z, {
 					name: "plus",
 					size: 14
-				})], 8, Nke)])
+				})], 8, Pke)])
 			])]),
-			e.info && !e.rows.length ? (B(), V("p", Pke, A(e.info), 1)) : K("", !0),
-			e.rows.length ? (B(), V("ul", Fke, [(B(!0), V(z, null, R(e.rows, (e) => (B(), V("li", {
+			e.info && !e.rows.length ? (B(), V("p", Fke, A(e.info), 1)) : K("", !0),
+			e.rows.length ? (B(), V("ul", Ike, [(B(!0), V(z, null, R(e.rows, (e) => (B(), V("li", {
 				key: e.id,
 				class: "dt-row",
 				"data-testid": "ps-eff-row"
-			}, [U("div", Ike, [
-				U("span", Lke, A(e.name.slice(0, 1)), 1),
-				U("div", Rke, [U("button", {
+			}, [U("div", Lke, [
+				U("span", Rke, A(e.name.slice(0, 1)), 1),
+				U("div", zke, [U("button", {
 					type: "button",
 					class: "dt-title",
 					onClick: (t) => v(e, "edit")
-				}, A(e.name), 9, zke)]),
-				U("span", Bke, A(e.source || "手动"), 1),
+				}, A(e.name), 9, Bke)]),
+				U("span", Vke, A(e.source || "手动"), 1),
 				U("span", {
 					class: Bt(["dt-cell dt-opt-2", { "ps-dim": !e.duration }]),
 					style: { width: "6rem" }
 				}, A(e.duration || "—"), 3),
-				U("span", Vke, [s(e) ? (B(), V("button", {
+				U("span", Hke, [s(e) ? (B(), V("button", {
 					key: 0,
 					class: "dt-act",
 					type: "button",
@@ -72283,7 +72329,7 @@ var HEe = {
 				}, [W(Z, {
 					name: "sparkle",
 					size: 15
-				})], 8, Hke)) : (B(), H(VF, {
+				})], 8, Uke)) : (B(), H(VF, {
 					key: 1,
 					"model-value": !e.disabled,
 					label: `${e.name}生效`,
@@ -72304,9 +72350,9 @@ var HEe = {
 					"onSelect"
 				])])
 			])]))), 128))])) : K("", !0)
-		], 8, Oke))), 128))])]));
+		], 8, kke))), 128))])]));
 	}
-}), Wke = ["data-editing", "data-testid"], Gke = { class: "ps-grp-head" }, Kke = ["aria-label", "title"], qke = ["aria-label", "disabled"], Jke = ["placeholder"], Yke = ["placeholder"], Xke = { class: "ps-text-actions" }, Zke = {
+}), Gke = ["data-editing", "data-testid"], Kke = { class: "ps-grp-head" }, qke = ["aria-label", "title"], Jke = ["aria-label", "disabled"], Yke = ["placeholder"], Xke = ["placeholder"], Zke = { class: "ps-text-actions" }, Qke = {
 	key: 1,
 	class: "ps-text-body"
 }, T5 = /* @__PURE__ */ I({
@@ -72342,7 +72388,7 @@ var HEe = {
 			class: "ps-text-card",
 			"data-editing": a.value || void 0,
 			"data-testid": e.testid
-		}, [U("header", Gke, [
+		}, [U("header", Kke, [
 			U("b", null, A(e.title), 1),
 			e.text && !e.single ? (B(), V("button", {
 				key: 0,
@@ -72354,7 +72400,7 @@ var HEe = {
 			}, [W(Z, {
 				name: u.value ? "check" : "copy",
 				size: 14
-			}, null, 8, ["name"])], 8, Kke)) : K("", !0),
+			}, null, 8, ["name"])], 8, qke)) : K("", !0),
 			U("button", {
 				class: "trpg-icon-btn",
 				type: "button",
@@ -72364,7 +72410,7 @@ var HEe = {
 			}, [W(Z, {
 				name: "pencil-simple",
 				size: 14
-			})], 8, qke)
+			})], 8, Jke)
 		]), a.value ? (B(), V("form", {
 			key: 0,
 			class: "ps-text-edit",
@@ -72377,7 +72423,7 @@ var HEe = {
 			class: "trpg-input",
 			placeholder: e.placeholder,
 			onKeydown: n[3] ||= ed(J((e) => a.value = !1, ["prevent"]), ["esc"])
-		}, null, 40, Yke)), [[Ru, o.value]]) : Vi((B(), V("textarea", {
+		}, null, 40, Xke)), [[Ru, o.value]]) : Vi((B(), V("textarea", {
 			key: 0,
 			ref_key: "box",
 			ref: s,
@@ -72386,36 +72432,36 @@ var HEe = {
 			rows: "5",
 			placeholder: e.placeholder,
 			onKeydown: n[1] ||= ed(J((e) => a.value = !1, ["prevent"]), ["esc"])
-		}, null, 40, Jke)), [[Ru, o.value]]), U("div", Xke, [U("button", {
+		}, null, 40, Yke)), [[Ru, o.value]]), U("div", Zke, [U("button", {
 			class: "trpg-btn trpg-btn--small",
 			type: "button",
 			onClick: n[4] ||= (e) => a.value = !1
 		}, "取消"), n[5] ||= U("button", {
 			class: "trpg-btn trpg-btn--small trpg-btn--primary",
 			type: "submit"
-		}, "保存", -1)])], 32)) : (B(), V("div", Zke, [Do(t.$slots, "default", {}, () => [G(A(e.text), 1)])]))], 8, Wke));
+		}, "保存", -1)])], 32)) : (B(), V("div", Qke, [Do(t.$slots, "default", {}, () => [G(A(e.text), 1)])]))], 8, Gke));
 	}
-}), Qke = {
+}), $ke = {
 	class: "ps-bio",
 	"data-testid": "ps-bio"
-}, $ke = { class: "ps-bio-main" }, eAe = {
+}, eAe = { class: "ps-bio-main" }, tAe = {
 	key: 0,
 	class: "ps-drawer-note"
-}, tAe = {
+}, nAe = {
 	key: 0,
 	class: "ps-bio-empty"
-}, nAe = [
+}, rAe = [
 	"disabled",
 	"data-testid",
 	"onClick"
-], rAe = { class: "ps-text-card ps-bio-traits" }, iAe = { class: "ps-bio-trait-grid" }, aAe = {
+], iAe = { class: "ps-text-card ps-bio-traits" }, aAe = { class: "ps-bio-trait-grid" }, oAe = {
 	key: 0,
 	class: "ps-bio-empty ps-bio-traits-add"
-}, oAe = [
+}, sAe = [
 	"disabled",
 	"data-testid",
 	"onClick"
-], sAe = /* @__PURE__ */ I({
+], cAe = /* @__PURE__ */ I({
 	__name: "BioTab",
 	setup(e) {
 		let t = R8(), n = q(() => t.sheet?.system.details ?? {}), r = (e) => e.replace(/<br\s*\/?>/gi, "\n").replace(/<\/(p|div|li|h\d)>/gi, "\n\n").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").replace(/\n{3,}/g, "\n\n").trim(), i = (e) => e.split(/\n{2,}/).map((e) => e.trim()).filter(Boolean).map((e) => `<p>${e.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</p>`).join(""), a = q(() => [
@@ -72466,13 +72512,13 @@ var HEe = {
 				path: e.path,
 				value: e.html ? i(n) : n
 			}]);
-		}, f = q(() => (t.sheet ? SCe(t.sheet) : []).map((e) => ({
+		}, f = q(() => (t.sheet ? CCe(t.sheet) : []).map((e) => ({
 			key: e.path,
 			title: e.label,
 			path: e.path,
 			text: e.value
 		}))), p = /* @__PURE__ */ j(/* @__PURE__ */ new Set()), m = q(() => f.value.filter((e) => e.text || p.value.has(e.key))), h = q(() => f.value.filter((e) => !e.text && !p.value.has(e.key)));
-		return (e, n) => (B(), V("div", Qke, [U("div", $ke, [(B(!0), V(z, null, R(s.value, (e) => (B(), H(T5, {
+		return (e, n) => (B(), V("div", $ke, [U("div", eAe, [(B(!0), V(z, null, R(s.value, (e) => (B(), H(T5, {
 			key: e.key,
 			ref_for: !0,
 			ref: (t) => l.value[e.key] = t,
@@ -72482,7 +72528,7 @@ var HEe = {
 			testid: `ps-bio-${e.key}`,
 			onSave: (t) => d(e, t)
 		}, {
-			default: P(() => [(B(!0), V(z, null, R(e.text.split(/\n{2,}/), (e, t) => (B(), V("p", { key: t }, A(e), 1))), 128)), e.text ? K("", !0) : (B(), V("p", eAe, "还没写。"))]),
+			default: P(() => [(B(!0), V(z, null, R(e.text.split(/\n{2,}/), (e, t) => (B(), V("p", { key: t }, A(e), 1))), 128)), e.text ? K("", !0) : (B(), V("p", tAe, "还没写。"))]),
 			_: 2
 		}, 1032, [
 			"title",
@@ -72490,16 +72536,16 @@ var HEe = {
 			"read-only",
 			"testid",
 			"onSave"
-		]))), 128)), c.value.length ? (B(), V("p", tAe, [n[0] ||= G("还没写的：", -1), (B(!0), V(z, null, R(c.value, (e) => (B(), V("button", {
+		]))), 128)), c.value.length ? (B(), V("p", nAe, [n[0] ||= G("还没写的：", -1), (B(!0), V(z, null, R(c.value, (e) => (B(), V("button", {
 			key: e.key,
 			type: "button",
 			class: "ps-add-chip",
 			disabled: N(t).readOnly,
 			"data-testid": `ps-bio-add-${e.key}`,
 			onClick: (t) => u(e)
-		}, "＋ " + A(e.title), 9, nAe))), 128))])) : K("", !0)]), U("section", rAe, [
+		}, "＋ " + A(e.title), 9, rAe))), 128))])) : K("", !0)]), U("section", iAe, [
 			n[1] ||= U("header", { class: "ps-grp-head" }, [U("b", null, "特征")], -1),
-			U("div", iAe, [(B(!0), V(z, null, R(m.value, (e) => (B(), H(T5, {
+			U("div", aAe, [(B(!0), V(z, null, R(m.value, (e) => (B(), H(T5, {
 				key: e.key,
 				class: "ps-bio-trait",
 				title: e.title,
@@ -72520,29 +72566,29 @@ var HEe = {
 				"read-only",
 				"onSave"
 			]))), 128))]),
-			h.value.length ? (B(), V("p", aAe, [(B(!0), V(z, null, R(h.value, (e) => (B(), V("button", {
+			h.value.length ? (B(), V("p", oAe, [(B(!0), V(z, null, R(h.value, (e) => (B(), V("button", {
 				key: e.key,
 				type: "button",
 				class: "ps-add-chip",
 				disabled: N(t).readOnly,
 				"data-testid": `ps-bio-trait-add-${e.key}`,
 				onClick: (t) => p.value = /* @__PURE__ */ new Set([...p.value, e.key])
-			}, "＋ " + A(e.title), 9, oAe))), 128))])) : K("", !0)
+			}, "＋ " + A(e.title), 9, sAe))), 128))])) : K("", !0)
 		])]));
 	}
-}), cAe = {
+}), lAe = {
 	class: "ps-notes",
 	"data-testid": "ps-notes"
-}, lAe = { class: "ps-grp ps-notes-list" }, uAe = { class: "ps-grp-head" }, dAe = ["disabled"], fAe = {
+}, uAe = { class: "ps-grp ps-notes-list" }, dAe = { class: "ps-grp-head" }, fAe = ["disabled"], pAe = {
 	key: 0,
 	class: "ps-drawer-note ps-notes-empty"
-}, pAe = { class: "ps-rows" }, mAe = ["data-open"], hAe = { class: "ps-row-main" }, gAe = { class: "ps-note-n" }, _Ae = ["onClick"], vAe = { class: "ps-row-title ps-row-title--static" }, yAe = { class: "ps-grp-menu-col" }, bAe = {
+}, mAe = { class: "ps-rows" }, hAe = ["data-open"], gAe = { class: "ps-row-main" }, _Ae = { class: "ps-note-n" }, vAe = ["onClick"], yAe = { class: "ps-row-title ps-row-title--static" }, bAe = { class: "ps-grp-menu-col" }, xAe = {
 	key: 0,
 	class: "ps-notes-page"
-}, xAe = {
+}, SAe = {
 	key: 0,
 	class: "ps-drawer-note"
-}, SAe = { class: "ps-notes-nav" }, CAe = ["disabled"], wAe = ["disabled"], TAe = /* @__PURE__ */ I({
+}, CAe = { class: "ps-notes-nav" }, wAe = ["disabled"], TAe = ["disabled"], EAe = /* @__PURE__ */ I({
 	__name: "NotesTab",
 	setup(e) {
 		let t = R8(), n = q(() => Array.isArray(t.row?.adjustments.journal) ? t.row.adjustments.journal : []), r = /* @__PURE__ */ j(null);
@@ -72571,8 +72617,8 @@ var HEe = {
 		function u(e, t) {
 			t === "remove" && s(`删除了日志「${e.title}」`, n.value.filter((t) => t.id !== e.id));
 		}
-		return (e, s) => (B(), V("div", cAe, [U("section", lAe, [
-			U("header", uAe, [
+		return (e, s) => (B(), V("div", lAe, [U("section", uAe, [
+			U("header", dAe, [
 				s[4] ||= U("b", null, "日志页", -1),
 				U("small", null, A(n.value.length), 1),
 				s[5] ||= U("span", { class: "tp-gap" }, null, -1),
@@ -72586,21 +72632,21 @@ var HEe = {
 				}, [W(Z, {
 					name: "plus",
 					size: 16
-				})], 8, dAe)
+				})], 8, fAe)
 			]),
-			n.value.length ? K("", !0) : (B(), V("p", fAe, "还没有日志。点 ＋ 记下这次跑团发生了什么。")),
-			U("ul", pAe, [(B(!0), V(z, null, R(n.value, (e, i) => (B(), V("li", {
+			n.value.length ? K("", !0) : (B(), V("p", pAe, "还没有日志。点 ＋ 记下这次跑团发生了什么。")),
+			U("ul", mAe, [(B(!0), V(z, null, R(n.value, (e, i) => (B(), V("li", {
 				key: e.id,
 				class: "ps-row",
 				"data-open": e.id === r.value || void 0
-			}, [U("div", hAe, [
-				U("span", gAe, A(n.value.length - i), 1),
+			}, [U("div", gAe, [
+				U("span", _Ae, A(n.value.length - i), 1),
 				U("button", {
 					class: "ps-row-name ps-note-pick",
 					type: "button",
 					onClick: (t) => r.value = e.id
-				}, [U("b", vAe, A(e.title), 1), U("small", null, A(o(e.date)), 1)], 8, _Ae),
-				U("span", yAe, [W(RF, {
+				}, [U("b", yAe, A(e.title), 1), U("small", null, A(o(e.date)), 1)], 8, vAe),
+				U("span", bAe, [W(RF, {
 					label: `${e.title}的更多操作`,
 					items: [{
 						key: "remove",
@@ -72614,8 +72660,8 @@ var HEe = {
 					"items",
 					"onSelect"
 				])])
-			])], 8, mAe))), 128))])
-		]), a.value ? (B(), V("div", bAe, [
+			])], 8, hAe))), 128))])
+		]), a.value ? (B(), V("div", xAe, [
 			(B(), H(T5, {
 				key: `t-${a.value.id}`,
 				title: "标题",
@@ -72636,10 +72682,10 @@ var HEe = {
 				testid: "ps-note-body",
 				onSave: s[1] ||= (e) => l({ text: e })
 			}, {
-				default: P(() => [(B(!0), V(z, null, R(a.value.text.split(/\n{2,}/), (e, t) => (B(), V("p", { key: t }, A(e), 1))), 128)), a.value.text ? K("", !0) : (B(), V("p", xAe, "还没写。点 ✎ 开始写。"))]),
+				default: P(() => [(B(!0), V(z, null, R(a.value.text.split(/\n{2,}/), (e, t) => (B(), V("p", { key: t }, A(e), 1))), 128)), a.value.text ? K("", !0) : (B(), V("p", SAe, "还没写。点 ✎ 开始写。"))]),
 				_: 1
 			}, 8, ["text", "read-only"])),
-			U("div", SAe, [U("button", {
+			U("div", CAe, [U("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
 				disabled: i.value >= n.value.length - 1,
@@ -72647,7 +72693,7 @@ var HEe = {
 			}, [W(Z, {
 				name: "caret-left",
 				size: 12
-			}), s[6] ||= G("上一页", -1)], 8, CAe), U("button", {
+			}), s[6] ||= G("上一页", -1)], 8, wAe), U("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
 				disabled: i.value <= 0,
@@ -72655,40 +72701,40 @@ var HEe = {
 			}, [s[7] ||= G("下一页", -1), W(Z, {
 				name: "caret-right",
 				size: 12
-			})], 8, wAe)])
+			})], 8, TAe)])
 		])) : K("", !0)]));
 	}
-}), EAe = {
+}), DAe = {
 	class: "ps",
 	"data-testid": "person-page"
-}, DAe = {
+}, OAe = {
 	class: "ps-bar",
 	"data-testid": "ps-bar"
-}, OAe = { class: "ps-bar-name" }, kAe = { class: "ps-bar-tools" }, AAe = ["disabled"], jAe = ["disabled"], MAe = ["disabled"], NAe = {
+}, kAe = { class: "ps-bar-name" }, AAe = { class: "ps-bar-tools" }, jAe = ["disabled"], MAe = ["disabled"], NAe = ["disabled"], PAe = {
 	key: 0,
 	class: "pp-error",
 	role: "alert"
-}, PAe = {
+}, FAe = {
 	key: 1,
 	class: "pp-note",
 	"data-testid": "ps-missing"
-}, FAe = {
+}, IAe = {
 	key: 2,
 	class: "ps-skeleton",
 	"aria-busy": "true",
 	"data-testid": "ps-loading"
-}, IAe = ["aria-pressed", "aria-label"], LAe = [
+}, LAe = ["aria-pressed", "aria-label"], RAe = [
 	"aria-selected",
 	"data-testid",
 	"onClick"
-], RAe = ["data-side"], zAe = {
+], zAe = ["data-side"], BAe = {
 	key: 0,
 	class: "ps-side",
 	"data-testid": "ps-side"
-}, BAe = { class: "ps-side-head" }, VAe = ["disabled"], HAe = {
+}, VAe = { class: "ps-side-head" }, HAe = ["disabled"], UAe = {
 	key: 0,
 	class: "ps-drawer-note"
-}, UAe = ["data-testid"], WAe = /* @__PURE__ */ I({
+}, WAe = ["data-testid"], GAe = /* @__PURE__ */ I({
 	__name: "PersonPage",
 	setup(e) {
 		let t = R8(), n = CA(), r = hA(), i = mA(), a = Uk(), o = Wk(), s = OA();
@@ -72777,13 +72823,13 @@ var HEe = {
 		let b = () => r.open({
 			key: "person-history",
 			title: "改动记录",
-			component: jr(Bwe),
+			component: jr(Vwe),
 			variant: "dialog",
 			width: 560,
 			height: 600
 		}), x = q(() => t.sheet ? q8(t.sheet) : []), S = /* @__PURE__ */ j("favs"), C = q(() => Object.fromEntries(x.value.map((e) => [e.key, e.label]))), w = q(() => t.row?.missing ?? []);
-		return (e, n) => (B(), V("div", EAe, [
-			U("div", DAe, [
+		return (e, n) => (B(), V("div", DAe, [
+			U("div", OAe, [
 				U("button", {
 					class: "trpg-btn trpg-btn--small trpg-btn--quiet",
 					type: "button",
@@ -72793,7 +72839,7 @@ var HEe = {
 					name: "caret-left",
 					size: 14
 				}), n[8] ||= G("人物", -1)]),
-				U("b", OAe, A(m.value), 1),
+				U("b", kAe, A(m.value), 1),
 				h.value ? (B(), H(RF, {
 					key: 0,
 					label: "放在哪个分类",
@@ -72801,7 +72847,7 @@ var HEe = {
 					text: N(vA).find((e) => e.id === h.value)?.label,
 					onSelect: v
 				}, null, 8, ["items", "text"])) : K("", !0),
-				U("span", kAe, [
+				U("span", AAe, [
 					U("button", {
 						class: "trpg-btn trpg-btn--small trpg-btn--quiet",
 						type: "button",
@@ -72812,7 +72858,7 @@ var HEe = {
 					}, [W(Z, {
 						name: "caret-left",
 						size: 16
-					})], 8, AAe),
+					})], 8, jAe),
 					U("button", {
 						class: "trpg-btn trpg-btn--small trpg-btn--quiet",
 						type: "button",
@@ -72823,7 +72869,7 @@ var HEe = {
 					}, [W(Z, {
 						name: "caret-right",
 						size: 16
-					})], 8, jAe),
+					})], 8, MAe),
 					U("button", {
 						class: "trpg-btn trpg-btn--small",
 						type: "button",
@@ -72833,7 +72879,7 @@ var HEe = {
 					}, [W(Z, {
 						name: "arrow-counter-clockwise",
 						size: 14
-					}), n[9] ||= G("撤销", -1)], 8, MAe),
+					}), n[9] ||= G("撤销", -1)], 8, NAe),
 					U("button", {
 						class: "trpg-btn trpg-btn--small trpg-btn--quiet",
 						type: "button",
@@ -72847,7 +72893,7 @@ var HEe = {
 					}, null, 8, ["items"])
 				])
 			]),
-			N(t).error ? (B(), V("p", NAe, [
+			N(t).error ? (B(), V("p", PAe, [
 				W(Z, {
 					name: "warning",
 					size: 16
@@ -72858,12 +72904,12 @@ var HEe = {
 					type: "button",
 					onClick: n[4] ||= (e) => N(t).reload()
 				}, "重试")
-			])) : w.value.length ? (B(), V("p", PAe, [W(Z, {
+			])) : w.value.length ? (B(), V("p", FAe, [W(Z, {
 				name: "warning",
 				size: 16
 			}), G("缺 " + A(w.value.length) + " 项资料：" + A(w.value.join("、")) + "；其余照常。", 1)])) : K("", !0),
 			N(t).sheet ? (B(), V(z, { key: 3 }, [
-				W(Awe),
+				W(jwe),
 				U("div", {
 					ref_key: "tabsEl",
 					ref: u,
@@ -72879,20 +72925,20 @@ var HEe = {
 				}, [W(Z, {
 					name: p.value ? "caret-left" : "caret-right",
 					size: 14
-				}, null, 8, ["name"])], 8, IAe), (B(), V(z, null, R(c, (e) => U("button", {
+				}, null, 8, ["name"])], 8, LAe), (B(), V(z, null, R(c, (e) => U("button", {
 					key: e.id,
 					type: "button",
 					role: "tab",
 					"aria-selected": l.value === e.id,
 					"data-testid": `ps-tab-${e.id}`,
 					onClick: (t) => f(e.id)
-				}, A(e.label), 9, LAe)), 64))], 512),
+				}, A(e.label), 9, RAe)), 64))], 512),
 				U("div", {
 					ref_key: "bodyEl",
 					ref: d,
 					class: "ps-body",
 					"data-side": p.value || void 0
-				}, [p.value ? (B(), V("aside", zAe, [W(RA, {
+				}, [p.value ? (B(), V("aside", BAe, [W(RA, {
 					modelValue: S.value,
 					"onUpdate:modelValue": n[6] ||= (e) => S.value = e,
 					label: "侧栏",
@@ -72903,7 +72949,7 @@ var HEe = {
 						value: "skills",
 						label: "技能"
 					}]
-				}, null, 8, ["modelValue"]), S.value === "skills" ? (B(), V(z, { key: 0 }, [U("div", BAe, [
+				}, null, 8, ["modelValue"]), S.value === "skills" ? (B(), V(z, { key: 0 }, [U("div", VAe, [
 					n[10] ||= U("b", null, "技能", -1),
 					n[11] ||= U("small", null, "加值", -1),
 					n[12] ||= U("small", null, "被动", -1),
@@ -72919,58 +72965,63 @@ var HEe = {
 					}, [W(Z, {
 						name: "pencil-simple",
 						size: 13
-					})], 8, VAe)
+					})], 8, HAe)
 				]), x.value.length ? (B(), H(c5, {
 					key: 1,
 					rows: x.value,
 					kind: "skills",
 					testid: "ps-side-skills"
-				}, null, 8, ["rows"])) : (B(), V("p", HAe, "没有列出的技能。"))], 64)) : (B(), H(lTe, { key: 1 }))])) : K("", !0), U("section", {
+				}, null, 8, ["rows"])) : (B(), V("p", UAe, "没有列出的技能。"))], 64)) : (B(), H(uTe, { key: 1 }))])) : K("", !0), U("section", {
 					class: "ps-tab",
 					role: "tabpanel",
 					"data-testid": `ps-panel-${l.value}`
-				}, [l.value === "action" ? (B(), H(WEe, { key: 0 })) : l.value === "attr" ? (B(), H(bOe, { key: 1 })) : l.value === "bag" ? (B(), H(NOe, { key: 2 })) : l.value === "spell" ? (B(), H(YOe, { key: 3 })) : l.value === "feat" ? (B(), H(tke, { key: 4 })) : l.value === "effect" ? (B(), H(Uke, { key: 5 })) : l.value === "bio" ? (B(), H(sAe, { key: 6 })) : l.value === "note" ? (B(), H(TAe, { key: 7 })) : K("", !0)], 8, UAe)], 8, RAe)
-			], 64)) : (B(), V("div", FAe, A(N(t).error ? "" : "正在读取人物…"), 1))
+				}, [l.value === "action" ? (B(), H(GEe, { key: 0 })) : l.value === "attr" ? (B(), H(xOe, { key: 1 })) : l.value === "bag" ? (B(), H(POe, { key: 2 })) : l.value === "spell" ? (B(), H(XOe, { key: 3 })) : l.value === "feat" ? (B(), H(nke, { key: 4 })) : l.value === "effect" ? (B(), H(Wke, { key: 5 })) : l.value === "bio" ? (B(), H(cAe, { key: 6 })) : l.value === "note" ? (B(), H(EAe, { key: 7 })) : K("", !0)], 8, WAe)], 8, zAe)
+			], 64)) : (B(), V("div", IAe, A(N(t).error ? "" : "正在读取人物…"), 1))
 		]));
 	}
-}), GAe = {
+}), KAe = {
 	key: 1,
 	class: "pp",
 	"data-testid": "people-view"
-}, KAe = { class: "pp-top" }, qAe = {
+}, qAe = { class: "pp-top" }, JAe = {
 	key: 0,
 	class: "pp-title"
-}, JAe = {
+}, YAe = {
 	key: 1,
 	class: "pp-tabs",
 	role: "group",
 	"aria-label": "人物分类"
-}, YAe = [
+}, XAe = [
 	"aria-pressed",
 	"data-testid",
 	"onClick"
-], XAe = { class: "pp-tools" }, ZAe = ["aria-pressed"], QAe = { class: "pp-search" }, $Ae = {
+], ZAe = { class: "pp-tools" }, QAe = ["aria-pressed"], $Ae = {
+	key: 0,
+	class: "pp-busy",
+	role: "status",
+	"data-testid": "pp-creating"
+}, eje = { class: "pp-search" }, tje = {
 	key: 0,
 	class: "pp-error",
 	role: "alert"
-}, eje = {
+}, nje = {
 	key: 1,
 	class: "pp-note"
-}, tje = {
+}, rje = {
 	key: 2,
 	class: "pp-list",
 	"aria-busy": "true"
-}, nje = {
+}, ije = {
 	key: 3,
 	class: "pp-empty"
-}, rje = { class: "pp-strip" }, ije = {
+}, aje = { class: "pp-strip" }, oje = {
 	key: 0,
 	class: "pp-list",
 	"data-testid": "pp-list"
-}, aje = {
+}, sje = {
 	key: 1,
 	class: "pp-empty"
-}, oje = { key: 0 }, sje = { key: 1 }, cje = /* @__PURE__ */ I({
+}, cje = { key: 0 }, lje = { key: 1 }, uje = /* @__PURE__ */ I({
 	__name: "PeopleView",
 	setup(e) {
 		let t = CA(), n = Wk(), r = hA(), i = R8();
@@ -73008,11 +73059,18 @@ var HEe = {
 				label: "从模板加入…",
 				...m.value
 			}
-		]);
-		async function g(e) {
+		]), g = /* @__PURE__ */ j(!1);
+		async function _(e) {
 			if (e === "blank") {
-				let e = vA.some((e) => e.id === t.view) ? t.view : "party", n = await t.addBlank(`新人物 ${t.counts.all + 1}`, e);
-				n && i.open(n);
+				if (g.value) return;
+				let e = vA.some((e) => e.id === t.view) ? t.view : "party";
+				g.value = !0;
+				try {
+					let n = await t.addBlank(`新人物 ${t.counts.all + 1}`, e);
+					n && i.open(n);
+				} finally {
+					g.value = !1;
+				}
 			} else {
 				if (e === "native") {
 					let e = vA.some((e) => e.id === t.view) ? t.view : "party";
@@ -73037,28 +73095,28 @@ var HEe = {
 				});
 			}
 		}
-		let _ = q(() => [o.value ? {
+		let v = q(() => [o.value ? {
 			key: "back",
 			label: "回到人物列表"
 		} : {
 			key: "trash",
 			label: `回收站（${t.counts.trash}）`
 		}]);
-		return (e, n) => N(i).id ? (B(), H(WAe, { key: 0 })) : (B(), V("div", GAe, [
-			U("div", KAe, [o.value ? (B(), V("div", qAe, [U("button", {
+		return (e, n) => N(i).id ? (B(), H(GAe, { key: 0 })) : (B(), V("div", KAe, [
+			U("div", qAe, [o.value ? (B(), V("div", JAe, [U("button", {
 				class: "trpg-btn trpg-btn--small trpg-btn--quiet",
 				type: "button",
 				onClick: n[0] ||= (e) => N(t).setView("party")
 			}, [W(Z, {
 				name: "caret-left",
 				size: 14
-			}), n[13] ||= G("人物", -1)]), n[14] ||= U("b", null, "回收站", -1)])) : (B(), V("div", JAe, [(B(!0), V(z, null, R(a.value, (e) => (B(), V("button", {
+			}), n[13] ||= G("人物", -1)]), n[14] ||= U("b", null, "回收站", -1)])) : (B(), V("div", YAe, [(B(!0), V(z, null, R(a.value, (e) => (B(), V("button", {
 				key: e.id,
 				type: "button",
 				"aria-pressed": N(t).view === e.id,
 				"data-testid": `pp-tab-${e.id}`,
 				onClick: (n) => N(t).setView(e.id)
-			}, [G(A(e.label), 1), U("small", null, A(N(t).counts[e.id]), 1)], 8, YAe))), 128))])), U("div", XAe, [
+			}, [G(A(e.label), 1), U("small", null, A(N(t).counts[e.id]), 1)], 8, XAe))), 128))])), U("div", ZAe, [
 				W(RF, {
 					label: "排序",
 					text: u.value,
@@ -73074,22 +73132,23 @@ var HEe = {
 					"data-testid": "pp-select",
 					"aria-pressed": N(t).selecting,
 					onClick: n[2] ||= (e) => N(t).toggleSelecting()
-				}, A(N(t).selecting ? "完成" : "选择"), 9, ZAe),
+				}, A(N(t).selecting ? "完成" : "选择"), 9, QAe),
+				g.value ? (B(), V("span", $Ae, "正在新建…")) : K("", !0),
 				o.value ? K("", !0) : (B(), H(RF, {
-					key: 0,
+					key: 1,
 					label: "新建",
 					text: "＋ 新建",
 					primary: "",
 					items: h.value,
-					onSelect: g
+					onSelect: _
 				}, null, 8, ["items"])),
 				W(RF, {
 					label: "人物页",
-					items: _.value,
+					items: v.value,
 					onSelect: n[3] ||= (e) => N(t).setView(e === "back" ? "party" : "trash")
 				}, null, 8, ["items"])
 			])]),
-			U("label", QAe, [W(Z, {
+			U("label", eje, [W(Z, {
 				name: "magnifying-glass",
 				size: 16
 			}), Vi(U("input", {
@@ -73100,7 +73159,7 @@ var HEe = {
 				"aria-label": "搜人物",
 				"data-testid": "pp-search"
 			}, null, 512), [[Ru, N(t).query]])]),
-			N(t).error ? (B(), V("p", $Ae, [
+			N(t).error ? (B(), V("p", tje, [
 				W(Z, {
 					name: "warning",
 					size: 16
@@ -73112,14 +73171,14 @@ var HEe = {
 					onClick: n[5] ||= (e) => N(t).load()
 				}, "重试")
 			])) : K("", !0),
-			s.value ? (B(), V("p", eje, [W(Z, {
+			s.value ? (B(), V("p", nje, [W(Z, {
 				name: "lock",
 				size: 14
 			}), n[15] ||= G("另一个窗口正在使用助手，这里只能查看，增删改都先停用。", -1)])) : K("", !0),
-			c.value ? (B(), V("ul", tje, [(B(), V(z, null, R(3, (e) => U("li", {
+			c.value ? (B(), V("ul", rje, [(B(), V(z, null, R(3, (e) => U("li", {
 				key: e,
 				class: "pp-row"
-			}, [...n[16] ||= [U("span", { class: "trpg-skeleton pp-skel" }, null, -1)]])), 64))])) : d.value ? (B(), V("div", nje, [...n[17] ||= [U("b", null, "这个战役里还没有人物", -1)]])) : (B(), V(z, { key: 4 }, [U("div", rje, [U("span", null, [G(A(l.value), 1), U("small", null, A(N(t).visible.length), 1)]), n[18] ||= U("span", null, "生命", -1)]), N(t).visible.length ? (B(), V("ul", ije, [(B(!0), V(z, null, R(N(t).visible, (e) => (B(), H(rye, {
+			}, [...n[16] ||= [U("span", { class: "trpg-skeleton pp-skel" }, null, -1)]])), 64))])) : d.value ? (B(), V("div", ije, [...n[17] ||= [U("b", null, "这个战役里还没有人物", -1)]])) : (B(), V(z, { key: 4 }, [U("div", aje, [U("span", null, [G(A(l.value), 1), U("small", null, A(N(t).visible.length), 1)]), n[18] ||= U("span", null, "生命", -1)]), N(t).visible.length ? (B(), V("ul", oje, [(B(!0), V(z, null, R(N(t).visible, (e) => (B(), H(rye, {
 				key: e.id,
 				row: e,
 				info: N(t).loaded[e.id],
@@ -73141,11 +73200,11 @@ var HEe = {
 				"onToggle",
 				"onMenu",
 				"onOpen"
-			]))), 128))])) : (B(), V("div", aje, [U("b", null, A(N(t).query ? "没有找到" : o.value ? "回收站是空的" : `${l.value}里还没有人物`), 1), N(t).elsewhere ? (B(), V("p", oje, [G("在「" + A(N(t).elsewhere.label) + "」里有 " + A(N(t).elsewhere.n) + " 个。", 1), U("button", {
+			]))), 128))])) : (B(), V("div", sje, [U("b", null, A(N(t).query ? "没有找到" : o.value ? "回收站是空的" : `${l.value}里还没有人物`), 1), N(t).elsewhere ? (B(), V("p", cje, [G("在「" + A(N(t).elsewhere.label) + "」里有 " + A(N(t).elsewhere.n) + " 个。", 1), U("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
 				onClick: n[7] ||= (e) => N(t).setView(N(t).elsewhere.id)
-			}, "去看")])) : N(t).query ? (B(), V("p", sje, "换个关键词，或点「全部」一起找。")) : K("", !0)]))], 64)),
+			}, "去看")])) : N(t).query ? (B(), V("p", lje, "换个关键词，或点「全部」一起找。")) : K("", !0)]))], 64)),
 			N(t).selecting ? (B(), H(dye, {
 				key: 5,
 				count: N(t).selected.length,
@@ -73165,7 +73224,7 @@ var HEe = {
 			])) : K("", !0)
 		]));
 	}
-}), lje = {
+}), dje = {
 	class: "trpg-hero__art",
 	viewBox: "0 0 960 168",
 	preserveAspectRatio: "xMaxYMax slice",
@@ -73173,9 +73232,9 @@ var HEe = {
 }, E5 = /* @__PURE__ */ I({
 	__name: "HeroArt",
 	setup(e) {
-		return (e, t) => (B(), V("svg", lje, [...t[0] ||= [Tc("<path class=\"far\" d=\"M0 120L90 70L170 110L260 60L350 105L430 75L520 112L610 68L700 108L790 62L880 100L960 78V168H0Z\"></path><circle class=\"moon\" cx=\"905\" cy=\"36\" r=\"12\"></circle><path class=\"mid\" d=\"M0 140L110 100L200 128L300 96L400 130L500 104L600 134L720 100L820 128L960 104V168H0Z\"></path><g class=\"castle\"><rect x=\"660\" y=\"112\" width=\"190\" height=\"40\"></rect><rect x=\"720\" y=\"64\" width=\"60\" height=\"76\"></rect><rect x=\"690\" y=\"84\" width=\"26\" height=\"56\"></rect><rect x=\"784\" y=\"78\" width=\"30\" height=\"62\"></rect><path d=\"M720 64L750 34L780 64Z\"></path><path d=\"M690 84L703 60L716 84Z\"></path><path d=\"M784 78L799 50L814 78Z\"></path></g><g class=\"lit\"><rect x=\"746\" y=\"86\" width=\"8\" height=\"12\" rx=\"1\"></rect><rect x=\"698\" y=\"102\" width=\"6\" height=\"9\" rx=\"1\"></rect><rect x=\"796\" y=\"96\" width=\"6\" height=\"9\" rx=\"1\"></rect></g><path class=\"near\" d=\"M0 150L120 132L260 148L420 130L580 150L760 134L960 150V168H0Z\"></path>", 6)]]));
+		return (e, t) => (B(), V("svg", dje, [...t[0] ||= [Tc("<path class=\"far\" d=\"M0 120L90 70L170 110L260 60L350 105L430 75L520 112L610 68L700 108L790 62L880 100L960 78V168H0Z\"></path><circle class=\"moon\" cx=\"905\" cy=\"36\" r=\"12\"></circle><path class=\"mid\" d=\"M0 140L110 100L200 128L300 96L400 130L500 104L600 134L720 100L820 128L960 104V168H0Z\"></path><g class=\"castle\"><rect x=\"660\" y=\"112\" width=\"190\" height=\"40\"></rect><rect x=\"720\" y=\"64\" width=\"60\" height=\"76\"></rect><rect x=\"690\" y=\"84\" width=\"26\" height=\"56\"></rect><rect x=\"784\" y=\"78\" width=\"30\" height=\"62\"></rect><path d=\"M720 64L750 34L780 64Z\"></path><path d=\"M690 84L703 60L716 84Z\"></path><path d=\"M784 78L799 50L814 78Z\"></path></g><g class=\"lit\"><rect x=\"746\" y=\"86\" width=\"8\" height=\"12\" rx=\"1\"></rect><rect x=\"698\" y=\"102\" width=\"6\" height=\"9\" rx=\"1\"></rect><rect x=\"796\" y=\"96\" width=\"6\" height=\"9\" rx=\"1\"></rect></g><path class=\"near\" d=\"M0 150L120 132L260 148L420 130L580 150L760 134L960 150V168H0Z\"></path>", 6)]]));
 	}
-}), uje = ["maxlength"], dje = { class: "trpg-confirm__actions" }, fje = ["disabled"], pje = /* @__PURE__ */ I({
+}), fje = ["maxlength"], pje = { class: "trpg-confirm__actions" }, mje = ["disabled"], hje = /* @__PURE__ */ I({
 	__name: "BranchPopover",
 	props: {
 		defaultName: {},
@@ -73230,9 +73289,9 @@ var HEe = {
 							maxlength: N(40),
 							autocomplete: "off",
 							onKeydown: n[1] ||= ed(J((e) => a.value = !1, ["stop", "prevent"]), ["esc"])
-						}, null, 40, uje), [[Ru, o.value]]),
+						}, null, 40, fje), [[Ru, o.value]]),
 						n[6] ||= U("span", { class: "trpg-field__hint" }, "从现在这一刻开一条新时间线：原存档保持上次保存的样子，当前未保存的改动会进入新分支。", -1),
-						U("div", dje, [U("button", {
+						U("div", pje, [U("button", {
 							class: "trpg-btn",
 							type: "button",
 							onClick: n[2] ||= (e) => a.value = !1
@@ -73240,7 +73299,7 @@ var HEe = {
 							class: "trpg-btn trpg-btn--primary",
 							type: "submit",
 							disabled: !o.value.trim()
-						}, "创建并切换", 8, fje)])
+						}, "创建并切换", 8, mje)])
 					], 32)]),
 					_: 1
 				})]),
@@ -73249,17 +73308,17 @@ var HEe = {
 			_: 1
 		}, 8, ["open"]));
 	}
-}), mje = ["data-current", "data-testid"], hje = { class: "trpg-saves__main" }, gje = { class: "trpg-saves__top" }, _je = ["maxlength", "onKeydown"], vje = { key: 1 }, yje = {
+}), gje = ["data-current", "data-testid"], _je = { class: "trpg-saves__main" }, vje = { class: "trpg-saves__top" }, yje = ["maxlength", "onKeydown"], bje = { key: 1 }, xje = {
 	key: 2,
 	class: "trpg-badge",
 	"data-tone": "primary"
-}, bje = { class: "trpg-saves__meta" }, xje = {
+}, Sje = { class: "trpg-saves__meta" }, Cje = {
 	key: 0,
 	class: "trpg-saves__meta"
-}, Sje = {
+}, wje = {
 	key: 1,
 	class: "trpg-saves__noteedit"
-}, Cje = ["maxlength"], wje = { class: "trpg-saves__noteactions" }, Tje = { class: "trpg-saves__end" }, Eje = ["disabled"], Dje = /* @__PURE__ */ I({
+}, Tje = ["maxlength"], Eje = { class: "trpg-saves__noteactions" }, Dje = { class: "trpg-saves__end" }, Oje = ["disabled"], kje = /* @__PURE__ */ I({
 	__name: "SaveRow",
 	props: {
 		id: {},
@@ -73334,8 +73393,8 @@ var HEe = {
 		return (t, n) => (B(), V("li", {
 			"data-current": e.current,
 			"data-testid": `save-${e.name}`
-		}, [U("div", hje, [
-			U("div", gje, [i.value ? (B(), V(z, { key: 0 }, [Vi(U("input", {
+		}, [U("div", _je, [
+			U("div", vje, [i.value ? (B(), V(z, { key: 0 }, [Vi(U("input", {
 				ref_key: "nameInput",
 				ref: c,
 				"onUpdate:modelValue": n[0] ||= (e) => a.value = e,
@@ -73344,7 +73403,7 @@ var HEe = {
 				"aria-label": "存档名",
 				onKeydown: [ed(J(h, ["prevent"]), ["enter"]), n[1] ||= ed(J((e) => i.value = !1, ["stop", "prevent"]), ["esc"])],
 				onBlur: m
-			}, null, 40, _je), [[Ru, a.value]]), i.value ? (B(), V("span", {
+			}, null, 40, yje), [[Ru, a.value]]), i.value ? (B(), V("span", {
 				key: 0,
 				class: "trpg-saves__renamebtns",
 				onClick: n[5] ||= J(() => {}, ["prevent", "stop"])
@@ -73368,17 +73427,17 @@ var HEe = {
 			}, [W(Z, {
 				name: "x",
 				size: 16
-			})], 32)])) : K("", !0)], 64)) : (B(), V("b", vje, A(l.value), 1)), e.current ? (B(), V("span", yje, "当前")) : K("", !0)]),
-			U("div", bje, A(u.value), 1),
-			e.note && !o.value ? (B(), V("div", xje, A(e.note.split("\n")[0]), 1)) : K("", !0),
-			o.value ? (B(), V("div", Sje, [Vi(U("textarea", {
+			})], 32)])) : K("", !0)], 64)) : (B(), V("b", bje, A(l.value), 1)), e.current ? (B(), V("span", xje, "当前")) : K("", !0)]),
+			U("div", Sje, A(u.value), 1),
+			e.note && !o.value ? (B(), V("div", Cje, A(e.note.split("\n")[0]), 1)) : K("", !0),
+			o.value ? (B(), V("div", wje, [Vi(U("textarea", {
 				"onUpdate:modelValue": n[6] ||= (e) => s.value = e,
 				class: "trpg-input",
 				maxlength: N(200),
 				"aria-label": "备注",
 				rows: "2",
 				onKeydown: n[7] ||= ed(J((e) => o.value = !1, ["stop", "prevent"]), ["esc"])
-			}, null, 40, Cje), [[Ru, s.value]]), U("div", wje, [U("button", {
+			}, null, 40, Tje), [[Ru, s.value]]), U("div", Eje, [U("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
 				onClick: n[8] ||= (e) => o.value = !1
@@ -73387,25 +73446,25 @@ var HEe = {
 				type: "button",
 				onClick: g
 			}, "保存")])])) : K("", !0)
-		]), U("div", Tje, [e.current ? K("", !0) : (B(), V("button", {
+		]), U("div", Dje, [e.current ? K("", !0) : (B(), V("button", {
 			key: 0,
 			class: "trpg-btn trpg-btn--small",
 			type: "button",
 			disabled: e.readOnly,
 			onClick: n[9] ||= (e) => r("load")
-		}, "读取", 8, Eje)), W(RF, {
+		}, "读取", 8, Oje)), W(RF, {
 			label: l.value,
 			items: d.value,
 			onSelect: p
-		}, null, 8, ["label", "items"])])], 8, mje));
+		}, null, 8, ["label", "items"])])], 8, gje));
 	}
-}), Oje = ["open", "data-testid"], kje = {
+}), Aje = ["open", "data-testid"], jje = {
 	class: "trpg-camp__chev",
 	"aria-hidden": "true"
-}, Aje = { class: "trpg-camp__name" }, jje = {
+}, Mje = { class: "trpg-camp__name" }, Nje = {
 	key: 0,
 	class: "trpg-saves__renamerow"
-}, Mje = ["maxlength", "onKeydown"], Nje = { key: 1 }, Pje = { class: "trpg-saves" }, D5 = /* @__PURE__ */ I({
+}, Pje = ["maxlength", "onKeydown"], Fje = { key: 1 }, Ije = { class: "trpg-saves" }, D5 = /* @__PURE__ */ I({
 	__name: "CampaignCard",
 	props: {
 		name: {},
@@ -73452,7 +73511,7 @@ var HEe = {
 			open: e.open,
 			"data-testid": `camp-${e.name}`
 		}, [U("summary", null, [
-			U("span", kje, [W(Z, {
+			U("span", jje, [W(Z, {
 				class: "trpg-camp__chev-open",
 				name: "caret-down",
 				size: 16
@@ -73461,7 +73520,7 @@ var HEe = {
 				name: "caret-right",
 				size: 16
 			})]),
-			U("span", Aje, [s.value ? (B(), V("span", jje, [Vi(U("input", {
+			U("span", Mje, [s.value ? (B(), V("span", Nje, [Vi(U("input", {
 				ref_key: "input",
 				ref: l,
 				"onUpdate:modelValue": n[0] ||= (e) => c.value = e,
@@ -73471,7 +73530,7 @@ var HEe = {
 				onClick: n[1] ||= J(() => {}, ["prevent", "stop"]),
 				onKeydown: [ed(J(p, ["prevent"]), ["enter"]), n[2] ||= ed(J((e) => s.value = !1, ["stop", "prevent"]), ["esc"])],
 				onBlur: f
-			}, null, 40, Mje), [[Ru, c.value]]), s.value ? (B(), V("span", {
+			}, null, 40, Pje), [[Ru, c.value]]), s.value ? (B(), V("span", {
 				key: 0,
 				class: "trpg-saves__renamebtns",
 				onClick: n[6] ||= J(() => {}, ["prevent", "stop"])
@@ -73495,7 +73554,7 @@ var HEe = {
 			}, [W(Z, {
 				name: "x",
 				size: 16
-			})], 32)])) : K("", !0)])) : (B(), V("span", Nje, A(e.name), 1)), U("small", null, A(o.value), 1)]),
+			})], 32)])) : K("", !0)])) : (B(), V("span", Fje, A(e.name), 1)), U("small", null, A(o.value), 1)]),
 			U("span", { onClick: n[7] ||= J(() => {}, ["prevent", "stop"]) }, [W(RF, {
 				label: e.name,
 				items: [{
@@ -73506,7 +73565,7 @@ var HEe = {
 				}],
 				onSelect: d
 			}, null, 8, ["label", "items"])])
-		]), U("ul", Pje, [(B(!0), V(z, null, R(a.value, (t) => (B(), H(Dje, {
+		]), U("ul", Ije, [(B(!0), V(z, null, R(a.value, (t) => (B(), H(kje, {
 			id: t.id,
 			key: t.id,
 			name: t.name,
@@ -73537,7 +73596,7 @@ var HEe = {
 			"onNote",
 			"onExport",
 			"onRemove"
-		]))), 128))])], 8, Oje));
+		]))), 128))])], 8, Aje));
 	}
 }), O5 = Uint8Array, k5 = Uint16Array, A5 = Int32Array, j5 = new O5([
 	0,
@@ -73634,7 +73693,7 @@ var HEe = {
 	};
 }, F5 = P5(j5, 2), I5 = F5.b, L5 = F5.r;
 I5[28] = 258, L5[258] = 28;
-for (var R5 = P5(M5, 0), Fje = R5.b, z5 = R5.r, B5 = new k5(32768), V5 = 0; V5 < 32768; ++V5) {
+for (var R5 = P5(M5, 0), Lje = R5.b, z5 = R5.r, B5 = new k5(32768), V5 = 0; V5 < 32768; ++V5) {
 	var H5 = (V5 & 43690) >> 1 | (V5 & 21845) << 1;
 	H5 = (H5 & 52428) >> 2 | (H5 & 13107) << 2, H5 = (H5 & 61680) >> 4 | (H5 & 3855) << 4, B5[V5] = ((H5 & 65280) >> 8 | (H5 & 255) << 8) >> 1;
 }
@@ -73654,7 +73713,7 @@ for (var V5 = 144; V5 < 256; ++V5) W5[V5] = 9;
 for (var V5 = 256; V5 < 280; ++V5) W5[V5] = 7;
 for (var V5 = 280; V5 < 288; ++V5) W5[V5] = 8;
 for (var G5 = new O5(32), V5 = 0; V5 < 32; ++V5) G5[V5] = 5;
-var Ije = /*#__PURE__*/ U5(W5, 9, 0), Lje = /*#__PURE__*/ U5(W5, 9, 1), Rje = /*#__PURE__*/ U5(G5, 5, 0), zje = /*#__PURE__*/ U5(G5, 5, 1), K5 = function(e) {
+var Rje = /*#__PURE__*/ U5(W5, 9, 0), zje = /*#__PURE__*/ U5(W5, 9, 1), Bje = /*#__PURE__*/ U5(G5, 5, 0), Vje = /*#__PURE__*/ U5(G5, 5, 1), K5 = function(e) {
 	for (var t = e[0], n = 1; n < e.length; ++n) e[n] > t && (t = e[n]);
 	return t;
 }, q5 = function(e, t, n) {
@@ -73667,7 +73726,7 @@ var Ije = /*#__PURE__*/ U5(W5, 9, 0), Lje = /*#__PURE__*/ U5(W5, 9, 1), Rje = /*
 	return (e + 7) / 8 | 0;
 }, X5 = function(e, t, n) {
 	return (t == null || t < 0) && (t = 0), (n == null || n > e.length) && (n = e.length), new O5(e.subarray(t, n));
-}, Bje = [
+}, Hje = [
 	"unexpected EOF",
 	"invalid block type",
 	"invalid length/literal",
@@ -73683,10 +73742,10 @@ var Ije = /*#__PURE__*/ U5(W5, 9, 0), Lje = /*#__PURE__*/ U5(W5, 9, 1), Rje = /*
 	"stream finishing",
 	"invalid zip data"
 ], Z5 = function(e, t, n) {
-	var r = Error(t || Bje[e]);
+	var r = Error(t || Hje[e]);
 	if (r.code = e, Error.captureStackTrace && Error.captureStackTrace(r, Z5), !n) throw r;
 	return r;
-}, Vje = function(e, t, n, r) {
+}, Uje = function(e, t, n, r) {
 	var i = e.length, a = r ? r.length : 0;
 	if (!i || t.f && !t.l) return n || new O5(0);
 	var o = !n, s = o || t.i != 2, c = t.i;
@@ -73711,7 +73770,7 @@ var Ije = /*#__PURE__*/ U5(W5, 9, 0), Lje = /*#__PURE__*/ U5(W5, 9, 1), Rje = /*
 				s && l(f + b), n.set(e.subarray(y, x), f), t.b = f += b, t.p = d = x * 8, t.f = u;
 				continue;
 			}
-			if (v == 1) p = Lje, m = zje, h = 9, g = 5;
+			if (v == 1) p = zje, m = Vje, h = 9, g = 5;
 			else if (v == 2) {
 				var S = q5(e, d, 31) + 257, C = q5(e, d + 10, 15) + 4, w = S + q5(e, d + 5, 31) + 1;
 				d += 14;
@@ -73754,7 +73813,7 @@ var Ije = /*#__PURE__*/ U5(W5, 9, 0), Lje = /*#__PURE__*/ U5(W5, 9, 1), Rje = /*
 				}
 				var pe = m[J5(e, d) & ce], me = pe >> 4;
 				pe || Z5(3), d += pe & 15;
-				var oe = Fje[me];
+				var oe = Lje[me];
 				if (me > 3) {
 					var fe = M5[me];
 					oe += J5(e, d) & (1 << fe) - 1, d += fe;
@@ -73891,7 +73950,7 @@ var Ije = /*#__PURE__*/ U5(W5, 9, 0), Lje = /*#__PURE__*/ U5(W5, 9, 1), Rje = /*
 			var de = ue[w] & 31;
 			Q5(t, u, se[de]), u += E[de], de > 15 && (Q5(t, u, ue[w] >> 5 & 127), u += ue[w] >> 12);
 		}
-	} else re = Ije, ie = W5, ae = Rje, oe = G5;
+	} else re = Rje, ie = W5, ae = Bje, oe = G5;
 	for (var w = 0; w < s; ++w) {
 		var fe = r[w];
 		if (fe > 255) {
@@ -73902,7 +73961,7 @@ var Ije = /*#__PURE__*/ U5(W5, 9, 0), Lje = /*#__PURE__*/ U5(W5, 9, 1), Rje = /*
 		} else $5(t, u, re[fe]), u += ie[fe];
 	}
 	return $5(t, u, re[256]), u + ie[256];
-}, Hje = /*#__PURE__*/ new A5([
+}, Wje = /*#__PURE__*/ new A5([
 	65540,
 	131080,
 	131088,
@@ -73912,11 +73971,11 @@ var Ije = /*#__PURE__*/ U5(W5, 9, 0), Lje = /*#__PURE__*/ U5(W5, 9, 1), Rje = /*
 	1048832,
 	2114560,
 	2117632
-]), o7 = /*#__PURE__*/ new O5(0), Uje = function(e, t, n, r, i, a) {
+]), o7 = /*#__PURE__*/ new O5(0), Gje = function(e, t, n, r, i, a) {
 	var o = a.z || e.length, s = new O5(r + o + 5 * (1 + Math.ceil(o / 7e3)) + i), c = s.subarray(r, s.length - i), l = a.l, u = (a.r || 0) & 7;
 	if (t) {
 		u && (c[0] = a.r >> 3);
-		for (var d = Hje[t - 1], f = d >> 13, p = d & 8191, m = (1 << n) - 1, h = a.p || new k5(32768), g = a.h || new k5(m + 1), _ = Math.ceil(n / 3), v = 2 * _, y = function(t) {
+		for (var d = Wje[t - 1], f = d >> 13, p = d & 8191, m = (1 << n) - 1, h = a.p || new k5(32768), g = a.h || new k5(m + 1), _ = Math.ceil(n / 3), v = 2 * _, y = function(t) {
 			return (e[t] ^ e[t + 1] << _ ^ e[t + 2] << v) & m;
 		}, b = new A5(25e3), x = new k5(288), S = new k5(32), C = 0, w = 0, T = a.i || 0, E = 0, D = a.w || 0, O = 0; T + 2 < o; ++T) {
 			var ee = y(T), te = T & 32767, ne = g[ee];
@@ -73958,29 +74017,29 @@ var Ije = /*#__PURE__*/ U5(W5, 9, 0), Lje = /*#__PURE__*/ U5(W5, 9, 1), Rje = /*
 		a.i = o;
 	}
 	return X5(s, 0, r + Y5(u) + i);
-}, Wje = /*#__PURE__*/ (function() {
+}, Kje = /*#__PURE__*/ (function() {
 	for (var e = /* @__PURE__ */ new Int32Array(256), t = 0; t < 256; ++t) {
 		for (var n = t, r = 9; --r;) n = (n & 1 && -306674912) ^ n >>> 1;
 		e[t] = n;
 	}
 	return e;
-})(), Gje = function() {
+})(), qje = function() {
 	var e = -1;
 	return {
 		p: function(t) {
-			for (var n = e, r = 0; r < t.length; ++r) n = Wje[n & 255 ^ t[r]] ^ n >>> 8;
+			for (var n = e, r = 0; r < t.length; ++r) n = Kje[n & 255 ^ t[r]] ^ n >>> 8;
 			e = n;
 		},
 		d: function() {
 			return ~e;
 		}
 	};
-}, Kje = function(e, t, n, r, i) {
+}, Jje = function(e, t, n, r, i) {
 	if (!i && (i = { l: 1 }, t.dictionary)) {
 		var a = t.dictionary.subarray(-32768), o = new O5(a.length + e.length);
 		o.set(a), o.set(e, a.length), e = o, i.w = a.length;
 	}
-	return Uje(e, t.level == null ? 6 : t.level, t.mem == null ? i.l ? Math.ceil(Math.max(8, Math.min(13, Math.log(e.length))) * 1.5) : 20 : 12 + t.mem, n, r, i);
+	return Gje(e, t.level == null ? 6 : t.level, t.mem == null ? i.l ? Math.ceil(Math.max(8, Math.min(13, Math.log(e.length))) * 1.5) : 20 : 12 + t.mem, n, r, i);
 }, s7 = function(e, t) {
 	var n = {};
 	for (var r in e) n[r] = e[r];
@@ -73995,11 +74054,11 @@ var Ije = /*#__PURE__*/ U5(W5, 9, 0), Lje = /*#__PURE__*/ U5(W5, 9, 1), Rje = /*
 }, d7 = function(e, t, n) {
 	for (; n; ++t) e[t] = n, n >>>= 8;
 };
-function qje(e, t) {
-	return Kje(e, t || {}, 0, 0);
+function Yje(e, t) {
+	return Jje(e, t || {}, 0, 0);
 }
-function Jje(e, t) {
-	return Vje(e, { i: 2 }, t && t.out, t && t.dictionary);
+function Xje(e, t) {
+	return Uje(e, { i: 2 }, t && t.out, t && t.dictionary);
 }
 var f7 = function(e, t, n, r) {
 	for (var i in e) {
@@ -74010,7 +74069,7 @@ var f7 = function(e, t, n, r) {
 try {
 	m7.decode(o7, { stream: !0 });
 } catch {}
-var Yje = function(e) {
+var Zje = function(e) {
 	for (var t = "", n = 0;;) {
 		var r = e[n++], i = (r > 127) + (r > 223) + (r > 239);
 		if (n + i > e.length) return {
@@ -74044,13 +74103,13 @@ function g7(e, t) {
 		return n;
 	}
 	if (m7) return m7.decode(e);
-	var i = Yje(e), a = i.s, n = i.r;
+	var i = Zje(e), a = i.s, n = i.r;
 	return n.length && Z5(8), a;
 }
-var Xje = function(e, t) {
+var Qje = function(e, t) {
 	return t + 30 + c7(e, t + 26) + c7(e, t + 28);
-}, Zje = function(e, t, n) {
-	var r = c7(e, t + 28), i = c7(e, t + 30), a = g7(e.subarray(t + 46, t + 46 + r), !(c7(e, t + 8) & 2048)), o = t + 46 + r, s = Qje(e, o, i, n, l7(e, t + 20), l7(e, t + 24), l7(e, t + 42)), c = s[0], l = s[1], u = s[2];
+}, $je = function(e, t, n) {
+	var r = c7(e, t + 28), i = c7(e, t + 30), a = g7(e.subarray(t + 46, t + 46 + r), !(c7(e, t + 8) & 2048)), o = t + 46 + r, s = eMe(e, o, i, n, l7(e, t + 20), l7(e, t + 24), l7(e, t + 42)), c = s[0], l = s[1], u = s[2];
 	return [
 		c7(e, t + 10),
 		c,
@@ -74059,7 +74118,7 @@ var Xje = function(e, t) {
 		o + i + c7(e, t + 32),
 		u
 	];
-}, Qje = function(e, t, n, r, i, a, o) {
+}, eMe = function(e, t, n, r, i, a, o) {
 	var s = i == 4294967295, c = a == 4294967295, l = o == 4294967295, u = t + n, d = s + c + l;
 	if (r && d) {
 		for (; t + 4 < u; t += 4 + c7(e, t + 2)) if (c7(e, t) == 1) return [
@@ -74092,10 +74151,10 @@ var Xje = function(e, t) {
 		d7(e, t, +m), d7(e, t + 2, g), e.set(h, t + 4), t += 4 + g;
 	}
 	return u && (e.set(s, t), t += u), t;
-}, $je = function(e, t, n, r, i) {
+}, tMe = function(e, t, n, r, i) {
 	d7(e, t, 101010256), d7(e, t + 8, n), d7(e, t + 10, n), d7(e, t + 12, r), d7(e, t + 16, i);
 };
-function eMe(e, t) {
+function nMe(e, t) {
 	t ||= {};
 	var n = {}, r = [];
 	f7(e, "", n, t);
@@ -74103,7 +74162,7 @@ function eMe(e, t) {
 	for (var o in n) {
 		var s = n[o], c = s[0], l = s[1], u = l.level == 0 ? 0 : 8, d = h7(o), f = d.length, p = l.comment, m = p && h7(p), h = m && m.length, g = _7(l.extra);
 		f > 65535 && Z5(11);
-		var _ = u ? qje(c, l) : c, v = _.length, y = Gje();
+		var _ = u ? Yje(c, l) : c, v = _.length, y = qje();
 		y.p(c), r.push(s7(l, {
 			size: c.length,
 			crc: y.d(),
@@ -74121,9 +74180,9 @@ function eMe(e, t) {
 		var w = 30 + d.f.length + _7(d.extra);
 		b.set(d.c, d.o + w), v7(b, i, d, d.f, d.u, d.c.length, d.o, d.m), i += 16 + w + (d.m ? d.m.length : 0);
 	}
-	return $je(b, i, r.length, S, x), b;
+	return tMe(b, i, r.length, S, x), b;
 }
-function tMe(e, t) {
+function rMe(e, t) {
 	for (var n = {}, r = e.length - 22; l7(e, r) != 101010256; --r) (!r || e.length - r > 65558) && Z5(13);
 	var i = c7(e, r + 8);
 	if (!i) return {};
@@ -74133,17 +74192,17 @@ function tMe(e, t) {
 		o = l7(e, s) == 101075792, o && (i = l7(e, s + 32), a = l7(e, s + 48));
 	}
 	for (var c = t && t.filter, l = 0; l < i; ++l) {
-		var u = Zje(e, a, o), d = u[0], f = u[1], p = u[2], m = u[3], h = u[4], g = u[5], _ = Xje(e, g);
+		var u = $je(e, a, o), d = u[0], f = u[1], p = u[2], m = u[3], h = u[4], g = u[5], _ = Qje(e, g);
 		a = h, (!c || c({
 			name: m,
 			size: f,
 			originalSize: p,
 			compression: d
-		})) && (d ? d == 8 ? n[m] = Jje(e.subarray(_, _ + f), { out: new O5(p) }) : Z5(14, "unknown compression type " + d) : n[m] = X5(e, _, _ + f));
+		})) && (d ? d == 8 ? n[m] = Xje(e.subarray(_, _ + f), { out: new O5(p) }) : Z5(14, "unknown compression type " + d) : n[m] = X5(e, _, _ + f));
 	}
 	return n;
 }
-var nMe = [
+var iMe = [
 	{
 		mime: "image/png",
 		test: (e) => e.length >= 8 && e[0] === 137 && e[1] === 80 && e[2] === 78 && e[3] === 71
@@ -74162,29 +74221,29 @@ var nMe = [
 	}
 ];
 function y7(e) {
-	return nMe.find((t) => t.test(e))?.mime;
+	return iMe.find((t) => t.test(e))?.mime;
 }
-function rMe(e, t) {
+function aMe(e, t) {
 	if (t.length > 10485760) throw new gv("E_BAD_CONTENT", `文件内容损坏：图片「${e}」过大`);
 	let n = y7(t);
 	if (!n) throw new gv("E_BAD_CONTENT", `文件内容损坏：图片「${e}」不合法`);
 	return n;
 }
 // src/core/files/zip.ts
-function iMe(e) {
+function oMe(e) {
 	try {
-		return tMe(e);
+		return rMe(e);
 	} catch {
 		throw new gv("E_NOT_ZIP", "无法识别：这不是 TRPG 跑团助手的文件");
 	}
 }
-function aMe(e) {
+function sMe(e) {
 	let t = {};
 	for (let n of Object.keys(e).sort()) {
 		let r = e[n];
 		t[n] = typeof r == "string" ? h7(r) : r;
 	}
-	return eMe(t, {
+	return nMe(t, {
 		level: 6,
 		mtime: new Date(1980, 0, 1, 0, 0, 0)
 	});
@@ -74198,7 +74257,7 @@ function b7(e, t) {
 	}
 }
 // src/core/transfer/saveFile.ts
-var oMe = J_({
+var cMe = J_({
 	format: Q_(["trpg-save", "trpg-backup"]),
 	formatVersion: H_().int().positive(),
 	appVersion: X(),
@@ -74234,8 +74293,8 @@ function C7(e, t, n, r) {
 	}
 	return i;
 }
-function sMe(e) {
-	let t = iMe(e), n = t["trpg-manifest.json"];
+function lMe(e) {
+	let t = oMe(e), n = t["trpg-manifest.json"];
 	if (!n) throw new gv("E_NO_MANIFEST", "无法识别：缺少说明文件，可能不是本扩展导出的文件");
 	let r;
 	try {
@@ -74248,7 +74307,7 @@ function sMe(e) {
 	if (i.format !== "trpg-save" && i.format !== "trpg-backup") throw new gv("E_UNKNOWN_FORMAT", "无法识别：未知的文件类型");
 	if (typeof i.formatVersion != "number" || i.formatVersion > 4) throw new gv("E_NEWER_FORMAT", "这个文件由更新版本的扩展创建，请先更新扩展");
 	if (i.formatVersion < 3) throw new gv("E_OLD_DATA", "这是旧版扩展导出的存档（旧扩展包格式），新版不再读取");
-	let a = oMe.safeParse(r);
+	let a = cMe.safeParse(r);
 	if (!a.success) throw x7(`说明文件的 ${S7(a.error.issues[0])} 不合法`);
 	let o = C7(t, "saves/", "save", Ane), s = C7(t, "workspaces/", "workspace", Dne), c, l = b7(t, "settings.json");
 	if (l !== void 0) {
@@ -74262,7 +74321,7 @@ function sMe(e) {
 		if (!/^[a-f0-9]{64}$/.test(n)) throw x7(`图片「${n}」的文件名不是哈希`);
 		let r = t[e];
 		if (we(r) !== n) throw x7(`图片「${n.slice(0, 12)}」的哈希不一致`);
-		rMe(n, r), u.set(n, r);
+		aMe(n, r), u.set(n, r);
 	}
 	let d = {};
 	for (let e of Object.keys(t).filter((e) => e.startsWith("library/") && !e.endsWith("/"))) d[e.slice(8)] = g7(t[e]);
@@ -74277,7 +74336,7 @@ function sMe(e) {
 	};
 }
 // src/core/transfer/importer.ts
-function cMe(e, t) {
+function uMe(e, t) {
 	return e.saves.map((e) => t(e.ruleId) ? {
 		save: e,
 		selectable: !0
@@ -74287,7 +74346,7 @@ function cMe(e, t) {
 		reason: "规则未安装"
 	});
 }
-function lMe(e, t) {
+function dMe(e, t) {
 	if (!t.has(e)) return e;
 	let n = `${e}（导入）`;
 	if (!t.has(n)) return n;
@@ -74296,7 +74355,7 @@ function lMe(e, t) {
 		if (!t.has(r)) return r;
 	}
 }
-async function uMe(e, t, n) {
+async function fMe(e, t, n) {
 	let { db: r, campaign: i } = e, a = e.uuid ?? E, o = t.saves.filter((t) => e.hasRule(t.ruleId)), s = new Set(n.selectedIds), c = 0, l = t.manifest.dependencies ?? [], u = t.type === "backup" && e.library && Object.keys(t.libraryFiles).length ? await e.library.importFiles(t.libraryFiles) : null, d = (e.checkRefs ? await e.checkRefs(l) : []).filter((e) => !e.ok).map((e) => ({
 		ref: e.ref,
 		reason: e.reason ?? "missing"
@@ -74324,7 +74383,7 @@ async function uMe(e, t, n) {
 					ownerKey: n.owner.ownerKey,
 					ownerLabel: n.owner.ownerLabel,
 					kind: "manual",
-					name: lMe(t.name, o),
+					name: dMe(t.name, o),
 					createdAt: s,
 					updatedAt: s
 				}), c++;
@@ -74364,17 +74423,17 @@ async function uMe(e, t, n) {
 	});
 }
 // src/ui/imports/SavePreview.vue?vue&type=script&setup=true&lang.ts
-var dMe = {
+var pMe = {
 	class: "page-stack",
 	"data-testid": "import-save"
-}, fMe = { class: "trpg-import__ok" }, pMe = {
+}, mMe = { class: "trpg-import__ok" }, hMe = {
 	key: 0,
 	class: "trpg-field"
-}, mMe = { class: "trpg-field__hint" }, hMe = { class: "trpg-list" }, gMe = { class: "trpg-row__title" }, _Me = { class: "trpg-row__meta" }, vMe = { class: "trpg-field__hint" }, yMe = { class: "trpg-confirm__actions" }, bMe = ["disabled"], xMe = /* @__PURE__ */ I({
+}, gMe = { class: "trpg-field__hint" }, _Me = { class: "trpg-list" }, vMe = { class: "trpg-row__title" }, yMe = { class: "trpg-row__meta" }, bMe = { class: "trpg-field__hint" }, xMe = { class: "trpg-confirm__actions" }, SMe = ["disabled"], CMe = /* @__PURE__ */ I({
 	__name: "SavePreview",
 	props: { rec: {} },
 	setup(e) {
-		let t = e, n = Uk(), r = Wk(), i = hA(), a = wA(), o = cA(), s = q(() => cMe(t.rec, (e) => n.svc().rules.has(e))), c = /* @__PURE__ */ j(s.value.filter((e) => e.selectable).map((e) => e.save.id)), l = /* @__PURE__ */ j("merge"), u = /* @__PURE__ */ j(!1), d = q(() => t.rec.type === "backup"), f = (e) => n.svc().rules.get(e)?.nameShort ?? e, p = q(() => d.value && l.value === "overwrite" ? s.value.filter((e) => e.selectable).length : c.value.length), m = q(() => d.value ? `完整备份 · ${t.rec.saves.length} 个存档` : `存档文件 · ${t.rec.saves.length} 个存档`);
+		let t = e, n = Uk(), r = Wk(), i = hA(), a = wA(), o = cA(), s = q(() => uMe(t.rec, (e) => n.svc().rules.has(e))), c = /* @__PURE__ */ j(s.value.filter((e) => e.selectable).map((e) => e.save.id)), l = /* @__PURE__ */ j("merge"), u = /* @__PURE__ */ j(!1), d = q(() => t.rec.type === "backup"), f = (e) => n.svc().rules.get(e)?.nameShort ?? e, p = q(() => d.value && l.value === "overwrite" ? s.value.filter((e) => e.selectable).length : c.value.length), m = q(() => d.value ? `完整备份 · ${t.rec.saves.length} 个存档` : `存档文件 · ${t.rec.saves.length} 个存档`);
 		function h(e, t) {
 			c.value = t ? [...c.value, e] : c.value.filter((t) => t !== e);
 		}
@@ -74389,7 +74448,7 @@ var dMe = {
 			})) {
 				u.value = !0;
 				try {
-					let i = n.svc(), o = await uMe({
+					let i = n.svc(), o = await fMe({
 						db: i.db,
 						campaign: i.campaign,
 						now: i.now,
@@ -74401,7 +74460,7 @@ var dMe = {
 						selectedIds: c.value,
 						mode: d.value ? l.value : void 0
 					});
-					await r.switchOwner(e), await a.refresh(), zMe(o);
+					await r.switchOwner(e), await a.refresh(), VMe(o);
 				} catch (e) {
 					console.error("[trpg-assistant] 导入存档失败", e), o.error(`导入失败：${BB(e)}`);
 				} finally {
@@ -74409,9 +74468,9 @@ var dMe = {
 				}
 			}
 		}
-		return (e, t) => (B(), V("div", dMe, [
-			U("p", fMe, "✓ 已识别：" + A(m.value), 1),
-			d.value ? (B(), V("div", pMe, [W(RA, {
+		return (e, t) => (B(), V("div", pMe, [
+			U("p", mMe, "✓ 已识别：" + A(m.value), 1),
+			d.value ? (B(), V("div", hMe, [W(RA, {
 				modelValue: l.value,
 				"onUpdate:modelValue": t[0] ||= (e) => l.value = e,
 				label: "恢复方式",
@@ -74422,8 +74481,8 @@ var dMe = {
 					value: "overwrite",
 					label: "覆盖"
 				}]
-			}, null, 8, ["modelValue"]), U("span", mMe, A(l.value === "merge" ? "只添加尚不存在的存档与当前数据。" : "先写自动存档，再用备份替换全部存档、当前数据与设置。"), 1)])) : K("", !0),
-			U("ul", hMe, [(B(!0), V(z, null, R(s.value, (e) => (B(), V("li", {
+			}, null, 8, ["modelValue"]), U("span", gMe, A(l.value === "merge" ? "只添加尚不存在的存档与当前数据。" : "先写自动存档，再用备份替换全部存档、当前数据与设置。"), 1)])) : K("", !0),
+			U("ul", _Me, [(B(!0), V(z, null, R(s.value, (e) => (B(), V("li", {
 				key: e.save.id,
 				class: "trpg-row"
 			}, [W(mR, {
@@ -74432,16 +74491,16 @@ var dMe = {
 				disabled: !e.selectable || d.value && l.value === "overwrite",
 				"onUpdate:modelValue": (t) => h(e.save.id, t)
 			}, {
-				default: P(() => [U("span", gMe, A(e.save.name), 1)]),
+				default: P(() => [U("span", vMe, A(e.save.name), 1)]),
 				_: 2
 			}, 1032, [
 				"model-value",
 				"label",
 				"disabled",
 				"onUpdate:modelValue"
-			]), U("span", _Me, [G(A(f(e.save.ruleId)) + " · " + A(N(IB)(e.save.updatedAt)), 1), e.reason ? (B(), V(z, { key: 0 }, [G(" · " + A(e.reason) + "（不可选）", 1)], 64)) : K("", !0)])]))), 128))]),
-			U("p", vMe, "导入为「" + A(N(r).owner?.ownerLabel ?? "当前角色卡") + "」的存档；重名时名称后加\"（导入）\"。", 1),
-			U("div", yMe, [U("button", {
+			]), U("span", yMe, [G(A(f(e.save.ruleId)) + " · " + A(N(IB)(e.save.updatedAt)), 1), e.reason ? (B(), V(z, { key: 0 }, [G(" · " + A(e.reason) + "（不可选）", 1)], 64)) : K("", !0)])]))), 128))]),
+			U("p", bMe, "导入为「" + A(N(r).owner?.ownerLabel ?? "当前角色卡") + "」的存档；重名时名称后加\"（导入）\"。", 1),
+			U("div", xMe, [U("button", {
 				class: "trpg-btn",
 				type: "button",
 				onClick: t[1] ||= (e) => N(i).close(!0)
@@ -74450,28 +74509,28 @@ var dMe = {
 				type: "button",
 				disabled: u.value || p.value === 0,
 				onClick: g
-			}, A(d.value && l.value === "overwrite" ? "覆盖并恢复" : `导入 ${p.value} 个`), 11, bMe)])
+			}, A(d.value && l.value === "overwrite" ? "覆盖并恢复" : `导入 ${p.value} 个`), 11, SMe)])
 		]));
 	}
-}), SMe = { class: "page-stack" }, CMe = {
+}), wMe = { class: "page-stack" }, TMe = {
 	class: "trpg-row__meta",
 	"data-testid": "import-filename"
-}, wMe = {
+}, EMe = {
 	key: 0,
 	class: "page-stack",
 	role: "alert"
-}, TMe = { class: "trpg-field__error" }, EMe = { class: "trpg-confirm__actions" }, DMe = {
+}, DMe = { class: "trpg-field__error" }, OMe = { class: "trpg-confirm__actions" }, kMe = {
 	key: 1,
 	class: "page-intro",
 	role: "status"
-}, OMe = /* @__PURE__ */ I({
+}, AMe = /* @__PURE__ */ I({
 	__name: "ImportPage",
 	props: { file: {} },
 	setup(e) {
 		let t = e, n = hA(), r = /* @__PURE__ */ M(null), i = /* @__PURE__ */ j(""), a = /* @__PURE__ */ j(null);
 		L(async () => {
 			try {
-				r.value = sMe(new Uint8Array(await t.file.arrayBuffer()));
+				r.value = lMe(new Uint8Array(await t.file.arrayBuffer()));
 			} catch (e) {
 				e instanceof gv || console.error("[trpg-assistant] 识别文件失败", e), i.value = BB(e);
 			}
@@ -74480,7 +74539,7 @@ var dMe = {
 			let t = e.target, n = t.files?.[0];
 			t.value = "", n && w7(n);
 		}
-		return (e, s) => (B(), V("div", SMe, [U("p", CMe, A(t.file.name), 1), i.value ? (B(), V("div", wMe, [U("p", TMe, "⚠ " + A(i.value), 1), U("div", EMe, [
+		return (e, s) => (B(), V("div", wMe, [U("p", TMe, A(t.file.name), 1), i.value ? (B(), V("div", EMe, [U("p", DMe, "⚠ " + A(i.value), 1), U("div", OMe, [
 			U("button", {
 				class: "trpg-btn",
 				type: "button",
@@ -74501,27 +74560,27 @@ var dMe = {
 				"aria-hidden": "true",
 				onChange: o
 			}, null, 544)
-		])])) : r.value ? (B(), H(xMe, {
+		])])) : r.value ? (B(), H(CMe, {
 			key: 2,
 			rec: r.value
-		}, null, 8, ["rec"])) : (B(), V("p", DMe, "正在识别…"))]));
+		}, null, 8, ["rec"])) : (B(), V("p", kMe, "正在识别…"))]));
 	}
-}), kMe = {
+}), jMe = {
 	class: "page-stack",
 	"data-testid": "import-result"
-}, AMe = { class: "trpg-import__ok" }, jMe = {
+}, MMe = { class: "trpg-import__ok" }, NMe = {
 	key: 0,
 	class: "trpg-checks"
-}, MMe = { class: "trpg-checks" }, NMe = { key: 0 }, PMe = {
+}, PMe = { class: "trpg-checks" }, FMe = { key: 0 }, IMe = {
 	key: 1,
 	"data-testid": "import-missing"
-}, FMe = { key: 2 }, IMe = { class: "trpg-field__hint" }, LMe = { class: "trpg-confirm__actions" }, RMe = /* @__PURE__ */ I({
+}, LMe = { key: 2 }, RMe = { class: "trpg-field__hint" }, zMe = { class: "trpg-confirm__actions" }, BMe = /* @__PURE__ */ I({
 	__name: "ImportResultPage",
 	props: { result: {} },
 	setup(e) {
 		let t = hA();
-		return (n, r) => (B(), V("div", kMe, [
-			U("p", AMe, [
+		return (n, r) => (B(), V("div", jMe, [
+			U("p", MMe, [
 				W(Z, {
 					name: "check-circle",
 					size: 16
@@ -74529,7 +74588,7 @@ var dMe = {
 				G(" 导入 " + A(e.result.imported) + " 个存档", 1),
 				e.result.skipped ? (B(), V(z, { key: 0 }, [G(" · 跳过 " + A(e.result.skipped) + " 个", 1)], 64)) : K("", !0)
 			]),
-			e.result.library ? (B(), V("div", jMe, [U("div", null, [
+			e.result.library ? (B(), V("div", NMe, [U("div", null, [
 				r[1] ||= U("b", null, "资料库恢复", -1),
 				U("span", null, "自制包 " + A(e.result.library.brews) + " · 范围 " + A(e.result.library.scopes) + " · 房规 " + A(e.result.library.houseRules), 1),
 				(B(!0), V(z, null, R(e.result.library.errors, (e) => (B(), V("span", {
@@ -74540,12 +74599,12 @@ var dMe = {
 					size: 12
 				}), G(A(e), 1)]))), 128))
 			])])) : K("", !0),
-			U("div", MMe, [e.result.dependenciesUnchecked ? (B(), V("div", NMe, [...r[2] ||= [U("b", null, "依赖未核对", -1), U("span", { class: "trpg-field__hint" }, "这些存档用到的资料有没有装好，这次没有核对；读取时会再检查。", -1)]])) : e.result.missing.length ? (B(), V("div", PMe, [
+			U("div", PMe, [e.result.dependenciesUnchecked ? (B(), V("div", FMe, [...r[2] ||= [U("b", null, "依赖未核对", -1), U("span", { class: "trpg-field__hint" }, "这些存档用到的资料有没有装好，这次没有核对；读取时会再检查。", -1)]])) : e.result.missing.length ? (B(), V("div", IMe, [
 				U("b", null, "缺少 " + A(e.result.missing.length) + " 项资料", 1),
 				(B(!0), V(z, null, R(e.result.missing.slice(0, 8), (e, t) => (B(), V("span", { key: t }, A(e.ref.hash) + "（" + A(e.reason) + "）", 1))), 128)),
 				r[3] ||= U("span", { class: "trpg-field__hint" }, "仍可读取和导出；用到它们的结算会暂停，数据不会丢。", -1)
-			])) : (B(), V("div", FMe, [r[4] ||= U("b", null, "依赖齐全", -1), U("span", IMe, "共 " + A(e.result.dependencies) + " 项依赖，都能找到。", 1)]))]),
-			U("div", LMe, [U("button", {
+			])) : (B(), V("div", LMe, [r[4] ||= U("b", null, "依赖齐全", -1), U("span", RMe, "共 " + A(e.result.dependencies) + " 项依赖，都能找到。", 1)]))]),
+			U("div", zMe, [U("button", {
 				class: "trpg-btn trpg-btn--primary",
 				type: "button",
 				"data-autofocus": "",
@@ -74559,16 +74618,16 @@ function w7(e) {
 	hA().open({
 		key: "import",
 		title: "导入文件",
-		component: jr(OMe),
+		component: jr(AMe),
 		props: { file: e },
 		variant: "dialog"
 	});
 }
-function zMe(e) {
+function VMe(e) {
 	hA().open({
 		key: "import-result",
 		title: "导入结果",
-		component: jr(RMe),
+		component: jr(BMe),
 		props: { result: e },
 		variant: "dialog"
 	});
@@ -74584,14 +74643,14 @@ function T7(e, t = /* @__PURE__ */ new Set()) {
 	return t;
 }
 // src/core/transfer/exporter.ts
-function BMe(e) {
+function HMe(e) {
 	let t = new Date(e);
 	return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
 }
-function VMe(e) {
+function UMe(e) {
 	return e.replace(/[\\/:*?"<>|\s]+/g, "_").replace(/^_+|_+$/g, "") || "存档";
 }
-function HMe(e, t) {
+function WMe(e, t) {
 	let n = /* @__PURE__ */ new Map(), r = (e, t) => {
 		let r = `${e.set}|${e.prop}|${e.hash}`;
 		n.has(r) || n.set(r, {
@@ -74608,7 +74667,7 @@ function HMe(e, t) {
 	for (let e of t) i(e.data.kernel);
 	return [...n.values()].sort((e, t) => `${e.set}|${e.prop}|${e.hash}`.localeCompare(`${t.set}|${t.prop}|${t.hash}`));
 }
-function UMe(e) {
+function GMe(e) {
 	return e.flatMap((e) => {
 		let t = e.snapshot.kernel;
 		return t ? [{
@@ -74627,7 +74686,7 @@ async function E7(e, t) {
 	}
 	return (await e.saves.toArray()).filter((e) => e.deletedAt === void 0);
 }
-async function WMe(e, t) {
+async function KMe(e, t) {
 	let n = (await E7(e.db, t)).reduce((e, t) => e + JSON.stringify(t).length, 0), r = 0;
 	if (t.type === "backup" && e.library) {
 		let t = await e.library.exportFiles();
@@ -74639,7 +74698,7 @@ async function WMe(e, t) {
 		totalBytes: n + r
 	};
 }
-async function GMe(e, t) {
+async function qMe(e, t) {
 	let n = await E7(e.db, t), r = {};
 	for (let e of n) r[`saves/${e.id}.json`] = JSON.stringify(e);
 	let i = [];
@@ -74662,22 +74721,22 @@ async function GMe(e, t) {
 		appVersion: e.appVersion,
 		exportedAt: new Date(e.now()).toISOString(),
 		ruleIds: [...new Set(n.map((e) => e.ruleId))],
-		dependencies: HMe(n, i),
-		kernelVersions: UMe(n)
+		dependencies: WMe(n, i),
+		kernelVersions: GMe(n)
 	});
-	let o = BMe(e.now()), s = t.type === "backup" ? `TRPG备份_${o}.trpgsave` : `${VMe(n[0].name)}_${o}.trpgsave`;
+	let o = HMe(e.now()), s = t.type === "backup" ? `TRPG备份_${o}.trpgsave` : `${UMe(n[0].name)}_${o}.trpgsave`;
 	return {
-		bytes: aMe(r),
+		bytes: sMe(r),
 		filename: s
 	};
 }
 // src/ui/download.ts
-function KMe(e, t) {
+function JMe(e, t) {
 	let n = new Blob([e], { type: "application/octet-stream" }), r = URL.createObjectURL(n), i = document.createElement("a");
 	i.href = r, i.download = t, document.body.appendChild(i), i.click(), i.remove(), setTimeout(() => URL.revokeObjectURL(r), 1e4);
 }
 // src/ui/saves/ExportPage.vue?vue&type=script&setup=true&lang.ts
-var qMe = { class: "page-stack" }, JMe = { class: "trpg-field" }, YMe = { class: "trpg-field__hint" }, XMe = { class: "trpg-confirm__actions" }, ZMe = ["disabled"], QMe = /* @__PURE__ */ I({
+var YMe = { class: "page-stack" }, XMe = { class: "trpg-field" }, ZMe = { class: "trpg-field__hint" }, QMe = { class: "trpg-confirm__actions" }, $Me = ["disabled"], eNe = /* @__PURE__ */ I({
 	__name: "ExportPage",
 	props: { saveId: {} },
 	setup(e) {
@@ -74692,7 +74751,7 @@ var qMe = { class: "page-stack" }, JMe = { class: "trpg-field" }, YMe = { class:
 		}), p = q(() => RB(l.value?.saveBytes ?? 0)), m = q(() => new Date(n.svc().now()).toISOString().slice(0, 10)), h = q(() => s.value === "backup" ? `TRPG备份_${m.value}.trpgsave` : `${c.value.replace(/\s+/g, "_")}_${m.value}.trpgsave`);
 		async function g() {
 			try {
-				s.value === "save" && (c.value = (await n.svc().campaign.getSave(o.value))?.name ?? "存档"), l.value = await WMe(f(), d.value);
+				s.value === "save" && (c.value = (await n.svc().campaign.getSave(o.value))?.name ?? "存档"), l.value = await KMe(f(), d.value);
 			} catch (e) {
 				console.error("[trpg-assistant] 估算导出大小失败", e), l.value = null;
 			}
@@ -74701,16 +74760,16 @@ var qMe = { class: "page-stack" }, JMe = { class: "trpg-field" }, YMe = { class:
 		async function _() {
 			u.value = !0;
 			try {
-				let { bytes: e, filename: t } = await GMe(f(), d.value);
-				KMe(e, t), s.value === "backup" && (await Pne(n.svc().db, n.svc().now()), await n.refreshBackup()), a.success(`已导出「${t}」`), i.close(!0);
+				let { bytes: e, filename: t } = await qMe(f(), d.value);
+				JMe(e, t), s.value === "backup" && (await Pne(n.svc().db, n.svc().now()), await n.refreshBackup()), a.success(`已导出「${t}」`), i.close(!0);
 			} catch (e) {
 				console.error("[trpg-assistant] 导出失败", e), a.error(`导出失败：${BB(e)}`);
 			} finally {
 				u.value = !1;
 			}
 		}
-		return (e, t) => (B(), V("div", qMe, [
-			U("div", JMe, [t[2] ||= U("span", { class: "trpg-field__label" }, "范围", -1), W(RA, {
+		return (e, t) => (B(), V("div", YMe, [
+			U("div", XMe, [t[2] ||= U("span", { class: "trpg-field__label" }, "范围", -1), W(RA, {
 				modelValue: s.value,
 				"onUpdate:modelValue": t[0] ||= (e) => s.value = e,
 				label: "导出范围",
@@ -74722,8 +74781,8 @@ var qMe = { class: "page-stack" }, JMe = { class: "trpg-field" }, YMe = { class:
 					label: "全部（完整备份）"
 				}]
 			}, null, 8, ["modelValue", "options"])]),
-			U("p", YMe, "文件名 " + A(h.value) + " · 约 " + A(p.value), 1),
-			U("div", XMe, [U("button", {
+			U("p", ZMe, "文件名 " + A(h.value) + " · 约 " + A(p.value), 1),
+			U("div", QMe, [U("button", {
 				class: "trpg-btn",
 				type: "button",
 				onClick: t[1] ||= (e) => N(i).close(!0)
@@ -74732,7 +74791,7 @@ var qMe = { class: "page-stack" }, JMe = { class: "trpg-field" }, YMe = { class:
 				type: "button",
 				disabled: u.value || s.value === "save" && !o.value,
 				onClick: _
-			}, A(u.value ? "打包中…" : "导出"), 9, ZMe)])
+			}, A(u.value ? "打包中…" : "导出"), 9, $Me)])
 		]));
 	}
 });
@@ -74741,7 +74800,7 @@ function D7(e) {
 	hA().open({
 		key: "export",
 		title: "导出",
-		component: jr(QMe),
+		component: jr(eNe),
 		props: { saveId: e },
 		variant: "dialog"
 	});
@@ -74750,23 +74809,23 @@ async function O7(e) {
 	w7(e);
 }
 // src/ui/saves/SaveFolds.vue?vue&type=script&setup=true&lang.ts
-var $Me = {
+var tNe = {
 	key: 0,
 	class: "trpg-fold",
 	"data-testid": "fold-auto"
-}, eNe = { class: "trpg-saves" }, tNe = { class: "trpg-saves__main" }, nNe = { class: "trpg-saves__top" }, rNe = { class: "trpg-saves__meta" }, iNe = { class: "trpg-saves__end" }, aNe = ["disabled", "onClick"], oNe = {
+}, nNe = { class: "trpg-saves" }, rNe = { class: "trpg-saves__main" }, iNe = { class: "trpg-saves__top" }, aNe = { class: "trpg-saves__meta" }, oNe = { class: "trpg-saves__end" }, sNe = ["disabled", "onClick"], cNe = {
 	key: 1,
 	class: "trpg-fold",
 	"data-testid": "fold-deleted"
-}, sNe = { class: "trpg-saves" }, cNe = { class: "trpg-saves__main" }, lNe = { class: "trpg-saves__top" }, uNe = { class: "trpg-saves__meta" }, dNe = { class: "trpg-saves__end" }, fNe = ["disabled", "onClick"], pNe = ["disabled", "onClick"], mNe = { class: "trpg-fold__actions" }, hNe = ["disabled"], gNe = {
+}, lNe = { class: "trpg-saves" }, uNe = { class: "trpg-saves__main" }, dNe = { class: "trpg-saves__top" }, fNe = { class: "trpg-saves__meta" }, pNe = { class: "trpg-saves__end" }, mNe = ["disabled", "onClick"], hNe = ["disabled", "onClick"], gNe = { class: "trpg-fold__actions" }, _Ne = ["disabled"], vNe = {
 	key: 2,
 	class: "trpg-fold",
 	"data-testid": "fold-others"
-}, _Ne = { class: "trpg-saves" }, vNe = { class: "trpg-saves__main" }, yNe = { class: "trpg-saves__top" }, bNe = { class: "trpg-badge" }, xNe = { class: "trpg-saves__meta" }, SNe = { class: "trpg-saves__end" }, CNe = [
+}, yNe = { class: "trpg-saves" }, bNe = { class: "trpg-saves__main" }, xNe = { class: "trpg-saves__top" }, SNe = { class: "trpg-badge" }, CNe = { class: "trpg-saves__meta" }, wNe = { class: "trpg-saves__end" }, TNe = [
 	"disabled",
 	"title",
 	"onClick"
-], wNe = /* @__PURE__ */ I({
+], ENe = /* @__PURE__ */ I({
 	__name: "SaveFolds",
 	props: {
 		autos: {},
@@ -74786,7 +74845,7 @@ var $Me = {
 	setup(e, { emit: t }) {
 		let n = t;
 		return (t, r) => (B(), V(z, null, [
-			e.autos.length ? (B(), V("details", $Me, [U("summary", null, [
+			e.autos.length ? (B(), V("details", tNe, [U("summary", null, [
 				W(Z, {
 					class: "trpg-fold__chev-open",
 					name: "caret-down",
@@ -74799,12 +74858,12 @@ var $Me = {
 				}),
 				r[1] ||= G("自动存档", -1),
 				U("small", null, A(e.autos.length), 1)
-			]), U("ul", eNe, [(B(!0), V(z, null, R(e.autos, (t) => (B(), V("li", { key: t.id }, [U("div", tNe, [U("div", nNe, [U("b", null, A(t.autoReason), 1)]), U("div", rNe, [G(A(N(IB)(t.createdAt)) + " · 自动", 1), N(zB)(t) ? (B(), V(z, { key: 0 }, [G(" · " + A(N(zB)(t)), 1)], 64)) : K("", !0)])]), U("div", iNe, [U("button", {
+			]), U("ul", nNe, [(B(!0), V(z, null, R(e.autos, (t) => (B(), V("li", { key: t.id }, [U("div", rNe, [U("div", iNe, [U("b", null, A(t.autoReason), 1)]), U("div", aNe, [G(A(N(IB)(t.createdAt)) + " · 自动", 1), N(zB)(t) ? (B(), V(z, { key: 0 }, [G(" · " + A(N(zB)(t)), 1)], 64)) : K("", !0)])]), U("div", oNe, [U("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
 				disabled: e.readOnly,
 				onClick: (e) => n("load", t)
-			}, "读取", 8, aNe), W(RF, {
+			}, "读取", 8, sNe), W(RF, {
 				label: `自动存档 ${N(IB)(t.createdAt)}`,
 				items: [{
 					key: "manual",
@@ -74812,7 +74871,7 @@ var $Me = {
 				}],
 				onSelect: (e) => n("auto-as-manual", t)
 			}, null, 8, ["label", "onSelect"])])]))), 128))])])) : K("", !0),
-			e.deleted.length ? (B(), V("details", oNe, [
+			e.deleted.length ? (B(), V("details", cNe, [
 				U("summary", null, [
 					W(Z, {
 						class: "trpg-fold__chev-open",
@@ -74827,25 +74886,25 @@ var $Me = {
 					r[2] ||= G("最近删除", -1),
 					U("small", null, A(e.deleted.length), 1)
 				]),
-				U("ul", sNe, [(B(!0), V(z, null, R(e.deleted, (t) => (B(), V("li", { key: t.id }, [U("div", cNe, [U("div", lNe, [U("b", null, A(t.name), 1)]), U("div", uNe, "删除于 " + A(N(IB)(t.deletedAt ?? 0)) + " · " + A(t.ownerLabel), 1)]), U("div", dNe, [U("button", {
+				U("ul", lNe, [(B(!0), V(z, null, R(e.deleted, (t) => (B(), V("li", { key: t.id }, [U("div", uNe, [U("div", dNe, [U("b", null, A(t.name), 1)]), U("div", fNe, "删除于 " + A(N(IB)(t.deletedAt ?? 0)) + " · " + A(t.ownerLabel), 1)]), U("div", pNe, [U("button", {
 					class: "trpg-btn trpg-btn--small trpg-btn--primary",
 					type: "button",
 					disabled: e.readOnly,
 					onClick: (e) => n("restore", t)
-				}, "恢复", 8, fNe), U("button", {
+				}, "恢复", 8, mNe), U("button", {
 					class: "trpg-btn trpg-btn--small trpg-btn--danger",
 					type: "button",
 					disabled: e.readOnly,
 					onClick: (e) => n("purge", t)
-				}, "彻底删除", 8, pNe)])]))), 128))]),
-				U("div", mNe, [U("button", {
+				}, "彻底删除", 8, hNe)])]))), 128))]),
+				U("div", gNe, [U("button", {
 					class: "trpg-btn trpg-btn--small",
 					type: "button",
 					disabled: e.readOnly,
 					onClick: r[0] ||= (e) => n("purge-all")
-				}, "清空最近删除", 8, hNe)])
+				}, "清空最近删除", 8, _Ne)])
 			])) : K("", !0),
-			e.others.length ? (B(), V("details", gNe, [U("summary", null, [
+			e.others.length ? (B(), V("details", vNe, [U("summary", null, [
 				W(Z, {
 					class: "trpg-fold__chev-open",
 					name: "caret-down",
@@ -74858,28 +74917,28 @@ var $Me = {
 				}),
 				r[3] ||= G("其他规则", -1),
 				U("small", null, A(e.others.length), 1)
-			]), U("ul", _Ne, [(B(!0), V(z, null, R(e.others, (t) => (B(), V("li", { key: t.id }, [U("div", vNe, [U("div", yNe, [U("b", null, A(t.name), 1), U("span", bNe, A(e.ruleName(t.ruleId)), 1)]), U("div", xNe, A(t.ownerLabel) + " · " + A(N(IB)(t.updatedAt)), 1)]), U("div", SNe, [U("button", {
+			]), U("ul", yNe, [(B(!0), V(z, null, R(e.others, (t) => (B(), V("li", { key: t.id }, [U("div", bNe, [U("div", xNe, [U("b", null, A(t.name), 1), U("span", SNe, A(e.ruleName(t.ruleId)), 1)]), U("div", CNe, A(t.ownerLabel) + " · " + A(N(IB)(t.updatedAt)), 1)]), U("div", wNe, [U("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
 				disabled: e.readOnly || !e.ruleInstalled(t.ruleId),
 				title: e.ruleInstalled(t.ruleId) ? void 0 : "规则未安装",
 				onClick: (e) => n("load", t)
-			}, A(e.ruleInstalled(t.ruleId) ? "切换规则并读取" : "规则未安装"), 9, CNe)])]))), 128))])])) : K("", !0)
+			}, A(e.ruleInstalled(t.ruleId) ? "切换规则并读取" : "规则未安装"), 9, TNe)])]))), 128))])])) : K("", !0)
 		], 64));
 	}
-}), TNe = ["data-dragging"], ENe = {
+}), DNe = ["data-dragging"], ONe = {
 	key: 0,
 	class: "trpg-drawer__current",
 	"data-testid": "drawer-current"
-}, DNe = { class: "trpg-drawer__title" }, ONe = {
+}, kNe = { class: "trpg-drawer__title" }, ANe = {
 	key: 0,
 	class: "trpg-badge",
 	"data-tone": "warn",
 	style: { "margin-left": "8px" }
-}, kNe = { class: "trpg-drawer__buttons" }, ANe = ["disabled"], jNe = { class: "trpg-drawer__body" }, MNe = { class: "trpg-group" }, NNe = {
+}, jNe = { class: "trpg-drawer__buttons" }, MNe = ["disabled"], NNe = { class: "trpg-drawer__body" }, PNe = { class: "trpg-group" }, FNe = {
 	key: 0,
 	class: "trpg-group trpg-group--first"
-}, PNe = { class: "trpg-drawer__bottom" }, FNe = ["disabled"], INe = ["disabled"], LNe = /* @__PURE__ */ I({
+}, INe = { class: "trpg-drawer__bottom" }, LNe = ["disabled"], RNe = ["disabled"], zNe = /* @__PURE__ */ I({
 	__name: "SaveDrawerPage",
 	setup(e) {
 		let t = Uk(), n = Wk(), r = wA(), i = cA(), a = /* @__PURE__ */ j(null), o = /* @__PURE__ */ j(!1);
@@ -74945,9 +75004,9 @@ var $Me = {
 			onDragleave: i[13] ||= J((e) => o.value = !1, ["self"]),
 			onDrop: J(b, ["prevent"])
 		}, [
-			N(n).hasCampaign ? (B(), V("section", ENe, [
-				U("div", null, [U("span", DNe, "当前存档：" + A(s.value?.name ?? ""), 1), N(n).dirty ? (B(), V("span", ONe, "● 有未保存到存档的改动")) : K("", !0)]),
-				U("div", kNe, [
+			N(n).hasCampaign ? (B(), V("section", ONe, [
+				U("div", null, [U("span", kNe, "当前存档：" + A(s.value?.name ?? ""), 1), N(n).dirty ? (B(), V("span", ANe, "● 有未保存到存档的改动")) : K("", !0)]),
+				U("div", jNe, [
 					U("button", {
 						class: "trpg-btn trpg-btn--primary",
 						type: "button",
@@ -74957,8 +75016,8 @@ var $Me = {
 					}, [W(Z, {
 						name: "floppy-disk",
 						size: 16
-					}), G(A(N(n).dirty ? "保存存档" : "已是最新"), 1)], 8, ANe),
-					W(pje, {
+					}), G(A(N(n).dirty ? "保存存档" : "已是最新"), 1)], 8, MNe),
+					W(hje, {
 						"default-name": `${s.value?.name ?? "存档"} 分支`,
 						disabled: N(n).readOnly,
 						onCreate: g
@@ -74976,7 +75035,7 @@ var $Me = {
 					"data-testid": "backup-reminder"
 				}, A(N(t).reminder.text), 3)) : K("", !0)
 			])) : K("", !0),
-			U("div", jNe, [N(n).hasCampaign ? (B(), V(z, { key: 0 }, [
+			U("div", NNe, [N(n).hasCampaign ? (B(), V(z, { key: 0 }, [
 				i[14] ||= U("h3", { class: "trpg-group trpg-group--first" }, "当前战役", -1),
 				c.value?.root ? (B(), H(D5, {
 					key: 0,
@@ -75002,7 +75061,7 @@ var $Me = {
 					"read-only",
 					"onLoad"
 				])) : K("", !0),
-				p.value.length ? (B(), V(z, { key: 1 }, [U("h3", MNe, "其他战役（" + A(p.value.length) + "）", 1), (B(!0), V(z, null, R(p.value, (e) => (B(), H(D5, {
+				p.value.length ? (B(), V(z, { key: 1 }, [U("h3", PNe, "其他战役（" + A(p.value.length) + "）", 1), (B(!0), V(z, null, R(p.value, (e) => (B(), H(D5, {
 					key: e.root.id,
 					name: e.root.name,
 					"updated-at": e.updatedAt,
@@ -75027,7 +75086,7 @@ var $Me = {
 					"onRenameCampaign",
 					"onRemove"
 				]))), 128))], 64)) : K("", !0)
-			], 64)) : (B(), V(z, { key: 1 }, [m.value.length ? (B(), V("h3", NNe, "战役（" + A(m.value.length) + "）", 1)) : K("", !0), (B(!0), V(z, null, R(m.value, (e, t) => (B(), H(D5, {
+			], 64)) : (B(), V(z, { key: 1 }, [m.value.length ? (B(), V("h3", FNe, "战役（" + A(m.value.length) + "）", 1)) : K("", !0), (B(!0), V(z, null, R(m.value, (e, t) => (B(), H(D5, {
 				key: e.c.root.id,
 				name: e.c.root.name,
 				"updated-at": e.c.updatedAt,
@@ -75053,7 +75112,7 @@ var $Me = {
 				"onLoad",
 				"onRenameCampaign",
 				"onRemove"
-			]))), 128))], 64)), W(wNe, {
+			]))), 128))], 64)), W(ENe, {
 				autos: N(r).autos,
 				deleted: N(r).deleted,
 				others: N(r).otherRules,
@@ -75072,7 +75131,7 @@ var $Me = {
 				"read-only",
 				"onLoad"
 			])]),
-			U("footer", PNe, [
+			U("footer", INe, [
 				N(n).hasCampaign ? (B(), V("button", {
 					key: 0,
 					class: "trpg-btn",
@@ -75083,7 +75142,7 @@ var $Me = {
 				}, [W(Z, {
 					name: "plus",
 					size: 16
-				}), i[15] ||= G("新建战役", -1)], 8, FNe)) : K("", !0),
+				}), i[15] ||= G("新建战役", -1)], 8, LNe)) : K("", !0),
 				U("button", {
 					class: "trpg-btn",
 					type: "button",
@@ -75093,7 +75152,7 @@ var $Me = {
 				}, [W(Z, {
 					name: "upload-simple",
 					size: 16
-				}), i[16] ||= G("导入存档", -1)], 8, INe),
+				}), i[16] ||= G("导入存档", -1)], 8, RNe),
 				U("input", {
 					ref_key: "picker",
 					ref: a,
@@ -75105,38 +75164,38 @@ var $Me = {
 					onChange: x
 				}, null, 544)
 			])
-		], 40, TNe));
+		], 40, DNe));
 	}
-}), RNe = {
+}), BNe = {
 	class: "trpg-drawer",
 	"data-testid": "load-confirm"
-}, zNe = { class: "trpg-drawer__body" }, BNe = {
+}, VNe = { class: "trpg-drawer__body" }, HNe = {
 	key: 0,
 	class: "trpg-loading",
 	role: "status"
-}, VNe = { class: "trpg-checks" }, HNe = { "data-testid": "load-lead" }, UNe = { key: 0 }, WNe = {
+}, UNe = { class: "trpg-checks" }, WNe = { "data-testid": "load-lead" }, GNe = { key: 0 }, KNe = {
 	key: 1,
 	"data-kind": "block",
 	"data-testid": "load-blocked"
-}, GNe = {
+}, qNe = {
 	key: 2,
 	"data-testid": "load-dirty"
-}, KNe = { class: "trpg-field__hint" }, qNe = { key: 3 }, JNe = { key: 4 }, YNe = {
+}, JNe = { class: "trpg-field__hint" }, YNe = { key: 3 }, XNe = { key: 4 }, ZNe = {
 	key: 5,
 	"data-testid": "load-download"
-}, XNe = { class: "lib-src" }, ZNe = {
+}, QNe = { class: "lib-src" }, $Ne = {
 	key: 6,
 	"data-testid": "load-closed"
-}, QNe = { class: "lib-src" }, $Ne = {
+}, ePe = { class: "lib-src" }, tPe = {
 	key: 7,
 	"data-testid": "load-missing"
-}, ePe = {
+}, nPe = {
 	key: 0,
 	class: "trpg-field__hint"
-}, tPe = {
+}, rPe = {
 	key: 8,
 	"data-testid": "load-changed"
-}, nPe = { class: "trpg-drawer__bottom trpg-drawer__bottom--confirm" }, rPe = ["disabled"], iPe = /* @__PURE__ */ I({
+}, iPe = { class: "trpg-drawer__bottom trpg-drawer__bottom--confirm" }, aPe = ["disabled"], oPe = /* @__PURE__ */ I({
 	__name: "LoadConfirmPage",
 	props: { save: {} },
 	setup(e) {
@@ -75184,11 +75243,11 @@ var $Me = {
 				}
 			}
 		}
-		return (t, n) => (B(), V("div", RNe, [U("div", zNe, [!c.value && !l.value ? (B(), V("p", BNe, [...n[3] ||= [U("span", {
+		return (t, n) => (B(), V("div", BNe, [U("div", VNe, [!c.value && !l.value ? (B(), V("p", HNe, [...n[3] ||= [U("span", {
 			class: "trpg-spinner",
 			"aria-hidden": "true"
-		}, null, -1), G("正在检查这个存档…", -1)]])) : K("", !0), U("div", VNe, [
-			U("div", HNe, [
+		}, null, -1), G("正在检查这个存档…", -1)]])) : K("", !0), U("div", UNe, [
+			U("div", WNe, [
 				U("b", null, "读取「" + A(e.save.name) + "」", 1),
 				U("span", null, "当前战役会换成这个存档的样子。" + A(f.value ? "读取前不会自动备份当前内容。" : "读取前，当前内容会先自动存一份，随时能找回。"), 1),
 				W(mR, {
@@ -75201,7 +75260,7 @@ var $Me = {
 				}, 8, ["model-value"]),
 				n[5] ||= U("span", { class: "trpg-field__hint" }, "勾上后会记住，以后读取都不再自动备份；当前未保存的内容读取后无法找回。", -1)
 			]),
-			l.value ? (B(), V("div", UNe, [
+			l.value ? (B(), V("div", GNe, [
 				U("b", null, [W(Z, {
 					name: "warning",
 					size: 16
@@ -75209,7 +75268,7 @@ var $Me = {
 				U("span", null, A(l.value), 1),
 				n[7] ||= U("span", { class: "trpg-field__hint" }, "仍可尝试读取；读取失败时当前战役不会被改动。", -1)
 			])) : K("", !0),
-			v.value ? (B(), V("div", WNe, [
+			v.value ? (B(), V("div", KNe, [
 				U("b", null, [W(Z, {
 					name: "warning",
 					size: 16
@@ -75217,7 +75276,7 @@ var $Me = {
 				U("span", null, "这个存档属于「" + A(m(e.save.ruleId)) + "」，这台设备还没有这套规则。", 1),
 				n[9] ||= U("span", { class: "trpg-field__hint" }, "存档原文件保持不动，装好这套规则后再来读取。你仍然可以导出它。", -1)
 			])) : K("", !0),
-			g.value ? (B(), V("div", GNe, [
+			g.value ? (B(), V("div", qNe, [
 				n[11] ||= U("b", null, "当前有未保存的改动", -1),
 				W(mR, {
 					"model-value": d.value,
@@ -75233,11 +75292,11 @@ var $Me = {
 					default: P(() => [...n[10] ||= [G("不保存，直接读取", -1)]]),
 					_: 1
 				}, 8, ["model-value"]),
-				U("span", KNe, A(f.value ? "没有自动备份：选「不保存」会丢掉当前未保存的改动。" : "无论选哪个，当前内容都会先自动存一份。"), 1)
+				U("span", JNe, A(f.value ? "没有自动备份：选「不保存」会丢掉当前未保存的改动。" : "无论选哪个，当前内容都会先自动存一份。"), 1)
 			])) : K("", !0),
-			h.value && !v.value ? (B(), V("div", qNe, [n[12] ||= U("b", null, "这个存档属于其他规则", -1), U("span", null, "「" + A(e.save.name) + "」使用 " + A(m(e.save.ruleId)) + "。读取后，整个助手会切换为该规则的界面与资料；当前的「" + A(N(i).currentSave?.name ?? "存档") + "」会先写入自动存档。", 1)])) : K("", !0),
-			_.value ? (B(), V("div", JNe, [U("b", null, "这个存档属于其他角色卡「" + A(e.save.ownerLabel) + "」", 1), U("span", null, "读取时会复制成这张卡的新存档「" + A(e.save.name) + "（来自 " + A(e.save.ownerLabel) + "）」，成为一个独立战役。", 1)])) : K("", !0),
-			S.value?.download.length ? (B(), V("div", YNe, [
+			h.value && !v.value ? (B(), V("div", YNe, [n[12] ||= U("b", null, "这个存档属于其他规则", -1), U("span", null, "「" + A(e.save.name) + "」使用 " + A(m(e.save.ruleId)) + "。读取后，整个助手会切换为该规则的界面与资料；当前的「" + A(N(i).currentSave?.name ?? "存档") + "」会先写入自动存档。", 1)])) : K("", !0),
+			_.value ? (B(), V("div", XNe, [U("b", null, "这个存档属于其他角色卡「" + A(e.save.ownerLabel) + "」", 1), U("span", null, "读取时会复制成这张卡的新存档「" + A(e.save.name) + "（来自 " + A(e.save.ownerLabel) + "）」，成为一个独立战役。", 1)])) : K("", !0),
+			S.value?.download.length ? (B(), V("div", ZNe, [
 				n[13] ||= U("b", null, "缺少数据包 —— 为防止存档数据损坏，建议下载下面的包", -1),
 				n[14] ||= U("span", { class: "trpg-field__hint" }, "读取后在后台下载，进度见【库】标志；自制包的依赖会按作者程序一起装。", -1),
 				(B(!0), V(z, null, R(S.value.download, (e) => (B(), H(mR, {
@@ -75246,7 +75305,7 @@ var $Me = {
 					disabled: e.kind === "brew" && !e.sources?.length,
 					"onUpdate:modelValue": (t) => b.value[C(e)] = t
 				}, {
-					default: P(() => [G(A(T(e)), 1), U("span", XNe, "（" + A(e.refs) + " 项用到" + A(e.labels.length ? `：${e.labels.slice(0, 2).join("、")}` : "") + "）", 1)]),
+					default: P(() => [G(A(T(e)), 1), U("span", QNe, "（" + A(e.refs) + " 项用到" + A(e.labels.length ? `：${e.labels.slice(0, 2).join("、")}` : "") + "）", 1)]),
 					_: 2
 				}, 1032, [
 					"model-value",
@@ -75254,7 +75313,7 @@ var $Me = {
 					"onUpdate:modelValue"
 				]))), 128))
 			])) : K("", !0),
-			S.value?.closed.length ? (B(), V("div", ZNe, [
+			S.value?.closed.length ? (B(), V("div", $Ne, [
 				n[15] ||= U("b", null, "包在，但本战役关着", -1),
 				n[16] ||= U("span", { class: "trpg-field__hint" }, "勾选后在本战役里开启；不勾就保持关着，存档里的引用照常能看。", -1),
 				(B(!0), V(z, null, R(S.value.closed, (e) => (B(), H(mR, {
@@ -75262,18 +75321,18 @@ var $Me = {
 					"model-value": !!x.value[e.source],
 					"onUpdate:modelValue": (t) => x.value[e.source] = t
 				}, {
-					default: P(() => [G(A(e.source), 1), U("span", QNe, "（" + A(e.refs) + " 项用到：" + A(e.labels.slice(0, 2).join("、")) + "）", 1)]),
+					default: P(() => [G(A(e.source), 1), U("span", ePe, "（" + A(e.refs) + " 项用到：" + A(e.labels.slice(0, 2).join("、")) + "）", 1)]),
 					_: 2
 				}, 1032, ["model-value", "onUpdate:modelValue"]))), 128))
 			])) : K("", !0),
-			c.value?.missing.length ? (B(), V("div", $Ne, [
+			c.value?.missing.length ? (B(), V("div", tPe, [
 				U("b", null, "缺少 " + A(c.value.missing.length) + " 项资料", 1),
 				(B(!0), V(z, null, R(c.value.missing.slice(0, 8), (e, t) => (B(), V("span", { key: t }, A(e.actorName) + " · " + A(e.ref.label ?? e.ref.hash) + "（" + A(E[e.reason] ?? e.reason) + "）", 1))), 128)),
-				c.value.missing.length > 8 ? (B(), V("span", ePe, "另有 " + A(c.value.missing.length - 8) + " 项…", 1)) : K("", !0),
+				c.value.missing.length > 8 ? (B(), V("span", nPe, "另有 " + A(c.value.missing.length - 8) + " 项…", 1)) : K("", !0),
 				n[17] ||= U("span", { class: "trpg-field__hint" }, "仍可读取和导出；用到它们的结算会暂停，数据不会丢。", -1)
 			])) : K("", !0),
-			y.value ? (B(), V("div", tPe, [...n[18] ||= [U("span", { class: "trpg-field__hint" }, "有条目的资料版本变了，已使用新版；存档里的改动（数量、等级等）不受影响。", -1)]])) : K("", !0)
-		])]), U("footer", nPe, [U("button", {
+			y.value ? (B(), V("div", rPe, [...n[18] ||= [U("span", { class: "trpg-field__hint" }, "有条目的资料版本变了，已使用新版；存档里的改动（数量、等级等）不受影响。", -1)]])) : K("", !0)
+		])]), U("footer", iPe, [U("button", {
 			class: "trpg-btn",
 			type: "button",
 			onClick: n[2] ||= (e) => N(a).pop()
@@ -75284,7 +75343,7 @@ var $Me = {
 			"data-autofocus": "",
 			disabled: u.value || v.value || !c.value && !l.value,
 			onClick: O
-		}, A(u.value ? "正在读取…" : "读取"), 9, rPe)])]));
+		}, A(u.value ? "正在读取…" : "读取"), 9, aPe)])]));
 	}
 }), k7 = hv[0], A7 = () => ({
 	step: 1,
@@ -75301,7 +75360,7 @@ var $Me = {
 	estimating: !1,
 	netTried: !1
 }), $ = /* @__PURE__ */ xr(A7()), j7 = /* @__PURE__ */ M(null), M7 = /* @__PURE__ */ M(null), N7 = /* @__PURE__ */ M(null);
-function aPe() {
+function sPe() {
 	Object.assign($, A7()), j7.value = null, M7.value = null, N7.value = null;
 }
 var P7 = (e) => Object.values($.picked).filter((t) => t.kind === e), F7 = 1048576;
@@ -75337,7 +75396,7 @@ function L7(e) {
 		text: "正在计算下载文件大小…"
 	};
 }
-function oPe() {
+function cPe() {
 	let e = [L7("data"), L7("adv")].filter((e) => e.kind !== "none");
 	if (!e.length) return {
 		kind: "none",
@@ -75361,12 +75420,12 @@ function oPe() {
 	};
 }
 // src/ui/wizard/data.ts
-var R7 = 0, z7 = 0, B7 = (e) => `${e.set}:${e.kind}:${e.id ?? `src:${e.source}`}`, sPe = (e) => n(e.set).kind === "official";
-function cPe(e) {
+var R7 = 0, z7 = 0, B7 = (e) => `${e.set}:${e.kind}:${e.id ?? `src:${e.source}`}`, lPe = (e) => n(e.set).kind === "official";
+function uPe(e) {
 	let t = $.q.trim().toLowerCase();
-	return [...e.books, ...e.adventures].filter((e) => sPe(e) && ($.filter === "all" || ($.filter === "none" ? HL(e) === null : HL(e) === $.filter)) && (!t || `${e.name} ${e.altName ?? ""} ${e.abv}`.toLowerCase().includes(t)));
+	return [...e.books, ...e.adventures].filter((e) => lPe(e) && ($.filter === "all" || ($.filter === "none" ? HL(e) === null : HL(e) === $.filter)) && (!t || `${e.name} ${e.altName ?? ""} ${e.abv}`.toLowerCase().includes(t)));
 }
-var V7 = (e) => e.downloaded || !!$.picked[B7(e)], H7 = (e) => !e.downloaded && (e.kind === "book" || e.id !== null && !!N7.value?.sets[e.set]?.adventures), lPe = (e) => e.kind === "adventure" && !e.downloaded ? N7.value?.sets[e.set]?.reason ?? null : null;
+var V7 = (e) => e.downloaded || !!$.picked[B7(e)], H7 = (e) => !e.downloaded && (e.kind === "book" || e.id !== null && !!N7.value?.sets[e.set]?.adventures), dPe = (e) => e.kind === "adventure" && !e.downloaded ? N7.value?.sets[e.set]?.reason ?? null : null;
 function U7(e, t, n) {
 	let r = B7(e);
 	t ? n[r] = {
@@ -75385,12 +75444,12 @@ async function W7(e) {
 	for (let e of t.drop) for (let t of Object.values(n)) t.kind === "adventure" && t.set === e.set && t.id === e.id && delete n[t.key];
 	$.picked = n;
 }
-async function uPe(e, t, n) {
+async function fPe(e, t, n) {
 	if (!H7(t)) return;
 	let r = { ...$.picked };
 	U7(t, n, r), $.picked = r, t.kind !== "adventure" && await W7(e), J7(e);
 }
-async function dPe(e, t, n) {
+async function pPe(e, t, n) {
 	let r = { ...$.picked };
 	for (let e of t.filter((e) => !e.downloaded && e.kind !== "adventure")) U7(e, n, r);
 	$.picked = r, await W7(e);
@@ -75451,7 +75510,7 @@ async function J7(e) {
 	}
 }
 // src/ui/wizard/StepData.vue?vue&type=script&setup=true&lang.ts
-var fPe = {
+var mPe = {
 	key: 0,
 	class: "trpg-empty",
 	"data-testid": "wizard-blocked",
@@ -75459,27 +75518,27 @@ var fPe = {
 		border: "2px solid var(--danger-line)",
 		"margin-bottom": "12px"
 	}
-}, pPe = { style: { color: "var(--danger-text)" } }, mPe = { class: "trpg-field trpg-field--grow" }, hPe = {
+}, hPe = { style: { color: "var(--danger-text)" } }, gPe = { class: "trpg-field trpg-field--grow" }, _Pe = {
 	key: 0,
 	class: "trpg-loading",
 	role: "status",
 	"data-testid": "wizard-loading"
-}, gPe = {
+}, vPe = {
 	key: 1,
 	class: "trpg-hint",
 	"data-testid": "wizard-nobooks"
-}, _Pe = { class: "trpg-wizard__filters" }, vPe = {
+}, yPe = { class: "trpg-wizard__filters" }, bPe = {
 	key: 0,
 	class: "trpg-hint",
 	"data-testid": "wizard-filter-empty"
-}, yPe = {
+}, xPe = {
 	key: 1,
 	class: "trpg-shelf",
 	"data-testid": "wizard-shelf"
-}, bPe = ["open"], xPe = { class: "trpg-shelf__sum" }, SPe = ["title", "data-kind"], CPe = { class: "trpg-term" }, Y7 = {
+}, SPe = ["open"], CPe = { class: "trpg-shelf__sum" }, Y7 = ["title", "data-kind"], wPe = { class: "trpg-term" }, TPe = {
 	class: "trpg-wizard__picked",
 	"data-testid": "wizard-picked"
-}, wPe = "当前拉取不到书目，请之后再去库里添加", TPe = /* @__PURE__ */ I({
+}, EPe = "当前拉取不到书目，请之后再去库里添加", DPe = /* @__PURE__ */ I({
 	__name: "StepData",
 	setup(e) {
 		let t = Uk(), n = q(() => j7.value), r = q(() => !!n.value && (n.value.catalogUnavailable || !n.value.shelf.some((e) => e.books.length || e.adventures.length))), i = [
@@ -75501,8 +75560,8 @@ var fPe = {
 			}
 		], a = q(() => (n.value?.shelf ?? []).map((e) => ({
 			g: e,
-			rows: cPe(e)
-		})).filter((e) => e.rows.length)), o = q(() => oPe()), s = q(() => P7("book").length + P7("adventure").length);
+			rows: uPe(e)
+		})).filter((e) => e.rows.length)), o = q(() => cPe()), s = q(() => P7("book").length + P7("adventure").length);
 		function c(e) {
 			return e.kind === "adventure" ? ["冒险", e.shelf?.level ? `等级 ${e.shelf.level.start}–${e.shelf.level.end}` : ""].filter(Boolean).join(" · ") : [
 				"书",
@@ -75510,10 +75569,10 @@ var fPe = {
 				e.shelf?.published?.slice(0, 4) ?? ""
 			].filter(Boolean).join(" · ");
 		}
-		let l = (e) => e.downloaded ? "已下载，这场战役里默认可用" : H7(e) ? void 0 : lPe(e) ?? void 0, u = (e) => e.filter((e) => !e.downloaded && V7(e)).length, d = (e) => e.filter((e) => !e.downloaded).length;
+		let l = (e) => e.downloaded ? "已下载，这场战役里默认可用" : H7(e) ? void 0 : dPe(e) ?? void 0, u = (e) => e.filter((e) => !e.downloaded && V7(e)).length, d = (e) => e.filter((e) => !e.downloaded).length;
 		return (e, f) => (B(), V(z, null, [
 			f[5] ||= U("h3", { class: "trpg-wizard__title" }, "选择资料", -1),
-			n.value?.blockingError ? (B(), V("div", fPe, [U("b", pPe, [W(Z, {
+			n.value?.blockingError ? (B(), V("div", mPe, [U("b", hPe, [W(Z, {
 				name: "warning",
 				size: 16
 			}), G(" " + A(n.value.blockingError), 1)]), U("button", {
@@ -75525,10 +75584,10 @@ var fPe = {
 				class: "trpg-hint",
 				"data-testid": "wizard-size-hint"
 			}, "勾选的书和冒险会在战役创建完成后，在后台【库】里下载。为了自动化结算，会在下载的同时解析数据，可能需要一定时间。", -1),
-			U("div", mPe, [N($).loading && !n.value ? (B(), V("div", hPe, [N($).showLoading ? (B(), V(z, { key: 0 }, [f[3] ||= U("span", {
+			U("div", gPe, [N($).loading && !n.value ? (B(), V("div", _Pe, [N($).showLoading ? (B(), V(z, { key: 0 }, [f[3] ||= U("span", {
 				class: "trpg-spinner",
 				"aria-hidden": "true"
-			}, null, -1), f[4] ||= G("正在读取中…", -1)], 64)) : K("", !0)])) : r.value ? (B(), V("p", gPe, A(wPe))) : n.value ? (B(), V(z, { key: 2 }, [U("div", _Pe, [W(RA, {
+			}, null, -1), f[4] ||= G("正在读取中…", -1)], 64)) : K("", !0)])) : r.value ? (B(), V("p", vPe, A(EPe))) : n.value ? (B(), V(z, { key: 2 }, [U("div", yPe, [W(RA, {
 				modelValue: N($).filter,
 				"onUpdate:modelValue": f[1] ||= (e) => N($).filter = e,
 				options: i,
@@ -75540,11 +75599,11 @@ var fPe = {
 				type: "search",
 				placeholder: "搜索书名 / 冒险名",
 				"aria-label": "搜索书名 / 冒险名"
-			}, null, 512), [[Ru, N($).q]])]), a.value.length ? (B(), V("div", yPe, [(B(!0), V(z, null, R(a.value, (e, n) => (B(), V("details", {
+			}, null, 512), [[Ru, N($).q]])]), a.value.length ? (B(), V("div", xPe, [(B(!0), V(z, null, R(a.value, (e, n) => (B(), V("details", {
 				key: e.g.group,
 				class: "trpg-shelf__group",
 				open: !!N($).q || e.g.group === "core" || n === 0 && !a.value.some((e) => e.g.group === "core")
-			}, [U("summary", xPe, [
+			}, [U("summary", CPe, [
 				W(Z, {
 					class: "trpg-shelf__chev-open",
 					name: "caret-down",
@@ -75561,7 +75620,7 @@ var fPe = {
 					selected: u(e.rows),
 					total: d(e.rows),
 					label: e.g.name,
-					onChange: (n) => N(dPe)(N(t).svc(), e.rows, n)
+					onChange: (n) => N(pPe)(N(t).svc(), e.rows, n)
 				}, null, 8, [
 					"selected",
 					"total",
@@ -75579,9 +75638,9 @@ var fPe = {
 				dl: e.downloaded,
 				disabled: !N(H7)(e),
 				label: e.name,
-				"onUpdate:modelValue": (n) => N(uPe)(N(t).svc(), e, n)
+				"onUpdate:modelValue": (n) => N(fPe)(N(t).svc(), e, n)
 			}, {
-				default: P(() => [U("span", CPe, A(e.name), 1)]),
+				default: P(() => [U("span", wPe, A(e.name), 1)]),
 				_: 2
 			}, 1032, [
 				"model-value",
@@ -75589,30 +75648,30 @@ var fPe = {
 				"disabled",
 				"label",
 				"onUpdate:modelValue"
-			]), U("small", null, A(c(e)), 1)], 8, SPe))), 128))], 8, bPe))), 128))])) : (B(), V("p", vPe, A(N($).q ? "没有符合的。" : "这个标签下没有书。"), 1))], 64)) : K("", !0)]),
-			U("p", Y7, "已选 " + A(s.value) + " 项 · " + A(o.value.text), 1)
+			]), U("small", null, A(c(e)), 1)], 8, Y7))), 128))], 8, SPe))), 128))])) : (B(), V("p", bPe, A(N($).q ? "没有符合的。" : "这个标签下没有书。"), 1))], 64)) : K("", !0)]),
+			U("p", TPe, "已选 " + A(s.value) + " 项 · " + A(o.value.text), 1)
 		], 64));
 	}
-}), EPe = {
+}), OPe = {
 	class: "trpg-field",
 	style: { margin: "0" }
-}, DPe = ["aria-invalid"], OPe = {
+}, kPe = ["aria-invalid"], APe = {
 	key: 0,
 	class: "trpg-field__err",
 	role: "alert"
-}, kPe = {
+}, jPe = {
 	key: 1,
 	class: "trpg-field__hint"
-}, APe = {
+}, MPe = {
 	class: "trpg-field",
 	style: { margin: "0" }
-}, jPe = ["maxlength"], MPe = {
+}, NPe = ["maxlength"], PPe = {
 	class: "trpg-summary",
 	"data-testid": "wizard-summary"
-}, NPe = {
+}, FPe = {
 	key: 0,
 	class: "trpg-field__hint"
-}, PPe = /* @__PURE__ */ I({
+}, IPe = /* @__PURE__ */ I({
 	__name: "StepName",
 	emits: ["submit"],
 	setup(e, { emit: t }) {
@@ -75632,7 +75691,7 @@ var fPe = {
 				class: "trpg-wizard__title",
 				style: { margin: "0" }
 			}, "给这场战役起个名字", -1),
-			U("div", EPe, [
+			U("div", OPe, [
 				t[4] ||= U("label", {
 					class: "trpg-field__label",
 					for: "trpg-wizard-name"
@@ -75648,10 +75707,10 @@ var fPe = {
 					autocomplete: "off",
 					"data-testid": "wizard-name",
 					onInput: t[1] ||= (e) => N($).nameEdited = !0
-				}, null, 40, DPe), [[Ru, N($).name]]),
-				u.value ? (B(), V("span", OPe, "⚠ " + A(l.value ? "请输入战役名称" : `名称最多 ${N(40)} 个字`), 1)) : (B(), V("span", kPe, "1–" + A(N(40)) + " 字，之后可以在存档里改名", 1))
+				}, null, 40, kPe), [[Ru, N($).name]]),
+				u.value ? (B(), V("span", APe, "⚠ " + A(l.value ? "请输入战役名称" : `名称最多 ${N(40)} 个字`), 1)) : (B(), V("span", jPe, "1–" + A(N(40)) + " 字，之后可以在存档里改名", 1))
 			]),
-			U("div", APe, [t[5] ||= U("label", {
+			U("div", MPe, [t[5] ||= U("label", {
 				class: "trpg-field__label",
 				for: "trpg-wizard-note"
 			}, "备注（可空）", -1), Vi(U("textarea", {
@@ -75662,33 +75721,33 @@ var fPe = {
 				style: { "min-height": "56px" },
 				maxlength: N(200),
 				placeholder: "比如：周五晚的跑团"
-			}, null, 8, jPe), [[Ru, N($).note]])]),
-			U("div", MPe, [
+			}, null, 8, NPe), [[Ru, N($).note]])]),
+			U("div", PPe, [
 				U("b", null, "将建立战役：" + A(N($).name.trim() || "（未命名）"), 1),
 				U("span", null, A(p.value), 1),
 				U("span", null, "资料：" + A(m.value ? `选中 ${m.value} 本（${d.value.text}）` : "这次不下载新的书") + " · 冒险：" + A(h.value ? `选中 ${h.value} 本（${f.value.text}）` : "未选择"), 1),
-				g.value ? (B(), V("span", NPe, "当前战役「" + A(g.value) + "」会先自动存档。", 1)) : K("", !0)
+				g.value ? (B(), V("span", FPe, "当前战役「" + A(g.value) + "」会先自动存档。", 1)) : K("", !0)
 			])
 		], 32));
 	}
-}), FPe = { class: "page-stack" }, IPe = {
+}), LPe = { class: "page-stack" }, RPe = {
 	class: "trpg-rulecards",
 	role: "radiogroup",
 	"aria-label": "规则"
-}, LPe = [
+}, zPe = [
 	"aria-checked",
 	"aria-disabled",
 	"tabindex",
 	"data-status",
 	"onClick",
 	"onKeydown"
-], RPe = {
+], BPe = {
 	class: "trpg-rulecard__mark",
 	"aria-hidden": "true"
-}, zPe = { class: "trpg-rulecard__body" }, BPe = { class: "trpg-term" }, VPe = { class: "trpg-field__hint" }, HPe = {
+}, VPe = { class: "trpg-rulecard__body" }, HPe = { class: "trpg-term" }, UPe = { class: "trpg-field__hint" }, WPe = {
 	key: 0,
 	class: "trpg-badge"
-}, UPe = /* @__PURE__ */ I({
+}, GPe = /* @__PURE__ */ I({
 	__name: "StepRule",
 	setup(e) {
 		let t = Uk(), n = q(() => lk(t.svc().rules));
@@ -75697,7 +75756,7 @@ var fPe = {
 			let n = e.versions.find((e) => e.status === "installed");
 			n && q7(t.svc(), n.id, n.versionLabel);
 		}
-		return (e, t) => (B(), V("div", FPe, [t[0] ||= U("h3", { class: "trpg-wizard__title" }, "选择这场战役用的规则", -1), U("div", IPe, [(B(!0), V(z, null, R(n.value, (e) => (B(), V("div", {
+		return (e, t) => (B(), V("div", LPe, [t[0] ||= U("h3", { class: "trpg-wizard__title" }, "选择这场战役用的规则", -1), U("div", RPe, [(B(!0), V(z, null, R(n.value, (e) => (B(), V("div", {
 			key: e.family,
 			class: "trpg-rulecard",
 			role: "radio",
@@ -75708,37 +75767,37 @@ var fPe = {
 			"data-testid": "rule-card",
 			onClick: (t) => r(e),
 			onKeydown: [ed(J((t) => r(e), ["prevent"]), ["enter"]), ed(J((t) => r(e), ["prevent"]), ["space"])]
-		}, [U("span", RPe, [W(Z, {
+		}, [U("span", BPe, [W(Z, {
 			name: N($).family === e.family ? "check-circle" : "info",
 			size: 20
-		}, null, 8, ["name"])]), U("span", zPe, [
-			U("span", BPe, A(e.name), 1),
-			U("span", VPe, "版本：" + A(e.versions.map((e) => e.versionLabel).join(" / ")) + "，下一步选", 1),
-			e.ready ? K("", !0) : (B(), V("span", HPe, "即将推出"))
-		])], 40, LPe))), 128))])]));
+		}, null, 8, ["name"])]), U("span", VPe, [
+			U("span", HPe, A(e.name), 1),
+			U("span", UPe, "版本：" + A(e.versions.map((e) => e.versionLabel).join(" / ")) + "，下一步选", 1),
+			e.ready ? K("", !0) : (B(), V("span", WPe, "即将推出"))
+		])], 40, zPe))), 128))])]));
 	}
-}), WPe = { class: "page-stack" }, GPe = {
+}), KPe = { class: "page-stack" }, qPe = {
 	class: "trpg-rulecards",
 	role: "radiogroup",
 	"aria-label": "规则版本"
-}, KPe = [
+}, JPe = [
 	"aria-checked",
 	"aria-disabled",
 	"tabindex",
 	"data-status",
 	"onClick",
 	"onKeydown"
-], qPe = {
+], YPe = {
 	class: "trpg-rulecard__mark",
 	"aria-hidden": "true"
-}, JPe = { class: "trpg-rulecard__body" }, YPe = { class: "trpg-term" }, XPe = { class: "trpg-field__hint" }, ZPe = { class: "trpg-field__hint" }, QPe = /* @__PURE__ */ I({
+}, XPe = { class: "trpg-rulecard__body" }, ZPe = { class: "trpg-term" }, QPe = { class: "trpg-field__hint" }, $Pe = { class: "trpg-field__hint" }, eFe = /* @__PURE__ */ I({
 	__name: "StepVersion",
 	setup(e) {
 		let t = Uk(), n = q(() => lk(t.svc().rules).find((e) => e.family === $.family)?.versions ?? []);
 		function r(e) {
 			e.status === "installed" && q7(t.svc(), e.id, e.versionLabel);
 		}
-		return (e, t) => (B(), V("div", WPe, [t[1] ||= U("h3", { class: "trpg-wizard__title" }, "选择规则版本", -1), U("div", GPe, [(B(!0), V(z, null, R(n.value, (e) => (B(), V("div", {
+		return (e, t) => (B(), V("div", KPe, [t[1] ||= U("h3", { class: "trpg-wizard__title" }, "选择规则版本", -1), U("div", qPe, [(B(!0), V(z, null, R(n.value, (e) => (B(), V("div", {
 			key: e.id,
 			class: "trpg-rulecard",
 			role: "radio",
@@ -75749,29 +75808,29 @@ var fPe = {
 			"data-testid": "version-card",
 			onClick: (t) => r(e),
 			onKeydown: [ed(J((t) => r(e), ["prevent"]), ["enter"]), ed(J((t) => r(e), ["prevent"]), ["space"])]
-		}, [U("span", qPe, [W(Z, {
+		}, [U("span", YPe, [W(Z, {
 			name: N($).ruleId === e.id ? "check-circle" : "info",
 			size: 20
-		}, null, 8, ["name"])]), U("span", JPe, [
-			U("span", YPe, A(e.name), 1),
-			U("span", XPe, A(e.description), 1),
-			e.status === "installed" ? K("", !0) : (B(), V(z, { key: 0 }, [t[0] ||= U("span", { class: "trpg-badge" }, "结算规则还没接入", -1), U("span", ZPe, "暂时不能用它建战役；这一版的资料可以在下一步切到「" + A(e.versionLabel) + "」勾选下载。", 1)], 64))
-		])], 40, KPe))), 128))])]));
+		}, null, 8, ["name"])]), U("span", XPe, [
+			U("span", ZPe, A(e.name), 1),
+			U("span", QPe, A(e.description), 1),
+			e.status === "installed" ? K("", !0) : (B(), V(z, { key: 0 }, [t[0] ||= U("span", { class: "trpg-badge" }, "结算规则还没接入", -1), U("span", $Pe, "暂时不能用它建战役；这一版的资料可以在下一步切到「" + A(e.versionLabel) + "」勾选下载。", 1)], 64))
+		])], 40, JPe))), 128))])]));
 	}
-}), $Pe = {
+}), tFe = {
 	class: "trpg-wizard",
 	"data-testid": "wizard"
-}, eFe = {
+}, nFe = {
 	class: "trpg-steps",
 	"aria-label": "步骤"
-}, tFe = ["data-state"], nFe = [
+}, rFe = ["data-state"], iFe = [
 	"aria-current",
 	"disabled",
 	"onClick"
-], rFe = { class: "trpg-steps__n" }, iFe = {
+], aFe = { class: "trpg-steps__n" }, oFe = {
 	class: "trpg-steps__compact",
 	"aria-hidden": "true"
-}, aFe = { class: "trpg-wizard__body" }, oFe = { class: "trpg-wizard__foot" }, sFe = ["disabled"], cFe = ["disabled"], lFe = /* @__PURE__ */ I({
+}, sFe = { class: "trpg-wizard__body" }, cFe = { class: "trpg-wizard__foot" }, lFe = ["disabled"], uFe = ["disabled"], dFe = /* @__PURE__ */ I({
 	__name: "WizardPage",
 	setup(e) {
 		let t = Uk(), r = Wk(), i = pA(), a = hA(), o = cA(), s = mA(), c = /* @__PURE__ */ j(!1), l = [
@@ -75837,8 +75896,8 @@ var fPe = {
 				}
 			}
 		}
-		return (e, t) => (B(), V("div", $Pe, [
-			U("ol", eFe, [(B(), V(z, null, R(l, (e) => U("li", {
+		return (e, t) => (B(), V("div", tFe, [
+			U("ol", nFe, [(B(), V(z, null, R(l, (e) => U("li", {
 				key: e.n,
 				"data-state": e.n === N($).step ? "current" : e.n < N($).step ? "done" : "todo"
 			}, [U("button", {
@@ -75846,29 +75905,29 @@ var fPe = {
 				"aria-current": e.n === N($).step ? "step" : void 0,
 				disabled: e.n >= N($).step,
 				onClick: (t) => h(e.n)
-			}, [U("span", rFe, [e.n < N($).step ? (B(), H(Z, {
+			}, [U("span", aFe, [e.n < N($).step ? (B(), H(Z, {
 				key: 0,
 				name: "check",
 				size: 12
-			})) : (B(), V(z, { key: 1 }, [G(A(e.n), 1)], 64))]), U("span", null, A(e.label), 1)], 8, nFe)], 8, tFe)), 64))]),
-			U("p", iFe, A(N($).step) + "/" + A(l.length) + " · " + A(m.value), 1),
-			U("div", aFe, [N($).step === 1 ? (B(), H(UPe, { key: 0 })) : N($).step === 2 ? (B(), H(QPe, { key: 1 })) : N($).step === 3 ? (B(), H(TPe, { key: 2 })) : (B(), H(PPe, {
+			})) : (B(), V(z, { key: 1 }, [G(A(e.n), 1)], 64))]), U("span", null, A(e.label), 1)], 8, iFe)], 8, rFe)), 64))]),
+			U("p", oFe, A(N($).step) + "/" + A(l.length) + " · " + A(m.value), 1),
+			U("div", sFe, [N($).step === 1 ? (B(), H(GPe, { key: 0 })) : N($).step === 2 ? (B(), H(eFe, { key: 1 })) : N($).step === 3 ? (B(), H(DPe, { key: 2 })) : (B(), H(IPe, {
 				key: 3,
 				onSubmit: v
 			}))]),
-			U("footer", oFe, [N($).step > 1 ? (B(), V("button", {
+			U("footer", cFe, [N($).step > 1 ? (B(), V("button", {
 				key: 0,
 				class: "trpg-btn",
 				type: "button",
 				disabled: c.value,
 				onClick: _
-			}, "上一步", 8, sFe)) : K("", !0), U("button", {
+			}, "上一步", 8, lFe)) : K("", !0), U("button", {
 				class: "trpg-btn trpg-btn--primary",
 				type: "button",
 				disabled: !p.value,
 				"data-testid": "wizard-next",
 				onClick: g
-			}, A(N($).step === 4 ? c.value ? "正在准备…" : "开始冒险" : "下一步"), 9, cFe)])
+			}, A(N($).step === 4 ? c.value ? "正在准备…" : "开始冒险" : "下一步"), 9, uFe)])
 		]));
 	}
 });
@@ -75877,15 +75936,15 @@ function X7() {
 	hA().open({
 		key: "saves",
 		title: "存档",
-		component: jr(LNe),
+		component: jr(zNe),
 		variant: "drawer"
 	});
 }
 function Z7() {
-	aPe(), hA().open({
+	sPe(), hA().open({
 		key: "wizard",
 		title: "开始新冒险",
-		component: jr(lFe),
+		component: jr(dFe),
 		variant: "dialog"
 	});
 }
@@ -75902,22 +75961,22 @@ function $7(e) {
 	Wk().readOnly || hA().push({
 		key: `load:${e.id}`,
 		title: `读取「${e.name}」`,
-		component: jr(iPe),
+		component: jr(oPe),
 		props: { save: e }
 	});
 }
 // src/ui/home/HomeCampaign.vue?vue&type=script&setup=true&lang.ts
-var uFe = { class: "page-stack" }, dFe = {
+var fFe = { class: "page-stack" }, pFe = {
 	class: "trpg-banner",
 	"aria-label": "当前战役"
-}, fFe = {
+}, mFe = {
 	class: "trpg-banner__title",
 	"data-testid": "banner-title"
-}, pFe = { class: "trpg-banner__line" }, mFe = ["data-dirty"], hFe = { class: "trpg-banner__foot" }, gFe = ["disabled"], _Fe = { class: "trpg-empty" }, vFe = /* @__PURE__ */ I({
+}, hFe = { class: "trpg-banner__line" }, gFe = ["data-dirty"], _Fe = { class: "trpg-banner__foot" }, vFe = ["disabled"], yFe = { class: "trpg-empty" }, bFe = /* @__PURE__ */ I({
 	__name: "HomeCampaign",
 	setup(e) {
 		let t = Uk(), n = Wk(), r = wA(), i = mA(), a = q(() => n.workspace ? t.svc().rules.get(n.workspace.ruleId) : void 0), o = q(() => r.view?.name ?? n.currentSave?.name ?? "战役"), s = q(() => n.currentSave?.name ?? "存档"), c = q(() => n.dirty ? "● 有未保存到存档的改动" : n.currentSave ? `存档已保存 ${LB(n.currentSave.updatedAt)}` : "");
-		return (e, t) => (B(), V("div", uFe, [U("section", dFe, [
+		return (e, t) => (B(), V("div", fFe, [U("section", pFe, [
 			W(E5),
 			U("button", {
 				class: "trpg-banner__main",
@@ -75925,16 +75984,16 @@ var uFe = { class: "page-stack" }, dFe = {
 				"data-testid": "banner",
 				"aria-label": "打开存档",
 				onClick: t[0] ||= (...e) => N(X7) && N(X7)(...e)
-			}, [U("span", fFe, A(o.value), 1), U("span", pFe, [
+			}, [U("span", mFe, A(o.value), 1), U("span", hFe, [
 				U("span", null, A(s.value), 1),
 				U("span", null, A(a.value?.name), 1),
 				U("span", {
 					class: "trpg-banner__state",
 					"data-testid": "banner-state",
 					"data-dirty": N(n).dirty
-				}, A(c.value), 9, mFe)
+				}, A(c.value), 9, gFe)
 			])]),
-			U("div", hFe, [U("button", {
+			U("div", _Fe, [U("button", {
 				class: "trpg-banner__new",
 				type: "button",
 				"data-testid": "banner-new",
@@ -75943,7 +76002,7 @@ var uFe = { class: "page-stack" }, dFe = {
 			}, [W(Z, {
 				name: "plus",
 				size: 14
-			}), t[4] ||= G("创建新战役", -1)], 8, gFe), U("button", {
+			}), t[4] ||= G("创建新战役", -1)], 8, vFe), U("button", {
 				class: "trpg-banner__go",
 				type: "button",
 				tabindex: "-1",
@@ -75953,7 +76012,7 @@ var uFe = { class: "page-stack" }, dFe = {
 				name: "caret-right",
 				size: 14
 			})])])
-		]), U("div", null, [t[8] ||= U("h2", { class: "trpg-group trpg-group--first" }, "最近记录", -1), U("div", _Fe, [t[7] ||= U("span", null, "还没有记录。点击右下角的骰子圆球，随时可以掷骰。", -1), U("button", {
+		]), U("div", null, [t[8] ||= U("h2", { class: "trpg-group trpg-group--first" }, "最近记录", -1), U("div", yFe, [t[7] ||= U("span", null, "还没有记录。点击右下角的骰子圆球，随时可以掷骰。", -1), U("button", {
 			class: "trpg-link trpg-link--hl",
 			type: "button",
 			"data-testid": "dice-hint",
@@ -75963,27 +76022,27 @@ var uFe = { class: "page-stack" }, dFe = {
 			size: 16
 		}), t[6] ||= G("掷一次骰子试试", -1)])])])]));
 	}
-}), yFe = { class: "page-stack" }, bFe = ["disabled"], xFe = { class: "trpg-hero__sub" }, SFe = {
+}), xFe = { class: "page-stack" }, SFe = ["disabled"], CFe = { class: "trpg-hero__sub" }, wFe = {
 	class: "trpg-hero__go",
 	"aria-hidden": "true"
-}, CFe = {
+}, TFe = {
 	key: 0,
 	class: "trpg-field__hint",
 	"data-testid": "readonly-note"
-}, wFe = {
+}, EFe = {
 	class: "trpg-linkcard__icon",
 	"aria-hidden": "true"
-}, TFe = { class: "trpg-linkcard__go" }, EFe = {
+}, DFe = { class: "trpg-linkcard__go" }, OFe = {
 	key: 1,
 	class: "trpg-hero trpg-hero--idle",
 	"data-testid": "no-chat"
-}, DFe = /* @__PURE__ */ I({
+}, kFe = /* @__PURE__ */ I({
 	__name: "HomeEmpty",
 	setup(e) {
 		let t = Wk(), n = Uk(), r = wA(), i = /* @__PURE__ */ j(0);
 		return L(async () => {
 			i.value = await r.count(), await n.refreshBackup();
-		}), (e, n) => (B(), V("div", yFe, [N(t).owner ? (B(), V(z, { key: 0 }, [
+		}), (e, n) => (B(), V("div", xFe, [N(t).owner ? (B(), V(z, { key: 0 }, [
 			U("button", {
 				class: Bt(["trpg-hero", { "trpg-hero--off": N(t).readOnly }]),
 				type: "button",
@@ -75993,13 +76052,13 @@ var uFe = { class: "page-stack" }, dFe = {
 			}, [
 				W(E5),
 				n[3] ||= U("span", { class: "trpg-hero__title" }, "开始一场新的冒险", -1),
-				U("span", xFe, "为「" + A(N(t).owner.ownerLabel) + "」建立一个战役：选规则、资料与冒险，再起个名字。", 1),
-				U("span", SFe, [n[2] ||= G("开始新冒险", -1), W(Z, {
+				U("span", CFe, "为「" + A(N(t).owner.ownerLabel) + "」建立一个战役：选规则、资料与冒险，再起个名字。", 1),
+				U("span", wFe, [n[2] ||= G("开始新冒险", -1), W(Z, {
 					name: "caret-right",
 					size: 14
 				})])
-			], 10, bFe),
-			N(t).readOnly ? (B(), V("p", CFe, "另一个窗口正在使用这份数据，这里只能查看。")) : K("", !0),
+			], 10, SFe),
+			N(t).readOnly ? (B(), V("p", TFe, "另一个窗口正在使用这份数据，这里只能查看。")) : K("", !0),
 			i.value > 0 ? (B(), V("button", {
 				key: 1,
 				class: "trpg-linkcard",
@@ -76007,42 +76066,42 @@ var uFe = { class: "page-stack" }, dFe = {
 				"data-testid": "load-existing",
 				onClick: n[1] ||= (...e) => N(X7) && N(X7)(...e)
 			}, [
-				U("span", wFe, [W(Z, {
+				U("span", EFe, [W(Z, {
 					name: "arrow-counter-clockwise",
 					size: 20
 				})]),
 				n[4] ||= U("span", { class: "trpg-linkcard__text" }, [U("b", null, "读取已有存档"), U("small", null, "接着玩以前的战役")], -1),
-				U("span", TFe, [G(A(i.value) + " 个存档", 1), W(Z, {
+				U("span", DFe, [G(A(i.value) + " 个存档", 1), W(Z, {
 					name: "caret-right",
 					size: 14
 				})])
 			])) : K("", !0)
-		], 64)) : (B(), V("div", EFe, [...n[5] ||= [U("span", { class: "trpg-hero__title" }, "请先在酒馆中打开一个聊天", -1), U("span", { class: "trpg-hero__sub" }, "打开任意聊天后，这里会出现「开始一场新的冒险」。", -1)]]))]));
+		], 64)) : (B(), V("div", OFe, [...n[5] ||= [U("span", { class: "trpg-hero__title" }, "请先在酒馆中打开一个聊天", -1), U("span", { class: "trpg-hero__sub" }, "打开任意聊天后，这里会出现「开始一场新的冒险」。", -1)]]))]));
 	}
-}), OFe = {
+}), AFe = {
 	key: 0,
 	class: "trpg-field__error",
 	role: "alert"
-}, kFe = {
+}, jFe = {
 	key: 1,
 	class: "page-stack",
 	"aria-busy": "true"
-}, AFe = /* @__PURE__ */ I({
+}, MFe = /* @__PURE__ */ I({
 	__name: "HomeView",
 	setup(e) {
 		let t = Uk(), n = Wk();
-		return (e, r) => N(t).bootError ? (B(), V("p", OFe, "无法打开本机存储：" + A(N(t).bootError), 1)) : !N(t).booted || !N(n).ready ? (B(), V("div", kFe, [...r[0] ||= [U("div", {
+		return (e, r) => N(t).bootError ? (B(), V("p", AFe, "无法打开本机存储：" + A(N(t).bootError), 1)) : !N(t).booted || !N(n).ready ? (B(), V("div", jFe, [...r[0] ||= [U("div", {
 			class: "trpg-skeleton",
 			style: { height: "140px" }
 		}, null, -1), U("div", {
 			class: "trpg-skeleton",
 			style: { width: "40%" }
-		}, null, -1)]])) : N(n).hasCampaign ? (B(), H(vFe, { key: 3 })) : (B(), H(DFe, { key: 2 }));
+		}, null, -1)]])) : N(n).hasCampaign ? (B(), H(bFe, { key: 3 })) : (B(), H(kFe, { key: 2 }));
 	}
-}), jFe = {
+}), NFe = {
 	class: "trpg-settings",
 	"data-testid": "backup-settings"
-}, MFe = ["data-testid"], NFe = { class: "trpg-field__hint" }, PFe = /* @__PURE__ */ I({
+}, PFe = ["data-testid"], FFe = { class: "trpg-field__hint" }, IFe = /* @__PURE__ */ I({
 	__name: "BackupSettings",
 	setup(e) {
 		let t = Uk(), n = cA(), r = q(() => t.settings ?? uv.parse({})), i = uv.parse({}), a = [
@@ -76091,7 +76150,7 @@ var uFe = { class: "page-stack" }, dFe = {
 		function l(e, t) {
 			o(e.key, t ? i[e.key] : 0);
 		}
-		return (e, t) => (B(), V("div", jFe, [(B(), V(z, null, R(a, (e) => U("div", {
+		return (e, t) => (B(), V("div", NFe, [(B(), V(z, null, R(a, (e) => U("div", {
 			key: e.key,
 			class: "trpg-settings__row",
 			"data-testid": `setting-${e.key}`
@@ -76123,51 +76182,51 @@ var uFe = { class: "page-stack" }, dFe = {
 				"label",
 				"onUpdate:modelValue"
 			])) : K("", !0)], 2),
-			U("span", NFe, A(e.hint), 1)
-		], 8, MFe)), 64))]));
+			U("span", FFe, A(e.hint), 1)
+		], 8, PFe)), 64))]));
 	}
-}), FFe = { "data-testid": "lib-settings" }, IFe = {
+}), LFe = { "data-testid": "lib-settings" }, RFe = {
 	class: "lib-top",
 	style: {
 		"padding-left": "0",
 		"padding-right": "0"
 	}
-}, LFe = {
+}, zFe = {
 	key: 0,
 	class: "trpg-settings",
 	"data-testid": "lib-prefs"
-}, RFe = { class: "trpg-settings__row" }, zFe = { class: "trpg-settings__row" }, BFe = { class: "trpg-settings__row" }, VFe = { class: "trpg-settings__row" }, HFe = { class: "trpg-settings__row" }, UFe = {
+}, BFe = { class: "trpg-settings__row" }, VFe = { class: "trpg-settings__row" }, HFe = { class: "trpg-settings__row" }, UFe = { class: "trpg-settings__row" }, WFe = { class: "trpg-settings__row" }, GFe = {
 	key: 1,
 	class: "lib-pad",
 	"data-testid": "lib-edits"
-}, WFe = {
+}, KFe = {
 	key: 2,
 	class: "lib-pad",
 	"data-testid": "lib-logs"
-}, GFe = {
+}, qFe = {
 	key: 0,
 	class: "lib-skel",
 	"aria-busy": "true"
-}, KFe = {
+}, JFe = {
 	key: 1,
 	class: "lib-state"
-}, qFe = { class: "lib-muted" }, JFe = {
+}, YFe = { class: "lib-muted" }, XFe = {
 	key: 0,
 	class: "lib-sumline"
-}, YFe = { style: {
+}, ZFe = { style: {
 	display: "flex",
 	gap: "var(--sp-2)",
 	"flex-wrap": "wrap"
-} }, XFe = {
+} }, QFe = {
 	key: 1,
 	class: "lib-muted"
-}, ZFe = ["data-tone"], QFe = { class: "lib-end lib-muted" }, $Fe = { class: "lib-fold__body" }, eIe = {
+}, $Fe = ["data-tone"], eIe = { class: "lib-end lib-muted" }, tIe = { class: "lib-fold__body" }, nIe = {
 	class: "lib-sec",
 	style: { "padding-bottom": "0" }
-}, tIe = {
+}, rIe = {
 	key: 2,
 	class: "lib-muted"
-}, nIe = { class: "trpg-badge" }, rIe = { class: "lib-end lib-src" }, iIe = { class: "lib-fold__body" }, aIe = /* @__PURE__ */ I({
+}, iIe = { class: "trpg-badge" }, aIe = { class: "lib-end lib-src" }, oIe = { class: "lib-fold__body" }, sIe = /* @__PURE__ */ I({
 	__name: "LibSettings",
 	setup(e) {
 		let t = Uk(), n = cA(), r = /* @__PURE__ */ j("prefs"), i = q(() => t.settings?.library);
@@ -76215,7 +76274,7 @@ var uFe = { class: "page-stack" }, dFe = {
 		function v(e) {
 			e && (r.value = e, e === "logs" && d());
 		}
-		return (e, t) => (B(), V("div", FFe, [U("div", IFe, [W(RA, {
+		return (e, t) => (B(), V("div", LFe, [U("div", RFe, [W(RA, {
 			"model-value": r.value,
 			label: "库设置分区",
 			options: [
@@ -76233,8 +76292,8 @@ var uFe = { class: "page-stack" }, dFe = {
 				}
 			],
 			"onUpdate:modelValue": v
-		}, null, 8, ["model-value"])]), r.value === "prefs" && i.value ? (B(), V("div", LFe, [
-			U("div", RFe, [
+		}, null, 8, ["model-value"])]), r.value === "prefs" && i.value ? (B(), V("div", zFe, [
+			U("div", BFe, [
 				t[5] ||= U("b", null, "分类方式", -1),
 				W(RA, {
 					"model-value": i.value.groupBy,
@@ -76250,7 +76309,7 @@ var uFe = { class: "page-stack" }, dFe = {
 				}, null, 8, ["model-value"]),
 				t[6] ||= U("span", { class: "trpg-field__hint" }, "书架里的书怎么分组", -1)
 			]),
-			U("div", zFe, [
+			U("div", VFe, [
 				t[7] ||= U("b", null, "编辑 / 覆盖默认作用于", -1),
 				W(RA, {
 					"model-value": i.value.overrideLevel,
@@ -76273,7 +76332,7 @@ var uFe = { class: "page-stack" }, dFe = {
 				}, null, 8, ["model-value"]),
 				t[8] ||= U("span", { class: "trpg-field__hint" }, "新做的编辑和覆盖默认生效在哪一层；本战役 = 这个战役的所有存档和分支", -1)
 			]),
-			U("div", BFe, [
+			U("div", HFe, [
 				t[9] ||= U("b", null, "导入时总是不预览", -1),
 				W(VF, {
 					"model-value": i.value.skipImportPreview,
@@ -76282,7 +76341,7 @@ var uFe = { class: "page-stack" }, dFe = {
 				}, null, 8, ["model-value"]),
 				t[10] ||= U("span", { class: "trpg-field__hint" }, "开着：选好文件直接导入，不再显示检查结果", -1)
 			]),
-			U("div", VFe, [
+			U("div", UFe, [
 				t[11] ||= U("b", null, "下载时不提示依赖", -1),
 				W(VF, {
 					"model-value": i.value.skipDependencyPrompt,
@@ -76291,7 +76350,7 @@ var uFe = { class: "page-stack" }, dFe = {
 				}, null, 8, ["model-value"]),
 				t[12] ||= U("span", { class: "trpg-field__hint" }, "开着：下载自制包前不再列出会一起下载的依赖包（依赖仍会自动一起装）", -1)
 			]),
-			U("div", HFe, [
+			U("div", WFe, [
 				t[13] ||= U("b", null, "删除时总是不提示", -1),
 				W(VF, {
 					"model-value": i.value.skipRemovePrompt,
@@ -76301,22 +76360,22 @@ var uFe = { class: "page-stack" }, dFe = {
 				t[14] ||= U("span", { class: "trpg-field__hint" }, "开着：删除或卸载前不再显示\"会影响谁\"。建议保持关闭", -1)
 			]),
 			t[15] ||= U("p", { class: "trpg-hint" }, "读取存档不会改变这里的任何设置。", -1)
-		])) : r.value === "edits" ? (B(), V("div", UFe, [W(m8, { scope: { kind: "all" } })])) : r.value === "logs" ? (B(), V("div", WFe, [l.value ? (B(), V("div", GFe, [...t[16] ||= [U("i", null, null, -1), U("i", { style: { width: "70%" } }, null, -1)]])) : u.value ? (B(), V("div", KFe, [
+		])) : r.value === "edits" ? (B(), V("div", GFe, [W(m8, { scope: { kind: "all" } })])) : r.value === "logs" ? (B(), V("div", KFe, [l.value ? (B(), V("div", qFe, [...t[16] ||= [U("i", null, null, -1), U("i", { style: { width: "70%" } }, null, -1)]])) : u.value ? (B(), V("div", JFe, [
 			t[17] ||= U("h3", null, "日志读不出来", -1),
-			U("p", qFe, A(u.value), 1),
+			U("p", YFe, A(u.value), 1),
 			U("button", {
 				class: "trpg-btn trpg-btn--primary",
 				type: "button",
 				onClick: d
 			}, "重试")
 		])) : (B(), V(z, { key: 2 }, [
-			o.value ? (B(), V("div", JFe, [
+			o.value ? (B(), V("div", XFe, [
 				U("span", null, [t[18] ||= G("ok ", -1), U("b", null, A(o.value.summary.ok), 1)]),
 				U("span", null, [t[19] ||= G("info ", -1), U("b", null, A(o.value.summary.info), 1)]),
 				U("span", null, [t[20] ||= G("warn ", -1), U("b", null, A(o.value.summary.warn), 1)]),
 				U("span", null, [t[21] ||= G("error ", -1), U("b", null, A(o.value.summary.error), 1)])
 			])) : K("", !0),
-			U("div", YFe, [
+			U("div", ZFe, [
 				U("button", {
 					class: "trpg-btn trpg-btn--small",
 					type: "button",
@@ -76342,7 +76401,7 @@ var uFe = { class: "page-stack" }, dFe = {
 					size: 14
 				}), t[24] ||= G("重新读取", -1)])
 			]),
-			o.value && !o.value.summary.warn && !o.value.summary.error ? (B(), V("p", XFe, "一切正常。")) : K("", !0),
+			o.value && !o.value.summary.warn && !o.value.summary.error ? (B(), V("p", QFe, "一切正常。")) : K("", !0),
 			(B(!0), V(z, null, R(p.value, (e, t) => (B(), V("details", {
 				key: `h${t}`,
 				class: "lib-fold"
@@ -76350,20 +76409,20 @@ var uFe = { class: "page-stack" }, dFe = {
 				U("span", {
 					class: "trpg-badge",
 					"data-tone": e.level === "error" ? void 0 : e.level === "warn" ? "warn" : e.level === "ok" ? "success" : void 0
-				}, A(e.level), 9, ZFe),
+				}, A(e.level), 9, $Fe),
 				U("b", null, A(e.title), 1),
-				U("span", QFe, A(e.count) + " 条", 1)
-			]), U("pre", $Fe, A(e.stale ? "旧数据的报告，仅供参考\n" : "") + A(g(e.details)), 1)]))), 128)),
-			U("div", eIe, "后端日志（最近 " + A(s.value.length) + " / 共 " + A(c.value) + " 条）", 1),
-			s.value.length ? K("", !0) : (B(), V("p", tIe, "还没有日志。")),
+				U("span", eIe, A(e.count) + " 条", 1)
+			]), U("pre", tIe, A(e.stale ? "旧数据的报告，仅供参考\n" : "") + A(g(e.details)), 1)]))), 128)),
+			U("div", nIe, "后端日志（最近 " + A(s.value.length) + " / 共 " + A(c.value) + " 条）", 1),
+			s.value.length ? K("", !0) : (B(), V("p", rIe, "还没有日志。")),
 			(B(!0), V(z, null, R(s.value, (e) => (B(), V("details", {
 				key: e.id,
 				class: "lib-fold"
 			}, [U("summary", null, [
-				U("span", nIe, A(e.level), 1),
+				U("span", iIe, A(e.level), 1),
 				U("b", null, A(e.message), 1),
-				U("span", rIe, A(_(e.at)) + " · " + A(e.source), 1)
-			]), U("pre", iIe, A(e.kind) + A(e.detail ? `\n${g(e.detail)}` : ""), 1)]))), 128))
+				U("span", aIe, A(_(e.at)) + " · " + A(e.source), 1)
+			]), U("pre", oIe, A(e.kind) + A(e.detail ? `\n${g(e.detail)}` : ""), 1)]))), 128))
 		], 64))])) : K("", !0)]));
 	}
 }), e9 = /* @__PURE__ */ xr({});
@@ -76384,7 +76443,7 @@ async function n9(e, t, n) {
 		console.error(`[trpg-assistant] 探针 ${e} 出错`, n), t9(e, t, "error", n instanceof Error ? n.message : String(n));
 	}
 }
-function oIe(e) {
+function cIe(e) {
 	return {
 		generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
 		env: e,
@@ -76393,7 +76452,7 @@ function oIe(e) {
 }
 // src/probes/envProbe.ts
 var r9 = "env", i9 = "宿主与设备环境";
-function sIe() {
+function lIe() {
 	let e = document.createElement("div");
 	e.style.cssText = "position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top)", document.body.appendChild(e);
 	let t = getComputedStyle(e).paddingTop;
@@ -76423,7 +76482,7 @@ async function a9(e) {
 			dpr: window.devicePixelRatio
 		},
 		coarsePointer: window.matchMedia("(pointer: coarse)").matches,
-		safeAreaTop: sIe(),
+		safeAreaTop: lIe(),
 		contextKeys: Object.keys(e).sort(),
 		libsKeys: Object.keys(window.SillyTavern?.libs ?? {}).sort(),
 		hasSetExtensionPrompt: typeof e.setExtensionPrompt == "function",
@@ -76432,7 +76491,7 @@ async function a9(e) {
 		tauri: t
 	};
 }
-function cIe(e) {
+function uIe(e) {
 	let t = () => n9(r9, i9, async () => {
 		let t = await a9(e), n = t.tauri;
 		t9(r9, i9, "info", n.present ? "检测到 TauriTavern 宿主" : "未检测到 TauriTavern（普通 SillyTavern）", t);
@@ -76449,7 +76508,7 @@ function cIe(e) {
 	};
 }
 // src/probes/backendChain.ts
-async function lIe(e, t, n, r, i, a) {
+async function dIe(e, t, n, r, i, a) {
 	let o = `${n.codeSet}-official`, s = await e.parsed(o, r);
 	for (let e = 0; e < s.items.length; e++) {
 		let c = s.items[e], l = s.hashes[e];
@@ -76467,8 +76526,8 @@ async function lIe(e, t, n, r, i, a) {
 	}
 	throw Error(`【库】里找不到带英文对照的 ${i} ${r}（先装中英官方）`);
 }
-async function uIe(e, t, n) {
-	let r = (r, i, a) => lIe(e, t, n, r, i, a);
+async function fIe(e, t, n) {
+	let r = (r, i, a) => dIe(e, t, n, r, i, a);
 	return {
 		build: [
 			await r("race", "PHB", (e) => !!e.size && !String(e.name).includes("(")),
@@ -76528,7 +76587,7 @@ async function m9(e, t, n, r = () => !0, i) {
 function h9(e) {
 	return (e?.system)?.attributes?.hp?.value;
 }
-async function dIe() {
+async function pIe() {
 	let e = p9(), { library: t, kernel: n, kernelSave: r } = e.backend, i = [], a = x(f9, "cn");
 	await n.close(d9.ownerKey), await e.db.workspaces.clear(), await e.db.saves.clear(), await m9(i, "新战役并绑定结算内核", async () => (await e.campaign.startNewCampaign({
 		...d9,
@@ -76544,7 +76603,7 @@ async function dIe() {
 		revision: 0,
 		undo: []
 	}))));
-	let o = await m9(i, "从【库】挑真实条目", () => uIe(t.service, t.scoped, a), () => !0, (e) => [
+	let o = await m9(i, "从【库】挑真实条目", () => fIe(t.service, t.scoped, a), () => !0, (e) => [
 		...e.build,
 		...e.equipment,
 		e.monster
@@ -76676,7 +76735,7 @@ async function dIe() {
 		rebuilt: h
 	});
 }
-async function fIe() {
+async function mIe() {
 	let { tasks: e } = p9().backend.library, t = {};
 	for (let n of ["cn-official", "en-official"]) {
 		let r = performance.now(), i = e.startOfficial(n), a = setInterval(() => {
@@ -76694,11 +76753,11 @@ async function fIe() {
 	}
 	t9(l9, u9, "pass", `中英官方都装好：${Object.entries(t).map(([e, t]) => `${e} ${t.seconds} 秒`).join("，")}`, t);
 }
-async function pIe() {
+async function hIe() {
 	let e = await Db(), t = (e) => e === null ? "未知" : `${Math.round(e / 1048576)}MB`;
 	t9(l9, u9, "info", `存储：已用 ${t(e.usage)} / 可用上限 ${t(e.quota)}；持久存储 ${e.persisted === null ? "未知" : e.persisted ? "已授予" : "未授予"}`, e);
 }
-function mIe() {
+function gIe() {
 	return {
 		id: l9,
 		title: u9,
@@ -76706,15 +76765,15 @@ function mIe() {
 		actions: [
 			{
 				label: "①装中英官方",
-				run: () => n9(l9, u9, fIe)
+				run: () => n9(l9, u9, mIe)
 			},
 			{
 				label: "②全线验证（断网时即断网验证）",
-				run: () => n9(l9, u9, dIe)
+				run: () => n9(l9, u9, pIe)
 			},
 			{
 				label: "③存储空间",
-				run: () => n9(l9, u9, pIe)
+				run: () => n9(l9, u9, hIe)
 			}
 		]
 	};
@@ -76730,7 +76789,7 @@ var g9 = "events", _9 = "聊天事件", v9 = [
 	["GENERATION_STARTED", "generation_started"],
 	["GENERATION_ENDED", "generation_ended"]
 ];
-function hIe(e) {
+function _Ie(e) {
 	let t = {}, n = [], r = () => {
 		let e = v9.map(([e]) => e).filter((e) => !t[e]);
 		t9(g9, _9, "info", e.length ? `尚未观察到：${e.join("、")}` : "全部事件都已观察到", {
@@ -76760,7 +76819,7 @@ function hIe(e) {
 }
 // src/probes/identityProbe.ts
 var y9 = "identity", b9 = "角色卡 / 群组 / 聊天标识";
-function gIe(e) {
+function vIe(e) {
 	let t = e.characterId === void 0 ? void 0 : e.characters?.[Number(e.characterId)];
 	return {
 		characterId: e.characterId ?? null,
@@ -76773,9 +76832,9 @@ function gIe(e) {
 		user: e.name1 ?? null
 	};
 }
-function _Ie(e) {
+function yIe(e) {
 	let t = [], n = () => {
-		let n = gIe(e), r = JSON.stringify([
+		let n = vIe(e), r = JSON.stringify([
 			n.characterId,
 			n.groupId,
 			n.chatId
@@ -76803,7 +76862,7 @@ function _Ie(e) {
 }
 // src/probes/libraryProbe.ts
 var x9 = "library-b3", S9 = "【库】真机验证（B3）", C9 = () => c9().backend.library;
-function vIe() {
+function bIe() {
 	return {
 		id: x9,
 		title: S9,
@@ -76887,7 +76946,7 @@ function D9(e, t) {
 	let n = e.indexOf(t);
 	if (!(n < 0)) return e.slice(Math.max(0, n - 6), n + t.length + 12);
 }
-function yIe(e, t) {
+function xIe(e, t) {
 	let n = e?.chat;
 	if (Array.isArray(n)) for (let e = 0; e < n.length; e++) {
 		let r = n[e];
@@ -76906,18 +76965,18 @@ function O9(e) {
 		inject: t.includes(T9),
 		commentSnippet: D9(t, w9),
 		injectSnippet: D9(t, T9),
-		injectAt: yIe(e, T9)
+		injectAt: xIe(e, T9)
 	};
 }
 // src/probes/llmLogAudit.ts
-function bIe(e) {
+function SIe(e) {
 	if (e && typeof e == "object") {
 		let t = e;
 		return t.id ?? t.key ?? t.logId ?? t.name;
 	}
 	return e;
 }
-async function xIe() {
+async function CIe() {
 	let e = (await We())?.api?.dev?.llmApiLogs;
 	if (!e?.index || !e.getRaw) return {
 		status: "info",
@@ -76938,7 +76997,7 @@ async function xIe() {
 		summary: "请求日志为空（可能未开启记录，或还没有发过请求）",
 		detail: a
 	};
-	let o = O9(await e.getRaw(bIe(r)));
+	let o = O9(await e.getRaw(SIe(r)));
 	return a.scan = o, a.markers = [w9, T9], {
 		status: "info",
 		summary: `最近一次请求原文：${o.comment ? `含注释标记${o.commentIntact ? "（符号完整）" : "（符号被改）"}` : "无注释标记"}；${o.inject ? "含注入标记" : "无注入标记"}`,
@@ -76947,14 +77006,14 @@ async function xIe() {
 }
 // src/probes/promptProbes.ts
 var k9 = "comment", A9 = "注释是否进入发给 AI 的请求", j9 = "inject", M9 = "提示词注入是否生效", N9 = "input", P9 = "写入与读取输入框", F9 = "tavern-trpg-assistant_probe", I9 = 1, L9 = 0;
-function SIe(e) {
+function wIe(e) {
 	return e?.dryRun === !0;
 }
-function CIe(e) {
+function TIe(e) {
 	let t = !1, n = !1, r = "", i = [], a = {}, o = (e) => (t) => {
 		i.push({
 			event: e,
-			dryRun: SIe(t),
+			dryRun: wIe(t),
 			...O9(t)
 		});
 	}, s = () => {
@@ -77012,7 +77071,7 @@ function CIe(e) {
 	u.actions.push({
 		label: "从 TauriTavern 请求日志核对",
 		run: () => n9(k9, A9, async () => {
-			let e = await xIe();
+			let e = await CIe();
 			t9(k9, A9, e.status, e.summary, {
 				runType: r,
 				audit: e.detail,
@@ -77068,10 +77127,10 @@ function CIe(e) {
 	];
 }
 // src/probes/storageProbe.ts
-var R9 = "storage", z9 = "本地存储与持久性", wIe = `${Be}-m0`, TIe = 4194304;
-function EIe() {
+var R9 = "storage", z9 = "本地存储与持久性", EIe = `${Be}-m0`, DIe = 4194304;
+function OIe() {
 	return new Promise((e, t) => {
-		let n = indexedDB.open(wIe, 1);
+		let n = indexedDB.open(EIe, 1);
 		n.onupgradeneeded = () => n.result.createObjectStore("kv"), n.onsuccess = () => e(n.result), n.onerror = () => t(n.error);
 	});
 }
@@ -77081,16 +77140,16 @@ function B9(e, t, n) {
 		a.onsuccess = () => r(a.result), a.onerror = () => i(a.error);
 	});
 }
-function DIe(e) {
+function kIe(e) {
 	let t = () => n9(R9, z9, async () => {
-		let t = await EIe(), n = await B9(t, "readonly", (e) => e.get("boot")), r = (/* @__PURE__ */ new Date()).toISOString(), i = {
+		let t = await OIe(), n = await B9(t, "readonly", (e) => e.get("boot")), r = (/* @__PURE__ */ new Date()).toISOString(), i = {
 			count: (n?.count ?? 0) + 1,
 			firstAt: n?.firstAt ?? r,
 			lastAt: r
 		};
 		await B9(t, "readwrite", (e) => e.put(i, "boot"));
 		let a = !!await B9(t, "readonly", (e) => e.get("blob"));
-		a || await B9(t, "readwrite", (e) => e.put(new Uint8Array(TIe), "blob"));
+		a || await B9(t, "readwrite", (e) => e.put(new Uint8Array(DIe), "blob"));
 		let o = await B9(t, "readonly", (e) => e.get("blob"));
 		t.close();
 		let s = await navigator.storage?.persisted?.() ?? null, c = await navigator.storage?.estimate?.() ?? null, l = e.extensionSettings[Be] ??= {}, u = Number(l.probeBootCount ?? 0);
@@ -77125,7 +77184,7 @@ function DIe(e) {
 	};
 }
 // src/probes/tauriProbe.ts
-var V9 = "tauri", H9 = "TauriTavern 扩展接口", U9 = `${Be}-m0`, OIe = "/scripts/tauritavern/layout-kit.js", kIe = [
+var V9 = "tauri", H9 = "TauriTavern 扩展接口", U9 = `${Be}-m0`, AIe = "/scripts/tauritavern/layout-kit.js", jIe = [
 	"current",
 	"getCurrent",
 	"active",
@@ -77153,7 +77212,7 @@ async function G9(e, t) {
 		};
 	}
 }
-function AIe(e) {
+function MIe(e) {
 	if (Array.isArray(e)) {
 		let t = e[0];
 		return {
@@ -77174,10 +77233,10 @@ function K9(e) {
 	let t = e;
 	return t.ok ? {
 		ok: !0,
-		shape: AIe(t.value)
+		shape: MIe(t.value)
 	} : t;
 }
-async function jIe(e) {
+async function NIe(e) {
 	if (typeof e.searchMessages == "function" || e.store) return {
 		handle: e,
 		via: "api.chat 本身"
@@ -77190,7 +77249,7 @@ async function jIe(e) {
 			via: "api.chat.current.handle()"
 		};
 	}
-	for (let t of kIe) {
+	for (let t of jIe) {
 		let n = e[t];
 		if (typeof n == "function") {
 			let r = await G9(`api.chat.${t}()`, () => n.call(e)), i = r.value;
@@ -77208,7 +77267,7 @@ async function jIe(e) {
 		via: null
 	};
 }
-function MIe() {
+function PIe() {
 	let e = () => n9(V9, H9, async () => {
 		if (!window.__TAURITAVERN__) {
 			t9(V9, H9, "info", "不是 TauriTavern，跳过（扩展将使用酒馆通用能力）");
@@ -77217,9 +77276,9 @@ function MIe() {
 		let e = (await We())?.api ?? {}, t = e.chat ?? {}, n = { apiShape: W9(e, 3) };
 		n.layoutKitExports = await G9("layout-kit 导入", () => import(
 			/* @vite-ignore */
-			OIe
+			AIe
 ).then((e) => Object.keys(e)));
-		let { handle: r, via: i } = await jIe(t);
+		let { handle: r, via: i } = await NIe(t);
 		if (n.handleVia = i, r) {
 			let e = r;
 			n.handleShape = W9(r, 2), e.searchMessages && (n.searchMessages = K9(await G9("searchMessages", () => e.searchMessages({
@@ -77271,20 +77330,20 @@ function MIe() {
 	};
 }
 // src/probes/index.ts
-function NIe(e) {
+function FIe(e) {
 	return [
-		vIe(),
-		mIe(),
-		cIe(e),
-		...CIe(e),
-		DIe(e),
+		bIe(),
+		gIe(),
+		uIe(e),
+		...TIe(e),
+		kIe(e),
+		yIe(e),
 		_Ie(e),
-		hIe(e),
-		MIe()
+		PIe()
 	];
 }
 // src/ui/views/LabModalPage.vue?vue&type=script&setup=true&lang.ts
-var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I({
+var IIe = ["data-testid"], LIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I({
 	__name: "LabModalPage",
 	props: { level: {} },
 	setup(e) {
@@ -77316,7 +77375,7 @@ var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I(
 				}),
 				n[1] ||= G("前进一页。", -1)
 			]),
-			U("ul", FIe, [(B(), V(z, null, R(30, (e) => U("li", {
+			U("ul", LIe, [(B(), V(z, null, R(30, (e) => U("li", {
 				key: e,
 				class: "trpg-row"
 			}, [U("span", null, "演示行 " + A(e), 1)])), 64))]),
@@ -77325,18 +77384,18 @@ var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I(
 				type: "button",
 				onClick: i
 			}, "弹窗内确认")
-		], 8, PIe));
+		], 8, IIe));
 	}
-}), IIe = { class: "probe" }, LIe = { class: "lab" }, RIe = { class: "lab__row" }, zIe = {
+}), RIe = { class: "probe" }, zIe = { class: "lab" }, BIe = { class: "lab__row" }, VIe = {
 	class: "probe__hint",
 	"data-testid": "select-model"
-}, BIe = { class: "lab__row" }, VIe = { class: "lab__row" }, HIe = {
+}, HIe = { class: "lab__row" }, UIe = { class: "lab__row" }, WIe = {
 	class: "probe__hint",
 	"data-testid": "combo-model"
-}, UIe = { class: "probe__actions" }, WIe = { class: "lab__row" }, GIe = { class: "trpg-row" }, KIe = { class: "trpg-row__main" }, qIe = { "data-testid": "switch-state" }, JIe = {
+}, GIe = { class: "probe__actions" }, KIe = { class: "lab__row" }, qIe = { class: "trpg-row" }, JIe = { class: "trpg-row__main" }, YIe = { "data-testid": "switch-state" }, XIe = {
 	class: "probe__hint",
 	"data-testid": "menu-pick"
-}, YIe = { class: "probe__actions" }, XIe = { class: "probe__head" }, ZIe = { class: "probe__title" }, QIe = ["data-status"], $Ie = { class: "probe__hint" }, eLe = { class: "probe__actions" }, tLe = ["onClick"], nLe = ["onClick"], rLe = /* @__PURE__ */ I({
+}, ZIe = { class: "probe__actions" }, QIe = { class: "probe__head" }, $Ie = { class: "probe__title" }, eLe = ["data-status"], tLe = { class: "probe__hint" }, nLe = { class: "probe__actions" }, rLe = ["onClick"], iLe = ["onClick"], aLe = /* @__PURE__ */ I({
 	__name: "UiLab",
 	setup(e) {
 		let t = [
@@ -77391,10 +77450,10 @@ var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I(
 		function g(e, t, n) {
 			t9(e, t, n, n === "pass" ? "人工确认：通过" : "人工确认：不通过");
 		}
-		return (e, f) => (B(), V("section", IIe, [
+		return (e, f) => (B(), V("section", RIe, [
 			f[15] ||= U("h3", { class: "probe__title" }, "界面实测（需要你目测后点结果）", -1),
-			U("div", LIe, [
-				U("div", RIe, [
+			U("div", zIe, [
+				U("div", BIe, [
 					W(WF, {
 						modelValue: n.value,
 						"onUpdate:modelValue": f[0] ||= (e) => n.value = e,
@@ -77413,7 +77472,7 @@ var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I(
 						],
 						placeholder: "下拉测试：选择环阶"
 					}, null, 8, ["modelValue"]),
-					U("p", zIe, "下拉当前值：" + A(n.value || "未选") + " / " + A(r.value || "未选"), 1),
+					U("p", VIe, "下拉当前值：" + A(n.value || "未选") + " / " + A(r.value || "未选"), 1),
 					W(WF, {
 						modelValue: r.value,
 						"onUpdate:modelValue": f[1] ||= (e) => r.value = e,
@@ -77426,7 +77485,7 @@ var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I(
 						placeholder: "下拉测试：选择颜色"
 					}, null, 8, ["modelValue"])
 				]),
-				U("div", BIe, [
+				U("div", HIe, [
 					W(RA, {
 						modelValue: i.value,
 						"onUpdate:modelValue": f[2] ||= (e) => i.value = e,
@@ -77461,7 +77520,7 @@ var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I(
 						placeholder: "输入测试：中文 / English"
 					}, null, 512), [[Ru, o.value]])
 				]),
-				U("div", VIe, [
+				U("div", UIe, [
 					W(w5, {
 						modelValue: c.value,
 						"onUpdate:modelValue": f[5] ||= (e) => c.value = e,
@@ -77469,17 +77528,17 @@ var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I(
 						label: "可搜索下拉演示",
 						placeholder: "搜索 300 条法术"
 					}, null, 8, ["modelValue", "options"]),
-					U("p", HIe, "可搜索下拉当前值：" + A(c.value || "未选"), 1),
-					U("div", UIe, [(B(!0), V(z, null, R(u.value, (e) => (B(), H(Z8, {
+					U("p", WIe, "可搜索下拉当前值：" + A(c.value || "未选"), 1),
+					U("div", GIe, [(B(!0), V(z, null, R(u.value, (e) => (B(), H(Z8, {
 						key: e,
 						label: e,
 						owner: "盖尔",
 						onRemove: (t) => u.value = u.value.filter((t) => t !== e)
 					}, null, 8, ["label", "onRemove"]))), 128))])
 				]),
-				U("div", WIe, [
-					U("div", GIe, [
-						U("span", KIe, [f[12] ||= G("开关演示：", -1), U("span", qIe, A(s.value ? "开" : "关"), 1)]),
+				U("div", KIe, [
+					U("div", qIe, [
+						U("span", JIe, [f[12] ||= G("开关演示：", -1), U("span", YIe, A(s.value ? "开" : "关"), 1)]),
 						W(VF, {
 							modelValue: s.value,
 							"onUpdate:modelValue": f[6] ||= (e) => s.value = e,
@@ -77507,12 +77566,12 @@ var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I(
 							onSelect: f[7] ||= (e) => d.value = e
 						})
 					]),
-					U("p", JIe, "菜单选择：" + A(d.value || "无"), 1),
+					U("p", XIe, "菜单选择：" + A(d.value || "无"), 1),
 					U("p", null, [f[14] ||= G("下划线术语：", -1), W(iI, { onOpen: m }, {
 						default: P(() => [...f[13] ||= [G("点我打开演示弹窗", -1)]]),
 						_: 1
 					})]),
-					U("div", YIe, [
+					U("div", ZIe, [
 						U("button", {
 							class: "trpg-btn",
 							type: "button",
@@ -77542,33 +77601,33 @@ var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I(
 				key: e.id,
 				class: "probe"
 			}, [
-				U("div", XIe, [U("h4", ZIe, A(e.title), 1), U("span", {
+				U("div", QIe, [U("h4", $Ie, A(e.title), 1), U("span", {
 					class: "trpg-badge",
 					"data-status": N(e9)[e.id]?.status ?? "idle"
-				}, A(N(e9)[e.id]?.status ?? "待测"), 9, QIe)]),
-				U("p", $Ie, A(e.how), 1),
-				U("div", eLe, [U("button", {
+				}, A(N(e9)[e.id]?.status ?? "待测"), 9, eLe)]),
+				U("p", tLe, A(e.how), 1),
+				U("div", nLe, [U("button", {
 					class: "trpg-btn",
 					type: "button",
 					onClick: (t) => g(e.id, e.title, "pass")
-				}, "通过", 8, tLe), U("button", {
+				}, "通过", 8, rLe), U("button", {
 					class: "trpg-btn",
 					type: "button",
 					onClick: (t) => g(e.id, e.title, "fail")
-				}, "不通过", 8, nLe)])
+				}, "不通过", 8, iLe)])
 			])), 64))
 		]));
 	}
-}), iLe = { class: "probe__head" }, aLe = { class: "probe__title" }, oLe = ["data-status"], sLe = { class: "probe__hint" }, cLe = {
+}), oLe = { class: "probe__head" }, sLe = { class: "probe__title" }, cLe = ["data-status"], lLe = { class: "probe__hint" }, uLe = {
 	key: 0,
 	class: "probe__summary"
-}, lLe = { class: "probe__actions" }, uLe = ["onClick"], dLe = { key: 1 }, fLe = { class: "report-bar" }, pLe = { role: "status" }, mLe = /* @__PURE__ */ I({
+}, dLe = { class: "probe__actions" }, fLe = ["onClick"], pLe = { key: 1 }, mLe = { class: "report-bar" }, hLe = { role: "status" }, gLe = /* @__PURE__ */ I({
 	__name: "ProbeList",
 	props: { ctx: {} },
 	setup(e) {
-		let t = e.ctx, n = NIe(t), r = /* @__PURE__ */ j("");
+		let t = e.ctx, n = FIe(t), r = /* @__PURE__ */ j("");
 		async function i() {
-			return JSON.stringify(oIe(await a9(t)), null, 2);
+			return JSON.stringify(cIe(await a9(t)), null, 2);
 		}
 		async function a() {
 			let e = await i();
@@ -77588,22 +77647,22 @@ var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I(
 				key: e.id,
 				class: "probe"
 			}, [
-				U("div", iLe, [U("h3", aLe, A(e.title), 1), U("span", {
+				U("div", oLe, [U("h3", sLe, A(e.title), 1), U("span", {
 					class: "trpg-badge",
 					"data-status": N(e9)[e.id]?.status ?? "idle"
-				}, A(N(e9)[e.id]?.status ?? "待测"), 9, oLe)]),
-				U("p", sLe, A(e.hint), 1),
-				N(e9)[e.id] ? (B(), V("p", cLe, A(N(e9)[e.id].summary), 1)) : K("", !0),
-				U("div", lLe, [(B(!0), V(z, null, R(e.actions, (e) => (B(), V("button", {
+				}, A(N(e9)[e.id]?.status ?? "待测"), 9, cLe)]),
+				U("p", lLe, A(e.hint), 1),
+				N(e9)[e.id] ? (B(), V("p", uLe, A(N(e9)[e.id].summary), 1)) : K("", !0),
+				U("div", dLe, [(B(!0), V(z, null, R(e.actions, (e) => (B(), V("button", {
 					key: e.label,
 					class: "trpg-btn",
 					type: "button",
 					onClick: (t) => e.run()
-				}, A(e.label), 9, uLe))), 128))]),
-				N(e9)[e.id]?.detail === void 0 ? K("", !0) : (B(), V("details", dLe, [t[2] ||= U("summary", null, "详情", -1), U("pre", null, A(JSON.stringify(N(e9)[e.id].detail, null, 2)), 1)]))
+				}, A(e.label), 9, fLe))), 128))]),
+				N(e9)[e.id]?.detail === void 0 ? K("", !0) : (B(), V("details", pLe, [t[2] ||= U("summary", null, "详情", -1), U("pre", null, A(JSON.stringify(N(e9)[e.id].detail, null, 2)), 1)]))
 			]))), 128)),
-			W(rLe),
-			U("div", fLe, [
+			W(aLe),
+			U("div", mLe, [
 				U("button", {
 					class: "trpg-btn trpg-btn--primary",
 					type: "button",
@@ -77614,22 +77673,22 @@ var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I(
 					type: "button",
 					onClick: t[1] ||= (e) => o()
 				}, "保存报告到扩展设置"),
-				U("span", pLe, A(r.value), 1)
+				U("span", hLe, A(r.value), 1)
 			])
 		]));
 	}
-}), hLe = {
+}), _Le = {
 	key: 0,
 	class: "trpg-menu",
 	"data-testid": "settings-menu"
-}, gLe = ["data-testid", "onClick"], _Le = { key: 1 }, vLe = { class: "trpg-pagehead" }, yLe = {
+}, vLe = ["data-testid", "onClick"], yLe = { key: 1 }, bLe = { class: "trpg-pagehead" }, xLe = {
 	key: 2,
 	class: "trpg-diag",
 	"data-testid": "diagnostics"
-}, bLe = {
+}, SLe = {
 	key: 3,
 	class: "trpg-about page-stack"
-}, xLe = { class: "trpg-group trpg-group--first" }, SLe = /* @__PURE__ */ I({
+}, CLe = { class: "trpg-group trpg-group--first" }, wLe = /* @__PURE__ */ I({
 	__name: "SettingsView",
 	setup(e) {
 		let t = Wi("stCtx"), n = /* @__PURE__ */ j(null), r = Uk();
@@ -77661,7 +77720,7 @@ var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I(
 			diag: "诊断",
 			about: "关于"
 		};
-		return (e, r) => n.value === null ? (B(), V("div", hLe, [(B(), V(z, null, R(i, (e) => U("button", {
+		return (e, r) => n.value === null ? (B(), V("div", _Le, [(B(), V(z, null, R(i, (e) => U("button", {
 			key: e.id,
 			class: "trpg-menu__row",
 			type: "button",
@@ -77674,7 +77733,7 @@ var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I(
 				name: "caret-right",
 				size: 16
 			})])
-		], 8, gLe)), 64))])) : (B(), V("div", _Le, [
+		], 8, vLe)), 64))])) : (B(), V("div", yLe, [
 			U("button", {
 				class: "trpg-back",
 				type: "button",
@@ -77684,18 +77743,18 @@ var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I(
 				name: "caret-left",
 				size: 16
 			}), r[1] ||= G("设置", -1)]),
-			U("h2", vLe, A(a[n.value]), 1),
-			n.value === "backup" ? (B(), H(PFe, { key: 0 })) : n.value === "library" ? (B(), H(aIe, { key: 1 })) : n.value === "diag" ? (B(), V("div", yLe, [N(t) ? (B(), H(mLe, {
+			U("h2", bLe, A(a[n.value]), 1),
+			n.value === "backup" ? (B(), H(IFe, { key: 0 })) : n.value === "library" ? (B(), H(sIe, { key: 1 })) : n.value === "diag" ? (B(), V("div", xLe, [N(t) ? (B(), H(gLe, {
 				key: 0,
 				ctx: N(t)
-			}, null, 8, ["ctx"])) : K("", !0)])) : (B(), V("div", bLe, [
-				U("h3", xLe, "TRPG 跑团助手 " + A(N(fk)), 1),
+			}, null, 8, ["ctx"])) : K("", !0)])) : (B(), V("div", SLe, [
+				U("h3", CLe, "TRPG 跑团助手 " + A(N(fk)), 1),
 				r[2] ||= U("p", { class: "page-intro" }, "代码以 AGPL-3.0 许可发布，源码在 GitHub：didhogg/tavern-trpg-assistant。", -1),
 				r[3] ||= U("p", { class: "page-intro" }, "界面图标：Phosphor Icons（MIT）。规则数据的来源与许可见各条目的出处标注与随包附带的数据声明。", -1)
 			]))
 		]));
 	}
-}), CLe = { class: "trpg-head__chips" }, wLe = { class: "trpg-chip__camp" }, TLe = { class: "trpg-chip__save" }, ELe = /* @__PURE__ */ I({
+}), TLe = { class: "trpg-head__chips" }, ELe = { class: "trpg-chip__camp" }, DLe = { class: "trpg-chip__save" }, OLe = /* @__PURE__ */ I({
 	__name: "HeaderChips",
 	props: { layout: {} },
 	setup(e) {
@@ -77710,7 +77769,7 @@ var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I(
 			e === "saves" ? X7() : o.windowOpen = !1;
 		}
 		let f = () => a.info("另一个窗口正在使用这份数据，这里只能查看");
-		return (e, n) => (B(), V("div", CLe, [s.value ? (B(), V(z, { key: 0 }, [
+		return (e, n) => (B(), V("div", TLe, [s.value ? (B(), V(z, { key: 0 }, [
 			t.layout === "narrow" ? K("", !0) : (B(), V("button", {
 				key: 0,
 				class: "trpg-pill trpg-chip",
@@ -77719,8 +77778,8 @@ var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I(
 				"aria-haspopup": "dialog",
 				onClick: n[0] ||= (...e) => N(X7) && N(X7)(...e)
 			}, [
-				U("span", wLe, A(l.value), 1),
-				U("span", TLe, "/ " + A(u.value), 1),
+				U("span", ELe, A(l.value), 1),
+				U("span", DLe, "/ " + A(u.value), 1),
 				W(Z, {
 					name: "caret-down",
 					size: 14
@@ -77747,21 +77806,21 @@ var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I(
 			onSelect: d
 		}, null, 8, ["items"])) : K("", !0)]));
 	}
-}), DLe = ["data-state"], OLe = [
+}), kLe = ["data-state"], ALe = [
 	"width",
 	"height",
 	"viewBox"
-], kLe = [
+], jLe = [
 	"cx",
 	"cy",
 	"r"
-], ALe = [
+], MLe = [
 	"cx",
 	"cy",
 	"r",
 	"stroke-dasharray",
 	"transform"
-], jLe = {
+], NLe = {
 	key: 0,
 	class: "trpg-ring__badge"
 }, J9 = /* @__PURE__ */ I({
@@ -77792,7 +77851,7 @@ var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I(
 			r: n.value,
 			fill: "none",
 			"stroke-width": "3"
-		}, null, 8, kLe), U("circle", {
+		}, null, 8, jLe), U("circle", {
 			"data-part": "arc",
 			cx: i.value,
 			cy: i.value,
@@ -77802,17 +77861,17 @@ var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I(
 			"stroke-linecap": "round",
 			"stroke-dasharray": a.value,
 			transform: e.state === "spin" ? void 0 : `rotate(-90 ${i.value} ${i.value})`
-		}, null, 8, ALe)], 8, OLe)), o.value ? (B(), V("span", jLe, A(o.value), 1)) : K("", !0)], 12, DLe));
+		}, null, 8, MLe)], 8, ALe)), o.value ? (B(), V("span", NLe, A(o.value), 1)) : K("", !0)], 12, kLe));
 	}
-}), MLe = [
+}), PLe = [
 	"aria-label",
 	"aria-expanded",
 	"aria-current"
-], NLe = ["data-state"], PLe = { class: "trpg-libmark__icon" }, FLe = {
+], FLe = ["data-state"], ILe = { class: "trpg-libmark__icon" }, LLe = {
 	key: 0,
 	class: "trpg-count",
 	"aria-hidden": "true"
-}, ILe = { key: 2 }, LLe = { class: "trpg-pop__ring" }, RLe = { class: "trpg-pop__main" }, zLe = { class: "trpg-pop__acts" }, BLe = [
+}, RLe = { key: 2 }, zLe = { class: "trpg-pop__ring" }, BLe = { class: "trpg-pop__main" }, VLe = { class: "trpg-pop__acts" }, HLe = [
 	"disabled",
 	"aria-label",
 	"onClick"
@@ -77930,7 +77989,7 @@ var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I(
 			class: "trpg-libmark",
 			"data-testid": "lib-ring",
 			"data-state": N(r).ring
-		}, [U("span", PLe, [
+		}, [U("span", ILe, [
 			W(J9, {
 				state: N(r).ring,
 				pct: N(r).pct
@@ -77939,8 +77998,8 @@ var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I(
 				name: "books",
 				size: 16
 			}),
-			N(r).count ? (B(), V("b", FLe, A(N(r).count), 1)) : K("", !0)
-		])], 8, NLe)), e.labeled ? (B(), V("span", ILe, "库")) : K("", !0)], 42, MLe), (B(), H(da, { to: N(o) ?? "body" }, [s.value && N(r).count ? (B(), V("div", {
+			N(r).count ? (B(), V("b", LLe, A(N(r).count), 1)) : K("", !0)
+		])], 8, FLe)), e.labeled ? (B(), V("span", RLe, "库")) : K("", !0)], 42, PLe), (B(), H(da, { to: N(o) ?? "body" }, [s.value && N(r).count ? (B(), V("div", {
 			key: 0,
 			ref_key: "pop",
 			ref: l,
@@ -77961,13 +78020,13 @@ var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I(
 			"data-status": "running",
 			"data-testid": "lib-pop-row"
 		}, [
-			U("span", LLe, [W(J9, {
+			U("span", zLe, [W(J9, {
 				state: e.pct === null ? "spin" : "running",
 				pct: e.pct ?? 0,
 				size: 26
 			}, null, 8, ["state", "pct"])]),
-			U("span", RLe, [U("b", null, A(e.label), 1), U("small", null, A(C.value.has(e.taskId) ? "正在取消…" : [e.stage, E(e)].filter(Boolean).join(" · ")), 1)]),
-			U("span", zLe, [U("button", {
+			U("span", BLe, [U("b", null, A(e.label), 1), U("small", null, A(C.value.has(e.taskId) ? "正在取消…" : [e.stage, E(e)].filter(Boolean).join(" · ")), 1)]),
+			U("span", VLe, [U("button", {
 				class: "trpg-icon-btn",
 				type: "button",
 				disabled: C.value.has(e.taskId),
@@ -77977,7 +78036,7 @@ var PIe = ["data-testid"], FIe = { class: "trpg-list" }, q9 = /* @__PURE__ */ I(
 			}, [W(Z, {
 				name: "x",
 				size: 14
-			})], 8, BLe)])
+			})], 8, HLe)])
 		]))), 128))], 36)) : K("", !0)], 8, ["to"]))], 64));
 	}
 }), X9 = "trpg-assistant:window";
@@ -77990,7 +78049,7 @@ function Z9(e, t, n) {
 		y: Math.min(Math.max(e.y, 0), Math.max(0, n - i))
 	};
 }
-function VLe(e, t) {
+function ULe(e, t) {
 	let n = Math.min(960, e - 32), r = Math.min(640, t - 32);
 	return Z9({
 		w: n,
@@ -77999,7 +78058,7 @@ function VLe(e, t) {
 		y: Math.round((t - r) / 2)
 	}, e, t);
 }
-function HLe(e, t) {
+function WLe(e, t) {
 	try {
 		let n = localStorage.getItem(X9);
 		if (n) {
@@ -78014,7 +78073,7 @@ function HLe(e, t) {
 	} catch (e) {
 		console.warn("[trpg-assistant] 读取窗口位置失败", e);
 	}
-	return VLe(e, t);
+	return ULe(e, t);
 }
 function Q9(e) {
 	try {
@@ -78024,26 +78083,26 @@ function Q9(e) {
 	}
 }
 // src/ui/shell/MainWindow.vue?vue&type=script&setup=true&lang.ts
-var ULe = ["data-layout", "data-fullscreen"], WLe = ["inert"], GLe = {
+var GLe = ["data-layout", "data-fullscreen"], KLe = ["inert"], qLe = {
 	key: 0,
 	class: "trpg-side",
 	"aria-label": "主导航"
-}, KLe = { class: "trpg-brandmark" }, qLe = {
+}, JLe = { class: "trpg-brandmark" }, YLe = {
 	key: 0,
 	class: "trpg-side__name"
-}, JLe = { class: "trpg-side__list" }, YLe = [
+}, XLe = { class: "trpg-side__list" }, ZLe = [
 	"aria-current",
 	"title",
 	"onClick"
-], XLe = { key: 0 }, ZLe = { class: "trpg-side__list trpg-side__bottom" }, QLe = [
+], QLe = { key: 0 }, $Le = { class: "trpg-side__list trpg-side__bottom" }, eRe = [
 	"aria-current",
 	"title",
 	"onClick"
-], $Le = { key: 0 }, eRe = { class: "trpg-main" }, tRe = ["inert"], nRe = { class: "trpg-head__title" }, rRe = ["inert"], iRe = ["data-flush"], aRe = ["aria-pressed"], oRe = {
+], tRe = { key: 0 }, nRe = { class: "trpg-main" }, rRe = ["inert"], iRe = { class: "trpg-head__title" }, aRe = ["inert"], oRe = ["data-flush"], sRe = ["aria-pressed"], cRe = {
 	key: 0,
 	class: "trpg-tabs",
 	"aria-label": "主导航"
-}, sRe = ["aria-current", "onClick"], cRe = /* @__PURE__ */ I({
+}, lRe = ["aria-current", "onClick"], uRe = /* @__PURE__ */ I({
 	__name: "MainWindow",
 	setup(e) {
 		let t = mA(), n = hA(), r = Wk(), i = q(() => [
@@ -78070,11 +78129,11 @@ var ULe = ["data-layout", "data-fullscreen"], WLe = ["inert"], GLe = {
 				bottom: !0
 			}
 		]), a = {
-			home: AFe,
-			people: cje,
-			settings: SLe,
+			home: MFe,
+			people: uje,
+			settings: wLe,
 			library: Fve
-		}, o = /* @__PURE__ */ j(window.innerWidth), s = /* @__PURE__ */ j(window.innerHeight), c = /* @__PURE__ */ j(HLe(o.value, s.value)), l = /* @__PURE__ */ j(null), u = /* @__PURE__ */ j(c.value.w), d = q(() => o.value <= 480), f = q(() => u.value >= 720 ? "wide" : u.value > 480 ? "mid" : "narrow"), p = q(() => d.value ? {} : {
+		}, o = /* @__PURE__ */ j(window.innerWidth), s = /* @__PURE__ */ j(window.innerHeight), c = /* @__PURE__ */ j(WLe(o.value, s.value)), l = /* @__PURE__ */ j(null), u = /* @__PURE__ */ j(c.value.w), d = q(() => o.value <= 480), f = q(() => u.value >= 720 ? "wide" : u.value > 480 ? "mid" : "narrow"), p = q(() => d.value ? {} : {
 			left: `${c.value.x}px`,
 			top: `${c.value.y}px`,
 			width: `${c.value.w}px`,
@@ -78163,16 +78222,16 @@ var ULe = ["data-layout", "data-fullscreen"], WLe = ["inert"], GLe = {
 			U("div", {
 				class: "trpg-shell",
 				inert: y.value
-			}, [f.value === "narrow" ? K("", !0) : (B(), V("nav", GLe, [
+			}, [f.value === "narrow" ? K("", !0) : (B(), V("nav", qLe, [
 				U("div", {
 					class: "trpg-side__brand",
 					title: "拖动窗口",
 					onPointerdown: C
-				}, [U("span", KLe, [W(Z, {
+				}, [U("span", JLe, [W(Z, {
 					name: "dice-five",
 					size: 18
-				})]), f.value === "wide" ? (B(), V("span", qLe, "TRPG 跑团助手")) : K("", !0)], 32),
-				U("ul", JLe, [(B(!0), V(z, null, R(b.value, (e) => (B(), V("li", { key: e.id }, [U("button", {
+				})]), f.value === "wide" ? (B(), V("span", YLe, "TRPG 跑团助手")) : K("", !0)], 32),
+				U("ul", XLe, [(B(!0), V(z, null, R(b.value, (e) => (B(), V("li", { key: e.id }, [U("button", {
 					class: "trpg-nav",
 					type: "button",
 					"aria-current": N(t).page === e.id ? "page" : void 0,
@@ -78181,8 +78240,8 @@ var ULe = ["data-layout", "data-fullscreen"], WLe = ["inert"], GLe = {
 				}, [W(Z, {
 					name: e.icon,
 					size: 20
-				}, null, 8, ["name"]), f.value === "wide" ? (B(), V("span", XLe, A(e.label), 1)) : K("", !0)], 8, YLe)]))), 128))]),
-				U("ul", ZLe, [(B(!0), V(z, null, R(x.value, (e) => (B(), V("li", { key: e.id }, [e.id === "library" ? (B(), H(Y9, {
+				}, null, 8, ["name"]), f.value === "wide" ? (B(), V("span", QLe, A(e.label), 1)) : K("", !0)], 8, ZLe)]))), 128))]),
+				U("ul", $Le, [(B(!0), V(z, null, R(x.value, (e) => (B(), V("li", { key: e.id }, [e.id === "library" ? (B(), H(Y9, {
 					key: 0,
 					variant: "side",
 					labeled: f.value === "wide"
@@ -78196,16 +78255,16 @@ var ULe = ["data-layout", "data-fullscreen"], WLe = ["inert"], GLe = {
 				}, [W(Z, {
 					name: e.icon,
 					size: 20
-				}, null, 8, ["name"]), f.value === "wide" ? (B(), V("span", $Le, A(e.label), 1)) : K("", !0)], 8, QLe))]))), 128))])
-			])), U("div", eRe, [
+				}, null, 8, ["name"]), f.value === "wide" ? (B(), V("span", tRe, A(e.label), 1)) : K("", !0)], 8, eRe))]))), 128))])
+			])), U("div", nRe, [
 				U("header", {
 					class: "trpg-head",
 					title: "拖动窗口",
 					inert: v.value,
 					onPointerdown: C
 				}, [
-					U("h1", nRe, A(m.value), 1),
-					W(ELe, { layout: f.value }, null, 8, ["layout"]),
+					U("h1", iRe, A(m.value), 1),
+					W(OLe, { layout: f.value }, null, 8, ["layout"]),
 					f.value === "narrow" ? K("", !0) : (B(), V("button", {
 						key: 0,
 						class: "trpg-icon-btn",
@@ -78216,7 +78275,7 @@ var ULe = ["data-layout", "data-fullscreen"], WLe = ["inert"], GLe = {
 						name: "x",
 						size: 18
 					})]))
-				], 40, tRe),
+				], 40, rRe),
 				U("div", {
 					class: "trpg-body",
 					inert: v.value
@@ -78224,7 +78283,7 @@ var ULe = ["data-layout", "data-fullscreen"], WLe = ["inert"], GLe = {
 					class: "trpg-content",
 					"data-flush": N(t).page === "settings" || N(t).page === "library" || N(t).page === "people" ? "true" : void 0,
 					tabindex: "-1"
-				}, [(B(), H(Co(a[N(t).page])))], 8, iRe), U("button", {
+				}, [(B(), H(Co(a[N(t).page])))], 8, oRe), U("button", {
 					class: "trpg-dice-btn",
 					type: "button",
 					"aria-label": "掷骰",
@@ -78233,8 +78292,8 @@ var ULe = ["data-layout", "data-fullscreen"], WLe = ["inert"], GLe = {
 				}, [W(Z, {
 					name: "dice-five",
 					size: 28
-				})], 8, aRe)], 8, rRe),
-				f.value === "narrow" ? (B(), V("nav", oRe, [(B(!0), V(z, null, R(i.value, (e) => (B(), V(z, { key: e.id }, [e.id === "library" ? (B(), H(Y9, {
+				})], 8, sRe)], 8, aRe),
+				f.value === "narrow" ? (B(), V("nav", cRe, [(B(!0), V(z, null, R(i.value, (e) => (B(), V(z, { key: e.id }, [e.id === "library" ? (B(), H(Y9, {
 					key: 0,
 					variant: "tab",
 					labeled: !0
@@ -78247,8 +78306,8 @@ var ULe = ["data-layout", "data-fullscreen"], WLe = ["inert"], GLe = {
 				}, [W(Z, {
 					name: e.icon,
 					size: 22
-				}, null, 8, ["name"]), U("span", null, A(e.label), 1)], 8, sRe))], 64))), 128))])) : K("", !0)
-			])], 8, WLe),
+				}, null, 8, ["name"]), U("span", null, A(e.label), 1)], 8, lRe))], 64))), 128))])) : K("", !0)
+			])], 8, KLe),
 			W(Eae, { onDrag: C }),
 			d.value ? K("", !0) : (B(), V("div", {
 				key: 0,
@@ -78256,9 +78315,9 @@ var ULe = ["data-layout", "data-fullscreen"], WLe = ["inert"], GLe = {
 				"aria-hidden": "true",
 				onPointerdown: w
 			}, null, 32))
-		], 44, ULe));
+		], 44, GLe));
 	}
-}), lRe = { class: "trpg-root" }, uRe = /* @__PURE__ */ I({
+}), dRe = { class: "trpg-root" }, fRe = /* @__PURE__ */ I({
 	__name: "App",
 	props: {
 		ctx: {},
@@ -78268,16 +78327,16 @@ var ULe = ["data-layout", "data-fullscreen"], WLe = ["inert"], GLe = {
 		let t = e;
 		Ui("portalTarget", t.portalTarget), Ui("stCtx", t.ctx);
 		let n = mA();
-		return (e, t) => (B(), V("div", lRe, [
+		return (e, t) => (B(), V("div", dRe, [
 			W(bae),
-			N(n).windowOpen ? (B(), H(cRe, { key: 0 })) : K("", !0),
+			N(n).windowOpen ? (B(), H(uRe, { key: 0 })) : K("", !0),
 			W(vae),
 			W(Nie, { "library-open": N(n).windowOpen && N(n).page === "library" }, null, 8, ["library-open"]),
 			W(jie)
 		]));
 	}
-}), dRe = ".lib-author-block .ve-hidden,.lib-author-block .ve-print__hidden{display:none!important}.lib-author-block .ve-text-center{text-align:center}.lib-author-block .ve-text-right{text-align:right}.lib-author-block .ve-text-left{text-align:left}.lib-author-block .ve-bold,.lib-author-block .bold{font-weight:var(--fw-semibold)}.lib-author-block .ve-italic{font-style:italic}.lib-author-block .ve-muted{color:var(--text2)}.lib-author-block .small-caps,.lib-author-block .ve-small-caps{font-variant:small-caps}.lib-author-block .no-wrap,.lib-author-block .ve-no-wrap{white-space:nowrap}.lib-author-block .ve-flex{display:flex}.lib-author-block .ve-flex-col{flex-direction:column;display:flex}.lib-author-block .ve-flex-v-center{align-items:center;display:flex}.lib-author-block .ve-flex-vh-center{justify-content:center;align-items:center;display:flex}.lib-author-block .ve-split,.lib-author-block .ve-split-v-center{justify-content:space-between;align-items:center;gap:var(--sp-2);display:flex}.lib-author-block .ve-grow,.lib-author-block .ve-flex-1{flex:1 1 0;min-width:0}.lib-author-block .ve-flex-2{flex:2 1 0;min-width:0}.lib-author-block .ve-pl-2{padding-left:.5rem}.lib-author-block .ve-pr-2{padding-right:.5rem}.lib-author-block .ve-pb-2{padding-bottom:.5rem}.lib-author-block .ve-min-w-25{min-width:25%}.lib-author-block .ve-br-1p{border-right:var(--border) solid var(--line)}.lib-author-block .ve-mt-1{margin-top:.25rem}.lib-author-block .ve-mt-4{margin-top:1.5rem}.lib-author-block .ve-mb-1{margin-bottom:.25rem}.lib-author-block .ve-mb-1p{margin-bottom:1px}.lib-author-block .ve-mb-2{margin-bottom:.5rem}.lib-author-block .ve-overflow-x-auto{overflow-x:auto}.trpg-window[data-layout=narrow] .lib-author-block .ve-rd-plaintext__wrp-root{flex-direction:column}.trpg-window[data-layout=narrow] .lib-author-block .ve-rd-plaintext__wrp-root>.ve-br-1p{padding-right:0;padding-bottom:var(--sp-2);border-right:0;border-bottom:var(--border) solid var(--line)}.trpg-window[data-layout=narrow] .lib-author-block .ve-rd-plaintext__wrp-root>.ve-pl-2{padding-left:0;padding-top:var(--sp-2)}.lib-author-block .ve-w-100,.lib-author-block .w100{width:100%}.lib-author-block .ve-table-layout-fixed{table-layout:fixed}.lib-author-block .ve-col-1{width:8.3333%}.lib-author-block .ve-col-2{width:16.6667%}.lib-author-block .ve-col-2-3{width:19.1667%}.lib-author-block .ve-col-3{width:25%}.lib-author-block .ve-col-4{width:33.3333%}.lib-author-block .ve-col-5{width:41.6667%}.lib-author-block .ve-col-5-5{width:45.8333%}.lib-author-block .ve-col-6{width:50%}.lib-author-block .ve-col-10{width:83.3333%}.lib-author-block .ve-col-11{width:91.6667%}.lib-author-block .ve-col-12{width:100%}.lib-entity table{border-collapse:collapse;width:100%}.lib-entity th,.lib-entity td{padding:2px var(--sp-1);vertical-align:top;text-align:left;border:0}.lib-entity .ve-stats__sect-header-inner{margin-top:var(--sp-3);border-bottom:var(--border) solid var(--primary-tint-line);color:var(--primary-text);font-weight:var(--fw-semibold);font-variant:small-caps;padding-bottom:2px;display:block}.lib-entity .ve-stats__sect-row-inner{padding-top:var(--sp-2)}.lib-entity .ve-tbl-border{background:var(--primary-tint-line);height:2px;padding:0}.lib-entity .ve-tbl-divider{background:var(--line);height:1px;padding:0}.lib-entity [class*=ve-stats__disp-as-score]{background:var(--bg-sunk);text-align:center}.lib-entity [class*=ve-stats__disp-as-bonus]{background:var(--primary-tint);text-align:center}.lib-entity [class*=stats-tbl-ability-scores__lbl]{text-align:center;color:var(--text2);font-size:var(--fs-xs)}.lib-author-block .ve-rd__h--1{font-size:var(--fs-lg);font-weight:var(--fw-bold)}.lib-author-block .ve-rd__h--2{font-weight:var(--fw-bold)}.lib-author-block .ve-rd__h--3{font-weight:var(--fw-bold);font-style:italic}.lib-author-block ul.ve-rd__list-hang-notitle{padding:0;list-style:none}.lib-author-block .ve-rd__wrp-embedded-data{border:var(--border) solid var(--line);border-radius:var(--r-sm);margin:var(--sp-2) 0}.lib-author-block .ve-rd__b-inset{border:var(--border) solid var(--line);border-radius:var(--r-sm);padding:var(--sp-2) var(--sp-3);margin:var(--sp-2) 0;background:var(--bg-sunk)}.lib-author-block .ve-rd__quote{font-style:italic}", fRe = "*,:before,:after{box-sizing:border-box}button,input,textarea,select{font:inherit;color:inherit}button{cursor:pointer}:where(h1,h2,h3,h4,p,ul,ol,dl,dd){margin:0;padding:0}:where(ul,ol){list-style:none}:focus-visible{box-shadow:0 0 0 2px var(--surface), 0 0 0 4px var(--focus);border-radius:var(--r-sm);outline:none}.trpg-sr-only{clip:rect(0 0 0 0);white-space:nowrap;border:0;width:1px;height:1px;margin:-1px;padding:0;position:absolute;overflow:hidden}.trpg-icon{vertical-align:-.2em;flex:none;display:inline-block}@media (prefers-reduced-motion:reduce){*,:before,:after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}", pRe = ".trpg-dice{z-index:30;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);width:360px;max-height:calc(100dvh - 16px);box-shadow:var(--shadow-3);flex-direction:column;display:flex;position:fixed;overflow:hidden}.trpg-dice__head{background:var(--side);min-height:44px;color:var(--side-ink);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;flex:none;align-items:center;gap:8px;padding:0 6px 0 14px;display:flex}.trpg-dice__title{font-family:var(--font-serif);flex:1;font-size:16px}.trpg-dice__body{gap:14px;padding:14px 12px;display:grid;overflow-y:auto}.trpg-dice__lbl{color:var(--text2);justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;font-size:12.5px;display:flex}.trpg-dice__row{align-items:center;gap:8px;display:flex}.trpg-dice__formula{min-height:44px;font-family:var(--font-serif);letter-spacing:.02em;font-size:20px}.trpg-dice__formula[aria-invalid=true]{border-color:var(--danger-line)}.trpg-dice__err{min-height:18px;margin-top:4px}.trpg-dice__faces{grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;display:grid}.trpg-dice__face{min-width:0;position:relative}.trpg-dice__die{border:1px solid var(--line);background:var(--surface);width:100%;min-height:58px;color:var(--text);border-radius:8px;align-content:center;justify-items:center;gap:2px;padding:4px 0 3px;font-size:12px;display:grid;position:relative}.trpg-dice__die:hover{border-color:var(--primary)}.trpg-dice__die[data-n]:not([data-n=\"0\"]){border-color:var(--primary);background:var(--bg-side)}.trpg-dice__die .trpg-die{width:28px;height:28px}.trpg-dice__cnt{background:var(--primary);min-width:20px;height:20px;color:var(--on-primary);font-variant-numeric:tabular-nums;border-radius:10px;padding:0 5px;font-size:12px;line-height:20px;position:absolute;top:-6px;right:-4px}.trpg-dice__minus{border:1px solid var(--line);background:var(--surface);width:22px;height:22px;color:var(--text);border-radius:50%;padding:0;font-size:14px;line-height:18px;position:absolute;top:-8px;left:-6px}.trpg-dice__minus:after{content:\"\";position:absolute;inset:-10px}.trpg-die polygon,.trpg-die .trpg-die__body{fill:var(--surface);stroke:var(--text2);stroke-width:3px;stroke-linejoin:round}.trpg-die .trpg-die__facet{fill:none;stroke:var(--line);stroke-width:2px;stroke-linejoin:round}.trpg-die text{fill:var(--text);font-family:var(--font-serif);font-weight:600}.trpg-dice__die .trpg-die polygon,.trpg-dice__die .trpg-die .trpg-die__body{fill:none}.trpg-dice__die[data-n]:not([data-n=\"0\"]) .trpg-die polygon,.trpg-dice__die[data-n]:not([data-n=\"0\"]) .trpg-die .trpg-die__body{stroke:var(--primary)}.trpg-dice__adjust{flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:10px 16px;display:flex}.trpg-dice__step{align-items:center;gap:4px;display:inline-flex}.trpg-dice__step button{border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface);width:40px;height:40px;color:var(--text);font-size:18px}.trpg-dice__step output{text-align:center;font-variant-numeric:tabular-nums;min-width:2.6em;font-weight:600}.trpg-dice__small{color:var(--text2);font-size:12px}.trpg-dice__step .trpg-dice__small{margin-right:4px}.trpg-dice .trpg-seg button{min-height:40px}.trpg-seg.is-off{opacity:.45}.trpg-seg.is-off button{cursor:not-allowed}.trpg-dice__roll{width:100%;min-height:54px;font-family:var(--font-serif);letter-spacing:.3em;text-indent:.3em;font-size:19px}.trpg-dice__result{border:1px solid var(--line);background:var(--surface);border-radius:10px;justify-items:center;gap:8px;padding:14px 12px 12px;display:grid}.trpg-dice__hero{width:124px;height:124px}.trpg-dice__hero .trpg-die{width:100%;height:100%;overflow:visible}.trpg-dice__hero.is-rolling .trpg-die{animation:.46s ease-in-out trpg-tumble}.trpg-dice__hero.is-nat20 .trpg-die polygon,.trpg-dice__hero.is-nat20 .trpg-die .trpg-die__body{stroke:var(--accent);stroke-width:5px;fill:color-mix(in srgb, var(--accent) 22%, var(--surface))}.trpg-dice__hero.is-nat1 .trpg-die polygon,.trpg-dice__hero.is-nat1 .trpg-die .trpg-die__body{stroke:var(--danger-line);stroke-width:5px;fill:color-mix(in srgb, var(--danger-line) 18%, var(--surface))}.trpg-dice__line{min-height:22px;color:var(--text2);text-align:center;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.trpg-dice__minis{flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;min-height:36px;display:flex}.trpg-dice__mini{width:38px;height:38px}.trpg-dice__mini.is-dim{opacity:.35}.trpg-dice__mini .trpg-die{width:100%;height:100%}.trpg-dice__const{background:var(--bg-side);border:1px solid var(--line);font-variant-numeric:tabular-nums;border-radius:15px;place-items:center;min-width:38px;height:30px;padding:0 8px;font-weight:600;display:inline-grid}.trpg-dice__send{grid-template-columns:1.5fr 1fr;gap:8px;width:100%;display:grid}.trpg-dice__send .trpg-input{grid-column:1/-1}.trpg-dice__send .trpg-btn{min-height:44px}.trpg-dice__recent{border:1px solid var(--line);width:100%;min-height:44px;color:var(--text2);text-align:left;background:0 0;border-radius:8px;justify-content:space-between;align-items:center;gap:8px;padding:0 10px;display:flex}.trpg-dice__recent b{color:var(--text);font-family:var(--font-serif);font-size:16px}.trpg-dice__list{max-height:180px;margin:4px 0 0;padding:0;list-style:none;overflow-y:auto}.trpg-dice__list button{border:0;border-bottom:1px solid var(--line);text-align:left;background:0 0;align-items:baseline;gap:10px;width:100%;min-height:44px;padding:4px 10px;display:flex}.trpg-dice__list button:hover{background:var(--bg-side)}.trpg-dice__list b{min-width:2em;font-family:var(--font-serif);font-size:17px}.trpg-dice__list span{overflow-wrap:anywhere;min-width:0;color:var(--text2);flex:1;font-size:13px}.trpg-dice__list time{color:var(--text2);font-size:12px}.trpg-dice__clear{justify-content:flex-end;display:flex}@keyframes trpg-tumble{0%{transform:rotate(0)scale(1)}45%{transform:rotate(200deg)scale(.88)}to{transform:rotate(360deg)scale(1)}}.trpg-dice__shell{flex:1;min-height:0;display:flex}.trpg-dice__main{flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.trpg-dice__main>.trpg-dice__body{overflow-y:auto}.trpg-dice[data-narrow=true]{max-height:calc(100dvh - 76px)}.trpg-dice[data-narrow=true] .trpg-dice__shell{flex-direction:column}.trpg-rp{background:var(--surface);flex-direction:column;flex:1;min-height:0;display:flex}.trpg-rp__body{flex:1;align-content:start;gap:8px;min-height:0;padding:8px 14px;display:grid;overflow-y:auto}.trpg-rp .trpg-seg{width:fit-content;max-width:100%}.trpg-rp .trpg-seg button{min-height:32px;padding:2px 12px}.trpg-rp__sec{border-bottom:1px dotted color-mix(in srgb, var(--line) 60%, transparent);gap:6px;padding-bottom:8px;display:grid}.trpg-rp__sec:last-child{border-bottom:0}.trpg-rp__sec h4{color:var(--text2);margin:0;font-size:12px;font-weight:600}.trpg-rp__title{font:700 17px/1.3 var(--font-serif);margin:0}.trpg-rp__pair{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;display:grid}.trpg-rp__rows{gap:0;margin:0;padding:0;list-style:none;display:grid}.trpg-rp__row{border-bottom:1px dotted color-mix(in srgb, var(--line) 60%, transparent);align-items:center;gap:8px;min-height:30px;font-size:14px;display:flex}.trpg-rp__row:last-child{border-bottom:0}.trpg-rp__row>span{flex:1;min-width:0}.trpg-rp__row b{font-variant-numeric:tabular-nums}.trpg-rp__row.is-off{opacity:.4;text-decoration:line-through}.trpg-rp__hint{color:var(--text2);font-size:12px;font-weight:400}.trpg-rp__warn{background:color-mix(in srgb, var(--accent) 16%, var(--surface));border-radius:8px;margin:0;padding:6px 10px;font-size:13px}.trpg-rp__addrow{gap:4px;display:flex}.trpg-rp__form{grid-template-columns:1fr 1fr auto;align-items:center;gap:6px;display:grid}.trpg-rp__form .trpg-field__error{grid-column:1/-1}.trpg-rp__passive{color:var(--text2);align-items:center;gap:8px;font-size:13px;display:flex}.trpg-rp__dc{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.trpg-input.trpg-rp__dcnum{text-align:center;width:72px;min-height:44px;font:700 22px var(--font-serif);flex:none}.trpg-rp__round{border:1px solid var(--line);background:var(--surface);border-radius:50%;place-items:center;width:34px;height:34px;padding:0;display:inline-grid}.trpg-rp__chips{flex-wrap:wrap;gap:6px;width:100%;display:flex}.trpg-rp__chip{border:1px solid var(--line);background:var(--surface);font-variant-numeric:tabular-nums;border-radius:8px;width:40px;height:34px;padding:0}.trpg-rp__chip[aria-pressed=true]{background:var(--primary);color:var(--on-primary);border-color:var(--primary)}.trpg-rp__contest{gap:8px;display:grid}.trpg-rp__final{margin:0;font-size:14px;font-weight:600}.trpg-rp__final .trpg-rp__hint{margin-top:2px;display:block}.trpg-rp__foot{padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--surface);flex:none;gap:8px;display:grid}.trpg-rp__formula{margin:0;font:700 15px ui-monospace,SF Mono,Menlo,monospace}.trpg-rp__result{border:1px dashed var(--line);border-radius:10px;align-items:center;gap:14px;height:104px;padding:0 14px;display:flex;overflow:hidden}.trpg-rp__total{border:2px solid var(--line-ctrl);min-width:64px;height:64px;font:700 28px var(--font-serif);border-radius:14px;place-items:center;padding:0 6px;display:inline-grid}.trpg-rp__verdict{gap:2px;min-width:0;display:grid}.trpg-rp__verdict span{font:700 15px var(--font-serif)}.trpg-rp__verdict .is-pass,.trpg-rp__verdict .is-win{color:var(--primary)}.trpg-rp__verdict .is-fail,.trpg-rp__verdict .is-lose{color:var(--danger-line)}.trpg-rp__verdict small{color:var(--text2);overflow-wrap:anywhere;font-size:12.5px}.trpg-rp__roll{width:100%;min-height:46px;font:700 17px var(--font-serif);letter-spacing:.2em}.trpg-rp input[type=checkbox]{appearance:none;border:1.5px solid var(--line);background:var(--surface);cursor:pointer;border-radius:6px;flex:none;width:22px;height:22px;margin:0;position:relative}.trpg-rp input[type=checkbox]:checked{background:var(--primary);border-color:var(--primary)}.trpg-rp input[type=checkbox]:checked:after{content:\"\";border:solid var(--on-primary);border-width:0 2px 2px 0;width:6px;height:11px;position:absolute;top:2px;left:6px;transform:rotate(45deg)}.trpg-rp__act{align-items:center;gap:12px;display:flex}.trpg-rp__act .trpg-rp__formula{overflow-wrap:anywhere;flex:1;min-width:0}.trpg-rp__act .trpg-rp__roll{flex:none;width:auto;min-width:140px;padding:0 22px}.trpg-rp__result{height:92px}.trpg-rp__sec h4{color:var(--text);font-size:13px}.trpg-rp__body{padding-bottom:20px}.trpg-input.trpg-rp__dcnum{appearance:textfield;box-shadow:none}.trpg-rp__dcnum::-webkit-inner-spin-button{appearance:none;margin:0}.trpg-rp__dcnum::-webkit-outer-spin-button{appearance:none;margin:0}.trpg-rp__roll{letter-spacing:.08em}.trpg-rp__result.is-empty{height:44px}.trpg-rp__dcline{color:var(--text2);margin:0;font-size:12.5px}", mRe = ".lib-stack{gap:var(--sp-3);align-content:start;display:grid}.lib-file{border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);padding:var(--sp-3) var(--sp-4);gap:var(--sp-2);display:grid}.lib-file__top{align-items:center;gap:var(--sp-3);flex-wrap:wrap;display:flex}.lib-kv{gap:4px var(--sp-4);color:var(--text2);font-size:var(--fs-sm);flex-wrap:wrap;display:flex}.lib-kv b{color:var(--text);font-weight:var(--fw-semibold)}.lib-pack{gap:2px;min-width:0;display:grid}.lib-pack__cats{color:var(--text2);font-size:var(--fs-sm)}.lib-drafts{align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-md);background:var(--bg-sunk);font-size:var(--fs-sm);flex-wrap:wrap;display:flex}.lib-drafts>span:not(.lib-end){flex:160px;min-width:0}.lib-pending{color:var(--text2);font-size:var(--fs-xs);font-weight:var(--fw-regular);align-items:center;gap:4px;display:inline-flex}.lib-pending .trpg-icon{animation:1.2s linear infinite lib-spin}@keyframes lib-spin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.lib-pending .trpg-icon{animation:none}}.lib-form{gap:var(--sp-3);align-content:start;display:grid}.lib-form .trpg-field{margin-bottom:0}.lib-ebar{align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-top:var(--border) solid var(--line);background:var(--surface);flex-wrap:wrap;flex:none;display:flex}.lib-dialog{flex-direction:column;flex:1;min-height:0;display:flex}.lib-dialog__body{gap:var(--sp-3);flex:1;align-content:start;min-height:0;display:grid;overflow:auto}.lib-dialog__body .trpg-field{margin-bottom:0}.lib-locked{background:var(--bg-sunk);color:var(--text3);justify-content:space-between;align-items:center;display:flex}.lib-langs{gap:4px;display:inline-flex}.lib-form__sec{font-size:var(--fs-xs);color:var(--text2);font-weight:var(--fw-semibold);padding-bottom:var(--sp-1)}.lib-types{gap:var(--sp-1);display:grid}.lib-tgroup{gap:var(--sp-2);border-bottom:var(--border) solid var(--line);font-size:var(--fs-sm);flex-wrap:wrap;align-items:baseline;padding:6px 0;display:flex}.lib-tgroup>b{min-width:96px;color:var(--text2);font-weight:var(--fw-semibold)}.lib-tgroup__items{gap:4px var(--sp-3);flex-wrap:wrap;flex:1;min-width:0;display:flex}.lib-choice{gap:var(--sp-2);display:grid}.lib-choice>label{gap:2px var(--sp-2);padding:var(--sp-2) var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);cursor:pointer;grid-template-columns:20px 1fr;display:grid}.lib-choice>label[data-on=true]{box-shadow:inset 0 0 0 2px var(--primary)}.lib-choice>label>span:last-child{color:var(--text2);font-size:var(--fs-sm);grid-column:2}.lib-choice__radio{accent-color:var(--primary);margin:3px 0 0}.lib-etop{align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-bottom:var(--border) solid var(--line);font-size:var(--fs-sm);color:var(--text2);flex-wrap:wrap;flex:none;display:flex}.lib-two{gap:var(--sp-3);min-height:0;padding:var(--sp-3) var(--sp-4);flex:1;grid-template-columns:1fr 1fr;display:grid}.lib-two>div{gap:var(--sp-2);flex-direction:column;min-height:0;display:flex}.lib-lines{border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);min-height:0;padding:var(--sp-2) var(--sp-3);font-size:var(--fs-sm);align-content:start;gap:var(--sp-2);flex:1;display:grid;overflow:auto}.lib-convert__in{resize:none;min-height:160px;font:13px/1.6 var(--font-sans);padding:var(--sp-2) var(--sp-3);flex:1}.lib-jsonwrap{min-height:0;padding:var(--sp-3) var(--sp-4) 0;flex-direction:column;flex:1;display:flex}.lib-cmhost{border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);flex-direction:column;flex:1;min-height:160px;display:flex;overflow:hidden}.lib-cmhost .cm-editor{flex:1;min-height:0;font:12px/1.6 ui-monospace,Menlo,monospace}.lib-cmhost .cm-editor.cm-focused{outline:none}.lib-cmhost .cm-scroller{overflow:auto}.lib-cmhost .cm-gutters{background:var(--bg-sunk);border-right:var(--border) solid var(--line);color:var(--text3)}.lib-cmhost .cm-tooltip{font-family:var(--font-sans)}.lib-cm__err{padding:var(--sp-2) var(--sp-4) 0;flex:none;gap:6px;display:grid}.trpg-window[data-layout=narrow] .lib-two{grid-template-columns:1fr}.lib-two:has(>div:only-child){grid-template-columns:1fr}.lib-pills--wrap{flex-wrap:wrap;padding-inline:0;overflow:visible}.trpg-modal[data-variant=sheet] .trpg-modal__card:has(.trpg-modal__page:not(.is-under) .lib-editor){width:94%;height:92%}.lib-editor{min-height:0}.lib-split{flex:1;grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:0;display:grid}.lib-split>.lib-pane+.lib-pane{border-left:var(--border) solid var(--line)}.lib-vsplit{flex-direction:column;flex:1;min-height:0;display:flex}.lib-vsplit>.lib-pane{flex:1;min-height:0}.lib-vsplit>.lib-pane__head{overflow-x:auto}.lib-pane{flex-direction:column;min-width:0;min-height:0;display:flex}.lib-pane--side{background:var(--bg-sunk)}.lib-pane__head{align-items:center;gap:var(--sp-2);min-height:44px;padding:var(--sp-2) var(--sp-4);border-bottom:var(--border) solid var(--line);font-size:var(--fs-sm);flex:none;display:flex}.lib-pane__head .trpg-seg button{white-space:nowrap;min-height:30px;padding-inline:var(--sp-3)}.lib-pane__head>.lib-faint{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.lib-pane__body{min-height:0;padding:var(--sp-3) var(--sp-4) var(--sp-5);flex-direction:column;flex:1;display:flex;overflow:auto}.lib-tform{gap:var(--sp-3);align-content:start;display:grid}.lib-tfield{gap:4px;min-width:0;display:grid}.lib-tfield>label{font-size:var(--fs-sm);font-weight:var(--fw-semibold);align-items:center;gap:6px;display:flex}.lib-tfield>label small{color:var(--danger-text)}.lib-lname{align-items:center;gap:4px;display:inline-flex}.lib-lname[data-en]{font-family:ui-monospace,Menlo,monospace;font-weight:var(--fw-regular)}.lib-tip{color:var(--text3);cursor:help;display:inline-flex}.lib-mark{background:var(--warn-bg);color:var(--warn-text);font:500 11px/16px var(--font-sans);white-space:nowrap;box-shadow:inset 0 0 0 1px var(--accent);border-radius:999px;padding:1px 8px}.lib-tfield[data-diff=true]>.trpg-input,.lib-tfield[data-diff=true]>.trpg-select-trigger,.lib-tfield[data-diff=true]>.lib-inline .trpg-select-trigger{border-color:var(--accent);box-shadow:0 0 0 3px var(--warn-bg)}.lib-fsec{margin-top:var(--sp-2);border-bottom:var(--border) solid var(--line);color:var(--text2);font-size:12px;font-weight:var(--fw-semibold);padding-bottom:4px}.lib-more{align-items:center;gap:var(--sp-2);padding:var(--sp-2) 0;border:0;border-top:var(--border) dashed var(--line);color:var(--text2);font-size:var(--fs-sm);text-align:left;cursor:pointer;background:0 0;display:flex}.lib-tojson{width:fit-content;padding:6px var(--sp-3);border-radius:var(--r-sm);background:var(--bg-sunk);color:var(--text2);font-size:var(--fs-sm);cursor:pointer;border:0;align-items:center;gap:6px;display:inline-flex}.lib-pane--side .lib-tojson{background:var(--surface)}.lib-inline{gap:var(--sp-2);flex-wrap:wrap;align-items:center;min-width:0;display:flex}.lib-inline>.trpg-input{flex:120px;width:auto;min-width:0}.lib-inline>.trpg-select-trigger{flex:140px;width:auto}.lib-rep{gap:var(--sp-2);display:grid}.lib-rep__row{gap:var(--sp-2);padding:var(--sp-2);border-radius:var(--r-sm);background:var(--bg-sunk);align-items:flex-start;display:flex}.lib-pane--side .lib-rep__row{background:var(--surface)}.lib-rep__row>b{padding-top:7px;font-size:12px}.lib-rep__body{gap:var(--sp-2);flex:1;min-width:0;display:grid}.lib-grp{gap:var(--sp-2);padding-left:var(--sp-2);border-left:2px solid var(--line);display:grid}.lib-rep__body>.lib-grp{border-left:0;padding-left:0}.lib-checks{gap:var(--sp-2) var(--sp-4);flex-wrap:wrap;align-items:center;padding-top:4px;display:flex}.lib-num{width:96px}.lib-para{resize:vertical;width:100%;min-height:64px;font:inherit;padding:var(--sp-2) var(--sp-3);line-height:1.6}.lib-mono{font-family:ui-monospace,Menlo,monospace}.lib-seg--small button{min-height:26px;padding:0 var(--sp-3);font-size:12px}.lib-fillopt{padding:var(--sp-3);border-radius:var(--r-md);border:var(--border) solid var(--line);background:var(--surface);cursor:pointer;gap:6px;display:grid}.lib-fillopt[data-on=true]{border-color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary)}.lib-diff{font-size:var(--fs-sm);gap:6px;margin:0;padding:0;list-style:none;display:grid}.lib-diff li{gap:var(--sp-2);padding:6px var(--sp-3);border-radius:var(--r-sm);background:var(--bg-sunk);grid-template-columns:minmax(80px,128px) 1fr;display:grid}.lib-diff code{font:12px var(--font-sans);font-weight:var(--fw-semibold)}.lib-diff s{color:var(--text3)}.lib-pane__body>.lib-cmhost{min-height:280px}.lib-list__row--edit{align-items:center;gap:var(--sp-2);padding-block:0;display:flex}.lib-list__open{align-items:center;gap:var(--sp-2);min-width:0;color:inherit;font:inherit;text-align:left;cursor:pointer;min-height:inherit;background:0 0;border:0;flex:1;padding:0;display:flex}.lib-pane__head>.trpg-seg{flex:none}.lib-notes{background:var(--bg-sunk);width:fit-content;color:var(--text2);cursor:pointer;border:0;border-radius:999px;align-items:center;gap:6px;padding:4px 10px;font-size:12px;display:inline-flex}.lib-sum{gap:var(--sp-2);max-height:45%;padding:var(--sp-3) var(--sp-4);border-top:var(--border) solid var(--line);background:var(--surface);flex:none;display:grid;overflow:auto}.lib-sum__row{align-items:center;gap:var(--sp-3);font-size:var(--fs-sm);flex-wrap:wrap;display:flex}.lib-sum__row>.trpg-select-trigger{width:auto;min-width:200px}.lib-sum__choice{font-size:var(--fs-sm);gap:4px;display:grid}.lib-crow{gap:var(--sp-2);padding:7px var(--sp-2);border-bottom:var(--border) solid var(--line);font-size:var(--fs-sm);grid-template-columns:minmax(64px,96px) minmax(0,1fr) auto;align-items:start;display:grid}.lib-crow>b{font-weight:var(--fw-semibold);color:var(--text2);padding-top:2px;font-size:12px}.lib-crow[data-diff=true]{background:var(--warn-bg);border-radius:var(--r-sm)}.lib-crow small{color:var(--warn-text);font-size:11px;display:block}.lib-edits{margin:0;padding:0;list-style:none;display:grid}.lib-erow{gap:var(--sp-2);padding:var(--sp-2) 0;border-bottom:var(--border) solid var(--line);display:grid}.lib-erow[data-off=true]{opacity:.65}.lib-erow__top{align-items:center;gap:var(--sp-2);flex-wrap:wrap;display:flex}.lib-erow__name{font-weight:var(--fw-semibold)}.lib-erow__meta{color:var(--text2);flex:200px;min-width:0;font-size:12px}.lib-erow__top .trpg-select-trigger{width:auto;min-width:120px}.lib-erow__body{gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-sm);background:var(--bg-sunk);margin-left:26px;display:grid}.lib-housenote{color:var(--text);align-items:center;gap:4px;display:inline-flex}.lib-erow__top>.trpg-check,[data-testid=overrides]>.lib-filter>.trpg-check{flex:none;width:auto;margin:0}.lib-erow__top>.lib-end{flex:100%;justify-content:flex-end}.lib-erow__top>.lib-end .trpg-select-trigger{flex:0 200px;width:auto}.lib-block{gap:4px;display:grid}.lib-block__bar{flex-wrap:wrap;gap:2px;display:flex}.lib-block__bar .trpg-btn{min-height:28px}.lib-pick{gap:var(--sp-1);display:grid}.lib-pick>.trpg-btn,.lib-subs{justify-self:start}.lib-numrow{gap:var(--sp-2) var(--sp-3);flex-wrap:wrap;display:flex}.lib-numrow>.lib-tfield{width:7.5em}.lib-row1{display:contents}.lib-grp--row{align-items:flex-end;gap:var(--sp-2) var(--sp-3);flex-wrap:wrap;display:flex}.lib-grp--row>.lib-tfield{flex:8em}.lib-img{gap:var(--sp-1);display:grid}.lib-img__thumb{object-fit:contain;border-radius:var(--r-sm);border:var(--border) solid var(--line);background:var(--bg-sunk);max-width:160px;max-height:120px}.lib-fhint{margin:calc(-1 * var(--sp-2)) 0 0;font-size:12px}.lib-children{gap:var(--sp-2);margin-top:var(--sp-4);display:grid}.lib-children__grp{gap:var(--sp-1);display:grid}.lib-children__items{gap:var(--sp-2);flex-wrap:wrap;align-items:center;display:flex}.lib-typehint{margin-top:var(--sp-3);gap:2px;font-size:12px;display:grid}.lib-typehint p{margin:0}.lib-editgrid{gap:var(--sp-2);min-width:0;display:grid}.lib-editgrid__scroll{border:var(--border) solid var(--line);border-radius:var(--r-sm);overflow-x:auto}.lib-editgrid table{border-collapse:collapse;width:100%}.lib-editgrid td,.lib-editgrid th{border:var(--border) solid var(--line);text-align:start;min-width:84px;padding:3px}.lib-editgrid th{background:var(--bg-sunk)}.lib-editgrid td .trpg-input,.lib-editgrid th .trpg-input{width:100%;min-width:0}.lib-editgrid th .trpg-input{font-weight:var(--fw-semibold)}.lib-editgrid td .trpg-btn,.lib-editgrid th .trpg-btn{white-space:normal}.lib-editgrid .lib-editgrid__actions{text-align:center;width:1%;min-width:0}.lib-edittext{gap:var(--sp-2);min-width:0;display:grid}.lib-edittext__item{gap:var(--sp-1);grid-template-columns:minmax(0,1fr) auto;align-items:start;display:grid}.lib-edittext__add{justify-self:start}.lib-attached{margin-top:var(--sp-4);padding-top:var(--sp-3);border-top:var(--border) solid var(--line)}", hRe = ".trpg-btn{min-height:var(--hit);padding:0 var(--sp-4);justify-content:center;align-items:center;gap:var(--sp-2);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-weight:var(--fw-medium);white-space:nowrap;transition:background var(--dur-fast) var(--ease-std), border-color var(--dur-fast) var(--ease-std), transform var(--dur-press) var(--ease-out);display:inline-flex}.trpg-btn:hover:not(:disabled){background:var(--bg-hover)}.trpg-btn:active:not(:disabled){transform:translateY(1px)}.trpg-btn--primary{background:var(--primary);color:var(--on-primary);font-weight:var(--fw-semibold);border-color:#0000}.trpg-btn--primary:hover:not(:disabled){background:var(--primary-hover)}.trpg-btn--primary:active:not(:disabled){background:var(--primary-pressed)}.trpg-btn--danger{color:var(--danger-text);border:2px solid var(--danger-line);background:var(--surface)}.trpg-btn--quiet{background:0 0;border-color:#0000}.trpg-btn--small{min-height:28px;padding:0 var(--sp-3);font-size:var(--fs-sm)}.trpg-btn:disabled{background:var(--disabled-bg);border-color:var(--line);color:var(--disabled-text);cursor:not-allowed}.trpg-btn--primary:disabled{background:var(--line);color:var(--text2)}.trpg-window[data-layout=narrow] .trpg-btn:not(.trpg-btn--small){min-height:var(--hit-touch)}.trpg-icon-btn{width:var(--hit);height:var(--hit);min-width:var(--hit);border-radius:var(--r-sm);color:var(--text2);transition:background var(--dur-fast) var(--ease-std), color var(--dur-fast) var(--ease-std);background:0 0;border:0;place-items:center;padding:0;display:inline-grid}.trpg-icon-btn:hover{background:var(--bg-hover);color:var(--text)}.trpg-window[data-layout=narrow] .trpg-icon-btn{width:var(--hit-touch);height:var(--hit-touch)}.trpg-pill{align-items:center;gap:var(--sp-1);min-height:30px;padding:0 var(--sp-3);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-pill);background:var(--surface);font-size:var(--fs-sm);display:inline-flex}.trpg-badge,.trpg-tag{padding:1px var(--sp-2);border-radius:var(--r-xs);background:var(--bg-side);color:var(--text2);font-size:var(--fs-xs);white-space:nowrap;border:0;align-items:center;gap:4px;line-height:1.6;display:inline-flex}.trpg-badge[data-tone=primary]{background:var(--primary-tint);color:var(--primary-text);box-shadow:inset 0 0 0 1px var(--primary-tint-line)}.trpg-badge[data-tone=warn]{background:var(--warn-bg);color:var(--warn-text);box-shadow:inset 0 0 0 1px var(--accent)}.trpg-badge[data-tone=success]{background:var(--success-bg);color:var(--success-text)}.trpg-badge[data-off=true]{color:var(--text3);box-shadow:inset 0 0 0 1px var(--line);background:0 0;text-decoration:line-through}.trpg-badge[data-status=pass]{color:var(--success-text)}.trpg-badge[data-status=fail],.trpg-badge[data-status=error]{color:var(--danger-text)}button.trpg-badge{cursor:pointer;border:0}.trpg-link{color:var(--primary-text);font:inherit;text-underline-offset:3px;background:0 0;border:0;padding:0;text-decoration:underline}.trpg-link--hl{align-items:center;gap:var(--sp-2);min-height:var(--hit);padding:0 var(--sp-3);border-radius:var(--r-sm);background:var(--primary-tint);font-weight:var(--fw-semibold);transition:background var(--dur-fast) var(--ease-std);text-decoration:none;display:inline-flex}.trpg-link--hl:hover{background:var(--primary-tint-line)}.trpg-term{color:inherit;font-family:var(--font-serif);font-weight:var(--fw-semibold);text-align:left;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;-webkit-text-decoration-color:var(--text3);text-decoration-color:var(--text3);text-underline-offset:4px;background:0 0;border:0;padding:0;display:inline}.trpg-hint{margin:0 0 var(--sp-3);font-size:var(--fs-sm);color:var(--text2);line-height:var(--lh-body)}.trpg-group{margin:var(--sp-4) 0 var(--sp-2);font-size:var(--fs-sm);font-weight:var(--fw-semibold);color:var(--text2)}.trpg-group--first{margin-top:0}.trpg-empty{gap:var(--sp-2);padding:var(--sp-4);border:var(--border) dashed var(--line-ctrl);border-radius:var(--r-md);background:var(--bg-sunk);color:var(--text2);justify-items:start;display:grid}.trpg-loading{gap:var(--sp-3);padding:32px var(--sp-3);color:var(--text2);justify-content:center;align-items:center;display:flex}.trpg-spinner{border:3px solid var(--line);border-top-color:var(--primary);width:22px;height:22px;animation:trpg-spin var(--dur-spin) linear infinite;border-radius:50%;flex:none;display:inline-block}.trpg-skeleton{border-radius:var(--r-xs);background:linear-gradient(90deg, var(--bg-side), var(--line), var(--bg-side));opacity:.7;height:14px}.trpg-list{margin:0;padding:0;list-style:none}.trpg-row{align-items:center;gap:var(--sp-3);min-height:52px;padding:6px var(--sp-1);border-bottom:var(--border) solid var(--line);display:flex}.trpg-row__main{flex:1;min-width:0}.trpg-row__title{font-weight:var(--fw-semibold);overflow-wrap:anywhere}.trpg-row__meta{color:var(--text2);font-size:var(--fs-sm)}.trpg-row__end{align-items:center;gap:var(--sp-2);flex:none;display:flex}.trpg-field{gap:var(--sp-1);margin-bottom:var(--sp-4);display:grid}.trpg-field__label{font-weight:var(--fw-semibold)}.trpg-field__hint{font-size:var(--fs-xs);color:var(--text2)}.trpg-field__err{font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:var(--danger-text);align-items:center;gap:4px;display:inline-flex}.trpg-input{width:100%;min-height:var(--hit);padding:0 var(--sp-3);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);color:var(--text);transition:border-color var(--dur-fast) var(--ease-std);display:block}textarea.trpg-input{min-height:72px;padding:var(--sp-2) var(--sp-3);resize:vertical}.trpg-input:hover:not(:disabled){border-color:var(--text2)}.trpg-input[aria-invalid=true]{border:2px solid var(--danger-line)}.trpg-input:disabled{background:var(--disabled-bg);color:var(--disabled-text)}.trpg-check{align-items:center;gap:var(--sp-2);min-height:var(--hit);cursor:pointer;display:inline-flex;position:relative}.trpg-check input{opacity:0;width:100%;height:100%;cursor:inherit;margin:0;position:absolute;inset:0}.trpg-check__box{border:var(--border-strong) solid var(--line-ctrl);border-radius:var(--r-xs);background:var(--surface);color:#0000;width:18px;height:18px;transition:background var(--dur-fast) var(--ease-std), border-color var(--dur-fast) var(--ease-std);flex:none;place-items:center;display:grid}.trpg-check[data-on=true] .trpg-check__box{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}.trpg-check[data-dl=true] .trpg-check__box{background:var(--text3);border-color:var(--text3);color:var(--surface)}.trpg-check[data-dl=true]{color:var(--text2)}.trpg-check[data-disabled=true] .trpg-check__box{opacity:.35}.trpg-groupcheck{min-width:var(--hit);min-height:var(--hit);cursor:pointer;background:0 0;border:0;flex:none;place-items:center;padding:0;display:inline-grid}.trpg-groupcheck__box{border:var(--border-strong) solid var(--line-ctrl);border-radius:var(--r-xs);background:var(--surface);width:18px;height:18px;color:var(--on-primary);font-weight:var(--fw-semibold);transition:background var(--dur-fast) var(--ease-std), border-color var(--dur-fast) var(--ease-std);place-items:center;line-height:1;display:grid}.trpg-groupcheck[aria-checked=true] .trpg-groupcheck__box,.trpg-groupcheck[aria-checked=mixed] .trpg-groupcheck__box{background:var(--primary);border-color:var(--primary)}.trpg-groupcheck:disabled{opacity:.4;cursor:not-allowed}.trpg-groupcheck:focus-visible{outline:2px solid var(--focus);outline-offset:1px}.trpg-check[data-disabled=true]{cursor:not-allowed}.trpg-check[data-disabled=true]:not([data-dl=true]){opacity:.75}.trpg-check input:focus-visible~.trpg-check__box{box-shadow:0 0 0 2px var(--surface), 0 0 0 4px var(--focus)}.trpg-dl{margin-left:var(--sp-2);padding:0 var(--sp-2);border-radius:var(--r-xs);background:var(--bg-side);color:var(--text2);font-size:var(--fs-xs);align-items:center;gap:3px;display:inline-flex}.trpg-switch-wrap{color:var(--text2);min-height:var(--hit-touch);align-items:center;gap:6px;display:inline-flex}.trpg-switch{border-radius:var(--r-pill);background:var(--line-ctrl);width:40px;height:22px;transition:background var(--dur-fast) var(--ease-std);border:0;flex:none;padding:0;position:relative}.trpg-switch:before{content:\"\";background:var(--surface);width:16px;height:16px;box-shadow:var(--shadow-1);transition:transform var(--dur-fast) var(--ease-out);border-radius:50%;position:absolute;top:3px;left:3px}.trpg-switch[data-on=true]{background:var(--primary)}.trpg-switch[data-on=true]:before{transform:translate(18px)}.trpg-switch:disabled{opacity:.55;cursor:not-allowed}.trpg-stepper{border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);align-items:stretch;display:inline-flex;overflow:hidden}.trpg-stepper__btn{min-width:36px;min-height:36px;padding:0 var(--sp-2);color:var(--text);background:0 0;border:0;place-items:center;display:grid}.trpg-stepper__btn:hover:not(:disabled){background:var(--bg-hover)}.trpg-stepper__btn:disabled{color:var(--disabled-text);cursor:not-allowed}.trpg-stepper__val{min-width:72px;font-weight:var(--fw-semibold);border-inline:var(--border) solid var(--line);place-items:center;display:grid}.trpg-ctrl{align-items:center;gap:var(--sp-3);display:inline-flex}.trpg-ctrl--off .trpg-stepper{opacity:.5;background:var(--disabled-bg)}.trpg-seg{border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);display:inline-flex;overflow:hidden}.trpg-seg button{min-height:34px;padding:2px var(--sp-4);color:var(--text);background:0 0;border:0}.trpg-seg button+button{border-left:var(--border) solid var(--line-ctrl)}.trpg-seg button:hover:not(:disabled):not([aria-pressed=true]){background:var(--bg-hover)}.trpg-seg button[aria-pressed=true]{background:var(--primary);color:var(--on-primary);font-weight:var(--fw-semibold)}.trpg-seg button:disabled{opacity:.4;cursor:not-allowed}.trpg-select-trigger{justify-content:space-between;align-items:center;gap:var(--sp-2);width:100%;min-height:var(--hit);padding:0 var(--sp-3);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);color:var(--text);display:inline-flex}.trpg-select-content,.trpg-dropdown,.trpg-popover{z-index:100003;background:var(--surface);color:var(--text);border:var(--border) solid var(--line);border-radius:var(--r-md);box-shadow:var(--shadow-2)}.trpg-select-content{min-width:var(--reka-select-trigger-width,160px);max-height:min(320px, var(--reka-select-content-available-height));overflow:hidden}.trpg-select-viewport{max-height:inherit;padding:var(--sp-1);overflow-y:auto}.trpg-select-item,.trpg-dropdown__item{justify-content:space-between;align-items:center;gap:var(--sp-3);min-height:40px;padding:4px var(--sp-3);border-radius:var(--r-xs);cursor:pointer;color:var(--text);display:flex}.trpg-dropdown{padding:var(--sp-1);min-width:168px;max-height:min(var(--reka-dropdown-menu-content-available-height,340px), 340px);overscroll-behavior:contain;overflow-y:auto}.trpg-select-item[data-highlighted],.trpg-dropdown__item[data-highlighted]{background:var(--bg-hover);outline:none}.trpg-select-item[data-state=checked]{font-weight:var(--fw-semibold);color:var(--primary-text)}.trpg-dropdown__item--danger{color:var(--danger-text)}.trpg-dropdown__item[data-disabled]{opacity:.5;cursor:not-allowed}.trpg-dropdown__reason{font-size:var(--fs-xs);color:var(--text2)}.trpg-popover{width:min(320px,92vw);padding:var(--sp-3)}.trpg-combo__anchor{border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);align-items:center;display:flex}.trpg-combo__input{min-width:0;min-height:var(--hit);padding:4px var(--sp-3);color:var(--text);background:0 0;border:0;flex:1}.trpg-combo__input:focus-visible{box-shadow:none}.trpg-combo__anchor:focus-within{box-shadow:0 0 0 2px var(--surface), 0 0 0 4px var(--focus)}.trpg-combo__content{width:var(--reka-combobox-trigger-width);min-width:260px;max-height:min(320px, var(--reka-combobox-content-available-height,320px));flex-direction:column;display:flex}.trpg-combo__content .trpg-select-viewport{flex:1;min-height:0;max-height:none}.trpg-combo__count{padding:6px var(--sp-3);border-bottom:var(--border) solid var(--line);color:var(--text2);font-size:var(--fs-sm)}.trpg-combo__empty{padding:var(--sp-3);color:var(--text2)}.trpg-tip{max-width:100%;display:inline-flex;position:relative}.trpg-tip.is-inline{display:inline}.trpg-tip__bubble{z-index:100004;max-width:260px;padding:var(--sp-2) var(--sp-3);border-radius:var(--r-md);background:var(--hero-bg);color:var(--hero-ink);font-size:var(--fs-sm);text-align:left;white-space:pre-line;pointer-events:none;box-shadow:var(--shadow-2);animation:trpg-fade var(--dur-base) var(--ease-out);gap:1px;line-height:1.5;display:grid;position:fixed}.trpg-modal-root{display:contents}.trpg-modal{z-index:var(--z-modal);padding:var(--sp-5);background:color-mix(in srgb, var(--text) 46%, transparent);animation:trpg-fade var(--dur-base) var(--ease-out);justify-content:center;align-items:center;display:flex;position:absolute;inset:0}.trpg-modal__card{background:var(--surface);border-radius:var(--r-lg);width:min(640px,100%);height:min(600px,100%);min-height:0;max-height:100%;box-shadow:var(--shadow-3);animation:trpg-rise var(--dur-slow) var(--ease-out);flex-direction:column;display:flex;overflow:hidden}.trpg-modal[data-variant=drawer]{justify-content:flex-end;padding:0}.trpg-modal[data-variant=drawer] .trpg-modal__card{border-radius:var(--r-lg) 0 0 var(--r-lg);width:min(440px,100%);height:100%;animation:trpg-slide var(--dur-slow) var(--ease-out)}.trpg-modal[data-variant=confirm] .trpg-modal__card{width:min(440px,100%);height:auto}@keyframes trpg-rise{0%{opacity:0;transform:translateY(10px)scale(.985)}}@keyframes trpg-slide{0%{opacity:0;transform:translate(32px)}}@keyframes trpg-sheet{0%{opacity:0;transform:translateY(100%)}}.trpg-modal__head{align-items:center;gap:var(--sp-3);min-height:52px;padding:var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-5);border-bottom:var(--border) solid var(--line);flex:none;display:flex}.trpg-modal__title{min-width:0;font-size:var(--fs-xl);font-weight:var(--fw-semibold);text-overflow:ellipsis;white-space:nowrap;flex:1;overflow:hidden}.trpg-modal__back{max-width:40%;min-height:var(--hit);margin-left:calc(-1 * var(--sp-3));padding:0 var(--sp-2);border-radius:var(--r-sm);color:var(--primary-text);font-weight:var(--fw-semibold);white-space:nowrap;background:0 0;border:0;align-items:center;gap:2px;display:inline-flex}.trpg-modal__back span{text-overflow:ellipsis;overflow:hidden}.trpg-modal__back:hover{background:var(--bg-hover)}.trpg-sheet-grip{background:var(--line-ctrl);opacity:.5;border-radius:3px;width:44px;height:5px;margin:8px auto 0;display:none}.trpg-modal__pages{flex:1;min-height:0;position:relative}.trpg-modal[data-variant=confirm] .trpg-modal__pages{flex-direction:column;flex:0 auto;display:flex}.trpg-modal__page{min-height:0;padding:var(--sp-4) var(--sp-5) var(--sp-5);transition:opacity var(--dur-fast) var(--ease-std), transform var(--dur-fast) var(--ease-std), visibility 0s;flex-direction:column;display:flex;position:absolute;inset:0;overflow:auto}.trpg-modal[data-variant=confirm] .trpg-modal__page{flex:0 auto;position:relative;overflow:hidden}.trpg-modal__page.is-under{opacity:0;visibility:hidden;transition:opacity var(--dur-fast) var(--ease-std), transform var(--dur-fast) var(--ease-std), visibility 0s var(--dur-fast);transform:translate(-24px)}.trpg-page-enter-from,.trpg-page-leave-to{opacity:0;transform:translate(24px)}.trpg-page-enter-active,.trpg-page-leave-active{transition:opacity var(--dur-fast) var(--ease-std), transform var(--dur-fast) var(--ease-std)}.trpg-modal[data-variant=confirm] .trpg-page-leave-active{position:absolute;inset:0}.trpg-window[data-layout=narrow] .trpg-modal{background:var(--surface);align-items:stretch;padding:0}.trpg-window[data-layout=narrow] .trpg-modal__card{border-radius:0;width:100%;height:100%}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=drawer]{background:color-mix(in srgb, var(--text) 46%, transparent);align-items:flex-end}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=drawer] .trpg-modal__card{border-radius:14px 14px 0 0;height:88%;animation-name:trpg-sheet}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=drawer] .trpg-sheet-grip{display:block}.trpg-window[data-layout=mid] .trpg-modal[data-variant=drawer] .trpg-modal__card{width:min(440px,100%)}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=confirm]{background:color-mix(in srgb, var(--text) 46%, transparent);align-items:flex-end}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=confirm] .trpg-modal__card{border-radius:14px 14px 0 0;height:auto;animation-name:trpg-sheet}.trpg-confirm{gap:var(--sp-3);flex-direction:column;min-height:0;max-height:100%;display:flex}.trpg-modal[data-variant=sheet] .trpg-confirm{height:100%;padding:var(--sp-4) var(--sp-5) var(--sp-5)}.trpg-confirm__message{flex:none}.trpg-confirm__scroll{gap:var(--sp-3);min-height:0;padding-right:var(--sp-1);overscroll-behavior:contain;flex:0 auto;align-content:start;display:grid;overflow:auto}.trpg-confirm__section{gap:var(--sp-1);padding:var(--sp-2) var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-md);display:grid}.trpg-confirm__section[data-tone=must]{border-color:var(--danger-line);background:var(--danger-bg)}.trpg-confirm__section[data-tone=must] .trpg-confirm__h{color:var(--danger-text)}.trpg-confirm__h{font-size:var(--fs-sm);font-weight:var(--fw-semibold);margin:0}.trpg-confirm__h small{margin-left:var(--sp-2);color:var(--text3);font-weight:400}.trpg-confirm__details{padding-left:var(--sp-5);color:var(--text2);overflow-wrap:anywhere;list-style:outside}.trpg-confirm__actions{justify-content:flex-end;gap:var(--sp-2);margin-top:var(--sp-1);padding-top:var(--sp-2);border-top:var(--border) solid var(--line);flex:none;display:flex}.trpg-confirm__actions--stack{flex-wrap:wrap}.trpg-window[data-layout=narrow] .trpg-confirm__actions{flex-direction:column-reverse}.trpg-window[data-layout=narrow] .trpg-confirm__actions .trpg-btn{width:100%}.trpg-warn{color:var(--warn-text)}.page-stack{gap:var(--sp-4);align-content:start;display:grid}.page-intro{color:var(--text2)}.trpg-info__line{margin:0}.trpg-modal[data-variant=sheet]{left:var(--trpg-sheet-left,0px);bottom:var(--trpg-sheet-bottom,0px)}.trpg-modal[data-variant=sheet] .trpg-modal__card{width:68%;min-width:min(480px,100%);height:70%;min-height:min(520px,100%)}.trpg-modal{cursor:grab}.trpg-modal__card{cursor:auto}.trpg-modal[data-variant=sheet] .trpg-modal__page{padding:0;overflow:hidden}.trpg-modal[data-variant=sheet] .trpg-modal__title{font-family:var(--font-serif)}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=sheet]{background:color-mix(in srgb, var(--text) 46%, transparent);align-items:flex-end}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=sheet] .trpg-modal__card{border-radius:14px 14px 0 0;height:88%;animation-name:trpg-sheet}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=sheet] .trpg-sheet-grip{display:block}", gRe = ".lib-page{flex-direction:column;height:100%;min-height:0;display:flex}.lib-top{align-items:center;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);flex-wrap:wrap;flex:none;display:flex}.trpg-window[data-layout=narrow] .lib-top{padding:var(--sp-2) var(--sp-3);gap:var(--sp-2)}.lib-end{align-items:center;gap:var(--sp-2);flex:none;margin-left:auto;display:flex}.lib-scroll{min-height:0;padding:0 var(--sp-4) var(--sp-8,72px);flex:1;overflow:auto}.trpg-window[data-layout=narrow] .lib-scroll{padding:0 var(--sp-3) 72px}.lib-sec{align-items:center;gap:var(--sp-2);padding:var(--sp-3) 0 var(--sp-1);font-size:var(--fs-sm);font-weight:var(--fw-semibold);color:var(--text2);display:flex}.lib-muted{color:var(--text2)}.lib-faint{color:var(--text3)}.lib-src{color:var(--text3);font-size:var(--fs-xs);font-weight:var(--fw-regular);font-family:var(--font-sans)}.lib-name{text-overflow:ellipsis;white-space:nowrap;min-width:0;font-family:var(--font-serif);font-weight:var(--fw-semibold);text-align:left;color:inherit;font-size:inherit;background:0 0;border:0;flex:1;padding:0;overflow:hidden}.lib-name:hover{text-underline-offset:4px;-webkit-text-decoration:underline dotted;text-decoration:underline dotted}.trpg-shelf__row[data-off=true] .lib-name{color:var(--text2);font-weight:var(--fw-regular)}.lib-alt-name{margin-left:var(--sp-2);color:var(--text3);font-family:var(--font-sans,inherit);font-weight:var(--fw-regular);font-size:var(--fs-sm)}.lib-rowmeta{color:var(--text2);font-size:var(--fs-xs);white-space:nowrap}.trpg-window[data-layout=narrow] .lib-rowmeta{display:none}.trpg-shelf+.lib-sec{margin-top:var(--sp-2)}.lib-shelfbox{flex:none;min-height:0;overflow:hidden}.lib-banner{align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-md);background:var(--primary-tint);color:var(--primary-text);font-size:var(--fs-sm);flex-wrap:wrap;display:flex}.lib-banner>span:first-of-type:not(.trpg-spinner),.lib-banner>.trpg-spinner+span{overflow-wrap:anywhere;flex:140px;min-width:0}.lib-banner>.trpg-spinner{flex:none}.lib-banner--warn{background:var(--surface);color:var(--text);box-shadow:inset 0 0 0 2px var(--danger-line)}.lib-mbody{flex-direction:column;height:100%;min-height:0;display:flex}.lib-mscroll{--lib-row-h:44px;flex:1;min-height:0;overflow:auto}.trpg-window[data-layout=narrow] .lib-mscroll{--lib-row-h:48px}.lib-filter{align-items:center;gap:var(--sp-2);padding:var(--sp-3) var(--sp-4) var(--sp-2);flex-wrap:wrap;flex:none;display:flex}.lib-filter .trpg-input{flex:160px;min-width:140px}.lib-pills{gap:var(--sp-2);padding:0 var(--sp-4) var(--sp-2);flex:none;display:flex;overflow-x:auto}.lib-pills .trpg-pill{background:var(--surface);cursor:pointer;flex:none}.lib-pills .trpg-pill[aria-pressed=true]{background:var(--primary);border-color:var(--primary);color:var(--on-primary);font-weight:var(--fw-semibold)}.lib-pills .trpg-pill small{font-size:var(--fs-xs);opacity:.8;margin-left:4px}.lib-list{border-top:var(--border) solid var(--line);align-content:start;display:grid}.lib-list__row{align-items:center;gap:var(--sp-3);min-height:44px;padding:4px var(--sp-4);border:0;border-bottom:var(--border) solid var(--line);background:var(--surface);text-align:left;color:var(--text);font:inherit;cursor:pointer;width:100%;display:flex}.lib-list__row:hover{background:var(--bg-hover)}.lib-list__row .lib-name{font-weight:var(--fw-semibold)}.lib-list__row[data-off=true] .lib-name{color:var(--text3)}.lib-count{padding:var(--sp-2) var(--sp-4);color:var(--text2);font-size:var(--fs-xs);gap:var(--sp-3);flex:none;align-items:center;display:flex}.lib-state{gap:var(--sp-2);padding:var(--sp-6) var(--sp-5);justify-items:start;display:grid}.lib-state h3{font-size:var(--fs-lg);font-weight:var(--fw-semibold);margin:0}.lib-skel{gap:var(--sp-2);padding:var(--sp-4);display:grid}.lib-skel i{background:linear-gradient(90deg, var(--bg-side), var(--line), var(--bg-side));opacity:.7;border-radius:4px;height:14px;display:block}.lib-dtools{align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-4);border-bottom:var(--border) solid var(--line);background:var(--bg-sunk);flex-wrap:wrap;flex:none;display:flex}.lib-entrytabs{flex-direction:column;flex:1;min-height:0;display:flex}.lib-entrytabs__list{flex:none;padding-block-start:var(--sp-2)}.lib-entrytabs__list [data-state=active]{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}.lib-entrytabs>[hidden]{display:none}.lib-class-table tr>:first-child{background:var(--bg-sunk);position:sticky;left:0}.lib-class-table td{white-space:normal}.lib-class-picker{margin-block-end:var(--sp-3)}.lib-dbody{padding:var(--sp-4) var(--sp-5) var(--sp-6);gap:var(--sp-3);line-height:var(--lh-body);align-content:start;display:grid}.trpg-window[data-layout=narrow] .lib-dbody{padding:var(--sp-4) var(--sp-4) var(--sp-6)}.lib-dbody p{margin:0}.lib-dbody h3{margin:var(--sp-2) 0 0;font-size:var(--fs-md);font-weight:var(--fw-semibold)}.lib-srcline{color:var(--text3);font-size:var(--fs-xs)}.lib-sumline{gap:2px var(--sp-4);color:var(--text2);font-size:var(--fs-sm);flex-wrap:wrap;display:flex}.lib-sumline b{color:var(--text);font-weight:var(--fw-semibold)}.lib-block{gap:var(--sp-1);padding:var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--bg-sunk);display:grid}.lib-rtable{border-collapse:collapse;width:100%;font-size:var(--fs-sm)}.lib-rtable th,.lib-rtable td{border:var(--border) solid var(--line);text-align:left;vertical-align:top;padding:6px 10px}.lib-rtable th{background:var(--bg-sunk);white-space:nowrap}.lib-tablewrap{overflow:auto}.lib-list-ul{gap:var(--sp-1);margin:0;padding-left:1.4em;display:grid}.lib-quote{padding-left:var(--sp-3);border-left:3px solid var(--line-ctrl);color:var(--text2);margin:0}.lib-inset{padding:var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--bg-sunk);gap:var(--sp-2);display:grid}.lib-dice{color:var(--primary-text);font:inherit;line-height:inherit;text-underline-offset:3px;white-space:nowrap;cursor:pointer;background:0 0;border:0;padding:0;text-decoration:underline;text-decoration-thickness:1px;display:inline}.lib-dice:hover{text-decoration-thickness:2px}.lib-fold{border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--bg-sunk)}.lib-fold>summary{align-items:center;gap:var(--sp-2);min-height:40px;padding:0 var(--sp-3);cursor:pointer;list-style:none;display:flex}.lib-fold__body{padding:0 var(--sp-3) var(--sp-3);font-size:var(--fs-sm);overflow:auto}.lib-headsw{flex:none;align-items:center;gap:6px;display:inline-flex}.lib-sortbar{align-items:center;gap:var(--sp-2);padding:0 var(--sp-4) var(--sp-2);font-size:var(--fs-sm);color:var(--text2);flex-wrap:wrap;display:flex}.lib-table{border-collapse:separate;border-spacing:0;width:100%;font-size:var(--fs-sm)}.lib-table th{z-index:2;text-align:left;white-space:nowrap;font-weight:var(--fw-semibold);color:var(--text2);background:var(--bg-sunk);border-bottom:var(--border) solid var(--line);padding:0 10px;position:sticky;top:0}.lib-th{min-height:36px;color:var(--text);font:inherit;font-weight:var(--fw-semibold);cursor:pointer;background:0 0;border:0;align-items:center;gap:2px;padding:0;display:inline-flex}.lib-table td{white-space:nowrap;border-bottom:var(--border) solid var(--line);background:var(--surface);padding:8px 10px}.lib-table tbody tr{cursor:pointer}.lib-table tbody tr:hover td{background:var(--bg-hover)}.lib-table td.lib-name{font-weight:var(--fw-semibold);text-overflow:ellipsis;max-width:220px;overflow:hidden}.lib-table tr[data-off=true] td{color:var(--text3)}.lib-table th:first-child,.lib-table td:first-child{z-index:1;position:sticky;left:0}.lib-table th:first-child{z-index:3}.trpg-window[data-layout=narrow] .lib-table td{padding:12px 10px}.lib-sortable{opacity:.35}.lib-fold--bar{margin:0 var(--sp-4) var(--sp-2)}.lib-fold--bar>summary small{color:var(--text2);font-weight:var(--fw-regular)}.lib-fold--bar .lib-fold__body{gap:var(--sp-2);max-height:220px;display:grid}.lib-dlcard{gap:var(--sp-2);margin-top:var(--sp-3);padding:var(--sp-4);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);display:grid}.lib-dlcard__top{align-items:center;gap:var(--sp-3);flex-wrap:wrap;display:flex}.lib-title{font-size:var(--fs-lg);font-weight:var(--fw-semibold)}.lib-rbar{align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-bottom:var(--border) solid var(--line);background:var(--bg-sunk);flex:none;display:flex}.lib-read{flex:1;grid-template-columns:1fr;min-height:0;display:grid}.lib-read[data-toc=true]{grid-template-columns:200px 1fr}.trpg-window[data-layout=narrow] .lib-read[data-toc=true]{grid-template-columns:1fr}.trpg-window[data-layout=narrow] .lib-read[data-toc=true] main{display:none}.lib-read>aside{border-right:var(--border) solid var(--line);background:var(--bg-sunk);overflow:auto}.lib-toc{align-content:start;display:grid}.lib-toc summary{padding:var(--sp-2) var(--sp-3);font-weight:var(--fw-semibold);cursor:pointer}.lib-toc details>button{width:100%}.lib-toc .lib-toc__section[data-depth=true]{padding-inline-start:var(--sp-5)}.lib-toc__chapter{align-items:center;gap:var(--sp-1);width:100%;min-width:0;min-height:40px;padding:0 var(--sp-3);color:var(--text);font:inherit;font-weight:var(--fw-semibold);text-align:left;cursor:pointer;background:0 0;border:0;border-left:3px solid #0000;display:flex}.lib-toc__chapter span{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.lib-toc__chapter:hover{background:var(--bg-hover)}.lib-toc__chapter[aria-current=true]{border-left-color:var(--primary);background:var(--primary-tint)}.lib-toc__sections{grid-template-rows:1fr;display:grid}.lib-toc__inner{min-height:0;display:grid;overflow:hidden}.lib-toc-drop-enter-active,.lib-toc-drop-leave-active{transition:grid-template-rows var(--dur-base) var(--ease-out), opacity var(--dur-base) var(--ease-out)}.lib-toc-drop-enter-from,.lib-toc-drop-leave-to{opacity:0;grid-template-rows:0fr}.lib-toc__caret{transition:transform var(--dur-base) var(--ease-out);flex:none}.lib-toc__chapter[aria-expanded=true] .lib-toc__caret{transform:rotate(90deg)}@media (prefers-reduced-motion:reduce){.lib-toc-drop-enter-active,.lib-toc-drop-leave-active,.lib-toc__caret{transition:none}}[data-reader-current]{background:var(--primary-tint)}.lib-author-block{overflow-wrap:anywhere;min-width:0;display:flow-root}.lib-author-block table{border-collapse:collapse;width:100%}.lib-author-block table.ve-rd__table th,.lib-author-block table.ve-rd__table td{border:var(--border) solid var(--line);padding:var(--sp-2)}.lib-roll-outcome{margin-block:var(--sp-2)}.lib-toc button{min-height:40px;padding:0 var(--sp-3);text-align:left;color:var(--text);font:inherit;cursor:pointer;background:0 0;border:0;border-left:3px solid #0000;align-items:center;display:flex}.lib-toc button[aria-current=true]{border-left-color:var(--primary);background:var(--primary-tint);font-weight:var(--fw-semibold)}.lib-sec-block{gap:var(--sp-3);display:grid}.lib-stat{display:grid}.lib-stat>div{gap:var(--sp-3);border-bottom:1px dotted var(--line);font-size:var(--fs-sm);grid-template-columns:72px 1fr;padding:5px 0;display:grid}.lib-stat>div>span:first-child{color:var(--text2)}.lib-abil{gap:var(--sp-2);text-align:center;padding:var(--sp-2) 0;grid-template-columns:repeat(6,1fr);display:grid}.trpg-window[data-layout=narrow] .lib-abil{grid-template-columns:repeat(3,1fr)}.lib-abil>div{border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--bg-sunk);font-size:var(--fs-sm);padding:4px 2px}.lib-abil small{color:var(--text2);font-size:var(--fs-xs);display:block}.lib-rtable tr[data-hit=true] td{background:var(--primary-tint);font-weight:var(--fw-semibold)}.lib-rolltable{gap:var(--sp-2);display:grid}.lib-numbox{align-items:center;gap:var(--sp-2);display:inline-flex}.lib-versions{gap:var(--sp-2);display:grid}.lib-alt-row{justify-content:space-between;align-items:center;gap:var(--sp-3);min-height:36px;display:flex}.lib-versions__head{align-items:center;gap:var(--sp-3);flex-wrap:wrap;display:flex}.lib-alt-pick{width:100%;padding:var(--sp-2) var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--text);font:inherit;text-align:left;cursor:pointer;justify-content:flex-start;min-height:44px}.lib-alt-pick[data-on=true]{border-color:var(--primary);background:var(--primary-tint)}.lib-alt-pick:focus-visible{outline:2px solid var(--focus,var(--primary));outline-offset:2px}.lib-alt-pick__dot{border:2px solid var(--line-ctrl);background:0 0;border-radius:50%;flex:none;width:14px;height:14px}.lib-alt-pick[data-on=true] .lib-alt-pick__dot{border-color:var(--primary);background:radial-gradient(circle, var(--primary) 45%, transparent 50%)}.lib-alt-pick__name{overflow-wrap:anywhere;min-width:0}.lib-variants{gap:var(--sp-1) var(--sp-3);flex-wrap:wrap;display:flex}.lib-table tbody tr:not(.lib-spacer){height:var(--lib-row-h,44px)}.lib-table tr.lib-spacer,.lib-table tr.lib-spacer td{cursor:default;background:0 0;border:0;padding:0}.lib-list__row{height:var(--lib-row-h,44px);box-sizing:border-box}.lib-table td{box-sizing:border-box;text-overflow:ellipsis;overflow:hidden}.lib-pad{padding:var(--sp-4) var(--sp-5) 72px;gap:var(--sp-3);align-content:start;display:grid}.trpg-window[data-layout=narrow] .lib-pad{padding:var(--sp-4) var(--sp-4) 72px}.lib-pad .trpg-check,.lib-fold__body .trpg-check{border-bottom:var(--border) solid var(--line);align-items:center;width:100%;min-height:40px;display:flex}.lib-img{margin:var(--sp-2) 0;gap:var(--sp-1);display:grid}.lib-img__open{align-items:center;gap:var(--sp-2);color:inherit;font:inherit;cursor:pointer;background:0 0;border:0;justify-self:start;padding:2px 0;display:inline-flex}.lib-img__open .lib-img__label{text-underline-offset:4px;font-family:var(--font-serif);font-weight:var(--fw-semibold);-webkit-text-decoration:underline dotted;text-decoration:underline dotted}.lib-img__pic{border-radius:var(--r-md);max-width:100%;height:auto;display:block}.lib-img__err{align-items:center;gap:var(--sp-2);margin:0;display:flex}.lib-gallery{gap:var(--sp-3);grid-template-columns:repeat(auto-fill,minmax(160px,1fr));display:grid}.lib-hr{border:0;border-top:var(--border) solid var(--line);margin:var(--sp-3) 0}.lib-bar{background:var(--line);vertical-align:middle;border-radius:3px;flex:none;width:96px;height:6px;display:inline-block;position:relative;overflow:hidden}.lib-bar>i{background:var(--primary);transition:width var(--dur-base) var(--ease-std);border-radius:3px;position:absolute;top:0;bottom:0;left:0}.lib-bar[data-indet=true]>i{width:36%;animation:1.2s ease-in-out infinite alternate lib-bar-slide}@keyframes lib-bar-slide{0%{left:0}to{left:64%}}.lib-dling{align-items:center;gap:var(--sp-2);display:inline-flex}.lib-banner>.lib-bar{margin-left:auto}@media (prefers-reduced-motion:reduce){.lib-bar[data-indet=true]>i{animation:none;left:32%}}.trpg-shelf__row{content-visibility:auto;contain-intrinsic-size:auto 48px}.lib-ability{text-align:center;font-weight:var(--fw-semibold);margin:var(--sp-2) 0}.lib-embedded{margin:var(--sp-3) 0;border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);overflow:hidden}.lib-embedded__head{align-items:center;gap:var(--sp-2);padding:var(--sp-1) var(--sp-3) var(--sp-1) var(--sp-1);background:var(--primary-tint);border-bottom:var(--border) solid var(--line);font-family:var(--font-serif);display:flex}.lib-embedded__head small{font-family:var(--font-sans,inherit);margin-left:auto}.lib-embedded[data-fluff=true] .lib-embedded__head{background:var(--bg)}.lib-embedded>div,.lib-embedded__body{padding:var(--sp-2) var(--sp-3)}.lib-embedded .lib-embedded__body{padding:0}.lib-embedded h4{margin:var(--sp-2) 0 var(--sp-1);font-size:var(--fs-md,1rem)}.lib-inline{display:inline}.lib-filter--top{z-index:3;padding:var(--sp-3) 0 var(--sp-2);background:var(--bg);position:sticky;top:0}.lib-dlsec{gap:var(--sp-2);min-width:0;margin-top:var(--sp-4);padding:var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);display:grid}.lib-dlsec__head{align-items:center;gap:var(--sp-2) var(--sp-3);flex-wrap:wrap;min-width:0;display:flex}.lib-dlsec__head .lib-title{flex:1 0 auto}.lib-dlsec__tools{gap:var(--sp-2);flex-wrap:wrap;flex:280px;justify-content:flex-end;align-items:center;min-width:0;display:flex}.lib-dlsec__tools .trpg-input{flex:auto;min-width:0;max-width:320px}.trpg-window[data-layout=wide] .lib-dlsec__tools{flex-wrap:nowrap}.lib-dlsec__tools .trpg-btn{white-space:nowrap;flex:none}.lib-dlsec__bar{align-items:center;gap:var(--sp-2);flex-wrap:wrap;display:flex}.lib-dlsec__bar .lib-banner{flex:100%}.lib-dlsec__list{min-width:0}.lib-dlsec__empty{padding:var(--sp-2) 0;margin:0}.lib-dlgrp{border-top:var(--border) solid var(--line);min-width:0}.lib-dlgrp:first-child{border-top:0}.lib-dlgrp__sum{align-items:center;gap:var(--sp-2);min-height:var(--hit);display:flex}.lib-dlgrp__btn{align-items:center;gap:var(--sp-1);min-height:var(--hit);color:var(--text);font:inherit;font-weight:var(--fw-semibold);text-align:left;cursor:pointer;background:0 0;border:0;flex:1;padding:0;display:inline-flex}.lib-dlgrp__btn small{margin-left:var(--sp-2);color:var(--text3);font-weight:var(--fw-regular)}.lib-dlgrp__rows{min-width:0;margin:0 0 var(--sp-2)}.lib-dlgrp__rows .trpg-row{gap:var(--sp-2)}.lib-dlgrp__rows .trpg-row[data-selected=true]{background:var(--primary-tint)}.lib-selbar{z-index:2;align-items:center;gap:var(--sp-2);min-width:0;padding:var(--sp-2) var(--sp-3);margin:0 calc(-1 * var(--sp-3)) calc(-1 * var(--sp-3));border-top:var(--border) solid var(--line);background:var(--surface);box-shadow:0 -4px 10px color-mix(in srgb, var(--text) 8%, transparent);border-radius:0 0 var(--r-md) var(--r-md);flex-wrap:wrap;display:flex;position:sticky;bottom:0}.lib-selbar .lib-end{justify-content:flex-end;gap:var(--sp-2);flex-wrap:wrap;flex:auto;min-width:0;display:inline-flex}.lib-selbar>.lib-muted{min-width:0}.lib-selbar{padding-right:calc(var(--sp-3) + 64px)}.lib-scroll:has(.lib-selbar){padding-bottom:0}.lib-scroll:has(.lib-selbar) .lib-dlsec{padding-bottom:var(--sp-3)}.trpg-window[data-layout=narrow] .lib-dlsec__head .lib-title{flex:100%}.trpg-window[data-layout=narrow] .lib-dlsec__tools{flex:100%;justify-content:flex-start}.trpg-window[data-layout=narrow] .lib-dlsec__tools .trpg-input{flex:100%;max-width:none}.trpg-window[data-layout=narrow] .lib-dlsec__tools .trpg-btn{flex:0 auto}.trpg-window[data-layout=narrow] .lib-selbar .lib-end{flex:100%;justify-content:flex-start}.trpg-window[data-layout=narrow] .lib-selbar .lib-end .trpg-btn{flex:120px}.trpg-window[data-layout=narrow] .lib-scroll:has(.lib-selbar){padding-bottom:0}.lib-langsw{border:var(--border) solid var(--line);border-radius:var(--r-pill);background:var(--surface);box-shadow:inset 0 1px 3px color-mix(in srgb, var(--text) 12%, transparent);flex:none;padding:2px;display:inline-flex}.lib-langsw__btn{min-width:44px;min-height:28px;padding:0 var(--sp-3);border-radius:var(--r-pill);color:var(--text2);font:inherit;font-size:var(--fs-sm);font-weight:var(--fw-semibold);cursor:pointer;transition:background var(--dur-fast) var(--ease-std), color var(--dur-fast) var(--ease-std);background:0 0;border:0}.lib-langsw__btn:hover:not(:disabled):not([aria-pressed=true]){background:var(--bg-hover);color:var(--text)}.lib-langsw__btn[aria-pressed=true]{background:var(--primary);color:var(--on-primary);cursor:default}.lib-langsw__btn:disabled{opacity:.4;cursor:not-allowed}.lib-langsw__btn:focus-visible{outline:2px solid var(--focus,var(--primary));outline-offset:1px}.lib-deadlink{-webkit-text-decoration:underline dashed var(--text3);text-decoration:underline dashed var(--text3);text-underline-offset:3px;cursor:help;color:var(--text2)}.lib-deadlink__q{color:var(--text3);margin-left:1px;font-size:.7em}.lib-author-table table{border-collapse:collapse;width:100%;font-size:var(--fs-sm)}.lib-author-table th,.lib-author-table td{border:var(--border) solid var(--line);text-align:left;vertical-align:top;padding:6px 10px}.lib-author-table th{background:var(--bg-sunk)}.lib-author-table caption{color:var(--text2);font-size:var(--fs-sm);text-align:left;padding-bottom:var(--sp-1)}.lib-author-table tr[data-hit=true] td{background:var(--primary-tint);font-weight:var(--fw-semibold)}.lib-rolltable__bar{margin-bottom:var(--sp-1);justify-content:flex-end;display:flex}.trpg-shelf__row .trpg-check.lib-rowpick{flex:none}.lib-errdetail{padding:var(--sp-3);border-radius:var(--r-sm);background:var(--bg-sunk);font-size:var(--fs-xs);white-space:pre-wrap;overflow-wrap:anywhere;-webkit-user-select:text;user-select:text;max-height:50vh;margin:0;overflow:auto}.lib-draftlist{margin:calc(-1 * var(--sp-2)) 0 var(--sp-3);padding:var(--sp-2);border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--surface);gap:2px;display:grid}.lib-draftlist__row{align-items:center;gap:var(--sp-2);min-height:40px;display:flex}.lib-draftlist__name{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;overflow:hidden}.lib-draftlist__foot{padding-top:var(--sp-1);border-top:var(--border) solid var(--line);justify-content:flex-end;display:flex}", _Re = ".trpg-hero,.trpg-banner{gap:var(--sp-1);width:100%;min-height:168px;padding:var(--sp-6);border-radius:var(--r-lg);background:var(--hero-bg);color:var(--hero-ink);text-align:left;box-shadow:var(--shadow-2);transition:box-shadow var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);border:0;align-content:end;display:grid;position:relative;overflow:hidden}button.trpg-hero:hover:not(:disabled){box-shadow:var(--shadow-3);transform:translateY(-1px)}button.trpg-hero:active:not(:disabled){transform:none}.trpg-window[data-layout=narrow] .trpg-hero,.trpg-window[data-layout=narrow] .trpg-banner{min-height:140px;padding:var(--sp-5) var(--sp-4)}.trpg-hero--idle{background:var(--bg-side);color:var(--text);box-shadow:none}.trpg-hero--idle .trpg-hero__sub{color:var(--text2)}.trpg-hero--off{opacity:.55;cursor:not-allowed;box-shadow:none}.trpg-hero__art{pointer-events:none;width:100%;height:100%;position:absolute;inset:0}.trpg-hero__art .far{fill:color-mix(in srgb, var(--hero-ink) 9%, var(--hero-bg))}.trpg-hero__art .mid{fill:color-mix(in srgb, var(--hero-ink) 14%, var(--hero-bg))}.trpg-hero__art .near{fill:color-mix(in srgb, var(--hero-ink) 20%, var(--hero-bg))}.trpg-hero__art .castle{fill:color-mix(in srgb, var(--hero-ink) 28%, var(--hero-bg))}.trpg-hero__art .lit,.trpg-hero__art .moon{fill:var(--accent)}.trpg-hero__art .moon{opacity:.85}.trpg-hero__title,.trpg-hero__sub,.trpg-hero__go,.trpg-banner__title,.trpg-banner__line,.trpg-banner__go{position:relative}.trpg-hero__title,.trpg-banner__title{font-size:var(--fs-3xl);font-weight:var(--fw-bold);line-height:var(--lh-tight);overflow-wrap:anywhere}.trpg-window[data-layout=narrow] .trpg-hero__title,.trpg-window[data-layout=narrow] .trpg-banner__title{font-size:var(--fs-2xl)}.trpg-hero__sub{color:var(--hero-ink2);max-width:30em}.trpg-hero__go{margin-top:var(--sp-3);justify-self:start;align-items:center;gap:var(--sp-2);padding:7px var(--sp-4);border-radius:var(--r-sm);background:var(--primary-hover);color:var(--on-primary);font-weight:var(--fw-semibold);display:inline-flex}.trpg-banner{align-content:space-between;gap:var(--sp-3)}.trpg-banner__main{gap:var(--sp-1);color:inherit;text-align:left;background:0 0;border:0;padding:0;display:grid;position:relative}.trpg-banner__main:focus-visible{box-shadow:0 0 0 2px var(--hero-bg), 0 0 0 4px var(--accent)}.trpg-banner__foot{justify-content:space-between;align-items:center;gap:var(--sp-3);display:flex;position:relative}.trpg-banner__new{align-items:center;gap:var(--sp-2);min-height:var(--hit);padding:0 var(--sp-4);border-radius:var(--r-sm);background:var(--primary-hover);color:var(--on-primary);font-weight:var(--fw-semibold);transition:background var(--dur-fast) var(--ease-std);border:0;display:inline-flex}.trpg-banner__new:hover:not(:disabled){background:var(--primary)}.trpg-banner__new:disabled{background:var(--line);color:var(--text2);cursor:not-allowed}.trpg-banner__line{gap:var(--sp-1) var(--sp-4);color:var(--hero-ink2);flex-wrap:wrap;display:flex}.trpg-banner__state[data-dirty=true]{color:var(--accent);font-weight:var(--fw-semibold)}.trpg-banner__go{font-size:var(--fs-sm);color:var(--hero-ink2);background:0 0;border:0;align-items:center;gap:2px;padding:0;display:inline-flex}.trpg-linkcard{gap:var(--sp-3);width:100%;min-height:var(--hit-touch);padding:var(--sp-3) var(--sp-4);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--text);text-align:left;box-shadow:var(--shadow-1);transition:border-color var(--dur-fast) var(--ease-std), background var(--dur-fast) var(--ease-std);grid-template-columns:auto 1fr auto;align-items:center;display:grid}.trpg-linkcard:hover{background:var(--bg-hover);border-color:var(--line-ctrl)}.trpg-linkcard__icon{border-radius:var(--r-sm);background:var(--primary-tint);width:36px;height:36px;color:var(--primary-text);place-items:center;display:grid}.trpg-linkcard__text{display:grid}.trpg-linkcard__text b{font-weight:var(--fw-semibold)}.trpg-linkcard__text small{color:var(--text2);font-size:var(--fs-xs)}.trpg-linkcard__go{color:var(--text2);font-size:var(--fs-sm);white-space:nowrap;align-items:center;gap:2px;display:inline-flex}.trpg-modal[data-variant=dialog] .trpg-modal__page:has(.trpg-wizard){overflow:hidden}.trpg-wizard{flex-direction:column;flex:1;min-height:0;display:flex}.trpg-steps{margin:0 0 var(--sp-4);gap:var(--sp-2);grid-template-columns:repeat(4,1fr);display:grid}.trpg-steps li{border-bottom:3px solid var(--line);color:var(--text2);align-items:center;display:flex}.trpg-steps li[data-state=done]{border-color:var(--primary-tint-line);color:var(--text)}.trpg-steps li[data-state=current]{border-color:var(--primary);color:var(--text);font-weight:var(--fw-semibold)}.trpg-steps button{align-items:center;gap:var(--sp-2);width:100%;min-height:var(--hit);padding:var(--sp-1) 0;color:inherit;text-align:left;font-weight:inherit;background:0 0;border:0;display:flex}.trpg-steps button:disabled{cursor:default}.trpg-steps li[data-state=done] button:not(:disabled):hover .trpg-steps__n{background:var(--primary-tint-line)}.trpg-steps__n{border:var(--border-strong) solid currentColor;width:22px;height:22px;font-size:var(--fs-xs);border-radius:50%;flex:none;place-items:center;display:grid}.trpg-steps li[data-state=current] .trpg-steps__n{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}.trpg-steps li[data-state=done] .trpg-steps__n{background:var(--primary-tint);border-color:var(--primary-tint-line);color:var(--primary-text)}.trpg-steps__compact{margin:0 0 var(--sp-2);font-weight:var(--fw-semibold);display:none}.trpg-window[data-layout=narrow] .trpg-steps{display:none}.trpg-window[data-layout=narrow] .trpg-steps__compact{display:block}.trpg-wizard__title{margin:0 0 var(--sp-3);font-size:var(--fs-xl);font-weight:var(--fw-semibold)}.trpg-wizard__filters{align-items:center;gap:var(--sp-2) var(--sp-3);margin-bottom:var(--sp-3);flex-wrap:wrap;display:flex}.trpg-wizard__filters .trpg-input{flex:160px;min-width:0}.trpg-wizard__picked{margin:var(--sp-3) 0 0;font-weight:var(--fw-semibold);flex:none}.trpg-wizard__body{flex-direction:column;flex:1;min-height:0;display:flex;overflow:auto}.trpg-wizard__foot{justify-content:flex-end;gap:var(--sp-3);padding-top:var(--sp-4);margin-top:var(--sp-3);border-top:var(--border) solid var(--line);flex:none;display:flex}.trpg-window[data-layout=narrow] .trpg-wizard__foot{flex-direction:column-reverse}.trpg-window[data-layout=narrow] .trpg-wizard__foot .trpg-btn{width:100%}.trpg-rulecard{gap:var(--sp-3);padding:var(--sp-4);border:2px solid var(--primary);border-radius:var(--r-md);background:var(--primary-tint);cursor:pointer;display:flex}.trpg-rulecard[aria-disabled=true]{border-color:var(--line);background:var(--surface);opacity:.6;cursor:default}.trpg-rulecard__mark{color:var(--primary-text);line-height:1.5}.trpg-rulecard__body{gap:var(--sp-1);justify-items:start;display:grid}.trpg-field--grow{flex-direction:column;flex:1;min-height:0;margin-bottom:0;display:flex}.trpg-shelf{border:var(--border) solid var(--line-ctrl);border-radius:var(--r-md);background:var(--surface);flex:1;align-content:start;min-height:180px;overflow:auto}.trpg-shelf__group{border-bottom:var(--border) solid var(--line)}.trpg-shelf__group:last-child{border-bottom:0}.trpg-shelf__sum{align-items:center;gap:var(--sp-2);min-height:var(--hit);padding:var(--sp-1) var(--sp-3);font-weight:var(--fw-semibold);background:var(--bg-sunk);cursor:pointer;list-style:none;display:flex}.trpg-shelf__sum::-webkit-details-marker{display:none}.trpg-shelf__group:not([open]) .trpg-shelf__chev-open,.trpg-shelf__group[open] .trpg-shelf__chev-closed{display:none}.trpg-shelf__sum small{font-weight:var(--fw-regular);color:var(--text2);margin-left:auto}.trpg-shelf__row{align-items:center;gap:var(--sp-3);min-height:40px;padding:0 var(--sp-3);border-top:var(--border) solid var(--line);transition:background var(--dur-fast) var(--ease-std);display:flex}.trpg-shelf__row:hover{background:var(--bg-hover)}.trpg-shelf__row small{color:var(--text2);white-space:nowrap;margin-left:auto}.trpg-shelf__row .trpg-check{flex:1;min-width:0}.trpg-summary{gap:var(--sp-1);margin-top:var(--sp-4);padding:var(--sp-3) var(--sp-4);border-radius:var(--r-md);background:var(--bg-sunk);border:var(--border) solid var(--line);display:grid}.trpg-summary b{font-size:var(--fs-lg);font-weight:var(--fw-semibold);overflow-wrap:anywhere}.trpg-drawer{gap:var(--sp-3);flex-direction:column;flex:1;min-height:0;display:flex;position:relative}.trpg-drawer__current{gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);border:var(--border) solid var(--primary-tint-line);border-radius:var(--r-md);background:var(--primary-tint);display:grid}.trpg-drawer__title{font-weight:var(--fw-semibold);font-size:var(--fs-lg);overflow-wrap:anywhere}.trpg-drawer__buttons{gap:var(--sp-2);flex-wrap:wrap;align-items:center;display:flex}.trpg-drawer__body{gap:var(--sp-2);flex:1;align-content:start;min-height:0;display:grid;overflow:auto}.trpg-drawer__bottom{gap:var(--sp-2);padding-top:var(--sp-3);border-top:var(--border) solid var(--line);flex:none;display:flex}.trpg-drawer__bottom--confirm{justify-content:flex-end}.trpg-window[data-layout=narrow] .trpg-drawer__bottom--confirm{flex-direction:column-reverse}.trpg-window[data-layout=narrow] .trpg-drawer__bottom--confirm .trpg-btn{width:100%}.trpg-drawer[data-dragging=true]:after{content:\"松开以导入\";z-index:5;border:2px dashed var(--primary);border-radius:var(--r-md);background:color-mix(in srgb, var(--bg) 88%, transparent);color:var(--primary-text);font-weight:var(--fw-semibold);place-items:center;display:grid;position:absolute;inset:0}.trpg-camp{border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);box-shadow:var(--shadow-1)}.trpg-camp>summary{gap:var(--sp-2);padding:var(--sp-3);cursor:pointer;grid-template-columns:auto 1fr auto;align-items:center;list-style:none;display:grid}.trpg-camp>summary::-webkit-details-marker{display:none}.trpg-camp:not([open]) .trpg-camp__chev-open,.trpg-camp[open] .trpg-camp__chev-closed{display:none}.trpg-camp__name{font-weight:var(--fw-semibold);font-size:var(--fs-lg);overflow-wrap:anywhere;min-width:0;display:grid}.trpg-camp__name small{font-weight:var(--fw-regular);font-size:var(--fs-xs);color:var(--text2)}.trpg-saves{padding:0 var(--sp-2) var(--sp-2);gap:4px;margin:0;list-style:none;display:grid}.trpg-saves li{align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-sm);border:2px solid #0000;display:flex}.trpg-saves li[data-current=true]{border-color:var(--primary);background:var(--primary-tint)}.trpg-saves__main{flex:1;min-width:0;display:grid}.trpg-saves__top{gap:var(--sp-2);flex-wrap:wrap;align-items:center;display:flex}.trpg-saves__top b{font-weight:var(--fw-semibold);overflow-wrap:anywhere}.trpg-saves__meta{font-size:var(--fs-xs);color:var(--text2);overflow-wrap:anywhere}.trpg-saves__end{align-items:center;gap:var(--sp-1);flex:none;display:flex}.trpg-saves__rename{flex:1;min-width:0;min-height:32px}.trpg-saves__renamerow{align-items:center;gap:var(--sp-1);min-width:0;display:flex}.trpg-saves__renamebtns{flex:none;gap:2px;display:inline-flex}.trpg-saves__noteedit{gap:var(--sp-2);margin-top:var(--sp-1);display:grid}.trpg-saves__noteactions{justify-content:flex-end;gap:var(--sp-2);display:flex}.trpg-fold{border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface)}.trpg-fold>summary{align-items:center;gap:var(--sp-2);min-height:var(--hit);padding:var(--sp-1) var(--sp-3);font-weight:var(--fw-semibold);cursor:pointer;list-style:none;display:flex}.trpg-fold>summary::-webkit-details-marker{display:none}.trpg-fold:not([open]) .trpg-fold__chev-open,.trpg-fold[open] .trpg-fold__chev-closed{display:none}.trpg-fold>summary small{font-weight:var(--fw-regular);color:var(--text2);margin-left:auto}.trpg-fold__actions{gap:var(--sp-2);padding:var(--sp-1) var(--sp-3) var(--sp-3);flex-wrap:wrap;display:flex}.trpg-checks{gap:var(--sp-2);display:grid}.trpg-checks>div{gap:var(--sp-1);padding:var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);display:grid}.trpg-checks>div[data-kind=block]{border:2px solid var(--danger-line)}.trpg-checks b{gap:var(--sp-2);font-weight:var(--fw-semibold);align-items:center;display:flex}.trpg-checks .trpg-check{min-height:32px}.trpg-menu{display:grid}.trpg-menu__row{gap:2px var(--sp-3);width:100%;min-height:60px;padding:var(--sp-3) var(--sp-5);border:0;border-bottom:var(--border) solid var(--line);color:var(--text);text-align:left;transition:background var(--dur-fast) var(--ease-std);background:0 0;border-radius:0;grid-template-columns:1fr auto;align-items:center;display:grid}.trpg-window[data-layout=narrow] .trpg-menu__row{min-height:68px;padding:var(--sp-3) var(--sp-4)}.trpg-menu__row:last-child{border-bottom:0}.trpg-menu__row:hover{background:var(--bg-hover)}.trpg-menu__row b{font-weight:var(--fw-semibold)}.trpg-menu__row small{color:var(--text2);grid-column:1}.trpg-menu__row>span{color:var(--text2);grid-area:1/2/span 2;display:grid}.trpg-back{min-height:var(--hit-touch);padding:0 var(--sp-5);color:var(--primary-text);font-weight:var(--fw-semibold);background:0 0;border:0;align-items:center;gap:2px;display:inline-flex}.trpg-pagehead{padding:0 var(--sp-5) var(--sp-2);font-size:var(--fs-xl);font-weight:var(--fw-semibold)}.trpg-settings{display:grid}.trpg-settings__row{gap:4px var(--sp-4);padding:var(--sp-4) var(--sp-5);border-bottom:var(--border) solid var(--line);grid-template-columns:1fr auto;align-items:center;display:grid}.trpg-settings__row:last-child{border-bottom:0}.trpg-settings__row .trpg-field__hint{grid-column:1}.trpg-window[data-layout=narrow] .trpg-settings__row{padding:var(--sp-4);grid-template-columns:1fr}.trpg-window[data-layout=narrow] .trpg-settings__row>.trpg-stepper,.trpg-window[data-layout=narrow] .trpg-settings__row>.trpg-ctrl{justify-self:start}.trpg-diag,.trpg-about{padding:0 var(--sp-5)}.trpg-window[data-layout=narrow] .trpg-diag,.trpg-window[data-layout=narrow] .trpg-about{padding:0 var(--sp-4)}.probe{padding:var(--sp-3) 0;border-bottom:var(--border) solid var(--line)}.probe__head{justify-content:space-between;align-items:center;gap:var(--sp-2);display:flex}.probe__title{font-size:var(--fs-lg);font-weight:var(--fw-semibold)}.probe__hint{margin:var(--sp-1) 0;color:var(--text2);font-size:var(--fs-sm)}.probe__summary{margin:var(--sp-1) 0}.probe__actions{gap:var(--sp-2);margin-top:var(--sp-2);flex-wrap:wrap;display:flex}.probe pre{max-height:200px;margin:var(--sp-2) 0 0;padding:var(--sp-2);background:var(--surface);border:var(--border) solid var(--line);border-radius:var(--r-sm);font-size:var(--fs-xs);white-space:pre-wrap;word-break:break-all;overflow:auto}.probe summary{cursor:pointer;color:var(--text2);font-size:var(--fs-sm)}.report-bar{gap:var(--sp-2);padding:var(--sp-3) 0;flex-wrap:wrap;align-items:center;display:flex}.trpg-import__ok{color:var(--success-text);font-weight:var(--fw-semibold)}", vRe = ".pp{flex-direction:column;min-height:100%;display:flex}.pp-top{justify-content:space-between;align-items:center;gap:var(--sp-3);padding:var(--sp-4) var(--sp-5) var(--sp-2);flex-wrap:wrap;display:flex}.trpg-window[data-layout=narrow] .pp-top{padding:var(--sp-3) var(--sp-4) var(--sp-2)}.pp-tabs{border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--bg-sunk);display:inline-flex;overflow:hidden}.pp-tabs button{min-height:34px;padding:0 var(--sp-4);color:var(--text);align-items:center;gap:var(--sp-1);background:0 0;border:0;display:inline-flex}.pp-tabs button+button{border-left:var(--border) solid var(--line-ctrl)}.pp-tabs button small{color:var(--text2);font-size:var(--fs-xs)}.pp-tabs button:hover:not([aria-pressed=true]){background:var(--bg-hover)}.pp-tabs button[aria-pressed=true]{background:var(--primary);color:var(--on-primary);font-weight:var(--fw-semibold)}.pp-tabs button[aria-pressed=true] small{color:inherit;opacity:.85}.trpg-window[data-layout=narrow] .pp-tabs{width:100%}.trpg-window[data-layout=narrow] .pp-tabs button{padding:0 var(--sp-2);min-height:var(--hit-touch);flex:1;justify-content:center}.pp-title{align-items:center;gap:var(--sp-2);font-size:var(--fs-lg);display:flex}.pp-tools{align-items:center;gap:var(--sp-2);margin-left:auto;display:flex}.pp-search{align-items:center;gap:var(--sp-2);margin:0 var(--sp-5) var(--sp-3);color:var(--text2);display:flex;position:relative}.trpg-window[data-layout=narrow] .pp-search{margin:0 var(--sp-4) var(--sp-3)}.pp-search svg{left:var(--sp-3);pointer-events:none;position:absolute}.pp-search .trpg-input{padding-left:34px}.pp-error,.pp-note{align-items:center;gap:var(--sp-2);margin:0 var(--sp-5) var(--sp-3);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-sm);background:var(--warn-bg);color:var(--text);font-size:var(--fs-sm);display:flex}.pp-error{border:var(--border) solid var(--danger-line);color:var(--danger-text);background:var(--danger-bg)}.pp-error .trpg-btn{margin-left:auto}.pp-strip{padding:var(--sp-1) var(--sp-5);background:var(--bg-side);border-block:var(--border) solid var(--line);color:var(--text2);font-size:var(--fs-sm);font-weight:var(--fw-semibold);justify-content:space-between;display:flex}.pp-strip small{margin-left:var(--sp-2);font-weight:var(--fw-regular)}.pp-strip span:last-child{text-align:center;width:150px;margin-right:96px}.trpg-window[data-layout=narrow] .pp-strip{padding-inline:var(--sp-4)}.trpg-window[data-layout=narrow] .pp-strip span:last-child{display:none}.pp-list{background:var(--surface);margin:0;padding:0;list-style:none}.pp-row{align-items:center;gap:var(--sp-3);padding:var(--sp-3) var(--sp-5);border-bottom:var(--border) solid var(--line);grid-template-columns:44px minmax(0,1fr) 150px auto;display:grid;position:relative}.pp-row[data-selecting]{cursor:pointer}.pp-row[data-selected]{background:var(--primary-tint);box-shadow:inset 3px 0 0 var(--accent)}.trpg-window[data-layout=narrow] .pp-row{padding:var(--sp-3) var(--sp-4);grid-template-columns:44px minmax(0,1fr) auto}.trpg-window[data-layout=narrow] .pp-hp{align-items:flex-start;gap:var(--sp-3);flex-direction:row;grid-area:2/2}.pp-avatar{border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--bg-sunk);width:44px;height:44px;color:var(--text2);place-items:center;display:grid;overflow:hidden}.pp-avatar img{object-fit:cover;width:100%;height:100%}.pp-main{flex-direction:column;gap:2px;min-width:0;display:flex}.pp-name{align-items:center;gap:var(--sp-1);font-size:var(--fs-lg);display:flex}.pp-name b{font-weight:var(--fw-semibold);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.pp-name svg{color:var(--accent-text);flex:none}.pp-facts{gap:0 var(--sp-3);color:var(--text2);font-size:var(--fs-sm);flex-wrap:wrap;display:flex}.pp-facts--small{font-size:var(--fs-xs)}.pp-tags{align-items:center;gap:var(--sp-2);flex-wrap:wrap;margin-top:2px;display:flex}.pp-tag{align-items:center;gap:var(--sp-1);padding:0 var(--sp-2);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-xs);background:var(--warn-bg);color:var(--text);font-size:var(--fs-xs);display:inline-flex}.pp-hp{flex-direction:column;align-items:center;gap:4px;display:flex}.pp-hp__num{font-size:var(--fs-md)}.pp-hp__num b{font-size:var(--fs-lg)}.pp-hp__num em{color:var(--accent-text);font-style:normal}.pp-hp__none{color:var(--text3)}.pp-bar{border-radius:var(--r-pill);background:var(--line);width:100%;min-width:80px;max-width:150px;height:6px;display:flex;overflow:hidden}.pp-bar>i{background:var(--success-text)}.pp-bar>i[data-low]{background:var(--accent)}.pp-bar>u{background:var(--accent-light,var(--accent))}.pp-act{align-items:center;gap:var(--sp-2);justify-content:flex-end;min-width:36px;display:flex}.pp-skel{grid-column:1/-1;height:44px}.pp-empty{padding:var(--sp-8) var(--sp-5);text-align:center;color:var(--text2);gap:var(--sp-2);flex-direction:column;align-items:center;display:flex}.pp-empty b{color:var(--text);font-size:var(--fs-lg)}.pp-selbar{align-items:center;gap:var(--sp-2);padding:var(--sp-3) 84px var(--sp-3) var(--sp-5);background:var(--bg-side);border-top:var(--border) solid var(--line-ctrl);z-index:2;margin-top:auto;display:flex;position:sticky;bottom:0}.pp-selbar__gap{flex:1}.pp-selbar__n{font-weight:var(--fw-semibold);margin-right:var(--sp-2)}.trpg-window[data-layout=narrow] .pp-selbar{padding:var(--sp-2) 76px var(--sp-2) var(--sp-3);flex-wrap:wrap}.tp{grid-template-rows:minmax(0,1fr) auto;grid-template-columns:minmax(240px,5fr) 7fr;height:100%;min-height:0;display:grid}.trpg-window[data-layout=narrow] .tp,.trpg-window[data-layout=mid] .tp{grid-template-columns:1fr}.tp-list{border-right:var(--border) solid var(--line);flex-direction:column;min-height:0;display:flex}.tp-card{min-height:0;overflow:auto}.tp-row[data-picked]{background:var(--primary-tint);box-shadow:inset 3px 0 0 var(--accent)}.tp-bar{align-items:center;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);background:var(--bg-side);border-top:var(--border) solid var(--line-ctrl);flex-wrap:wrap;grid-column:1/-1;display:flex}.tp-gap{flex:1}.tp-lbl{color:var(--text2);font-size:var(--fs-sm)}.tp-added{align-items:center;gap:var(--sp-2);font-size:var(--fs-sm);display:inline-flex}.bp{flex-direction:column;height:100%;min-height:0;display:flex}.bp-form{gap:var(--sp-3);padding:var(--sp-3) var(--sp-5);flex-direction:column;flex:1;display:flex}.bp-first-step{padding:var(--sp-2) 0;border-bottom:var(--border) solid var(--line)}.bp-first-step span{border-radius:var(--r-pill);background:var(--primary);color:var(--on-primary);padding:var(--sp-1) var(--sp-3);display:inline-flex}.bp-name{gap:var(--sp-2);flex-direction:column;display:flex}.bp-lbl{color:var(--text2)}.bp-form .trpg-seg{align-self:flex-start}.bp-error{color:var(--danger-text);font-size:var(--fs-sm)}.bp-first-footer{padding-top:var(--sp-3);justify-content:flex-end;margin-top:auto;display:flex}.bp-slot{background:var(--surface);flex:1;min-height:0;position:relative}.bp-hint{color:var(--text2);place-items:center;margin:0;display:grid;position:absolute;inset:0}.trpg-modal__page:has(.bp){padding:0;overflow:hidden}.trpg-modal:has(.bp) .trpg-page-leave-active{pointer-events:none}.trpg-window:not([data-layout=narrow]) .trpg-modal:has(.bp) .trpg-modal__card{width:min(880px,100%);height:min(680px,100%)}", yRe = ".ps{flex-direction:column;min-height:100%;display:flex}.ps-bar{align-items:center;gap:var(--sp-2);padding:var(--sp-3) var(--sp-5);border-bottom:var(--border) solid var(--line);background:var(--surface);z-index:2;flex-wrap:wrap;display:flex;position:sticky;top:0}.ps-bar-name{font-size:var(--fs-lg);font-weight:var(--fw-semibold);text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.ps-bar-tools{align-items:center;gap:var(--sp-1);margin-left:auto;display:inline-flex}.trpg-window[data-layout=narrow] .ps-bar{padding:var(--sp-2) var(--sp-4)}.trpg-window[data-layout=narrow] .ps-bar [data-testid=ps-history]{display:none}.ps-skeleton{margin:var(--sp-5);padding:var(--sp-6) var(--sp-5);border:var(--border) dashed var(--line);border-radius:var(--r-sm);color:var(--text2)}.ps-tabs{border-bottom:var(--border) solid var(--line);background:var(--surface);z-index:1;align-items:stretch;gap:0;display:flex;position:sticky;top:49px;overflow-x:auto}.ps-tabs button{min-height:40px;padding:0 var(--sp-4);color:var(--text);cursor:pointer;background:0 0;border:0;border-bottom:2px solid #0000;flex:none}.ps-tabs button[aria-selected=true]{border-bottom-color:var(--primary);font-weight:var(--fw-semibold)}.ps-side-toggle{color:var(--text2)}.ps-body{flex:1;grid-template-columns:minmax(0,1fr);display:grid}.ps-body[data-side]{grid-template-columns:260px minmax(0,1fr)}.trpg-window[data-layout=narrow] .ps-body[data-side]{grid-template-columns:minmax(0,1fr)}.ps-side{padding:var(--sp-4);border-right:var(--border) solid var(--line);background:var(--bg-side)}.ps-side h3{margin:0 0 var(--sp-2);font-size:var(--fs-md)}.ps-skills{margin:0;padding:0;list-style:none}.ps-skills li{align-items:center;gap:var(--sp-1);border-bottom:var(--border) solid var(--line);min-height:30px;font-size:var(--fs-sm);grid-template-columns:22px 3.2em minmax(0,1fr) auto auto 2.2em;display:grid}.ps-skills small,.ps-skill-ab{color:var(--text2);text-align:right}.ps-skill-ab{text-align:left}.ps-prof{color:var(--text2)}.ps-prof[data-level=\"1\"],.ps-prof[data-level=\"2\"]{color:var(--primary)}.ps-tab{padding:var(--sp-5);min-width:0;container:pstab/inline-size}.ps-drawer{gap:var(--sp-3);padding:var(--sp-4) var(--sp-5);flex-direction:column;display:flex}.ps-drawer-row{justify-content:space-between;align-items:center;gap:var(--sp-3);flex-wrap:wrap;display:flex}.ps-drawer-label{color:var(--text)}.ps-drawer-num{width:96px}.ps-drawer-note{color:var(--text2);font-size:var(--fs-sm);margin:0}.ps-drawer-note--warn{color:var(--danger-text)}.ps-drawer-actions{justify-content:flex-end;gap:var(--sp-2);display:flex}.ps-field{gap:var(--sp-1);flex-direction:column;display:flex}.ps-field span{color:var(--text2);font-size:var(--fs-sm)}.ps-pips{gap:var(--sp-2);display:inline-flex}.ps-pip{border:var(--border) solid var(--line-ctrl);background:var(--surface);width:36px;height:36px;color:var(--text2);cursor:pointer;border-radius:50%}.ps-pip[data-on]{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}.ps-pip[data-on][data-kind=failure]{background:var(--danger-text);border-color:var(--danger-text)}.ps-avatar-form{grid-template-columns:minmax(0,1fr) 160px;grid-template-areas:\"fields preview\"\"actions actions\";display:grid}.ps-avatar-fields{gap:var(--sp-2);flex-direction:column;grid-area:fields;display:flex}.ps-avatar-preview{border:var(--border) dashed var(--line-ctrl);border-radius:var(--r-sm);background:var(--bg-sunk);grid-area:preview;width:160px;height:160px;overflow:hidden}.ps-avatar-preview img{object-fit:cover;width:100%;height:100%}.ps-avatar-form .ps-drawer-actions{grid-area:actions}.ps-history-list{margin:0;padding:0;list-style:none}.ps-history-row{padding:var(--sp-3) 0;border-bottom:var(--border) solid var(--line)}.ps-history-head{color:var(--text2);font-size:var(--fs-sm);justify-content:space-between;align-items:center;display:flex}.ps-history-actor span{color:var(--text2);font-size:var(--fs-sm)}.ps-history-actor ul{margin:var(--sp-1) 0 0;padding-left:var(--sp-5);color:var(--text);font-size:var(--fs-sm)}.ps-death-count{margin-left:var(--sp-2)}.ps-actions-bar{align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-4);flex-wrap:wrap;display:flex}.ps-actions-search{flex:200px;max-width:320px}.ps-act-table{border-collapse:collapse;width:100%;margin-bottom:var(--sp-5);font-size:var(--fs-sm)}.ps-act-table thead th{text-align:left;font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:var(--text2);padding:var(--sp-1) var(--sp-2);border-bottom:var(--border) solid var(--line);white-space:nowrap}.ps-act-table thead th:first-child{font-size:var(--fs-md);color:var(--text);padding-left:0}.ps-act-table td,.ps-act-table tbody th{padding:var(--sp-2);border-bottom:var(--border) solid var(--line);vertical-align:middle;text-align:left;font-weight:400}.ps-act-table tbody th{padding-left:0}.ps-act-table td{white-space:nowrap;color:var(--text)}.ps-act-name{color:var(--text);font:inherit;font-weight:var(--fw-semibold);text-align:left;cursor:pointer;-webkit-line-clamp:2;background:0 0;border:0;-webkit-box-orient:vertical;padding:0;display:-webkit-box;overflow:hidden}.ps-act-name:hover{text-decoration:underline}.ps-act-row[data-open] .ps-act-name{color:var(--primary)}.ps-act-sub{color:var(--text2);display:none}.ps-box{padding:1px var(--sp-2);border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--surface);font-variant-numeric:tabular-nums;display:inline-block}.ps-act-detail td{white-space:normal;padding:var(--sp-3) 0 var(--sp-4);background:var(--bg-side)}.trpg-window[data-layout=narrow] .ps-act-table th:nth-child(4),.trpg-window[data-layout=narrow] .ps-act-effect{display:none}.trpg-window[data-layout=narrow] .ps-act-sub{display:block}.trpg-window[data-layout=narrow] .ps-act-table tbody th{width:auto}.ps-attr{gap:var(--sp-5);grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;display:grid}@container pstab (width<=640px){.ps-attr{grid-template-columns:minmax(0,1fr)}}.ps-attr-col{gap:var(--sp-5);min-width:0;display:grid}.ps-card h3{margin:0 0 var(--sp-2);font-size:var(--fs-md);padding-bottom:var(--sp-1);border-bottom:var(--border) solid var(--line)}.ps-saves{column-gap:var(--sp-4);grid-template-columns:repeat(2,minmax(0,1fr));margin:0;padding:0;list-style:none;display:grid}.ps-saves li{align-items:center;gap:var(--sp-1);border-bottom:var(--border) solid var(--line);min-height:30px;font-size:var(--fs-sm);grid-template-columns:22px minmax(0,1fr) auto 22px;display:grid}.ps-saves-wide{grid-column:1/-1}.ps-traits{gap:var(--sp-2) var(--sp-4);font-size:var(--fs-sm);grid-template-columns:max-content minmax(0,1fr);margin:0;display:grid}.ps-traits dt{color:var(--text2)}.ps-traits dd{justify-content:space-between;align-items:flex-start;gap:var(--sp-2);margin:0;display:flex}.ps-traits dd .ps-skill-icon{opacity:.55;flex:none}.ps-traits dd:hover .ps-skill-icon{opacity:1}.ps-fact-part{white-space:nowrap;margin-right:var(--sp-3);display:inline-block}.ps-act-table{table-layout:fixed}.ps-act-table thead th:nth-child(2){width:112px}.ps-act-table thead th:nth-child(3){width:20%}.ps-act-table thead th:nth-child(4){width:30%}.ps-act-table td:last-child{white-space:normal}.trpg-window[data-layout=narrow] .ps-act-table thead th:nth-child(2){width:24%}.trpg-window[data-layout=narrow] .ps-act-table thead th:nth-child(3){width:34%}.ps-box{white-space:nowrap;margin:1px var(--sp-1) 1px 0}.ps-pills{padding:0 0 var(--sp-3);flex-wrap:wrap;overflow:visible}.ps-act-rec{color:var(--text2);font-size:var(--fs-xs);display:block}.ps-enc-bar{border-radius:var(--r-pill);background:var(--line);flex:auto;max-width:320px;height:8px;overflow:hidden}.ps-enc-bar i{background:var(--primary);height:100%;display:block}.ps-enc-bar[data-over] i{background:var(--danger-text)}.ps-bag-table thead th:nth-child(2){width:104px}.ps-bag-table thead th:nth-child(3){width:116px}.ps-bag-tags{gap:2px var(--sp-2);color:var(--text2);font-size:var(--fs-xs);flex-wrap:wrap;margin-top:2px;display:flex}.ps-tag{padding:0 var(--sp-1);border:var(--border) solid var(--line);border-radius:var(--r-xs)}.ps-tag--on{background:var(--text);color:var(--surface);border-color:var(--text)}.ps-tag--gold{border-color:var(--accent)}.ps-bag-row[data-depth] th{padding-left:var(--sp-5)}.ps-bag-act{text-align:right;white-space:nowrap}.ps-bag-act>*{vertical-align:middle}.ps-bag-foot{color:var(--text2);font-size:var(--fs-sm);text-align:right}.ps-bag-uses{align-items:center;gap:var(--sp-2);margin-top:var(--sp-1);font-size:var(--fs-xs);color:var(--text2);display:inline-flex}.ps-act-table .trpg-stepper__btn{min-width:26px;min-height:28px;padding:0}.ps-act-table .trpg-stepper__val{min-width:2.6em;padding:0 var(--sp-1);font-size:var(--fs-sm)}.ps-side .trpg-seg{width:100%;margin-bottom:var(--sp-3)}.ps-side .trpg-seg button{flex:1}.ps-side-head{align-items:center;gap:var(--sp-1);padding-bottom:var(--sp-1);border-bottom:var(--border) solid var(--line);font-size:var(--fs-sm);grid-template-columns:minmax(0,1fr) 3em 2.6em 28px;display:grid}.ps-side-head small{color:var(--text2);font-size:var(--fs-xs);text-align:right}.ps-favs{gap:var(--sp-1);margin:0;padding:0;list-style:none;display:grid}.ps-favs li{align-items:center;gap:var(--sp-2);border-bottom:var(--border) solid var(--line);min-height:36px;font-size:var(--fs-sm);display:flex}.ps-fav-name{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;overflow:hidden}.ps-attr .ps-card{padding:var(--sp-3) var(--sp-4)}@container pstab (width<=420px){.ps-bag-table thead th:nth-child(2){width:96px}.ps-bag-table thead th:nth-child(3){width:112px}.ps-bag-act .trpg-btn{padding:0 var(--sp-2)}}.ps-prof-btn{width:22px;height:22px;font:inherit;cursor:pointer;background:0 0;border:0;border-radius:50%;padding:0;line-height:1}.ps-prof-btn:hover:not(:disabled){background:var(--bg-hover)}.ps-prof-btn:disabled{cursor:default}.ps-skill-ab .trpg-btn{min-height:24px;color:var(--text2);font-size:var(--fs-xs);background:0 0;border-color:#0000;gap:0;padding:0 2px}.ps-skill-ab .trpg-btn:hover{border-color:var(--line-ctrl);color:var(--text)}.ps-skill-ab .trpg-btn svg{opacity:.6;width:10px;height:10px}.ps-skill-aux{opacity:0;transition:opacity var(--dur-fast) var(--ease-std);gap:0;display:inline-flex}.ps-skills li:hover .ps-skill-aux,.ps-skill-aux:focus-within{opacity:1}.ps-skill-icon{border-radius:var(--r-xs);width:20px;height:20px;color:var(--text3);cursor:pointer;background:0 0;border:0;place-items:center;padding:0;display:inline-grid}.ps-skill-icon:hover:not(:disabled){color:var(--text);background:var(--surface)}.ps-skill-icon[data-on]{color:var(--accent)}.ps-skills li:has(.ps-skill-icon[data-on]) .ps-skill-aux{opacity:1}@media (hover:none){.ps-skill-aux{opacity:1}}.ps-saves li .ps-skill-icon{opacity:0}.ps-saves li:hover .ps-skill-icon,.ps-saves li .ps-skill-icon:focus-visible{opacity:1}@media (hover:none){.ps-saves li .ps-skill-icon{opacity:1}}.ps-conc-on{background:var(--primary);width:22px;height:22px;color:var(--on-primary);cursor:pointer;border:0;border-radius:50%;place-items:center;padding:0;display:inline-grid}.ps-card-head{justify-content:space-between;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-2);border-bottom:var(--border) solid var(--line);display:flex}.ps-card-head h3{border-bottom:0;margin:0}.ps-trait-add{gap:var(--sp-1) var(--sp-2);margin-top:var(--sp-3);flex-wrap:wrap;display:flex}.ps-build{margin:0 0 var(--sp-3);padding-bottom:var(--sp-2);border-bottom:var(--border) solid var(--line);display:grid}.ps-build-row{align-items:center;gap:var(--sp-2);min-height:38px;font-size:var(--fs-sm);grid-template-columns:3.2em minmax(0,1fr) 32px;display:grid}.ps-build-row+.ps-build-row:not(.ps-build-sub){border-top:var(--border) dashed var(--line)}.ps-build-label{color:var(--text2);font-size:var(--fs-xs)}.ps-build-main{align-items:center;gap:var(--sp-1) var(--sp-2);flex-wrap:wrap;min-width:0;display:flex}.ps-build-name{min-width:0;font-weight:var(--fw-semibold);flex:auto}.ps-build-level .trpg-btn{min-height:28px}.ps-build-turn{color:var(--text3)}.ps-build-sub{min-height:32px}.ps-favs .ps-fav{align-items:center;gap:var(--sp-2);border-bottom:var(--border) solid var(--line);min-height:40px;font-size:var(--fs-sm);grid-template-columns:minmax(0,1fr) auto 24px;padding:2px 0;display:grid}.ps-fav[data-off] .ps-fav-main{opacity:.6}.ps-fav-main{flex-direction:column;min-width:0;display:flex}.ps-fav-main .ps-fav-name{font-weight:var(--fw-medium);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.ps-fav-main>small{color:var(--text2);font-size:var(--fs-xs);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.ps-fav-val{align-items:center;gap:var(--sp-2);font-variant-numeric:tabular-nums;display:inline-flex}.ps-fav-passive{color:var(--text3);font-weight:var(--fw-regular);font-size:var(--fs-xs);margin-left:2px}.ps-fav-x{opacity:.5}.ps-fav:hover .ps-fav-x{opacity:1}.ps-tab{padding-bottom:72px}.ps-card-head-acts{gap:var(--sp-1);display:inline-flex}.ps-build-crown{margin-left:var(--sp-1);color:var(--accent);vertical-align:-2px}", bRe = ".ps-head{gap:var(--sp-4);padding:var(--sp-4) var(--sp-5) var(--sp-5);background:var(--bg-side);border-bottom:var(--border) solid var(--line);flex-direction:column;display:flex}.ps-top{align-items:start;gap:var(--sp-4);grid-template-columns:112px minmax(0,1fr) minmax(220px,280px);grid-template-areas:\"portrait ident level\";display:grid}.ps-mid{align-items:stretch;gap:var(--sp-3);grid-template-columns:minmax(220px,272px) auto minmax(0,1fr);grid-template-areas:\"vitals combat abilities\";display:grid}.ps{container:pspage/inline-size}.ps-card{border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--surface);position:relative}.ps-pen{z-index:1;border:var(--border) solid var(--line-ctrl);background:var(--surface);width:28px;height:28px;color:var(--text2);cursor:pointer;box-shadow:var(--shadow-1);border-radius:50%;place-items:center;padding:0;display:grid;position:absolute;top:-10px;right:-10px}.ps-pen:hover:not(:disabled){color:var(--text);border-color:var(--accent)}.ps-pen--inline{width:24px;height:24px;box-shadow:none;background:0 0;border-color:#0000;position:static}.ps-card-label{color:var(--text2);font-size:var(--fs-xs)}.ps-portrait{aspect-ratio:1;border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--bg-sunk);width:100%;color:var(--text2);cursor:pointer;grid-area:portrait;place-items:center;padding:0;display:grid;position:relative;overflow:hidden}.ps-portrait img{object-fit:cover;width:100%;height:100%}.ps-portrait-badge{background:var(--surface);border:var(--border) solid var(--line);border-radius:50%;place-items:center;width:22px;height:22px;display:grid;position:absolute;bottom:6px;right:6px}.ps-ident{align-items:flex-start;gap:var(--sp-2);flex-direction:column;grid-area:ident;min-width:0;display:flex}.ps-name-line{align-self:stretch;align-items:baseline;gap:var(--sp-2);flex-wrap:wrap;display:flex}.ps-name{font-family:var(--font-serif);font-size:var(--fs-3xl);font-weight:var(--fw-semibold);line-height:var(--lh-tight);color:var(--text);margin:0}.ps-pin{width:28px;height:28px;color:var(--text3);cursor:pointer;background:0 0;border:0;align-self:center;place-items:center;padding:0;display:grid}.ps-pin[aria-pressed=true]{color:var(--accent)}.ps-english{color:var(--text2);font-size:var(--fs-md)}.ps-sub{gap:0 var(--sp-3);color:var(--text2);flex-wrap:wrap;margin:0;display:flex}.ps-sub-strong{color:var(--text);font-weight:var(--fw-semibold)}.ps-rests{gap:var(--sp-2);align-self:center;margin-left:auto;display:inline-flex}.ps-level{gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);grid-area:level;display:grid}.ps-level-nums{align-items:flex-end;gap:var(--sp-5);flex-wrap:wrap;display:flex}.ps-level-nums>div{flex-direction:column;display:flex}.ps-level-nums small,.ps-box small,.ps-ability small,.ps-xp small,.ps-fact dt{color:var(--text2);font-size:var(--fs-xs)}.ps-level-nums b{font-size:var(--fs-3xl);font-weight:var(--fw-semibold);font-variant-numeric:tabular-nums;line-height:1.1}.ps-level-nums b.ps-num-md{font-size:var(--fs-xl)}.ps-insp{align-self:center;align-items:center;gap:var(--sp-1);min-height:32px;padding:0 var(--sp-3);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-pill);background:var(--surface);color:var(--text2);cursor:pointer;margin-left:auto;display:inline-flex}.ps-insp[aria-pressed=true]{border-color:var(--accent);color:var(--accent-text);background:var(--bg-sunk)}.ps-xp{gap:var(--sp-1);display:grid}.ps-xp b{color:var(--text);font-size:var(--fs-lg)}.ps-meter,.ps-hp-bar{border-radius:var(--r-pill);background:var(--bg-sunk);height:6px;display:block;overflow:hidden}.ps-meter i{background:var(--accent);border-radius:inherit;height:100%;display:block}.ps-level-foot{justify-content:flex-end;display:flex}.ps-leg{gap:var(--sp-2) var(--sp-4);flex-wrap:wrap;display:flex}.ps-leg span{align-items:center;gap:var(--sp-1);display:inline-flex}.ps-leg small{color:var(--text2);font-size:var(--fs-xs);margin-right:var(--sp-1)}.ps-dot{border:var(--border) solid var(--primary);border-radius:50%;width:10px;height:10px}.ps-dot[data-on]{background:var(--primary)}.ps-facts{gap:var(--sp-1) var(--sp-5);font-size:var(--fs-sm);flex-wrap:wrap;margin:0;display:flex}.ps-fact{align-items:baseline;gap:var(--sp-2);min-width:0;display:flex}.ps-fact dt{color:var(--text2);font-size:var(--fs-xs);flex:none}.ps-fact dd{min-width:0;color:var(--text);margin:0}.ps-fact-btn{gap:0 var(--sp-2);color:var(--text);font:inherit;text-align:left;cursor:pointer;background:0 0;border:0;flex-wrap:wrap;padding:0;display:inline-flex}.ps-fact-btn:hover:not(:disabled){text-decoration:underline;-webkit-text-decoration-color:var(--accent);text-decoration-color:var(--accent);text-underline-offset:3px}.ps-fact-part{white-space:nowrap}.ps-vitals{gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);flex-direction:column;grid-area:vitals;display:flex}.ps-hp-line{align-items:baseline;gap:var(--sp-2);flex-wrap:wrap;display:flex}.ps-hp-now{font-size:2.25rem;font-weight:var(--fw-semibold);min-width:44px;padding:0 var(--sp-1);border:var(--border) solid transparent;border-radius:var(--r-sm);color:var(--text);cursor:text;font-variant-numeric:tabular-nums;background:0 0;line-height:1.1}.ps-hp-now:hover:not(:disabled){border-color:var(--line-ctrl)}.ps-hp-input{width:96px;padding:0 var(--sp-2);border:var(--border) solid var(--accent);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-size:1.5rem}.ps-hp-input--temp{width:64px;font-size:var(--fs-md)}.ps-hp-max{color:var(--text2);font-size:var(--fs-lg)}.ps-hp-temp{padding:2px var(--sp-2);border:var(--border) solid var(--accent);border-radius:var(--r-pill);background:var(--bg-sunk);color:var(--accent-text);font-size:var(--fs-sm);cursor:pointer}.ps-hp-temp[data-empty]{border-style:dashed;border-color:var(--line-ctrl);color:var(--text2);background:0 0}.ps-hp-hint{color:var(--text2);font-size:var(--fs-sm);margin:0}.ps-hp-bar i{background:var(--success-text);border-radius:inherit;height:100%;display:block}.ps-vital-rows{gap:var(--sp-1) var(--sp-2);flex-wrap:wrap;margin-top:auto;display:flex}.ps-vital-row{align-items:center;gap:var(--sp-2);min-height:32px;padding:0 var(--sp-2);border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--bg-sunk);color:var(--text);font-size:var(--fs-sm);cursor:pointer;display:inline-flex}.ps-vital-row:hover{border-color:var(--line-ctrl);background:var(--bg-hover)}.ps-vital-row span{white-space:nowrap;color:var(--text2);font-size:var(--fs-xs)}.ps-vital-row b{font-weight:var(--fw-semibold);font-variant-numeric:tabular-nums;text-align:right}.ps-vital-row[data-alert]{border-color:var(--danger-line);color:var(--danger-text)}.ps-death-count{font-weight:var(--fw-regular)}.ps-combat{gap:var(--sp-2);padding:var(--sp-2);grid-area:combat;display:flex}.ps-box{justify-content:center;align-items:center;gap:var(--sp-1);min-width:64px;padding:var(--sp-2) var(--sp-3);border:var(--border) solid var(--line);border-top:3px solid var(--accent);border-radius:var(--r-sm);background:var(--bg-sunk);color:var(--text);cursor:pointer;flex-direction:column;flex:1 1 0;display:flex}.ps-box small,.ps-ability small{color:var(--text2);font-size:var(--fs-xs)}.ps-box b{font-size:var(--fs-3xl);font-weight:var(--fw-semibold);font-variant-numeric:tabular-nums;line-height:1.1}.ps-box:hover,.ps-ability:hover{border-color:var(--line-ctrl);background:var(--bg-hover)}.ps-abilities{gap:var(--sp-2);min-width:0;padding:var(--sp-2);grid-area:abilities;grid-template-columns:repeat(6,minmax(0,1fr));display:grid}.ps-ability{min-width:0;padding:var(--sp-2) var(--sp-1);border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--surface);color:var(--text);cursor:pointer;flex-direction:column;justify-content:center;align-items:center;gap:2px;display:flex}.ps-ability b{font-size:var(--fs-2xl);font-weight:var(--fw-semibold);font-variant-numeric:tabular-nums;line-height:1.15}.ps-ability span{color:var(--text2);font-size:var(--fs-sm);font-variant-numeric:tabular-nums}.ps-ability em{border-top:var(--border) solid var(--line);color:var(--text2);font-style:normal;font-size:var(--fs-xs);white-space:nowrap;font-variant-numeric:tabular-nums;justify-content:center;align-self:stretch;align-items:center;gap:4px;margin-top:2px;padding-top:4px;display:flex}.ps-ability em[data-prof]{color:var(--primary)}.ps-ability em[data-prof]:before{content:\"\";background:currentColor;border-radius:50%;width:6px;height:6px}.ps-blank-cta{align-self:stretch;gap:var(--sp-1);padding:var(--sp-2) var(--sp-3);border:var(--border) dashed var(--accent);border-radius:var(--r-md);background:var(--bg-sunk);color:var(--text);flex-direction:column;display:flex}.ps-blank-cta b{align-items:center;gap:var(--sp-1);display:inline-flex}.ps-blank-cta>span{color:var(--text2);font-size:var(--fs-sm)}.ps-blank-steps{gap:var(--sp-2);margin-top:var(--sp-1);flex-wrap:wrap;display:flex}@container pspage (width<=980px){.ps-mid{grid-template-columns:auto minmax(0,1fr);grid-template-areas:\"vitals vitals\"\"combat abilities\"}.ps-head{gap:var(--sp-3);padding-top:var(--sp-3);padding-bottom:var(--sp-4)}.ps-vitals{align-items:center;column-gap:var(--sp-4);padding:var(--sp-2) var(--sp-4);grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:\"label hp rows\";row-gap:0;display:grid}.ps-vitals>.ps-card-label{grid-area:label}.ps-vitals .ps-hp-now{font-size:1.75rem}.ps-vitals>.ps-hp{grid-area:hp}.ps-vitals>.ps-vital-rows{grid-area:rows;margin-top:0}}@container pspage (width<=640px){.ps-head{padding:var(--sp-4)}.ps-top{gap:var(--sp-3);grid-template-columns:80px minmax(0,1fr);grid-template-areas:\"portrait ident\"\"level level\"}.ps-mid{grid-template-columns:minmax(0,1fr);grid-template-areas:\"vitals\"\"combat\"\"abilities\"}.ps-vitals{display:flex}.ps-abilities{grid-template-columns:repeat(3,minmax(0,1fr))}.ps-name{font-size:var(--fs-2xl)}}.ps-name-btn{color:inherit;font:inherit;cursor:text;background:0 0;border:0;border-bottom:1px dashed #0000;padding:0}.ps-name-btn:hover:not(:disabled){border-bottom-color:var(--line-ctrl)}.ps-name-btn:disabled{cursor:default}.ps-name-input{font-family:var(--font-serif);font-size:var(--fs-2xl);font-weight:var(--fw-semibold);min-width:10em;max-width:100%}.ps-ability{cursor:default}.ps-ability-cfg{color:inherit;font:inherit;cursor:pointer;background:0 0;border:0;flex-direction:column;align-items:center;gap:2px;padding:0;display:flex}.ps-ability-cfg b{font-size:var(--fs-2xl);font-weight:var(--fw-semibold);font-variant-numeric:tabular-nums;line-height:1.15}.ps-ability-score .ps-num-in{width:2.6em;color:var(--text2);font-size:var(--fs-sm)}.ps-vital-row--pips{cursor:default}.ps-vital-row--pips:hover{border-color:var(--line);background:0 0}.ps-vital-name{color:var(--text2);font:inherit;font-size:var(--fs-xs);white-space:nowrap;cursor:pointer;-webkit-text-decoration:underline dotted var(--line-ctrl);text-decoration:underline dotted var(--line-ctrl);text-underline-offset:3px;background:0 0;border:0;padding:0}.ps-vital-name:hover{color:var(--text)}.ps-vital-row .ps-pips{gap:3px}.ps-vital-row .ps-pips small{color:var(--text3);font-size:10px}.ps-vital-row .ps-pip{width:12px;height:12px;padding:0}.ps-vital-row .ps-pip--sq{border-radius:3px}.ps-vital-row .ps-pip:hover:not(:disabled){border-color:var(--primary)}", xRe = ".pf{flex-direction:column;height:100%;min-height:0;display:flex}.pf-body{overscroll-behavior:contain;min-height:0;padding:var(--sp-4) var(--sp-5);gap:var(--sp-4);flex:auto;grid-auto-rows:max-content;align-content:start;display:grid;overflow:auto}.trpg-modal__page:has(>.pf){padding:0;overflow:hidden}.pf-intro{color:var(--text2);font-size:var(--fs-sm);line-height:var(--lh-body);margin:0}.pf-total{align-items:baseline;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);border:var(--border) solid var(--line);border-top:3px solid var(--accent);border-radius:var(--r-sm);background:var(--bg-sunk);flex-wrap:wrap;display:flex}.pf-total span{color:var(--text2);font-size:var(--fs-sm)}.pf-total b{font-size:var(--fs-2xl);font-weight:var(--fw-semibold);font-variant-numeric:tabular-nums}.pf-total small{color:var(--text2);font-size:var(--fs-sm)}.pf-card{border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--surface);overflow:hidden}.pf-card>h4{justify-content:space-between;align-items:baseline;gap:var(--sp-3);padding:var(--sp-2) var(--sp-3);background:var(--bg-side);border-bottom:var(--border) solid var(--line);font-size:var(--fs-sm);font-weight:var(--fw-semibold);margin:0;display:flex}.pf-card>h4 small{color:var(--text2);font-weight:var(--fw-regular);font-size:var(--fs-xs)}.pf-entry{align-items:center;gap:var(--sp-3);min-height:44px;padding:0 var(--sp-2) 0 var(--sp-3);border-bottom:var(--border) solid var(--line);font-size:var(--fs-sm);grid-template-columns:minmax(0,1fr) auto auto 28px;display:grid}.pf-entry:last-of-type{border-bottom:0}.pf-entry>span{text-overflow:ellipsis;min-width:0;overflow:hidden}.pf-entry>span small{color:var(--text2)}.pf-entry>b{font-variant-numeric:tabular-nums;font-weight:var(--fw-semibold)}.pf-entry[data-manual]>span{text-decoration:underline;-webkit-text-decoration-color:var(--accent);text-decoration-color:var(--accent);text-underline-offset:4px}.pf-src{padding:1px var(--sp-2);border:var(--border) solid var(--line);border-radius:var(--r-pill);color:var(--text2);font-size:var(--fs-xs);white-space:nowrap;text-overflow:ellipsis;max-width:12em;font-style:normal;overflow:hidden}.pf-src[data-kind=manual]{border-color:var(--accent);color:var(--accent-text)}.pf-x{width:28px;height:28px}.pf-removed .pf-entry{color:var(--text2);grid-template-columns:minmax(0,1fr) auto auto auto}.pf-add{margin:var(--sp-2) var(--sp-3)}.pf-add-row{gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);border-top:var(--border) solid var(--line);grid-template-columns:minmax(0,1fr) 88px auto;display:grid}.pf-base>.pf-fields{padding:var(--sp-2) var(--sp-3) var(--sp-3)}.pf-fields{gap:var(--sp-2);display:grid}.pf-row{align-items:center;gap:var(--sp-3);grid-template-columns:minmax(0,11em) minmax(0,1fr);min-height:40px;display:grid}.pf-row[data-kind=html],.pf-row[data-kind=multi],.pf-row[data-kind=tags]{align-items:start}.pf-label{font-size:var(--fs-sm);color:var(--text);gap:2px;display:grid}.pf-hint{color:var(--text2);font-size:var(--fs-xs);line-height:var(--lh-ui)}.pf-control{min-width:0}.pf-control>.trpg-input{width:100%}.pf-num{font-variant-numeric:tabular-nums;max-width:120px}.pf-text{resize:vertical;width:100%;min-height:96px;line-height:var(--lh-body)}.pf-chips,.pf-tags{gap:var(--sp-1) var(--sp-2);flex-wrap:wrap;align-items:center;display:flex}.pf-chip{cursor:pointer;background:var(--surface)}.pf-chip[aria-pressed=true]{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}.pf-tag-input{flex:140px;min-width:120px}.pf-group{border-top:var(--border) solid var(--line)}.pf-group[data-plain]{border-top:0}.pf-group>.pf-fields{padding:0 0 var(--sp-3)}.pf-group[data-plain]>.pf-fields{padding:0}.pf-group>.pf-fields>.pf-group[data-plain]{margin-top:var(--sp-1)}.pf-group-title{align-items:center;gap:var(--sp-2);cursor:pointer;min-height:40px;font-size:var(--fs-sm);font-weight:var(--fw-semibold);color:var(--text);margin:0;list-style:none;display:flex}.pf-group-title::-webkit-details-marker{display:none}.pf-group-title:hover{color:var(--primary-text)}.pf-group-title svg{color:var(--text2);transition:transform var(--dur-fast) var(--ease-std)}.pf-group[open]>.pf-group-title svg{transform:rotate(90deg)}.pf-group[data-depth=\"1\"]>.pf-group-title,.pf-group[data-depth=\"2\"]>.pf-group-title{font-weight:var(--fw-regular);color:var(--text2)}.pf-foot{align-items:center;gap:var(--sp-2);padding:var(--sp-3) var(--sp-5);border-top:var(--border) solid var(--line);background:var(--surface);flex:none;display:flex}.pf-gap{flex:1}.pf-count{color:var(--text2);font-size:var(--fs-xs)}.trpg-window[data-layout=narrow] .pf-row{gap:var(--sp-1);grid-template-columns:minmax(0,1fr)}.trpg-window[data-layout=narrow] .pf-body,.trpg-window[data-layout=narrow] .pf-foot{padding:var(--sp-3)}.pf-id-actions{gap:var(--sp-2);padding:var(--sp-2) var(--sp-3) 0;flex-wrap:wrap;display:flex}.pf-id-actions .pf-add{margin:0}.pf-id-note{padding:var(--sp-2) var(--sp-3) var(--sp-3);font-size:var(--fs-xs)}.pf-base>.pf-fields>.pf-group:first-child{border-top:0}.pf-formula{max-width:280px}.pf-name{align-items:center;gap:var(--sp-3);font-size:var(--fs-sm);grid-template-columns:minmax(0,11em) minmax(0,1fr);display:grid}.pf-change{align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);border-bottom:var(--border) solid var(--line);grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) 6em 28px;display:grid}.trpg-window[data-layout=narrow] .pf-change{grid-template-columns:minmax(0,1fr) 28px}.pf-tree{padding:var(--sp-2) 0;max-height:none;margin:0;list-style:none;display:grid}.pf-tree li{align-items:center;gap:var(--sp-2);min-height:32px;padding-right:var(--sp-3);font-size:var(--fs-sm);display:flex}.pf-tree li[data-cat]{min-height:28px;margin-top:var(--sp-1);color:var(--text2);font-size:var(--fs-xs);font-weight:var(--fw-semibold)}.pf-tree-label{min-width:0}.pf-dur{align-items:center;gap:var(--sp-2);display:flex}.pf-dur .trpg-select-trigger{width:8em}", SRe = ".ps-tables{gap:var(--sp-4);display:grid}.ps-grp{border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);overflow:hidden}.ps-grp-head{align-items:center;gap:var(--sp-2);min-height:38px;padding:0 var(--sp-2) 0 var(--sp-3);background:var(--bg-side);border-bottom:var(--border) solid var(--line);font-size:var(--fs-sm);display:flex}.ps-grp-head>b{font-weight:var(--fw-semibold);white-space:nowrap}.ps-grp-head>small{color:var(--text3);font-size:var(--fs-xs)}.ps-grp-cols{color:var(--text2);font-size:var(--fs-xs);align-items:center;margin-left:auto;display:flex}.ps-grp-cols>span{text-align:center;flex:none}.ps-grp-menu-col{flex:none;justify-content:center;width:36px;display:flex}.ps-rows{margin:0;padding:0;list-style:none}.ps-row{border-bottom:var(--border) solid var(--line)}.ps-row:last-child{border-bottom:0}.ps-row-main{align-items:center;gap:var(--sp-2);min-height:48px;padding:var(--sp-1) var(--sp-2) var(--sp-1) var(--sp-3);display:flex}.ps-row[data-open] .ps-row-main{background:var(--bg-sunk)}.ps-row-name{flex-direction:column;flex:auto;gap:1px;min-width:120px;display:flex}.ps-row-title{color:var(--text);font:inherit;font-weight:var(--fw-semibold);font-size:var(--fs-md);text-align:left;cursor:pointer;text-overflow:ellipsis;-webkit-line-clamp:2;background:0 0;border:0;-webkit-box-orient:vertical;padding:0;display:-webkit-box;overflow:hidden}.ps-row-title:hover{text-decoration:underline;-webkit-text-decoration-color:var(--accent);text-decoration-color:var(--accent);text-underline-offset:3px}.ps-row-name>small{color:var(--text2);font-size:var(--fs-xs);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.ps-cell{font-size:var(--fs-sm);font-variant-numeric:tabular-nums;text-align:center;flex-wrap:wrap;flex:none;justify-content:center;align-items:center;gap:2px;display:flex}.ps-row-detail{padding:var(--sp-3) var(--sp-4) var(--sp-4);background:var(--bg-sunk);border-top:var(--border) solid var(--line)}.ps-pips{align-items:center;gap:4px;display:inline-flex}.ps-pipbtn{border:var(--border) solid var(--primary);cursor:pointer;background:0 0;border-radius:50%;width:14px;height:14px;padding:0}.ps-pipbtn[data-on]{background:var(--primary)}.ps-pipbtn:disabled{cursor:default}.ps-toolbar{align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-3);flex-wrap:wrap;display:flex}.ps-toolbar .ps-actions-search{flex:200px;max-width:360px}.ps-toolbar .tp-gap{flex:1}.ps-mark{border:var(--border) solid var(--line-ctrl);background:var(--surface);width:22px;height:22px;color:var(--text3);font-size:var(--fs-xs);cursor:pointer;border-radius:50%;flex:none;place-items:center;padding:0;display:inline-grid}.ps-mark[data-on]{border-color:var(--primary);background:var(--primary);color:var(--on-primary)}.ps-mark:disabled{cursor:default;opacity:.7}.ps-toolbar--end{margin-top:var(--sp-4);justify-content:flex-end}.ps-grp-info{padding:var(--sp-2) var(--sp-3);color:var(--text2);font-size:var(--fs-xs);border-bottom:var(--border) solid var(--line);margin:0}.ps-row-title--static{cursor:default}.ps-row-title--static:hover{text-decoration:none}.ps-conds{gap:var(--sp-2);padding:var(--sp-3);flex-wrap:wrap;display:flex}.ps-cond{align-items:center;gap:var(--sp-2);min-height:32px;padding:0 var(--sp-3);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-pill);background:var(--surface);color:var(--text);font-size:var(--fs-sm);cursor:pointer;display:inline-flex}.ps-cond[aria-pressed=true],.ps-cond--level[data-on]{background:var(--text);border-color:var(--text);color:var(--surface)}.ps-cond--level{cursor:default;padding-right:4px}.ps-cond--level .trpg-stepper{background:var(--surface)}.ps-cond--level .trpg-stepper__btn{min-width:26px;min-height:26px}.ps-cond--level .trpg-stepper__val{min-width:2em;color:var(--text)}.ps-casting,.ps-classes{gap:var(--sp-3);margin-bottom:var(--sp-4);flex-wrap:wrap;display:flex}.ps-casting-card,.ps-class-card{align-items:center;gap:var(--sp-2) var(--sp-5);padding:var(--sp-3) var(--sp-4);flex-wrap:wrap;display:flex}.ps-casting-card>span,.ps-class-card>span{font-size:var(--fs-lg);font-weight:var(--fw-semibold);font-variant-numeric:tabular-nums;flex-direction:column;display:flex}.ps-casting-card small,.ps-class-card small{color:var(--text2);font-size:var(--fs-xs);font-weight:var(--fw-regular)}.ps-casting-title{font-size:var(--fs-md)}.ps-box-sm{padding:1px var(--sp-2);border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--surface);white-space:nowrap;font-size:var(--fs-sm);display:inline-block}.ps-text-card{border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);overflow:hidden}.ps-text-card[data-editing]{border-color:var(--accent)}.ps-text-pen{margin-left:auto}.ps-text-body{padding:var(--sp-3) var(--sp-4);line-height:var(--lh-body);font-size:var(--fs-md)}.ps-text-body p{margin:0 0 var(--sp-2)}.ps-text-body p:last-child{margin-bottom:0}.ps-text-edit{gap:var(--sp-2);padding:var(--sp-3);display:grid}.ps-text-edit textarea{resize:vertical;width:100%;min-height:120px;line-height:var(--lh-body)}.ps-text-actions{justify-content:flex-end;gap:var(--sp-2);display:flex}.ps-bio{gap:var(--sp-4);grid-template-columns:minmax(0,1fr) minmax(200px,280px);align-items:start;display:grid}.ps-bio-main{gap:var(--sp-3);display:grid}.ps-bio-empty{color:var(--text2);font-size:var(--fs-sm);align-items:center;gap:var(--sp-2);flex-wrap:wrap;margin:0;display:flex}.ps-add-chip{min-height:28px;padding:0 var(--sp-3);border:var(--border) dashed var(--line-ctrl);border-radius:var(--r-pill);color:var(--text2);cursor:pointer;background:0 0}.ps-add-chip:hover:not(:disabled){color:var(--text);border-color:var(--accent)}.ps-bio-trait-grid{display:grid}.ps-bio-trait{border:0;border-bottom:var(--border) solid var(--line);border-radius:0}.ps-bio-trait:last-child{border-bottom:0}.ps-bio-trait .ps-grp-head{min-height:30px;color:var(--text2);background:0 0;border-bottom:0}.ps-bio-trait .ps-grp-head b{font-weight:var(--fw-regular);font-size:var(--fs-xs)}.ps-bio-trait .ps-text-body{padding-top:0}.ps-notes{gap:var(--sp-4);grid-template-columns:minmax(220px,300px) minmax(0,1fr);align-items:start;display:grid}.ps-notes-empty{padding:var(--sp-3);margin:0}.ps-note-n{border:var(--border) solid var(--line);border-radius:var(--r-sm);width:24px;height:24px;color:var(--text2);font-size:var(--fs-xs);flex:none;place-items:center;display:grid}.ps-note-pick{text-align:left;cursor:pointer;color:var(--text);background:0 0;border:0;padding:0}.ps-notes-page{gap:var(--sp-3);display:grid}.ps-notes-nav{justify-content:flex-end;gap:var(--sp-2);display:flex}.ps-initial{border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--bg-sunk);width:28px;height:28px;color:var(--text2);font-size:var(--fs-sm);flex:none;place-items:center;display:grid}.ps-narrow-only{color:var(--text2);font-size:var(--fs-xs);display:none}.ps-pips small{white-space:nowrap;color:var(--text2);font-size:var(--fs-xs)}@container pstab (width<=640px){[data-wide]{display:none}.ps-narrow-only{display:block}.ps-bio,.ps-notes{grid-template-columns:minmax(0,1fr)}}@container pstab (width<=420px){.ps-initial{display:none}.ps-row-main{gap:4px}.ps-row-name{min-width:72px}.ps-grp-cols>span:not(.ps-grp-menu-col){display:none}.ps-row-main{padding-left:var(--sp-2)}}.ps-indent{color:var(--text3);text-align:right;flex:none;padding-right:4px;display:inline-block}.ps-enc{align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-4);padding:var(--sp-3) var(--sp-4);font-size:var(--fs-sm);display:flex}.ps-cell .trpg-stepper__btn{min-width:26px;min-height:28px;padding:0}.ps-cell .trpg-stepper__val{min-width:2.4em;padding:0 var(--sp-1);font-size:var(--fs-sm)}.ps-bio-traits-add{padding:var(--sp-2) var(--sp-3) var(--sp-3)}", CRe = ".dt{gap:var(--sp-3);display:grid;container:dt/inline-size}.dt-grp{border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--surface);overflow:hidden}.dt-head{align-items:center;gap:var(--sp-2);min-height:36px;padding:0 var(--sp-2) 0 var(--sp-1);background:var(--bg-side);border-bottom:var(--border) solid var(--line);box-shadow:inset 0 2px 0 var(--primary-tint-line,var(--line));font-size:var(--fs-sm);display:flex}.dt-grp[data-collapsed] .dt-head{border-bottom:0}.dt-fold{align-items:center;gap:var(--sp-2);min-height:32px;padding:0 var(--sp-2);color:var(--text);font:inherit;cursor:pointer;border-radius:var(--r-xs);background:0 0;border:0;display:inline-flex}.dt-fold:hover{background:var(--bg-hover)}.dt-fold svg{color:var(--text3);transition:transform var(--dur-fast) var(--ease-std);transform:rotate(90deg)}.dt-grp[data-collapsed] .dt-fold svg{transform:none}.dt-fold b{font-weight:var(--fw-semibold);white-space:nowrap}.dt-fold small{color:var(--text3);font-size:var(--fs-xs);font-variant-numeric:tabular-nums}.dt-cols{color:var(--text2);font-size:var(--fs-xs);align-items:center;margin-left:auto;display:flex}.dt-cols>span{text-align:center;flex:none}.dt-acts-col{justify-content:flex-end;display:flex}.dt-add{border:var(--border) solid transparent;border-radius:var(--r-xs);width:28px;height:28px;color:var(--text2);cursor:pointer;background:0 0;place-items:center;display:inline-grid}.dt-add:hover:not(:disabled){border-color:var(--line-ctrl);color:var(--primary-text);background:var(--surface)}.dt-rows{margin:0;padding:0;list-style:none}.dt-row+.dt-row{border-top:var(--border) solid var(--line)}.dt-row[data-depth]{background:var(--bg-sunk)}.dt-main{align-items:center;gap:var(--sp-2);min-height:44px;padding:2px var(--sp-1) 2px var(--sp-3);display:flex}.dt-main:hover{background:var(--bg-hover)}.dt-row[data-open]>.dt-main{background:var(--bg-sunk)}.dt-indent{color:var(--text3);flex:none;justify-content:flex-end;display:inline-flex}.dt-initial,.dt-box{border:var(--border) solid var(--line);border-radius:var(--r-xs);background:var(--bg-sunk);width:26px;height:26px;color:var(--text2);font-size:var(--fs-xs);flex:none;place-items:center;display:grid}.dt-box{cursor:pointer;padding:0}.dt-box svg{transition:transform var(--dur-fast) var(--ease-std)}.dt-box[aria-expanded=true] svg{transform:rotate(90deg)}.dt-name{flex-direction:column;flex:auto;gap:1px;min-width:0;display:flex}.dt-title{color:var(--text);font:inherit;font-size:var(--fs-md);font-weight:var(--fw-medium);text-align:left;cursor:pointer;text-overflow:ellipsis;white-space:nowrap;background:0 0;border:0;padding:0;overflow:hidden}.dt-title:hover{color:var(--primary-text)}.dt-qty{margin-left:var(--sp-1);color:var(--text2);font-weight:var(--fw-regular);font-size:var(--fs-xs)}.dt-name>small{color:var(--text2);font-size:var(--fs-xs);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.dt-cell{font-size:var(--fs-sm);font-variant-numeric:tabular-nums;text-align:center;flex:none;justify-content:center;align-items:center;gap:2px;min-width:0;display:flex}.dt-acts{flex:none;align-items:center;gap:0;display:flex}.dt-act,.dt-act-gap{flex:none;width:1.9rem;height:28px}.dt-act{border-radius:var(--r-xs);color:var(--text3);cursor:pointer;background:0 0;border:0;place-items:center;padding:0;display:inline-grid}.dt-act:hover:not(:disabled){color:var(--text);background:var(--surface)}.dt-act[data-on]{color:var(--primary)}.dt-act--danger:hover:not(:disabled){color:var(--danger-text)}.dt-act:disabled{cursor:default;opacity:.55}.dt-detail{padding:var(--sp-3) var(--sp-4) var(--sp-4) calc(var(--sp-3) + 34px);background:var(--bg-sunk);border-top:var(--border) solid var(--line);font-size:var(--fs-sm);line-height:var(--lh-body)}.dt-desc{white-space:pre-line;margin:0}.dt-activities{margin:var(--sp-3) 0 0;gap:var(--sp-1);padding:0;list-style:none;display:grid}.dt-activities li{gap:var(--sp-1) var(--sp-3);padding:var(--sp-1) var(--sp-2);border-left:2px solid var(--primary-tint-line,var(--line));flex-wrap:wrap;align-items:baseline;display:flex}.dt-activities span{color:var(--text2);font-size:var(--fs-xs)}.ps-dim{color:var(--text3)}.ps-mod{font-weight:var(--fw-semibold)}.ps-stack{flex-direction:column;line-height:1.1;display:flex}.ps-stack small{color:var(--accent-text);font-size:10px}.ps-formula{text-overflow:ellipsis;white-space:nowrap;max-width:100%;display:inline-block;overflow:hidden}.ps-uses{align-items:baseline;gap:2px;display:inline-flex}.ps-uses small{color:var(--text2);font-size:var(--fs-xs)}.ps-recharge{padding:0 var(--sp-1);border-radius:var(--r-xs);color:var(--text2);font-size:var(--fs-xs)}.ps-recharge[data-cooldown]{color:var(--warn-text);background:var(--warn-bg)}.ps-cap{width:100%;padding:0 var(--sp-1);flex-direction:column;align-items:stretch;gap:2px;display:inline-flex}.ps-cap small{color:var(--text2);font-size:10px}.ps-cap-bar,.ps-enc-bar{border-radius:var(--r-pill);background:var(--bg-sunk);border:var(--border) solid var(--line);height:5px;display:block;overflow:hidden}.ps-cap-bar i,.ps-enc-bar i{background:var(--primary);height:100%;display:block}.ps-comps{gap:2px;display:inline-flex}.ps-comp{border:var(--border) solid var(--line);border-radius:var(--r-xs);min-width:16px;color:var(--text2);padding:0 2px;font-size:10px}.ps-comp[data-special]{border-color:var(--accent);color:var(--accent-text)}.ps-school{font-size:var(--fs-xs);color:var(--text2)}.ps-num{align-items:center;gap:0;display:inline-flex}.ps-num-in{border:var(--border) solid transparent;border-radius:var(--r-xs);width:3.2em;min-height:26px;color:var(--text);font:inherit;font-size:var(--fs-sm);font-variant-numeric:tabular-nums;text-align:center;background:0 0;padding:0 2px}.ps-num-in:hover:not(:disabled){border-color:var(--line-ctrl);background:var(--surface)}.ps-num-in:focus{border-color:var(--focus,var(--primary));background:var(--surface);outline:none}.ps-num[data-step] .ps-num-in{width:2.6em}.ps-num-btn{border-radius:var(--r-xs);width:20px;height:22px;color:var(--text3);cursor:pointer;opacity:0;transition:opacity var(--dur-fast) var(--ease-std);background:0 0;border:0;place-items:center;padding:0;display:inline-grid}.dt-main:hover .ps-num-btn,.ps-num:focus-within .ps-num-btn{opacity:1}.ps-num-btn:hover:not(:disabled){color:var(--text);background:var(--surface)}.ps-num-btn:disabled{cursor:default;opacity:0!important}@media (hover:none){.ps-num-btn{opacity:1}}.dt-bar{align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-3);flex-wrap:wrap;display:flex}.dt-search{flex:200px;align-items:center;max-width:340px;display:inline-flex;position:relative}.dt-search>svg{color:var(--text3);pointer-events:none;position:absolute;left:10px}.dt-search>.trpg-input{width:100%;padding-left:30px;padding-right:28px}.dt-search>.trpg-icon-btn{position:absolute;right:2px}.dt-bar-gap{flex:1}.dt-foot{align-items:center;gap:var(--sp-2) var(--sp-4);margin-top:var(--sp-3);padding:var(--sp-2) var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--bg-side);font-size:var(--fs-sm);flex-wrap:wrap;display:flex}.dt-conc{color:var(--primary-text);border-color:var(--primary-tint-line,var(--line-ctrl))}.ps-coins{gap:var(--sp-1) var(--sp-3);flex-wrap:wrap;display:inline-flex}.ps-coin{align-items:center;gap:2px;display:inline-flex}.ps-coin small{color:var(--text2);font-size:var(--fs-xs)}.ps-coin .ps-num-in{border-color:var(--line);background:var(--surface);width:4.2em}.ps-attune-count{align-items:center;gap:var(--sp-1);color:var(--text2);display:inline-flex}.ps-attune-count[data-over]{color:var(--danger-text)}.ps-enc{align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-3);padding:var(--sp-2) var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--surface);font-size:var(--fs-sm);display:flex}.ps-enc>svg{color:var(--text2);flex:none}.ps-enc-bar{flex:auto;height:7px}.ps-enc[data-level=over] .ps-enc-bar i{background:var(--danger-text)}.ps-enc b{font-weight:var(--fw-semibold);font-variant-numeric:tabular-nums;white-space:nowrap}.ps-link-btn{margin-left:var(--sp-2);color:var(--primary-text);font:inherit;font-size:var(--fs-xs);font-weight:var(--fw-regular);cursor:pointer;text-underline-offset:3px;background:0 0;border:0;padding:0;text-decoration:underline}.ps-tag{margin-left:var(--sp-2);padding:0 var(--sp-1);border:var(--border) solid var(--line);border-radius:var(--r-xs);color:var(--text2);font-size:10px;font-style:normal;font-weight:var(--fw-regular)}@container dt (width<=520px){.dt-initial{display:none}.dt-main{padding-left:var(--sp-2)}.dt-detail{padding-left:var(--sp-3)}}.dt-filters{align-items:center;gap:var(--sp-1) var(--sp-2);flex-wrap:wrap;flex-basis:100%;display:flex}.dt-filter{min-height:26px;padding:0 var(--sp-2);border:var(--border) solid var(--line);border-radius:var(--r-pill);background:var(--surface);color:var(--text2);font-size:var(--fs-xs);cursor:pointer;align-items:center;gap:2px;display:inline-flex}.dt-filter:hover{border-color:var(--line-ctrl);color:var(--text)}.dt-filter[data-state=on]{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}.dt-filter[data-state=off]{border-color:var(--danger-line,var(--line-ctrl));color:var(--danger-text);text-decoration:line-through}.ps-pins-strip{gap:var(--sp-2);flex-wrap:wrap;display:flex}.ps-pin-card{align-items:center;gap:var(--sp-2);min-height:36px;padding:0 var(--sp-1) 0 var(--sp-3);border:var(--border) solid var(--line);border-left:3px solid var(--accent);border-radius:var(--r-sm);background:var(--surface);font-size:var(--fs-sm);display:inline-flex}.ps-pin-icon{color:var(--accent)}.ps-pin-name{font-weight:var(--fw-medium);white-space:nowrap}@container dt (width<=600px){.dt-opt-1{display:none}}@container dt (width<=440px){.dt-opt-2{display:none}}.dt-filter-count{border-radius:var(--r-pill);background:var(--primary);min-width:18px;height:18px;color:var(--on-primary);place-items:center;margin-left:2px;padding:0 4px;font-size:11px;display:inline-grid}", wRe = ".ask{grid-template-rows:auto auto minmax(0,1fr) auto;height:100%;min-height:0;display:grid}.ask-head{align-items:center;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);border-bottom:var(--border) solid var(--line);background:var(--surface);display:flex}.ask-what{font-family:var(--font-serif);font-size:var(--fs-lg);font-weight:var(--fw-semibold)}.ask-count{color:var(--text2);font-size:var(--fs-xs);margin-left:auto}.ask-done{gap:var(--sp-1) var(--sp-2);padding:var(--sp-2) var(--sp-4);border-bottom:var(--border) solid var(--line);background:var(--bg-side);flex-wrap:wrap;max-height:96px;margin:0;list-style:none;display:flex;overflow-y:auto}.ask-done button{align-items:baseline;gap:var(--sp-1);max-width:100%;padding:2px var(--sp-2);border:var(--border) solid var(--line);border-radius:var(--r-pill);background:var(--surface);color:var(--text);font:inherit;font-size:var(--fs-xs);cursor:pointer;display:inline-flex}.ask-done button:hover:not(:disabled){border-color:var(--accent)}.ask-done span{color:var(--text2);white-space:nowrap}.ask-done b{font-weight:var(--fw-semibold);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.ask-body{min-height:0;padding:var(--sp-4) var(--sp-5);gap:var(--sp-3);flex-direction:column;display:flex;overflow-y:auto}.ask-title{font-size:var(--fs-xl);font-weight:var(--fw-semibold);margin:0}.ask-note,.ask-slow{color:var(--text2);font-size:var(--fs-sm);margin:0}.ask-slow:before{content:\"\";width:10px;height:10px;margin-right:var(--sp-2);border:2px solid var(--line-ctrl);border-top-color:var(--accent);vertical-align:-1px;border-radius:50%;animation:.8s linear infinite ask-spin;display:inline-block}@keyframes ask-spin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.ask-slow:before{animation:none}}.ask-foot{align-items:center;gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);border-top:var(--border) solid var(--line-ctrl);background:var(--bg-side);display:flex}.ask[aria-busy] .ask-form{opacity:.6;transition:opacity .15s}.ask-form{gap:var(--sp-3);flex-direction:column;display:flex}.ask-yesno{gap:var(--sp-2);flex-wrap:wrap;display:flex}.ask-yesno .trpg-btn{min-width:120px;min-height:40px}.ask-list{flex-direction:column;gap:2px;display:flex}.ask-row{align-items:baseline;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);border:var(--border) solid transparent;border-radius:var(--r-sm);cursor:pointer;display:flex}.ask-row:hover{background:var(--bg-hover)}.ask-row[data-on]{border-color:var(--line-ctrl);background:var(--surface)}.ask-row[data-off]{color:var(--text3);cursor:default}.ask-row input{accent-color:var(--primary)}.ask-level b{font-variant-numeric:tabular-nums;flex:none;min-width:3.5em}.ask-level .ask-note{flex:1}.ask-num{width:8em}.ask-fixed{color:var(--text2);font-size:var(--fs-sm);margin:0}.ask-group{gap:var(--sp-2);flex-direction:column;display:flex}.ask-group-head{align-items:baseline;gap:var(--sp-3);display:flex}.ask-group-head b{font-size:var(--fs-sm)}.ask-group-head small{color:var(--accent-text);font-size:var(--fs-xs)}.ask-group-head small[data-done]{color:var(--success-text)}.ask-chips{gap:var(--sp-1) var(--sp-3);grid-template-columns:repeat(auto-fill,minmax(140px,1fr));display:grid}.ask-chips[data-wide]{grid-template-columns:minmax(0,1fr)}.ask-own{gap:var(--sp-2);display:grid}.ask-equip .ask-group{padding:var(--sp-2) var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--surface)}.ask-equip-choices{flex-direction:column;gap:2px;display:flex}.ask-equip-choice{align-items:baseline;gap:var(--sp-2);padding:var(--sp-1) var(--sp-2);border-radius:var(--r-sm);cursor:pointer;display:flex}.ask-equip-choice[data-on]{background:var(--bg-sunk)}.ask-letter{color:var(--text2);font-weight:var(--fw-regular);flex:none}.ask-equip-items{align-items:baseline;gap:var(--sp-1) 0;flex-wrap:wrap;display:flex}.ask-equip-item:not(:last-of-type):after{content:\"、\";color:var(--text3)}.ask-equip-pick{min-width:180px}.ask-gold{gap:var(--sp-2);flex-direction:column;display:flex}.ask-gold label{align-items:center;gap:var(--sp-2);display:flex}.ask-asi-grid{gap:2px;max-width:420px;display:grid}.ask-asi-row{align-items:center;gap:var(--sp-2);padding:var(--sp-1) var(--sp-2);border-radius:var(--r-sm);grid-template-columns:4em 3em auto 4em;display:grid}.ask-asi-row[data-up]{background:var(--bg-sunk)}.ask-asi-now,.ask-asi-to{font-variant-numeric:tabular-nums;color:var(--text2)}.ask-asi-row[data-up] .ask-asi-to{color:var(--text);font-weight:var(--fw-semibold)}.ask-asi-ctl{align-items:center;gap:var(--sp-1);display:inline-flex}.ask-asi-ctl i{text-align:center;font-variant-numeric:tabular-nums;min-width:2em;font-style:normal}.ask-note[data-done]{color:var(--success-text)}.ask-feat{gap:var(--sp-2);grid-template-rows:auto minmax(160px,280px) auto;display:grid}.ask-feat-list{border:var(--border) solid var(--line);border-radius:var(--r-sm)}.ask-added{gap:var(--sp-2) var(--sp-4);grid-template-columns:auto minmax(0,1fr);margin:0;display:grid}.ask-added dt{color:var(--text2);font-size:var(--fs-sm);white-space:nowrap}.ask-added dd{line-height:var(--lh-normal,1.6);margin:0}", TRe = ".trpg-root{z-index:100000;width:0;height:0;position:fixed;top:0;left:0}.trpg-ball{background:var(--primary);width:48px;height:48px;color:var(--on-primary);box-shadow:var(--shadow-2);cursor:grab;touch-action:none;transition:background var(--dur-fast) var(--ease-std);border:0;border-radius:50%;place-items:center;padding:0;display:grid;position:fixed}.trpg-ball:hover{background:var(--primary-hover)}.trpg-ball:active{background:var(--primary-pressed)}.trpg-window{background:var(--bg);border:var(--border) solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-3);color:var(--text);display:flex;position:fixed;overflow:hidden}.trpg-window[data-fullscreen=true]{border:0;border-radius:0;height:100dvh;inset:0}.trpg-shell{flex:1;min-width:0;min-height:0;display:flex}.trpg-window[data-layout=narrow] .trpg-shell{padding-top:env(safe-area-inset-top);background:var(--surface)}.trpg-side{z-index:5;width:var(--side-w);padding-bottom:var(--sp-2);background:var(--side);color:var(--side-ink);border-right:var(--border) solid var(--side-line);flex-direction:column;flex:none;display:flex;position:relative}.trpg-window[data-layout=mid] .trpg-side{width:56px}.trpg-side__brand{height:var(--head-h);align-items:center;gap:var(--sp-2);padding:0 var(--sp-4);font-weight:var(--fw-semibold);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;flex:none;display:flex}.trpg-window[data-layout=mid] .trpg-side__brand{justify-content:center;padding:0}.trpg-brandmark{border-radius:var(--r-sm);background:var(--primary-hover);width:28px;height:28px;color:var(--on-primary);flex:none;place-items:center;display:grid}.trpg-side__list{padding:var(--sp-2);gap:2px;margin:0;display:grid}.trpg-side__list li{position:relative}.trpg-side__bottom{margin-top:auto}.trpg-nav{width:100%;min-height:var(--hit-touch);align-items:center;gap:var(--sp-3);padding:0 var(--sp-3);border-radius:var(--r-sm);color:var(--side-ink2);text-align:left;transition:background var(--dur-fast) var(--ease-std), color var(--dur-fast) var(--ease-std);background:0 0;border:0;display:flex}.trpg-window[data-layout=mid] .trpg-nav{justify-content:center;padding:0}.trpg-nav:hover{background:var(--side-hover);color:var(--side-ink)}.trpg-nav:active{background:var(--side-active)}.trpg-nav[aria-current=page]{background:var(--side-active);color:var(--side-ink);font-weight:var(--fw-semibold);box-shadow:inset 3px 0 0 var(--primary-hover)}.trpg-side :focus-visible,.trpg-tabs :focus-visible{box-shadow:0 0 0 2px var(--side), 0 0 0 4px var(--side-ink2)}.trpg-main{background:var(--bg);flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.trpg-head{height:var(--head-h);align-items:center;gap:var(--sp-3);padding:0 var(--sp-3) 0 var(--sp-5);background:var(--head-bg);color:var(--head-ink);border-bottom:var(--border) solid var(--head-line);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;flex:none;display:flex}.trpg-window[data-fullscreen=true] .trpg-head{cursor:default}.trpg-window[data-layout=narrow] .trpg-head{padding:0 var(--sp-2) 0 var(--sp-4)}.trpg-head__title{min-width:0;font-size:var(--fs-xl);font-weight:var(--fw-semibold);text-overflow:ellipsis;white-space:nowrap;flex:1;overflow:hidden}.trpg-head__chips{align-items:center;gap:var(--sp-2);min-width:0;display:flex}.trpg-chip{cursor:pointer;max-width:260px}.trpg-chip__camp{font-weight:var(--fw-semibold);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.trpg-chip__save{color:var(--head-ink2);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.trpg-head .trpg-pill,.trpg-head .trpg-chip{color:var(--head-ink);border-color:var(--head-line);background:0 0}.trpg-head .trpg-icon-btn{color:var(--head-ink)}.trpg-head .trpg-icon-btn:hover{background:var(--head-hover);color:var(--head-ink)}.trpg-body{flex:1;min-height:0;display:flex;position:relative}.trpg-content{min-width:0;padding:var(--sp-4) var(--sp-5) 88px;outline:none;flex:1;overflow:auto}.trpg-window[data-layout=narrow] .trpg-content{padding:var(--sp-3) var(--sp-4) 88px}.trpg-content[data-flush=true],.trpg-window[data-layout=narrow] .trpg-content[data-flush=true]{padding:0}.trpg-dice-btn{right:var(--sp-5);bottom:var(--sp-5);z-index:6;background:var(--primary);width:52px;height:52px;color:var(--on-primary);box-shadow:var(--shadow-2);transition:transform var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-std);border:0;border-radius:50%;place-items:center;padding:0;display:grid;position:absolute}.trpg-window[data-layout=narrow] .trpg-dice-btn{right:var(--sp-4);bottom:var(--sp-4)}.trpg-dice-btn:hover{background:var(--primary-hover);transform:translateY(-1px)}.trpg-dice-btn:active{background:var(--primary-pressed);transform:none}.trpg-dice-btn[aria-pressed=true]{box-shadow:0 0 0 3px var(--surface), 0 0 0 5px var(--primary), var(--shadow-2)}.trpg-tabs{background:var(--side);height:56px;color:var(--side-ink2);padding-bottom:env(safe-area-inset-bottom);box-sizing:content-box;flex:none;display:flex}.trpg-tab{min-width:64px;color:inherit;font-size:var(--fs-xs);background:0 0;border:0;flex-direction:column;flex:1;justify-content:center;align-items:center;gap:2px;display:flex;position:relative}.trpg-tab[aria-current=page]{color:var(--side-ink);box-shadow:inset 0 3px 0 var(--primary-hover)}.trpg-resize{z-index:30;cursor:nwse-resize;touch-action:none;background:linear-gradient(135deg, transparent 50%, var(--line-ctrl) 50%, var(--line-ctrl) 58%, transparent 58%, transparent 70%, var(--line-ctrl) 70%, var(--line-ctrl) 78%, transparent 78%);opacity:.6;width:22px;height:22px;position:absolute;bottom:0;right:0}.trpg-libmark{flex:none;width:30px;height:30px;display:inline-flex;position:relative}.trpg-libmark__icon{place-items:center;width:30px;height:30px;display:inline-grid;position:relative}.trpg-libmark__icon>.trpg-ring{position:absolute;inset:0}.trpg-count{border-radius:var(--r-pill);background:var(--accent);min-width:16px;height:16px;color:var(--side);font-size:10px;line-height:16px;font-weight:var(--fw-semibold);text-align:center;box-sizing:border-box;pointer-events:none;padding:0 4px;position:absolute;bottom:-3px;right:-5px}.trpg-ring{flex:none;place-items:center;display:inline-grid;position:relative}.trpg-ring svg{display:block}.trpg-ring [data-part=track]{stroke:var(--line-ctrl)}.trpg-ring [data-part=arc]{stroke:var(--primary);transition:stroke-dasharray var(--dur-ring) var(--ease-std)}.trpg-ring[data-state=spin] svg{animation:trpg-spin var(--dur-spin) linear infinite}.trpg-ring__badge{background:var(--accent);min-width:14px;height:14px;color:var(--on-accent);font-size:10px;font-weight:var(--fw-bold);border-radius:50%;place-items:center;line-height:1;display:grid;position:absolute;top:-4px;right:-4px}.trpg-side .trpg-ring [data-part=track],.trpg-tabs .trpg-ring [data-part=track]{stroke:var(--side-hover)}.trpg-side .trpg-ring [data-part=arc],.trpg-tabs .trpg-ring [data-part=arc]{stroke:var(--accent)}.trpg-pop{z-index:100003;overflow-wrap:anywhere;width:min(320px,100vw - 16px);max-height:min(60vh,420px);padding:var(--sp-2) var(--sp-3) var(--sp-3);gap:var(--sp-2);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--text);box-shadow:var(--shadow-3);animation:trpg-fade var(--dur-fast) var(--ease-out);text-align:left;font-weight:var(--fw-regular);display:grid;position:fixed;overflow:auto}.trpg-pop h3{font-size:var(--fs-sm);color:var(--text2);font-weight:var(--fw-semibold);margin:0}.trpg-pop__row{gap:var(--sp-2);padding-top:var(--sp-2);border-top:var(--border) solid var(--line);grid-template-columns:26px minmax(0,1fr) auto;align-items:center;display:grid}.trpg-pop__row:first-of-type{border-top:0;padding-top:0}.trpg-pop__ring{width:26px;height:26px;display:inline-flex}.trpg-pop__main{min-width:0;display:grid}.trpg-pop__main b{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.trpg-pop__main small{color:var(--text2);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.trpg-pop__row[data-status=failed] .trpg-pop__main small{color:var(--danger-text);white-space:normal;-webkit-line-clamp:2;-webkit-box-orient:vertical;display:-webkit-box;overflow:hidden}.trpg-pop__acts{gap:var(--sp-1);align-items:center;display:inline-flex}.trpg-pop__foot{justify-content:flex-end;display:flex}@keyframes trpg-fade{0%{opacity:0}}@keyframes trpg-spin{to{transform:rotate(360deg)}}.trpg-toasts{left:0;right:0;top:var(--trpg-host-top,48px);z-index:var(--z-toast);justify-items:center;gap:var(--sp-2);padding:0 var(--sp-3);pointer-events:none;display:grid;position:fixed}.trpg-toast{pointer-events:auto;align-items:center;gap:var(--sp-3);max-width:min(92vw,520px);padding:var(--sp-2) var(--sp-4);border-radius:var(--r-md);background:var(--hero-bg);color:var(--hero-ink);box-shadow:var(--shadow-2);cursor:pointer;display:flex}.trpg-toast[data-kind=error]{background:var(--surface);color:var(--text);box-shadow:var(--shadow-2), inset 0 0 0 2px var(--danger-line)}.trpg-toast[data-kind=error] .trpg-icon{color:var(--danger-text)}.trpg-toast[data-kind=success] .trpg-icon{color:var(--accent)}.trpg-toasts__banners,.trpg-toasts__list{justify-items:center;gap:var(--sp-2);display:grid}.trpg-toasts__banners{max-height:60vh;padding:var(--sp-1);overflow:auto}.trpg-toast--banner{cursor:default;width:min(92vw,520px)}.trpg-toast--more{justify-self:center;gap:var(--sp-1);padding:2px var(--sp-3);font:inherit;font-size:var(--fs-xs);border:0}.trpg-toast__text{overflow-wrap:anywhere;flex:1;min-width:0}.trpg-toast small{color:var(--hero-ink2);white-space:nowrap}.trpg-toast[data-kind=error] small{color:var(--text2)}.trpg-toast__btn{color:var(--accent);font-weight:var(--fw-semibold);min-height:32px;padding:0 var(--sp-2);background:0 0;border:0}.trpg-toast[data-kind=error] .trpg-toast__btn{color:var(--primary-text)}.trpg-toast-enter-active{animation:trpg-drop var(--dur-base) var(--ease-out)}.trpg-toast-leave-active{transition:opacity var(--dur-fast) var(--ease-in), transform var(--dur-fast) var(--ease-in)}.trpg-toast-leave-to{opacity:0;transform:translateY(-6px)}@keyframes trpg-drop{0%{opacity:0;transform:translateY(-8px)}}", $9 = "trpg-assistant-root";
-function ERe(e) {
+}), pRe = ".lib-author-block .ve-hidden,.lib-author-block .ve-print__hidden{display:none!important}.lib-author-block .ve-text-center{text-align:center}.lib-author-block .ve-text-right{text-align:right}.lib-author-block .ve-text-left{text-align:left}.lib-author-block .ve-bold,.lib-author-block .bold{font-weight:var(--fw-semibold)}.lib-author-block .ve-italic{font-style:italic}.lib-author-block .ve-muted{color:var(--text2)}.lib-author-block .small-caps,.lib-author-block .ve-small-caps{font-variant:small-caps}.lib-author-block .no-wrap,.lib-author-block .ve-no-wrap{white-space:nowrap}.lib-author-block .ve-flex{display:flex}.lib-author-block .ve-flex-col{flex-direction:column;display:flex}.lib-author-block .ve-flex-v-center{align-items:center;display:flex}.lib-author-block .ve-flex-vh-center{justify-content:center;align-items:center;display:flex}.lib-author-block .ve-split,.lib-author-block .ve-split-v-center{justify-content:space-between;align-items:center;gap:var(--sp-2);display:flex}.lib-author-block .ve-grow,.lib-author-block .ve-flex-1{flex:1 1 0;min-width:0}.lib-author-block .ve-flex-2{flex:2 1 0;min-width:0}.lib-author-block .ve-pl-2{padding-left:.5rem}.lib-author-block .ve-pr-2{padding-right:.5rem}.lib-author-block .ve-pb-2{padding-bottom:.5rem}.lib-author-block .ve-min-w-25{min-width:25%}.lib-author-block .ve-br-1p{border-right:var(--border) solid var(--line)}.lib-author-block .ve-mt-1{margin-top:.25rem}.lib-author-block .ve-mt-4{margin-top:1.5rem}.lib-author-block .ve-mb-1{margin-bottom:.25rem}.lib-author-block .ve-mb-1p{margin-bottom:1px}.lib-author-block .ve-mb-2{margin-bottom:.5rem}.lib-author-block .ve-overflow-x-auto{overflow-x:auto}.trpg-window[data-layout=narrow] .lib-author-block .ve-rd-plaintext__wrp-root{flex-direction:column}.trpg-window[data-layout=narrow] .lib-author-block .ve-rd-plaintext__wrp-root>.ve-br-1p{padding-right:0;padding-bottom:var(--sp-2);border-right:0;border-bottom:var(--border) solid var(--line)}.trpg-window[data-layout=narrow] .lib-author-block .ve-rd-plaintext__wrp-root>.ve-pl-2{padding-left:0;padding-top:var(--sp-2)}.lib-author-block .ve-w-100,.lib-author-block .w100{width:100%}.lib-author-block .ve-table-layout-fixed{table-layout:fixed}.lib-author-block .ve-col-1{width:8.3333%}.lib-author-block .ve-col-2{width:16.6667%}.lib-author-block .ve-col-2-3{width:19.1667%}.lib-author-block .ve-col-3{width:25%}.lib-author-block .ve-col-4{width:33.3333%}.lib-author-block .ve-col-5{width:41.6667%}.lib-author-block .ve-col-5-5{width:45.8333%}.lib-author-block .ve-col-6{width:50%}.lib-author-block .ve-col-10{width:83.3333%}.lib-author-block .ve-col-11{width:91.6667%}.lib-author-block .ve-col-12{width:100%}.lib-entity table{border-collapse:collapse;width:100%}.lib-entity th,.lib-entity td{padding:2px var(--sp-1);vertical-align:top;text-align:left;border:0}.lib-entity .ve-stats__sect-header-inner{margin-top:var(--sp-3);border-bottom:var(--border) solid var(--primary-tint-line);color:var(--primary-text);font-weight:var(--fw-semibold);font-variant:small-caps;padding-bottom:2px;display:block}.lib-entity .ve-stats__sect-row-inner{padding-top:var(--sp-2)}.lib-entity .ve-tbl-border{background:var(--primary-tint-line);height:2px;padding:0}.lib-entity .ve-tbl-divider{background:var(--line);height:1px;padding:0}.lib-entity [class*=ve-stats__disp-as-score]{background:var(--bg-sunk);text-align:center}.lib-entity [class*=ve-stats__disp-as-bonus]{background:var(--primary-tint);text-align:center}.lib-entity [class*=stats-tbl-ability-scores__lbl]{text-align:center;color:var(--text2);font-size:var(--fs-xs)}.lib-author-block .ve-rd__h--1{font-size:var(--fs-lg);font-weight:var(--fw-bold)}.lib-author-block .ve-rd__h--2{font-weight:var(--fw-bold)}.lib-author-block .ve-rd__h--3{font-weight:var(--fw-bold);font-style:italic}.lib-author-block ul.ve-rd__list-hang-notitle{padding:0;list-style:none}.lib-author-block .ve-rd__wrp-embedded-data{border:var(--border) solid var(--line);border-radius:var(--r-sm);margin:var(--sp-2) 0}.lib-author-block .ve-rd__b-inset{border:var(--border) solid var(--line);border-radius:var(--r-sm);padding:var(--sp-2) var(--sp-3);margin:var(--sp-2) 0;background:var(--bg-sunk)}.lib-author-block .ve-rd__quote{font-style:italic}", mRe = "*,:before,:after{box-sizing:border-box}button,input,textarea,select{font:inherit;color:inherit}button{cursor:pointer}:where(h1,h2,h3,h4,p,ul,ol,dl,dd){margin:0;padding:0}:where(ul,ol){list-style:none}:focus-visible{box-shadow:0 0 0 2px var(--surface), 0 0 0 4px var(--focus);border-radius:var(--r-sm);outline:none}.trpg-sr-only{clip:rect(0 0 0 0);white-space:nowrap;border:0;width:1px;height:1px;margin:-1px;padding:0;position:absolute;overflow:hidden}.trpg-icon{vertical-align:-.2em;flex:none;display:inline-block}@media (prefers-reduced-motion:reduce){*,:before,:after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}", hRe = ".trpg-dice{z-index:30;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);width:360px;max-height:calc(100dvh - 16px);box-shadow:var(--shadow-3);flex-direction:column;display:flex;position:fixed;overflow:hidden}.trpg-dice__head{background:var(--side);min-height:44px;color:var(--side-ink);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;flex:none;align-items:center;gap:8px;padding:0 6px 0 14px;display:flex}.trpg-dice__title{font-family:var(--font-serif);flex:1;font-size:16px}.trpg-dice__body{gap:14px;padding:14px 12px;display:grid;overflow-y:auto}.trpg-dice__lbl{color:var(--text2);justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;font-size:12.5px;display:flex}.trpg-dice__row{align-items:center;gap:8px;display:flex}.trpg-dice__formula{min-height:44px;font-family:var(--font-serif);letter-spacing:.02em;font-size:20px}.trpg-dice__formula[aria-invalid=true]{border-color:var(--danger-line)}.trpg-dice__err{min-height:18px;margin-top:4px}.trpg-dice__faces{grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;display:grid}.trpg-dice__face{min-width:0;position:relative}.trpg-dice__die{border:1px solid var(--line);background:var(--surface);width:100%;min-height:58px;color:var(--text);border-radius:8px;align-content:center;justify-items:center;gap:2px;padding:4px 0 3px;font-size:12px;display:grid;position:relative}.trpg-dice__die:hover{border-color:var(--primary)}.trpg-dice__die[data-n]:not([data-n=\"0\"]){border-color:var(--primary);background:var(--bg-side)}.trpg-dice__die .trpg-die{width:28px;height:28px}.trpg-dice__cnt{background:var(--primary);min-width:20px;height:20px;color:var(--on-primary);font-variant-numeric:tabular-nums;border-radius:10px;padding:0 5px;font-size:12px;line-height:20px;position:absolute;top:-6px;right:-4px}.trpg-dice__minus{border:1px solid var(--line);background:var(--surface);width:22px;height:22px;color:var(--text);border-radius:50%;padding:0;font-size:14px;line-height:18px;position:absolute;top:-8px;left:-6px}.trpg-dice__minus:after{content:\"\";position:absolute;inset:-10px}.trpg-die polygon,.trpg-die .trpg-die__body{fill:var(--surface);stroke:var(--text2);stroke-width:3px;stroke-linejoin:round}.trpg-die .trpg-die__facet{fill:none;stroke:var(--line);stroke-width:2px;stroke-linejoin:round}.trpg-die text{fill:var(--text);font-family:var(--font-serif);font-weight:600}.trpg-dice__die .trpg-die polygon,.trpg-dice__die .trpg-die .trpg-die__body{fill:none}.trpg-dice__die[data-n]:not([data-n=\"0\"]) .trpg-die polygon,.trpg-dice__die[data-n]:not([data-n=\"0\"]) .trpg-die .trpg-die__body{stroke:var(--primary)}.trpg-dice__adjust{flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:10px 16px;display:flex}.trpg-dice__step{align-items:center;gap:4px;display:inline-flex}.trpg-dice__step button{border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface);width:40px;height:40px;color:var(--text);font-size:18px}.trpg-dice__step output{text-align:center;font-variant-numeric:tabular-nums;min-width:2.6em;font-weight:600}.trpg-dice__small{color:var(--text2);font-size:12px}.trpg-dice__step .trpg-dice__small{margin-right:4px}.trpg-dice .trpg-seg button{min-height:40px}.trpg-seg.is-off{opacity:.45}.trpg-seg.is-off button{cursor:not-allowed}.trpg-dice__roll{width:100%;min-height:54px;font-family:var(--font-serif);letter-spacing:.3em;text-indent:.3em;font-size:19px}.trpg-dice__result{border:1px solid var(--line);background:var(--surface);border-radius:10px;justify-items:center;gap:8px;padding:14px 12px 12px;display:grid}.trpg-dice__hero{width:124px;height:124px}.trpg-dice__hero .trpg-die{width:100%;height:100%;overflow:visible}.trpg-dice__hero.is-rolling .trpg-die{animation:.46s ease-in-out trpg-tumble}.trpg-dice__hero.is-nat20 .trpg-die polygon,.trpg-dice__hero.is-nat20 .trpg-die .trpg-die__body{stroke:var(--accent);stroke-width:5px;fill:color-mix(in srgb, var(--accent) 22%, var(--surface))}.trpg-dice__hero.is-nat1 .trpg-die polygon,.trpg-dice__hero.is-nat1 .trpg-die .trpg-die__body{stroke:var(--danger-line);stroke-width:5px;fill:color-mix(in srgb, var(--danger-line) 18%, var(--surface))}.trpg-dice__line{min-height:22px;color:var(--text2);text-align:center;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.trpg-dice__minis{flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;min-height:36px;display:flex}.trpg-dice__mini{width:38px;height:38px}.trpg-dice__mini.is-dim{opacity:.35}.trpg-dice__mini .trpg-die{width:100%;height:100%}.trpg-dice__const{background:var(--bg-side);border:1px solid var(--line);font-variant-numeric:tabular-nums;border-radius:15px;place-items:center;min-width:38px;height:30px;padding:0 8px;font-weight:600;display:inline-grid}.trpg-dice__send{grid-template-columns:1.5fr 1fr;gap:8px;width:100%;display:grid}.trpg-dice__send .trpg-input{grid-column:1/-1}.trpg-dice__send .trpg-btn{min-height:44px}.trpg-dice__recent{border:1px solid var(--line);width:100%;min-height:44px;color:var(--text2);text-align:left;background:0 0;border-radius:8px;justify-content:space-between;align-items:center;gap:8px;padding:0 10px;display:flex}.trpg-dice__recent b{color:var(--text);font-family:var(--font-serif);font-size:16px}.trpg-dice__list{max-height:180px;margin:4px 0 0;padding:0;list-style:none;overflow-y:auto}.trpg-dice__list button{border:0;border-bottom:1px solid var(--line);text-align:left;background:0 0;align-items:baseline;gap:10px;width:100%;min-height:44px;padding:4px 10px;display:flex}.trpg-dice__list button:hover{background:var(--bg-side)}.trpg-dice__list b{min-width:2em;font-family:var(--font-serif);font-size:17px}.trpg-dice__list span{overflow-wrap:anywhere;min-width:0;color:var(--text2);flex:1;font-size:13px}.trpg-dice__list time{color:var(--text2);font-size:12px}.trpg-dice__clear{justify-content:flex-end;display:flex}@keyframes trpg-tumble{0%{transform:rotate(0)scale(1)}45%{transform:rotate(200deg)scale(.88)}to{transform:rotate(360deg)scale(1)}}.trpg-dice__shell{flex:1;min-height:0;display:flex}.trpg-dice__main{flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.trpg-dice__main>.trpg-dice__body{overflow-y:auto}.trpg-dice[data-narrow=true]{max-height:calc(100dvh - 76px)}.trpg-dice[data-narrow=true] .trpg-dice__shell{flex-direction:column}.trpg-rp{background:var(--surface);flex-direction:column;flex:1;min-height:0;display:flex}.trpg-rp__body{flex:1;align-content:start;gap:8px;min-height:0;padding:8px 14px;display:grid;overflow-y:auto}.trpg-rp .trpg-seg{width:fit-content;max-width:100%}.trpg-rp .trpg-seg button{min-height:32px;padding:2px 12px}.trpg-rp__sec{border-bottom:1px dotted color-mix(in srgb, var(--line) 60%, transparent);gap:6px;padding-bottom:8px;display:grid}.trpg-rp__sec:last-child{border-bottom:0}.trpg-rp__sec h4{color:var(--text2);margin:0;font-size:12px;font-weight:600}.trpg-rp__title{font:700 17px/1.3 var(--font-serif);margin:0}.trpg-rp__pair{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;display:grid}.trpg-rp__rows{gap:0;margin:0;padding:0;list-style:none;display:grid}.trpg-rp__row{border-bottom:1px dotted color-mix(in srgb, var(--line) 60%, transparent);align-items:center;gap:8px;min-height:30px;font-size:14px;display:flex}.trpg-rp__row:last-child{border-bottom:0}.trpg-rp__row>span{flex:1;min-width:0}.trpg-rp__row b{font-variant-numeric:tabular-nums}.trpg-rp__row.is-off{opacity:.4;text-decoration:line-through}.trpg-rp__hint{color:var(--text2);font-size:12px;font-weight:400}.trpg-rp__warn{background:color-mix(in srgb, var(--accent) 16%, var(--surface));border-radius:8px;margin:0;padding:6px 10px;font-size:13px}.trpg-rp__addrow{gap:4px;display:flex}.trpg-rp__form{grid-template-columns:1fr 1fr auto;align-items:center;gap:6px;display:grid}.trpg-rp__form .trpg-field__error{grid-column:1/-1}.trpg-rp__passive{color:var(--text2);align-items:center;gap:8px;font-size:13px;display:flex}.trpg-rp__dc{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.trpg-input.trpg-rp__dcnum{text-align:center;width:72px;min-height:44px;font:700 22px var(--font-serif);flex:none}.trpg-rp__round{border:1px solid var(--line);background:var(--surface);border-radius:50%;place-items:center;width:34px;height:34px;padding:0;display:inline-grid}.trpg-rp__chips{flex-wrap:wrap;gap:6px;width:100%;display:flex}.trpg-rp__chip{border:1px solid var(--line);background:var(--surface);font-variant-numeric:tabular-nums;border-radius:8px;width:40px;height:34px;padding:0}.trpg-rp__chip[aria-pressed=true]{background:var(--primary);color:var(--on-primary);border-color:var(--primary)}.trpg-rp__contest{gap:8px;display:grid}.trpg-rp__final{margin:0;font-size:14px;font-weight:600}.trpg-rp__final .trpg-rp__hint{margin-top:2px;display:block}.trpg-rp__foot{padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--surface);flex:none;gap:8px;display:grid}.trpg-rp__formula{margin:0;font:700 15px ui-monospace,SF Mono,Menlo,monospace}.trpg-rp__result{border:1px dashed var(--line);border-radius:10px;align-items:center;gap:14px;height:104px;padding:0 14px;display:flex;overflow:hidden}.trpg-rp__total{border:2px solid var(--line-ctrl);min-width:64px;height:64px;font:700 28px var(--font-serif);border-radius:14px;place-items:center;padding:0 6px;display:inline-grid}.trpg-rp__verdict{gap:2px;min-width:0;display:grid}.trpg-rp__verdict span{font:700 15px var(--font-serif)}.trpg-rp__verdict .is-pass,.trpg-rp__verdict .is-win{color:var(--primary)}.trpg-rp__verdict .is-fail,.trpg-rp__verdict .is-lose{color:var(--danger-line)}.trpg-rp__verdict small{color:var(--text2);overflow-wrap:anywhere;font-size:12.5px}.trpg-rp__roll{width:100%;min-height:46px;font:700 17px var(--font-serif);letter-spacing:.2em}.trpg-rp input[type=checkbox]{appearance:none;border:1.5px solid var(--line);background:var(--surface);cursor:pointer;border-radius:6px;flex:none;width:22px;height:22px;margin:0;position:relative}.trpg-rp input[type=checkbox]:checked{background:var(--primary);border-color:var(--primary)}.trpg-rp input[type=checkbox]:checked:after{content:\"\";border:solid var(--on-primary);border-width:0 2px 2px 0;width:6px;height:11px;position:absolute;top:2px;left:6px;transform:rotate(45deg)}.trpg-rp__act{align-items:center;gap:12px;display:flex}.trpg-rp__act .trpg-rp__formula{overflow-wrap:anywhere;flex:1;min-width:0}.trpg-rp__act .trpg-rp__roll{flex:none;width:auto;min-width:140px;padding:0 22px}.trpg-rp__result{height:92px}.trpg-rp__sec h4{color:var(--text);font-size:13px}.trpg-rp__body{padding-bottom:20px}.trpg-input.trpg-rp__dcnum{appearance:textfield;box-shadow:none}.trpg-rp__dcnum::-webkit-inner-spin-button{appearance:none;margin:0}.trpg-rp__dcnum::-webkit-outer-spin-button{appearance:none;margin:0}.trpg-rp__roll{letter-spacing:.08em}.trpg-rp__result.is-empty{height:44px}.trpg-rp__dcline{color:var(--text2);margin:0;font-size:12.5px}", gRe = ".lib-stack{gap:var(--sp-3);align-content:start;display:grid}.lib-file{border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);padding:var(--sp-3) var(--sp-4);gap:var(--sp-2);display:grid}.lib-file__top{align-items:center;gap:var(--sp-3);flex-wrap:wrap;display:flex}.lib-kv{gap:4px var(--sp-4);color:var(--text2);font-size:var(--fs-sm);flex-wrap:wrap;display:flex}.lib-kv b{color:var(--text);font-weight:var(--fw-semibold)}.lib-pack{gap:2px;min-width:0;display:grid}.lib-pack__cats{color:var(--text2);font-size:var(--fs-sm)}.lib-drafts{align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-md);background:var(--bg-sunk);font-size:var(--fs-sm);flex-wrap:wrap;display:flex}.lib-drafts>span:not(.lib-end){flex:160px;min-width:0}.lib-pending{color:var(--text2);font-size:var(--fs-xs);font-weight:var(--fw-regular);align-items:center;gap:4px;display:inline-flex}.lib-pending .trpg-icon{animation:1.2s linear infinite lib-spin}@keyframes lib-spin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.lib-pending .trpg-icon{animation:none}}.lib-form{gap:var(--sp-3);align-content:start;display:grid}.lib-form .trpg-field{margin-bottom:0}.lib-ebar{align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-top:var(--border) solid var(--line);background:var(--surface);flex-wrap:wrap;flex:none;display:flex}.lib-dialog{flex-direction:column;flex:1;min-height:0;display:flex}.lib-dialog__body{gap:var(--sp-3);flex:1;align-content:start;min-height:0;display:grid;overflow:auto}.lib-dialog__body .trpg-field{margin-bottom:0}.lib-locked{background:var(--bg-sunk);color:var(--text3);justify-content:space-between;align-items:center;display:flex}.lib-langs{gap:4px;display:inline-flex}.lib-form__sec{font-size:var(--fs-xs);color:var(--text2);font-weight:var(--fw-semibold);padding-bottom:var(--sp-1)}.lib-types{gap:var(--sp-1);display:grid}.lib-tgroup{gap:var(--sp-2);border-bottom:var(--border) solid var(--line);font-size:var(--fs-sm);flex-wrap:wrap;align-items:baseline;padding:6px 0;display:flex}.lib-tgroup>b{min-width:96px;color:var(--text2);font-weight:var(--fw-semibold)}.lib-tgroup__items{gap:4px var(--sp-3);flex-wrap:wrap;flex:1;min-width:0;display:flex}.lib-choice{gap:var(--sp-2);display:grid}.lib-choice>label{gap:2px var(--sp-2);padding:var(--sp-2) var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);cursor:pointer;grid-template-columns:20px 1fr;display:grid}.lib-choice>label[data-on=true]{box-shadow:inset 0 0 0 2px var(--primary)}.lib-choice>label>span:last-child{color:var(--text2);font-size:var(--fs-sm);grid-column:2}.lib-choice__radio{accent-color:var(--primary);margin:3px 0 0}.lib-etop{align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-bottom:var(--border) solid var(--line);font-size:var(--fs-sm);color:var(--text2);flex-wrap:wrap;flex:none;display:flex}.lib-two{gap:var(--sp-3);min-height:0;padding:var(--sp-3) var(--sp-4);flex:1;grid-template-columns:1fr 1fr;display:grid}.lib-two>div{gap:var(--sp-2);flex-direction:column;min-height:0;display:flex}.lib-lines{border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);min-height:0;padding:var(--sp-2) var(--sp-3);font-size:var(--fs-sm);align-content:start;gap:var(--sp-2);flex:1;display:grid;overflow:auto}.lib-convert__in{resize:none;min-height:160px;font:13px/1.6 var(--font-sans);padding:var(--sp-2) var(--sp-3);flex:1}.lib-jsonwrap{min-height:0;padding:var(--sp-3) var(--sp-4) 0;flex-direction:column;flex:1;display:flex}.lib-cmhost{border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);flex-direction:column;flex:1;min-height:160px;display:flex;overflow:hidden}.lib-cmhost .cm-editor{flex:1;min-height:0;font:12px/1.6 ui-monospace,Menlo,monospace}.lib-cmhost .cm-editor.cm-focused{outline:none}.lib-cmhost .cm-scroller{overflow:auto}.lib-cmhost .cm-gutters{background:var(--bg-sunk);border-right:var(--border) solid var(--line);color:var(--text3)}.lib-cmhost .cm-tooltip{font-family:var(--font-sans)}.lib-cm__err{padding:var(--sp-2) var(--sp-4) 0;flex:none;gap:6px;display:grid}.trpg-window[data-layout=narrow] .lib-two{grid-template-columns:1fr}.lib-two:has(>div:only-child){grid-template-columns:1fr}.lib-pills--wrap{flex-wrap:wrap;padding-inline:0;overflow:visible}.trpg-modal[data-variant=sheet] .trpg-modal__card:has(.trpg-modal__page:not(.is-under) .lib-editor){width:94%;height:92%}.lib-editor{min-height:0}.lib-split{flex:1;grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:0;display:grid}.lib-split>.lib-pane+.lib-pane{border-left:var(--border) solid var(--line)}.lib-vsplit{flex-direction:column;flex:1;min-height:0;display:flex}.lib-vsplit>.lib-pane{flex:1;min-height:0}.lib-vsplit>.lib-pane__head{overflow-x:auto}.lib-pane{flex-direction:column;min-width:0;min-height:0;display:flex}.lib-pane--side{background:var(--bg-sunk)}.lib-pane__head{align-items:center;gap:var(--sp-2);min-height:44px;padding:var(--sp-2) var(--sp-4);border-bottom:var(--border) solid var(--line);font-size:var(--fs-sm);flex:none;display:flex}.lib-pane__head .trpg-seg button{white-space:nowrap;min-height:30px;padding-inline:var(--sp-3)}.lib-pane__head>.lib-faint{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.lib-pane__body{min-height:0;padding:var(--sp-3) var(--sp-4) var(--sp-5);flex-direction:column;flex:1;display:flex;overflow:auto}.lib-tform{gap:var(--sp-3);align-content:start;display:grid}.lib-tfield{gap:4px;min-width:0;display:grid}.lib-tfield>label{font-size:var(--fs-sm);font-weight:var(--fw-semibold);align-items:center;gap:6px;display:flex}.lib-tfield>label small{color:var(--danger-text)}.lib-lname{align-items:center;gap:4px;display:inline-flex}.lib-lname[data-en]{font-family:ui-monospace,Menlo,monospace;font-weight:var(--fw-regular)}.lib-tip{color:var(--text3);cursor:help;display:inline-flex}.lib-mark{background:var(--warn-bg);color:var(--warn-text);font:500 11px/16px var(--font-sans);white-space:nowrap;box-shadow:inset 0 0 0 1px var(--accent);border-radius:999px;padding:1px 8px}.lib-tfield[data-diff=true]>.trpg-input,.lib-tfield[data-diff=true]>.trpg-select-trigger,.lib-tfield[data-diff=true]>.lib-inline .trpg-select-trigger{border-color:var(--accent);box-shadow:0 0 0 3px var(--warn-bg)}.lib-fsec{margin-top:var(--sp-2);border-bottom:var(--border) solid var(--line);color:var(--text2);font-size:12px;font-weight:var(--fw-semibold);padding-bottom:4px}.lib-more{align-items:center;gap:var(--sp-2);padding:var(--sp-2) 0;border:0;border-top:var(--border) dashed var(--line);color:var(--text2);font-size:var(--fs-sm);text-align:left;cursor:pointer;background:0 0;display:flex}.lib-tojson{width:fit-content;padding:6px var(--sp-3);border-radius:var(--r-sm);background:var(--bg-sunk);color:var(--text2);font-size:var(--fs-sm);cursor:pointer;border:0;align-items:center;gap:6px;display:inline-flex}.lib-pane--side .lib-tojson{background:var(--surface)}.lib-inline{gap:var(--sp-2);flex-wrap:wrap;align-items:center;min-width:0;display:flex}.lib-inline>.trpg-input{flex:120px;width:auto;min-width:0}.lib-inline>.trpg-select-trigger{flex:140px;width:auto}.lib-rep{gap:var(--sp-2);display:grid}.lib-rep__row{gap:var(--sp-2);padding:var(--sp-2);border-radius:var(--r-sm);background:var(--bg-sunk);align-items:flex-start;display:flex}.lib-pane--side .lib-rep__row{background:var(--surface)}.lib-rep__row>b{padding-top:7px;font-size:12px}.lib-rep__body{gap:var(--sp-2);flex:1;min-width:0;display:grid}.lib-grp{gap:var(--sp-2);padding-left:var(--sp-2);border-left:2px solid var(--line);display:grid}.lib-rep__body>.lib-grp{border-left:0;padding-left:0}.lib-checks{gap:var(--sp-2) var(--sp-4);flex-wrap:wrap;align-items:center;padding-top:4px;display:flex}.lib-num{width:96px}.lib-para{resize:vertical;width:100%;min-height:64px;font:inherit;padding:var(--sp-2) var(--sp-3);line-height:1.6}.lib-mono{font-family:ui-monospace,Menlo,monospace}.lib-seg--small button{min-height:26px;padding:0 var(--sp-3);font-size:12px}.lib-fillopt{padding:var(--sp-3);border-radius:var(--r-md);border:var(--border) solid var(--line);background:var(--surface);cursor:pointer;gap:6px;display:grid}.lib-fillopt[data-on=true]{border-color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary)}.lib-diff{font-size:var(--fs-sm);gap:6px;margin:0;padding:0;list-style:none;display:grid}.lib-diff li{gap:var(--sp-2);padding:6px var(--sp-3);border-radius:var(--r-sm);background:var(--bg-sunk);grid-template-columns:minmax(80px,128px) 1fr;display:grid}.lib-diff code{font:12px var(--font-sans);font-weight:var(--fw-semibold)}.lib-diff s{color:var(--text3)}.lib-pane__body>.lib-cmhost{min-height:280px}.lib-list__row--edit{align-items:center;gap:var(--sp-2);padding-block:0;display:flex}.lib-list__open{align-items:center;gap:var(--sp-2);min-width:0;color:inherit;font:inherit;text-align:left;cursor:pointer;min-height:inherit;background:0 0;border:0;flex:1;padding:0;display:flex}.lib-pane__head>.trpg-seg{flex:none}.lib-notes{background:var(--bg-sunk);width:fit-content;color:var(--text2);cursor:pointer;border:0;border-radius:999px;align-items:center;gap:6px;padding:4px 10px;font-size:12px;display:inline-flex}.lib-sum{gap:var(--sp-2);max-height:45%;padding:var(--sp-3) var(--sp-4);border-top:var(--border) solid var(--line);background:var(--surface);flex:none;display:grid;overflow:auto}.lib-sum__row{align-items:center;gap:var(--sp-3);font-size:var(--fs-sm);flex-wrap:wrap;display:flex}.lib-sum__row>.trpg-select-trigger{width:auto;min-width:200px}.lib-sum__choice{font-size:var(--fs-sm);gap:4px;display:grid}.lib-crow{gap:var(--sp-2);padding:7px var(--sp-2);border-bottom:var(--border) solid var(--line);font-size:var(--fs-sm);grid-template-columns:minmax(64px,96px) minmax(0,1fr) auto;align-items:start;display:grid}.lib-crow>b{font-weight:var(--fw-semibold);color:var(--text2);padding-top:2px;font-size:12px}.lib-crow[data-diff=true]{background:var(--warn-bg);border-radius:var(--r-sm)}.lib-crow small{color:var(--warn-text);font-size:11px;display:block}.lib-edits{margin:0;padding:0;list-style:none;display:grid}.lib-erow{gap:var(--sp-2);padding:var(--sp-2) 0;border-bottom:var(--border) solid var(--line);display:grid}.lib-erow[data-off=true]{opacity:.65}.lib-erow__top{align-items:center;gap:var(--sp-2);flex-wrap:wrap;display:flex}.lib-erow__name{font-weight:var(--fw-semibold)}.lib-erow__meta{color:var(--text2);flex:200px;min-width:0;font-size:12px}.lib-erow__top .trpg-select-trigger{width:auto;min-width:120px}.lib-erow__body{gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-sm);background:var(--bg-sunk);margin-left:26px;display:grid}.lib-housenote{color:var(--text);align-items:center;gap:4px;display:inline-flex}.lib-erow__top>.trpg-check,[data-testid=overrides]>.lib-filter>.trpg-check{flex:none;width:auto;margin:0}.lib-erow__top>.lib-end{flex:100%;justify-content:flex-end}.lib-erow__top>.lib-end .trpg-select-trigger{flex:0 200px;width:auto}.lib-block{gap:4px;display:grid}.lib-block__bar{flex-wrap:wrap;gap:2px;display:flex}.lib-block__bar .trpg-btn{min-height:28px}.lib-pick{gap:var(--sp-1);display:grid}.lib-pick>.trpg-btn,.lib-subs{justify-self:start}.lib-numrow{gap:var(--sp-2) var(--sp-3);flex-wrap:wrap;display:flex}.lib-numrow>.lib-tfield{width:7.5em}.lib-row1{display:contents}.lib-grp--row{align-items:flex-end;gap:var(--sp-2) var(--sp-3);flex-wrap:wrap;display:flex}.lib-grp--row>.lib-tfield{flex:8em}.lib-img{gap:var(--sp-1);display:grid}.lib-img__thumb{object-fit:contain;border-radius:var(--r-sm);border:var(--border) solid var(--line);background:var(--bg-sunk);max-width:160px;max-height:120px}.lib-fhint{margin:calc(-1 * var(--sp-2)) 0 0;font-size:12px}.lib-children{gap:var(--sp-2);margin-top:var(--sp-4);display:grid}.lib-children__grp{gap:var(--sp-1);display:grid}.lib-children__items{gap:var(--sp-2);flex-wrap:wrap;align-items:center;display:flex}.lib-typehint{margin-top:var(--sp-3);gap:2px;font-size:12px;display:grid}.lib-typehint p{margin:0}.lib-editgrid{gap:var(--sp-2);min-width:0;display:grid}.lib-editgrid__scroll{border:var(--border) solid var(--line);border-radius:var(--r-sm);overflow-x:auto}.lib-editgrid table{border-collapse:collapse;width:100%}.lib-editgrid td,.lib-editgrid th{border:var(--border) solid var(--line);text-align:start;min-width:84px;padding:3px}.lib-editgrid th{background:var(--bg-sunk)}.lib-editgrid td .trpg-input,.lib-editgrid th .trpg-input{width:100%;min-width:0}.lib-editgrid th .trpg-input{font-weight:var(--fw-semibold)}.lib-editgrid td .trpg-btn,.lib-editgrid th .trpg-btn{white-space:normal}.lib-editgrid .lib-editgrid__actions{text-align:center;width:1%;min-width:0}.lib-edittext{gap:var(--sp-2);min-width:0;display:grid}.lib-edittext__item{gap:var(--sp-1);grid-template-columns:minmax(0,1fr) auto;align-items:start;display:grid}.lib-edittext__add{justify-self:start}.lib-attached{margin-top:var(--sp-4);padding-top:var(--sp-3);border-top:var(--border) solid var(--line)}", _Re = ".trpg-btn{min-height:var(--hit);padding:0 var(--sp-4);justify-content:center;align-items:center;gap:var(--sp-2);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-weight:var(--fw-medium);white-space:nowrap;transition:background var(--dur-fast) var(--ease-std), border-color var(--dur-fast) var(--ease-std), transform var(--dur-press) var(--ease-out);display:inline-flex}.trpg-btn:hover:not(:disabled){background:var(--bg-hover)}.trpg-btn:active:not(:disabled){transform:translateY(1px)}.trpg-btn--primary{background:var(--primary);color:var(--on-primary);font-weight:var(--fw-semibold);border-color:#0000}.trpg-btn--primary:hover:not(:disabled){background:var(--primary-hover)}.trpg-btn--primary:active:not(:disabled){background:var(--primary-pressed)}.trpg-btn--danger{color:var(--danger-text);border:2px solid var(--danger-line);background:var(--surface)}.trpg-btn--quiet{background:0 0;border-color:#0000}.trpg-btn--small{min-height:28px;padding:0 var(--sp-3);font-size:var(--fs-sm)}.trpg-btn:disabled{background:var(--disabled-bg);border-color:var(--line);color:var(--disabled-text);cursor:not-allowed}.trpg-btn--primary:disabled{background:var(--line);color:var(--text2)}.trpg-window[data-layout=narrow] .trpg-btn:not(.trpg-btn--small){min-height:var(--hit-touch)}.trpg-icon-btn{width:var(--hit);height:var(--hit);min-width:var(--hit);border-radius:var(--r-sm);color:var(--text2);transition:background var(--dur-fast) var(--ease-std), color var(--dur-fast) var(--ease-std);background:0 0;border:0;place-items:center;padding:0;display:inline-grid}.trpg-icon-btn:hover{background:var(--bg-hover);color:var(--text)}.trpg-window[data-layout=narrow] .trpg-icon-btn{width:var(--hit-touch);height:var(--hit-touch)}.trpg-pill{align-items:center;gap:var(--sp-1);min-height:30px;padding:0 var(--sp-3);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-pill);background:var(--surface);font-size:var(--fs-sm);display:inline-flex}.trpg-badge,.trpg-tag{padding:1px var(--sp-2);border-radius:var(--r-xs);background:var(--bg-side);color:var(--text2);font-size:var(--fs-xs);white-space:nowrap;border:0;align-items:center;gap:4px;line-height:1.6;display:inline-flex}.trpg-badge[data-tone=primary]{background:var(--primary-tint);color:var(--primary-text);box-shadow:inset 0 0 0 1px var(--primary-tint-line)}.trpg-badge[data-tone=warn]{background:var(--warn-bg);color:var(--warn-text);box-shadow:inset 0 0 0 1px var(--accent)}.trpg-badge[data-tone=success]{background:var(--success-bg);color:var(--success-text)}.trpg-badge[data-off=true]{color:var(--text3);box-shadow:inset 0 0 0 1px var(--line);background:0 0;text-decoration:line-through}.trpg-badge[data-status=pass]{color:var(--success-text)}.trpg-badge[data-status=fail],.trpg-badge[data-status=error]{color:var(--danger-text)}button.trpg-badge{cursor:pointer;border:0}.trpg-link{color:var(--primary-text);font:inherit;text-underline-offset:3px;background:0 0;border:0;padding:0;text-decoration:underline}.trpg-link--hl{align-items:center;gap:var(--sp-2);min-height:var(--hit);padding:0 var(--sp-3);border-radius:var(--r-sm);background:var(--primary-tint);font-weight:var(--fw-semibold);transition:background var(--dur-fast) var(--ease-std);text-decoration:none;display:inline-flex}.trpg-link--hl:hover{background:var(--primary-tint-line)}.trpg-term{color:inherit;font-family:var(--font-serif);font-weight:var(--fw-semibold);text-align:left;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;-webkit-text-decoration-color:var(--text3);text-decoration-color:var(--text3);text-underline-offset:4px;background:0 0;border:0;padding:0;display:inline}.trpg-hint{margin:0 0 var(--sp-3);font-size:var(--fs-sm);color:var(--text2);line-height:var(--lh-body)}.trpg-group{margin:var(--sp-4) 0 var(--sp-2);font-size:var(--fs-sm);font-weight:var(--fw-semibold);color:var(--text2)}.trpg-group--first{margin-top:0}.trpg-empty{gap:var(--sp-2);padding:var(--sp-4);border:var(--border) dashed var(--line-ctrl);border-radius:var(--r-md);background:var(--bg-sunk);color:var(--text2);justify-items:start;display:grid}.trpg-loading{gap:var(--sp-3);padding:32px var(--sp-3);color:var(--text2);justify-content:center;align-items:center;display:flex}.trpg-spinner{border:3px solid var(--line);border-top-color:var(--primary);width:22px;height:22px;animation:trpg-spin var(--dur-spin) linear infinite;border-radius:50%;flex:none;display:inline-block}.trpg-skeleton{border-radius:var(--r-xs);background:linear-gradient(90deg, var(--bg-side), var(--line), var(--bg-side));opacity:.7;height:14px}.trpg-list{margin:0;padding:0;list-style:none}.trpg-row{align-items:center;gap:var(--sp-3);min-height:52px;padding:6px var(--sp-1);border-bottom:var(--border) solid var(--line);display:flex}.trpg-row__main{flex:1;min-width:0}.trpg-row__title{font-weight:var(--fw-semibold);overflow-wrap:anywhere}.trpg-row__meta{color:var(--text2);font-size:var(--fs-sm)}.trpg-row__end{align-items:center;gap:var(--sp-2);flex:none;display:flex}.trpg-field{gap:var(--sp-1);margin-bottom:var(--sp-4);display:grid}.trpg-field__label{font-weight:var(--fw-semibold)}.trpg-field__hint{font-size:var(--fs-xs);color:var(--text2)}.trpg-field__err{font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:var(--danger-text);align-items:center;gap:4px;display:inline-flex}.trpg-input{width:100%;min-height:var(--hit);padding:0 var(--sp-3);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);color:var(--text);transition:border-color var(--dur-fast) var(--ease-std);display:block}textarea.trpg-input{min-height:72px;padding:var(--sp-2) var(--sp-3);resize:vertical}.trpg-input:hover:not(:disabled){border-color:var(--text2)}.trpg-input[aria-invalid=true]{border:2px solid var(--danger-line)}.trpg-input:disabled{background:var(--disabled-bg);color:var(--disabled-text)}.trpg-check{align-items:center;gap:var(--sp-2);min-height:var(--hit);cursor:pointer;display:inline-flex;position:relative}.trpg-check input{opacity:0;width:100%;height:100%;cursor:inherit;margin:0;position:absolute;inset:0}.trpg-check__box{border:var(--border-strong) solid var(--line-ctrl);border-radius:var(--r-xs);background:var(--surface);color:#0000;width:18px;height:18px;transition:background var(--dur-fast) var(--ease-std), border-color var(--dur-fast) var(--ease-std);flex:none;place-items:center;display:grid}.trpg-check[data-on=true] .trpg-check__box{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}.trpg-check[data-dl=true] .trpg-check__box{background:var(--text3);border-color:var(--text3);color:var(--surface)}.trpg-check[data-dl=true]{color:var(--text2)}.trpg-check[data-disabled=true] .trpg-check__box{opacity:.35}.trpg-groupcheck{min-width:var(--hit);min-height:var(--hit);cursor:pointer;background:0 0;border:0;flex:none;place-items:center;padding:0;display:inline-grid}.trpg-groupcheck__box{border:var(--border-strong) solid var(--line-ctrl);border-radius:var(--r-xs);background:var(--surface);width:18px;height:18px;color:var(--on-primary);font-weight:var(--fw-semibold);transition:background var(--dur-fast) var(--ease-std), border-color var(--dur-fast) var(--ease-std);place-items:center;line-height:1;display:grid}.trpg-groupcheck[aria-checked=true] .trpg-groupcheck__box,.trpg-groupcheck[aria-checked=mixed] .trpg-groupcheck__box{background:var(--primary);border-color:var(--primary)}.trpg-groupcheck:disabled{opacity:.4;cursor:not-allowed}.trpg-groupcheck:focus-visible{outline:2px solid var(--focus);outline-offset:1px}.trpg-check[data-disabled=true]{cursor:not-allowed}.trpg-check[data-disabled=true]:not([data-dl=true]){opacity:.75}.trpg-check input:focus-visible~.trpg-check__box{box-shadow:0 0 0 2px var(--surface), 0 0 0 4px var(--focus)}.trpg-dl{margin-left:var(--sp-2);padding:0 var(--sp-2);border-radius:var(--r-xs);background:var(--bg-side);color:var(--text2);font-size:var(--fs-xs);align-items:center;gap:3px;display:inline-flex}.trpg-switch-wrap{color:var(--text2);min-height:var(--hit-touch);align-items:center;gap:6px;display:inline-flex}.trpg-switch{border-radius:var(--r-pill);background:var(--line-ctrl);width:40px;height:22px;transition:background var(--dur-fast) var(--ease-std);border:0;flex:none;padding:0;position:relative}.trpg-switch:before{content:\"\";background:var(--surface);width:16px;height:16px;box-shadow:var(--shadow-1);transition:transform var(--dur-fast) var(--ease-out);border-radius:50%;position:absolute;top:3px;left:3px}.trpg-switch[data-on=true]{background:var(--primary)}.trpg-switch[data-on=true]:before{transform:translate(18px)}.trpg-switch:disabled{opacity:.55;cursor:not-allowed}.trpg-stepper{border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);align-items:stretch;display:inline-flex;overflow:hidden}.trpg-stepper__btn{min-width:36px;min-height:36px;padding:0 var(--sp-2);color:var(--text);background:0 0;border:0;place-items:center;display:grid}.trpg-stepper__btn:hover:not(:disabled){background:var(--bg-hover)}.trpg-stepper__btn:disabled{color:var(--disabled-text);cursor:not-allowed}.trpg-stepper__val{min-width:72px;font-weight:var(--fw-semibold);border-inline:var(--border) solid var(--line);place-items:center;display:grid}.trpg-ctrl{align-items:center;gap:var(--sp-3);display:inline-flex}.trpg-ctrl--off .trpg-stepper{opacity:.5;background:var(--disabled-bg)}.trpg-seg{border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);display:inline-flex;overflow:hidden}.trpg-seg button{min-height:34px;padding:2px var(--sp-4);color:var(--text);background:0 0;border:0}.trpg-seg button+button{border-left:var(--border) solid var(--line-ctrl)}.trpg-seg button:hover:not(:disabled):not([aria-pressed=true]){background:var(--bg-hover)}.trpg-seg button[aria-pressed=true]{background:var(--primary);color:var(--on-primary);font-weight:var(--fw-semibold)}.trpg-seg button:disabled{opacity:.4;cursor:not-allowed}.trpg-select-trigger{justify-content:space-between;align-items:center;gap:var(--sp-2);width:100%;min-height:var(--hit);padding:0 var(--sp-3);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);color:var(--text);display:inline-flex}.trpg-select-content,.trpg-dropdown,.trpg-popover{z-index:100003;background:var(--surface);color:var(--text);border:var(--border) solid var(--line);border-radius:var(--r-md);box-shadow:var(--shadow-2)}.trpg-select-content{min-width:var(--reka-select-trigger-width,160px);max-height:min(320px, var(--reka-select-content-available-height));overflow:hidden}.trpg-select-viewport{max-height:inherit;padding:var(--sp-1);overflow-y:auto}.trpg-select-item,.trpg-dropdown__item{justify-content:space-between;align-items:center;gap:var(--sp-3);min-height:40px;padding:4px var(--sp-3);border-radius:var(--r-xs);cursor:pointer;color:var(--text);display:flex}.trpg-dropdown{padding:var(--sp-1);min-width:168px;max-height:min(var(--reka-dropdown-menu-content-available-height,340px), 340px);overscroll-behavior:contain;overflow-y:auto}.trpg-select-item[data-highlighted],.trpg-dropdown__item[data-highlighted]{background:var(--bg-hover);outline:none}.trpg-select-item[data-state=checked]{font-weight:var(--fw-semibold);color:var(--primary-text)}.trpg-dropdown__item--danger{color:var(--danger-text)}.trpg-dropdown__item[data-disabled]{opacity:.5;cursor:not-allowed}.trpg-dropdown__reason{font-size:var(--fs-xs);color:var(--text2)}.trpg-popover{width:min(320px,92vw);padding:var(--sp-3)}.trpg-combo__anchor{border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);align-items:center;display:flex}.trpg-combo__input{min-width:0;min-height:var(--hit);padding:4px var(--sp-3);color:var(--text);background:0 0;border:0;flex:1}.trpg-combo__input:focus-visible{box-shadow:none}.trpg-combo__anchor:focus-within{box-shadow:0 0 0 2px var(--surface), 0 0 0 4px var(--focus)}.trpg-combo__content{width:var(--reka-combobox-trigger-width);min-width:260px;max-height:min(320px, var(--reka-combobox-content-available-height,320px));flex-direction:column;display:flex}.trpg-combo__content .trpg-select-viewport{flex:1;min-height:0;max-height:none}.trpg-combo__count{padding:6px var(--sp-3);border-bottom:var(--border) solid var(--line);color:var(--text2);font-size:var(--fs-sm)}.trpg-combo__empty{padding:var(--sp-3);color:var(--text2)}.trpg-tip{max-width:100%;display:inline-flex;position:relative}.trpg-tip.is-inline{display:inline}.trpg-tip__bubble{z-index:100004;max-width:260px;padding:var(--sp-2) var(--sp-3);border-radius:var(--r-md);background:var(--hero-bg);color:var(--hero-ink);font-size:var(--fs-sm);text-align:left;white-space:pre-line;pointer-events:none;box-shadow:var(--shadow-2);animation:trpg-fade var(--dur-base) var(--ease-out);gap:1px;line-height:1.5;display:grid;position:fixed}.trpg-modal-root{display:contents}.trpg-modal{z-index:var(--z-modal);padding:var(--sp-5);background:color-mix(in srgb, var(--text) 46%, transparent);animation:trpg-fade var(--dur-base) var(--ease-out);justify-content:center;align-items:center;display:flex;position:absolute;inset:0}.trpg-modal__card{background:var(--surface);border-radius:var(--r-lg);width:min(640px,100%);height:min(600px,100%);min-height:0;max-height:100%;box-shadow:var(--shadow-3);animation:trpg-rise var(--dur-slow) var(--ease-out);flex-direction:column;display:flex;overflow:hidden}.trpg-modal[data-variant=drawer]{justify-content:flex-end;padding:0}.trpg-modal[data-variant=drawer] .trpg-modal__card{border-radius:var(--r-lg) 0 0 var(--r-lg);width:min(440px,100%);height:100%;animation:trpg-slide var(--dur-slow) var(--ease-out)}.trpg-modal[data-variant=confirm] .trpg-modal__card{width:min(440px,100%);height:auto}@keyframes trpg-rise{0%{opacity:0;transform:translateY(10px)scale(.985)}}@keyframes trpg-slide{0%{opacity:0;transform:translate(32px)}}@keyframes trpg-sheet{0%{opacity:0;transform:translateY(100%)}}.trpg-modal__head{align-items:center;gap:var(--sp-3);min-height:52px;padding:var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-5);border-bottom:var(--border) solid var(--line);flex:none;display:flex}.trpg-modal__title{min-width:0;font-size:var(--fs-xl);font-weight:var(--fw-semibold);text-overflow:ellipsis;white-space:nowrap;flex:1;overflow:hidden}.trpg-modal__back{max-width:40%;min-height:var(--hit);margin-left:calc(-1 * var(--sp-3));padding:0 var(--sp-2);border-radius:var(--r-sm);color:var(--primary-text);font-weight:var(--fw-semibold);white-space:nowrap;background:0 0;border:0;align-items:center;gap:2px;display:inline-flex}.trpg-modal__back span{text-overflow:ellipsis;overflow:hidden}.trpg-modal__back:hover{background:var(--bg-hover)}.trpg-sheet-grip{background:var(--line-ctrl);opacity:.5;border-radius:3px;width:44px;height:5px;margin:8px auto 0;display:none}.trpg-modal__pages{flex:1;min-height:0;position:relative}.trpg-modal[data-variant=confirm] .trpg-modal__pages{flex-direction:column;flex:0 auto;display:flex}.trpg-modal__page{min-height:0;padding:var(--sp-4) var(--sp-5) var(--sp-5);transition:opacity var(--dur-fast) var(--ease-std), transform var(--dur-fast) var(--ease-std), visibility 0s;flex-direction:column;display:flex;position:absolute;inset:0;overflow:auto}.trpg-modal[data-variant=confirm] .trpg-modal__page{flex:0 auto;position:relative;overflow:hidden}.trpg-modal__page.is-under{opacity:0;visibility:hidden;transition:opacity var(--dur-fast) var(--ease-std), transform var(--dur-fast) var(--ease-std), visibility 0s var(--dur-fast);transform:translate(-24px)}.trpg-page-enter-from,.trpg-page-leave-to{opacity:0;transform:translate(24px)}.trpg-page-enter-active,.trpg-page-leave-active{transition:opacity var(--dur-fast) var(--ease-std), transform var(--dur-fast) var(--ease-std)}.trpg-modal[data-variant=confirm] .trpg-page-leave-active{position:absolute;inset:0}.trpg-window[data-layout=narrow] .trpg-modal{background:var(--surface);align-items:stretch;padding:0}.trpg-window[data-layout=narrow] .trpg-modal__card{border-radius:0;width:100%;height:100%}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=drawer]{background:color-mix(in srgb, var(--text) 46%, transparent);align-items:flex-end}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=drawer] .trpg-modal__card{border-radius:14px 14px 0 0;height:88%;animation-name:trpg-sheet}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=drawer] .trpg-sheet-grip{display:block}.trpg-window[data-layout=mid] .trpg-modal[data-variant=drawer] .trpg-modal__card{width:min(440px,100%)}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=confirm]{background:color-mix(in srgb, var(--text) 46%, transparent);align-items:flex-end}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=confirm] .trpg-modal__card{border-radius:14px 14px 0 0;height:auto;animation-name:trpg-sheet}.trpg-confirm{gap:var(--sp-3);flex-direction:column;min-height:0;max-height:100%;display:flex}.trpg-modal[data-variant=sheet] .trpg-confirm{height:100%;padding:var(--sp-4) var(--sp-5) var(--sp-5)}.trpg-confirm__message{flex:none}.trpg-confirm__scroll{gap:var(--sp-3);min-height:0;padding-right:var(--sp-1);overscroll-behavior:contain;flex:0 auto;align-content:start;display:grid;overflow:auto}.trpg-confirm__section{gap:var(--sp-1);padding:var(--sp-2) var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-md);display:grid}.trpg-confirm__section[data-tone=must]{border-color:var(--danger-line);background:var(--danger-bg)}.trpg-confirm__section[data-tone=must] .trpg-confirm__h{color:var(--danger-text)}.trpg-confirm__h{font-size:var(--fs-sm);font-weight:var(--fw-semibold);margin:0}.trpg-confirm__h small{margin-left:var(--sp-2);color:var(--text3);font-weight:400}.trpg-confirm__details{padding-left:var(--sp-5);color:var(--text2);overflow-wrap:anywhere;list-style:outside}.trpg-confirm__actions{justify-content:flex-end;gap:var(--sp-2);margin-top:var(--sp-1);padding-top:var(--sp-2);border-top:var(--border) solid var(--line);flex:none;display:flex}.trpg-confirm__actions--stack{flex-wrap:wrap}.trpg-window[data-layout=narrow] .trpg-confirm__actions{flex-direction:column-reverse}.trpg-window[data-layout=narrow] .trpg-confirm__actions .trpg-btn{width:100%}.trpg-warn{color:var(--warn-text)}.page-stack{gap:var(--sp-4);align-content:start;display:grid}.page-intro{color:var(--text2)}.trpg-info__line{margin:0}.trpg-modal[data-variant=sheet]{left:var(--trpg-sheet-left,0px);bottom:var(--trpg-sheet-bottom,0px)}.trpg-modal[data-variant=sheet] .trpg-modal__card{width:68%;min-width:min(480px,100%);height:70%;min-height:min(520px,100%)}.trpg-modal{cursor:grab}.trpg-modal__card{cursor:auto}.trpg-modal[data-variant=sheet] .trpg-modal__page{padding:0;overflow:hidden}.trpg-modal[data-variant=sheet] .trpg-modal__title{font-family:var(--font-serif)}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=sheet]{background:color-mix(in srgb, var(--text) 46%, transparent);align-items:flex-end}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=sheet] .trpg-modal__card{border-radius:14px 14px 0 0;height:88%;animation-name:trpg-sheet}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=sheet] .trpg-sheet-grip{display:block}", vRe = ".lib-page{flex-direction:column;height:100%;min-height:0;display:flex}.lib-top{align-items:center;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);flex-wrap:wrap;flex:none;display:flex}.trpg-window[data-layout=narrow] .lib-top{padding:var(--sp-2) var(--sp-3);gap:var(--sp-2)}.lib-end{align-items:center;gap:var(--sp-2);flex:none;margin-left:auto;display:flex}.lib-scroll{min-height:0;padding:0 var(--sp-4) var(--sp-8,72px);flex:1;overflow:auto}.trpg-window[data-layout=narrow] .lib-scroll{padding:0 var(--sp-3) 72px}.lib-sec{align-items:center;gap:var(--sp-2);padding:var(--sp-3) 0 var(--sp-1);font-size:var(--fs-sm);font-weight:var(--fw-semibold);color:var(--text2);display:flex}.lib-muted{color:var(--text2)}.lib-faint{color:var(--text3)}.lib-src{color:var(--text3);font-size:var(--fs-xs);font-weight:var(--fw-regular);font-family:var(--font-sans)}.lib-name{text-overflow:ellipsis;white-space:nowrap;min-width:0;font-family:var(--font-serif);font-weight:var(--fw-semibold);text-align:left;color:inherit;font-size:inherit;background:0 0;border:0;flex:1;padding:0;overflow:hidden}.lib-name:hover{text-underline-offset:4px;-webkit-text-decoration:underline dotted;text-decoration:underline dotted}.trpg-shelf__row[data-off=true] .lib-name{color:var(--text2);font-weight:var(--fw-regular)}.lib-alt-name{margin-left:var(--sp-2);color:var(--text3);font-family:var(--font-sans,inherit);font-weight:var(--fw-regular);font-size:var(--fs-sm)}.lib-rowmeta{color:var(--text2);font-size:var(--fs-xs);white-space:nowrap}.trpg-window[data-layout=narrow] .lib-rowmeta{display:none}.trpg-shelf+.lib-sec{margin-top:var(--sp-2)}.lib-shelfbox{flex:none;min-height:0;overflow:hidden}.lib-banner{align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-md);background:var(--primary-tint);color:var(--primary-text);font-size:var(--fs-sm);flex-wrap:wrap;display:flex}.lib-banner>span:first-of-type:not(.trpg-spinner),.lib-banner>.trpg-spinner+span{overflow-wrap:anywhere;flex:140px;min-width:0}.lib-banner>.trpg-spinner{flex:none}.lib-banner--warn{background:var(--surface);color:var(--text);box-shadow:inset 0 0 0 2px var(--danger-line)}.lib-mbody{flex-direction:column;height:100%;min-height:0;display:flex}.lib-mscroll{--lib-row-h:44px;flex:1;min-height:0;overflow:auto}.trpg-window[data-layout=narrow] .lib-mscroll{--lib-row-h:48px}.lib-filter{align-items:center;gap:var(--sp-2);padding:var(--sp-3) var(--sp-4) var(--sp-2);flex-wrap:wrap;flex:none;display:flex}.lib-filter .trpg-input{flex:160px;min-width:140px}.lib-pills{gap:var(--sp-2);padding:0 var(--sp-4) var(--sp-2);flex:none;display:flex;overflow-x:auto}.lib-pills .trpg-pill{background:var(--surface);cursor:pointer;flex:none}.lib-pills .trpg-pill[aria-pressed=true]{background:var(--primary);border-color:var(--primary);color:var(--on-primary);font-weight:var(--fw-semibold)}.lib-pills .trpg-pill small{font-size:var(--fs-xs);opacity:.8;margin-left:4px}.lib-list{border-top:var(--border) solid var(--line);align-content:start;display:grid}.lib-list__row{align-items:center;gap:var(--sp-3);min-height:44px;padding:4px var(--sp-4);border:0;border-bottom:var(--border) solid var(--line);background:var(--surface);text-align:left;color:var(--text);font:inherit;cursor:pointer;width:100%;display:flex}.lib-list__row:hover{background:var(--bg-hover)}.lib-list__row .lib-name{font-weight:var(--fw-semibold)}.lib-list__row[data-off=true] .lib-name{color:var(--text3)}.lib-count{padding:var(--sp-2) var(--sp-4);color:var(--text2);font-size:var(--fs-xs);gap:var(--sp-3);flex:none;align-items:center;display:flex}.lib-state{gap:var(--sp-2);padding:var(--sp-6) var(--sp-5);justify-items:start;display:grid}.lib-state h3{font-size:var(--fs-lg);font-weight:var(--fw-semibold);margin:0}.lib-skel{gap:var(--sp-2);padding:var(--sp-4);display:grid}.lib-skel i{background:linear-gradient(90deg, var(--bg-side), var(--line), var(--bg-side));opacity:.7;border-radius:4px;height:14px;display:block}.lib-dtools{align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-4);border-bottom:var(--border) solid var(--line);background:var(--bg-sunk);flex-wrap:wrap;flex:none;display:flex}.lib-entrytabs{flex-direction:column;flex:1;min-height:0;display:flex}.lib-entrytabs__list{flex:none;padding-block-start:var(--sp-2)}.lib-entrytabs__list [data-state=active]{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}.lib-entrytabs>[hidden]{display:none}.lib-class-table tr>:first-child{background:var(--bg-sunk);position:sticky;left:0}.lib-class-table td{white-space:normal}.lib-class-picker{margin-block-end:var(--sp-3)}.lib-dbody{padding:var(--sp-4) var(--sp-5) var(--sp-6);gap:var(--sp-3);line-height:var(--lh-body);align-content:start;display:grid}.trpg-window[data-layout=narrow] .lib-dbody{padding:var(--sp-4) var(--sp-4) var(--sp-6)}.lib-dbody p{margin:0}.lib-dbody h3{margin:var(--sp-2) 0 0;font-size:var(--fs-md);font-weight:var(--fw-semibold)}.lib-srcline{color:var(--text3);font-size:var(--fs-xs)}.lib-sumline{gap:2px var(--sp-4);color:var(--text2);font-size:var(--fs-sm);flex-wrap:wrap;display:flex}.lib-sumline b{color:var(--text);font-weight:var(--fw-semibold)}.lib-block{gap:var(--sp-1);padding:var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--bg-sunk);display:grid}.lib-rtable{border-collapse:collapse;width:100%;font-size:var(--fs-sm)}.lib-rtable th,.lib-rtable td{border:var(--border) solid var(--line);text-align:left;vertical-align:top;padding:6px 10px}.lib-rtable th{background:var(--bg-sunk);white-space:nowrap}.lib-tablewrap{overflow:auto}.lib-list-ul{gap:var(--sp-1);margin:0;padding-left:1.4em;display:grid}.lib-quote{padding-left:var(--sp-3);border-left:3px solid var(--line-ctrl);color:var(--text2);margin:0}.lib-inset{padding:var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--bg-sunk);gap:var(--sp-2);display:grid}.lib-dice{color:var(--primary-text);font:inherit;line-height:inherit;text-underline-offset:3px;white-space:nowrap;cursor:pointer;background:0 0;border:0;padding:0;text-decoration:underline;text-decoration-thickness:1px;display:inline}.lib-dice:hover{text-decoration-thickness:2px}.lib-fold{border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--bg-sunk)}.lib-fold>summary{align-items:center;gap:var(--sp-2);min-height:40px;padding:0 var(--sp-3);cursor:pointer;list-style:none;display:flex}.lib-fold__body{padding:0 var(--sp-3) var(--sp-3);font-size:var(--fs-sm);overflow:auto}.lib-headsw{flex:none;align-items:center;gap:6px;display:inline-flex}.lib-sortbar{align-items:center;gap:var(--sp-2);padding:0 var(--sp-4) var(--sp-2);font-size:var(--fs-sm);color:var(--text2);flex-wrap:wrap;display:flex}.lib-table{border-collapse:separate;border-spacing:0;width:100%;font-size:var(--fs-sm)}.lib-table th{z-index:2;text-align:left;white-space:nowrap;font-weight:var(--fw-semibold);color:var(--text2);background:var(--bg-sunk);border-bottom:var(--border) solid var(--line);padding:0 10px;position:sticky;top:0}.lib-th{min-height:36px;color:var(--text);font:inherit;font-weight:var(--fw-semibold);cursor:pointer;background:0 0;border:0;align-items:center;gap:2px;padding:0;display:inline-flex}.lib-table td{white-space:nowrap;border-bottom:var(--border) solid var(--line);background:var(--surface);padding:8px 10px}.lib-table tbody tr{cursor:pointer}.lib-table tbody tr:hover td{background:var(--bg-hover)}.lib-table td.lib-name{font-weight:var(--fw-semibold);text-overflow:ellipsis;max-width:220px;overflow:hidden}.lib-table tr[data-off=true] td{color:var(--text3)}.lib-table th:first-child,.lib-table td:first-child{z-index:1;position:sticky;left:0}.lib-table th:first-child{z-index:3}.trpg-window[data-layout=narrow] .lib-table td{padding:12px 10px}.lib-sortable{opacity:.35}.lib-fold--bar{margin:0 var(--sp-4) var(--sp-2)}.lib-fold--bar>summary small{color:var(--text2);font-weight:var(--fw-regular)}.lib-fold--bar .lib-fold__body{gap:var(--sp-2);max-height:220px;display:grid}.lib-dlcard{gap:var(--sp-2);margin-top:var(--sp-3);padding:var(--sp-4);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);display:grid}.lib-dlcard__top{align-items:center;gap:var(--sp-3);flex-wrap:wrap;display:flex}.lib-title{font-size:var(--fs-lg);font-weight:var(--fw-semibold)}.lib-rbar{align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-bottom:var(--border) solid var(--line);background:var(--bg-sunk);flex:none;display:flex}.lib-read{flex:1;grid-template-columns:1fr;min-height:0;display:grid}.lib-read[data-toc=true]{grid-template-columns:200px 1fr}.trpg-window[data-layout=narrow] .lib-read[data-toc=true]{grid-template-columns:1fr}.trpg-window[data-layout=narrow] .lib-read[data-toc=true] main{display:none}.lib-read>aside{border-right:var(--border) solid var(--line);background:var(--bg-sunk);overflow:auto}.lib-toc{align-content:start;display:grid}.lib-toc summary{padding:var(--sp-2) var(--sp-3);font-weight:var(--fw-semibold);cursor:pointer}.lib-toc details>button{width:100%}.lib-toc .lib-toc__section[data-depth=true]{padding-inline-start:var(--sp-5)}.lib-toc__chapter{align-items:center;gap:var(--sp-1);width:100%;min-width:0;min-height:40px;padding:0 var(--sp-3);color:var(--text);font:inherit;font-weight:var(--fw-semibold);text-align:left;cursor:pointer;background:0 0;border:0;border-left:3px solid #0000;display:flex}.lib-toc__chapter span{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.lib-toc__chapter:hover{background:var(--bg-hover)}.lib-toc__chapter[aria-current=true]{border-left-color:var(--primary);background:var(--primary-tint)}.lib-toc__sections{grid-template-rows:1fr;display:grid}.lib-toc__inner{min-height:0;display:grid;overflow:hidden}.lib-toc-drop-enter-active,.lib-toc-drop-leave-active{transition:grid-template-rows var(--dur-base) var(--ease-out), opacity var(--dur-base) var(--ease-out)}.lib-toc-drop-enter-from,.lib-toc-drop-leave-to{opacity:0;grid-template-rows:0fr}.lib-toc__caret{transition:transform var(--dur-base) var(--ease-out);flex:none}.lib-toc__chapter[aria-expanded=true] .lib-toc__caret{transform:rotate(90deg)}@media (prefers-reduced-motion:reduce){.lib-toc-drop-enter-active,.lib-toc-drop-leave-active,.lib-toc__caret{transition:none}}[data-reader-current]{background:var(--primary-tint)}.lib-author-block{overflow-wrap:anywhere;min-width:0;display:flow-root}.lib-author-block table{border-collapse:collapse;width:100%}.lib-author-block table.ve-rd__table th,.lib-author-block table.ve-rd__table td{border:var(--border) solid var(--line);padding:var(--sp-2)}.lib-roll-outcome{margin-block:var(--sp-2)}.lib-toc button{min-height:40px;padding:0 var(--sp-3);text-align:left;color:var(--text);font:inherit;cursor:pointer;background:0 0;border:0;border-left:3px solid #0000;align-items:center;display:flex}.lib-toc button[aria-current=true]{border-left-color:var(--primary);background:var(--primary-tint);font-weight:var(--fw-semibold)}.lib-sec-block{gap:var(--sp-3);display:grid}.lib-stat{display:grid}.lib-stat>div{gap:var(--sp-3);border-bottom:1px dotted var(--line);font-size:var(--fs-sm);grid-template-columns:72px 1fr;padding:5px 0;display:grid}.lib-stat>div>span:first-child{color:var(--text2)}.lib-abil{gap:var(--sp-2);text-align:center;padding:var(--sp-2) 0;grid-template-columns:repeat(6,1fr);display:grid}.trpg-window[data-layout=narrow] .lib-abil{grid-template-columns:repeat(3,1fr)}.lib-abil>div{border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--bg-sunk);font-size:var(--fs-sm);padding:4px 2px}.lib-abil small{color:var(--text2);font-size:var(--fs-xs);display:block}.lib-rtable tr[data-hit=true] td{background:var(--primary-tint);font-weight:var(--fw-semibold)}.lib-rolltable{gap:var(--sp-2);display:grid}.lib-numbox{align-items:center;gap:var(--sp-2);display:inline-flex}.lib-versions{gap:var(--sp-2);display:grid}.lib-alt-row{justify-content:space-between;align-items:center;gap:var(--sp-3);min-height:36px;display:flex}.lib-versions__head{align-items:center;gap:var(--sp-3);flex-wrap:wrap;display:flex}.lib-alt-pick{width:100%;padding:var(--sp-2) var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--text);font:inherit;text-align:left;cursor:pointer;justify-content:flex-start;min-height:44px}.lib-alt-pick[data-on=true]{border-color:var(--primary);background:var(--primary-tint)}.lib-alt-pick:focus-visible{outline:2px solid var(--focus,var(--primary));outline-offset:2px}.lib-alt-pick__dot{border:2px solid var(--line-ctrl);background:0 0;border-radius:50%;flex:none;width:14px;height:14px}.lib-alt-pick[data-on=true] .lib-alt-pick__dot{border-color:var(--primary);background:radial-gradient(circle, var(--primary) 45%, transparent 50%)}.lib-alt-pick__name{overflow-wrap:anywhere;min-width:0}.lib-variants{gap:var(--sp-1) var(--sp-3);flex-wrap:wrap;display:flex}.lib-table tbody tr:not(.lib-spacer){height:var(--lib-row-h,44px)}.lib-table tr.lib-spacer,.lib-table tr.lib-spacer td{cursor:default;background:0 0;border:0;padding:0}.lib-list__row{height:var(--lib-row-h,44px);box-sizing:border-box}.lib-table td{box-sizing:border-box;text-overflow:ellipsis;overflow:hidden}.lib-pad{padding:var(--sp-4) var(--sp-5) 72px;gap:var(--sp-3);align-content:start;display:grid}.trpg-window[data-layout=narrow] .lib-pad{padding:var(--sp-4) var(--sp-4) 72px}.lib-pad .trpg-check,.lib-fold__body .trpg-check{border-bottom:var(--border) solid var(--line);align-items:center;width:100%;min-height:40px;display:flex}.lib-img{margin:var(--sp-2) 0;gap:var(--sp-1);display:grid}.lib-img__open{align-items:center;gap:var(--sp-2);color:inherit;font:inherit;cursor:pointer;background:0 0;border:0;justify-self:start;padding:2px 0;display:inline-flex}.lib-img__open .lib-img__label{text-underline-offset:4px;font-family:var(--font-serif);font-weight:var(--fw-semibold);-webkit-text-decoration:underline dotted;text-decoration:underline dotted}.lib-img__pic{border-radius:var(--r-md);max-width:100%;height:auto;display:block}.lib-img__err{align-items:center;gap:var(--sp-2);margin:0;display:flex}.lib-gallery{gap:var(--sp-3);grid-template-columns:repeat(auto-fill,minmax(160px,1fr));display:grid}.lib-hr{border:0;border-top:var(--border) solid var(--line);margin:var(--sp-3) 0}.lib-bar{background:var(--line);vertical-align:middle;border-radius:3px;flex:none;width:96px;height:6px;display:inline-block;position:relative;overflow:hidden}.lib-bar>i{background:var(--primary);transition:width var(--dur-base) var(--ease-std);border-radius:3px;position:absolute;top:0;bottom:0;left:0}.lib-bar[data-indet=true]>i{width:36%;animation:1.2s ease-in-out infinite alternate lib-bar-slide}@keyframes lib-bar-slide{0%{left:0}to{left:64%}}.lib-dling{align-items:center;gap:var(--sp-2);display:inline-flex}.lib-banner>.lib-bar{margin-left:auto}@media (prefers-reduced-motion:reduce){.lib-bar[data-indet=true]>i{animation:none;left:32%}}.trpg-shelf__row{content-visibility:auto;contain-intrinsic-size:auto 48px}.lib-ability{text-align:center;font-weight:var(--fw-semibold);margin:var(--sp-2) 0}.lib-embedded{margin:var(--sp-3) 0;border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);overflow:hidden}.lib-embedded__head{align-items:center;gap:var(--sp-2);padding:var(--sp-1) var(--sp-3) var(--sp-1) var(--sp-1);background:var(--primary-tint);border-bottom:var(--border) solid var(--line);font-family:var(--font-serif);display:flex}.lib-embedded__head small{font-family:var(--font-sans,inherit);margin-left:auto}.lib-embedded[data-fluff=true] .lib-embedded__head{background:var(--bg)}.lib-embedded>div,.lib-embedded__body{padding:var(--sp-2) var(--sp-3)}.lib-embedded .lib-embedded__body{padding:0}.lib-embedded h4{margin:var(--sp-2) 0 var(--sp-1);font-size:var(--fs-md,1rem)}.lib-inline{display:inline}.lib-filter--top{z-index:3;padding:var(--sp-3) 0 var(--sp-2);background:var(--bg);position:sticky;top:0}.lib-dlsec{gap:var(--sp-2);min-width:0;margin-top:var(--sp-4);padding:var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);display:grid}.lib-dlsec__head{align-items:center;gap:var(--sp-2) var(--sp-3);flex-wrap:wrap;min-width:0;display:flex}.lib-dlsec__head .lib-title{flex:1 0 auto}.lib-dlsec__tools{gap:var(--sp-2);flex-wrap:wrap;flex:280px;justify-content:flex-end;align-items:center;min-width:0;display:flex}.lib-dlsec__tools .trpg-input{flex:auto;min-width:0;max-width:320px}.trpg-window[data-layout=wide] .lib-dlsec__tools{flex-wrap:nowrap}.lib-dlsec__tools .trpg-btn{white-space:nowrap;flex:none}.lib-dlsec__bar{align-items:center;gap:var(--sp-2);flex-wrap:wrap;display:flex}.lib-dlsec__bar .lib-banner{flex:100%}.lib-dlsec__list{min-width:0}.lib-dlsec__empty{padding:var(--sp-2) 0;margin:0}.lib-dlgrp{border-top:var(--border) solid var(--line);min-width:0}.lib-dlgrp:first-child{border-top:0}.lib-dlgrp__sum{align-items:center;gap:var(--sp-2);min-height:var(--hit);display:flex}.lib-dlgrp__btn{align-items:center;gap:var(--sp-1);min-height:var(--hit);color:var(--text);font:inherit;font-weight:var(--fw-semibold);text-align:left;cursor:pointer;background:0 0;border:0;flex:1;padding:0;display:inline-flex}.lib-dlgrp__btn small{margin-left:var(--sp-2);color:var(--text3);font-weight:var(--fw-regular)}.lib-dlgrp__rows{min-width:0;margin:0 0 var(--sp-2)}.lib-dlgrp__rows .trpg-row{gap:var(--sp-2)}.lib-dlgrp__rows .trpg-row[data-selected=true]{background:var(--primary-tint)}.lib-selbar{z-index:2;align-items:center;gap:var(--sp-2);min-width:0;padding:var(--sp-2) var(--sp-3);margin:0 calc(-1 * var(--sp-3)) calc(-1 * var(--sp-3));border-top:var(--border) solid var(--line);background:var(--surface);box-shadow:0 -4px 10px color-mix(in srgb, var(--text) 8%, transparent);border-radius:0 0 var(--r-md) var(--r-md);flex-wrap:wrap;display:flex;position:sticky;bottom:0}.lib-selbar .lib-end{justify-content:flex-end;gap:var(--sp-2);flex-wrap:wrap;flex:auto;min-width:0;display:inline-flex}.lib-selbar>.lib-muted{min-width:0}.lib-selbar{padding-right:calc(var(--sp-3) + 64px)}.lib-scroll:has(.lib-selbar){padding-bottom:0}.lib-scroll:has(.lib-selbar) .lib-dlsec{padding-bottom:var(--sp-3)}.trpg-window[data-layout=narrow] .lib-dlsec__head .lib-title{flex:100%}.trpg-window[data-layout=narrow] .lib-dlsec__tools{flex:100%;justify-content:flex-start}.trpg-window[data-layout=narrow] .lib-dlsec__tools .trpg-input{flex:100%;max-width:none}.trpg-window[data-layout=narrow] .lib-dlsec__tools .trpg-btn{flex:0 auto}.trpg-window[data-layout=narrow] .lib-selbar .lib-end{flex:100%;justify-content:flex-start}.trpg-window[data-layout=narrow] .lib-selbar .lib-end .trpg-btn{flex:120px}.trpg-window[data-layout=narrow] .lib-scroll:has(.lib-selbar){padding-bottom:0}.lib-langsw{border:var(--border) solid var(--line);border-radius:var(--r-pill);background:var(--surface);box-shadow:inset 0 1px 3px color-mix(in srgb, var(--text) 12%, transparent);flex:none;padding:2px;display:inline-flex}.lib-langsw__btn{min-width:44px;min-height:28px;padding:0 var(--sp-3);border-radius:var(--r-pill);color:var(--text2);font:inherit;font-size:var(--fs-sm);font-weight:var(--fw-semibold);cursor:pointer;transition:background var(--dur-fast) var(--ease-std), color var(--dur-fast) var(--ease-std);background:0 0;border:0}.lib-langsw__btn:hover:not(:disabled):not([aria-pressed=true]){background:var(--bg-hover);color:var(--text)}.lib-langsw__btn[aria-pressed=true]{background:var(--primary);color:var(--on-primary);cursor:default}.lib-langsw__btn:disabled{opacity:.4;cursor:not-allowed}.lib-langsw__btn:focus-visible{outline:2px solid var(--focus,var(--primary));outline-offset:1px}.lib-deadlink{-webkit-text-decoration:underline dashed var(--text3);text-decoration:underline dashed var(--text3);text-underline-offset:3px;cursor:help;color:var(--text2)}.lib-deadlink__q{color:var(--text3);margin-left:1px;font-size:.7em}.lib-author-table table{border-collapse:collapse;width:100%;font-size:var(--fs-sm)}.lib-author-table th,.lib-author-table td{border:var(--border) solid var(--line);text-align:left;vertical-align:top;padding:6px 10px}.lib-author-table th{background:var(--bg-sunk)}.lib-author-table caption{color:var(--text2);font-size:var(--fs-sm);text-align:left;padding-bottom:var(--sp-1)}.lib-author-table tr[data-hit=true] td{background:var(--primary-tint);font-weight:var(--fw-semibold)}.lib-rolltable__bar{margin-bottom:var(--sp-1);justify-content:flex-end;display:flex}.trpg-shelf__row .trpg-check.lib-rowpick{flex:none}.lib-errdetail{padding:var(--sp-3);border-radius:var(--r-sm);background:var(--bg-sunk);font-size:var(--fs-xs);white-space:pre-wrap;overflow-wrap:anywhere;-webkit-user-select:text;user-select:text;max-height:50vh;margin:0;overflow:auto}.lib-draftlist{margin:calc(-1 * var(--sp-2)) 0 var(--sp-3);padding:var(--sp-2);border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--surface);gap:2px;display:grid}.lib-draftlist__row{align-items:center;gap:var(--sp-2);min-height:40px;display:flex}.lib-draftlist__name{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;overflow:hidden}.lib-draftlist__foot{padding-top:var(--sp-1);border-top:var(--border) solid var(--line);justify-content:flex-end;display:flex}", yRe = ".trpg-hero,.trpg-banner{gap:var(--sp-1);width:100%;min-height:168px;padding:var(--sp-6);border-radius:var(--r-lg);background:var(--hero-bg);color:var(--hero-ink);text-align:left;box-shadow:var(--shadow-2);transition:box-shadow var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);border:0;align-content:end;display:grid;position:relative;overflow:hidden}button.trpg-hero:hover:not(:disabled){box-shadow:var(--shadow-3);transform:translateY(-1px)}button.trpg-hero:active:not(:disabled){transform:none}.trpg-window[data-layout=narrow] .trpg-hero,.trpg-window[data-layout=narrow] .trpg-banner{min-height:140px;padding:var(--sp-5) var(--sp-4)}.trpg-hero--idle{background:var(--bg-side);color:var(--text);box-shadow:none}.trpg-hero--idle .trpg-hero__sub{color:var(--text2)}.trpg-hero--off{opacity:.55;cursor:not-allowed;box-shadow:none}.trpg-hero__art{pointer-events:none;width:100%;height:100%;position:absolute;inset:0}.trpg-hero__art .far{fill:color-mix(in srgb, var(--hero-ink) 9%, var(--hero-bg))}.trpg-hero__art .mid{fill:color-mix(in srgb, var(--hero-ink) 14%, var(--hero-bg))}.trpg-hero__art .near{fill:color-mix(in srgb, var(--hero-ink) 20%, var(--hero-bg))}.trpg-hero__art .castle{fill:color-mix(in srgb, var(--hero-ink) 28%, var(--hero-bg))}.trpg-hero__art .lit,.trpg-hero__art .moon{fill:var(--accent)}.trpg-hero__art .moon{opacity:.85}.trpg-hero__title,.trpg-hero__sub,.trpg-hero__go,.trpg-banner__title,.trpg-banner__line,.trpg-banner__go{position:relative}.trpg-hero__title,.trpg-banner__title{font-size:var(--fs-3xl);font-weight:var(--fw-bold);line-height:var(--lh-tight);overflow-wrap:anywhere}.trpg-window[data-layout=narrow] .trpg-hero__title,.trpg-window[data-layout=narrow] .trpg-banner__title{font-size:var(--fs-2xl)}.trpg-hero__sub{color:var(--hero-ink2);max-width:30em}.trpg-hero__go{margin-top:var(--sp-3);justify-self:start;align-items:center;gap:var(--sp-2);padding:7px var(--sp-4);border-radius:var(--r-sm);background:var(--primary-hover);color:var(--on-primary);font-weight:var(--fw-semibold);display:inline-flex}.trpg-banner{align-content:space-between;gap:var(--sp-3)}.trpg-banner__main{gap:var(--sp-1);color:inherit;text-align:left;background:0 0;border:0;padding:0;display:grid;position:relative}.trpg-banner__main:focus-visible{box-shadow:0 0 0 2px var(--hero-bg), 0 0 0 4px var(--accent)}.trpg-banner__foot{justify-content:space-between;align-items:center;gap:var(--sp-3);display:flex;position:relative}.trpg-banner__new{align-items:center;gap:var(--sp-2);min-height:var(--hit);padding:0 var(--sp-4);border-radius:var(--r-sm);background:var(--primary-hover);color:var(--on-primary);font-weight:var(--fw-semibold);transition:background var(--dur-fast) var(--ease-std);border:0;display:inline-flex}.trpg-banner__new:hover:not(:disabled){background:var(--primary)}.trpg-banner__new:disabled{background:var(--line);color:var(--text2);cursor:not-allowed}.trpg-banner__line{gap:var(--sp-1) var(--sp-4);color:var(--hero-ink2);flex-wrap:wrap;display:flex}.trpg-banner__state[data-dirty=true]{color:var(--accent);font-weight:var(--fw-semibold)}.trpg-banner__go{font-size:var(--fs-sm);color:var(--hero-ink2);background:0 0;border:0;align-items:center;gap:2px;padding:0;display:inline-flex}.trpg-linkcard{gap:var(--sp-3);width:100%;min-height:var(--hit-touch);padding:var(--sp-3) var(--sp-4);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--text);text-align:left;box-shadow:var(--shadow-1);transition:border-color var(--dur-fast) var(--ease-std), background var(--dur-fast) var(--ease-std);grid-template-columns:auto 1fr auto;align-items:center;display:grid}.trpg-linkcard:hover{background:var(--bg-hover);border-color:var(--line-ctrl)}.trpg-linkcard__icon{border-radius:var(--r-sm);background:var(--primary-tint);width:36px;height:36px;color:var(--primary-text);place-items:center;display:grid}.trpg-linkcard__text{display:grid}.trpg-linkcard__text b{font-weight:var(--fw-semibold)}.trpg-linkcard__text small{color:var(--text2);font-size:var(--fs-xs)}.trpg-linkcard__go{color:var(--text2);font-size:var(--fs-sm);white-space:nowrap;align-items:center;gap:2px;display:inline-flex}.trpg-modal[data-variant=dialog] .trpg-modal__page:has(.trpg-wizard){overflow:hidden}.trpg-wizard{flex-direction:column;flex:1;min-height:0;display:flex}.trpg-steps{margin:0 0 var(--sp-4);gap:var(--sp-2);grid-template-columns:repeat(4,1fr);display:grid}.trpg-steps li{border-bottom:3px solid var(--line);color:var(--text2);align-items:center;display:flex}.trpg-steps li[data-state=done]{border-color:var(--primary-tint-line);color:var(--text)}.trpg-steps li[data-state=current]{border-color:var(--primary);color:var(--text);font-weight:var(--fw-semibold)}.trpg-steps button{align-items:center;gap:var(--sp-2);width:100%;min-height:var(--hit);padding:var(--sp-1) 0;color:inherit;text-align:left;font-weight:inherit;background:0 0;border:0;display:flex}.trpg-steps button:disabled{cursor:default}.trpg-steps li[data-state=done] button:not(:disabled):hover .trpg-steps__n{background:var(--primary-tint-line)}.trpg-steps__n{border:var(--border-strong) solid currentColor;width:22px;height:22px;font-size:var(--fs-xs);border-radius:50%;flex:none;place-items:center;display:grid}.trpg-steps li[data-state=current] .trpg-steps__n{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}.trpg-steps li[data-state=done] .trpg-steps__n{background:var(--primary-tint);border-color:var(--primary-tint-line);color:var(--primary-text)}.trpg-steps__compact{margin:0 0 var(--sp-2);font-weight:var(--fw-semibold);display:none}.trpg-window[data-layout=narrow] .trpg-steps{display:none}.trpg-window[data-layout=narrow] .trpg-steps__compact{display:block}.trpg-wizard__title{margin:0 0 var(--sp-3);font-size:var(--fs-xl);font-weight:var(--fw-semibold)}.trpg-wizard__filters{align-items:center;gap:var(--sp-2) var(--sp-3);margin-bottom:var(--sp-3);flex-wrap:wrap;display:flex}.trpg-wizard__filters .trpg-input{flex:160px;min-width:0}.trpg-wizard__picked{margin:var(--sp-3) 0 0;font-weight:var(--fw-semibold);flex:none}.trpg-wizard__body{flex-direction:column;flex:1;min-height:0;display:flex;overflow:auto}.trpg-wizard__foot{justify-content:flex-end;gap:var(--sp-3);padding-top:var(--sp-4);margin-top:var(--sp-3);border-top:var(--border) solid var(--line);flex:none;display:flex}.trpg-window[data-layout=narrow] .trpg-wizard__foot{flex-direction:column-reverse}.trpg-window[data-layout=narrow] .trpg-wizard__foot .trpg-btn{width:100%}.trpg-rulecard{gap:var(--sp-3);padding:var(--sp-4);border:2px solid var(--primary);border-radius:var(--r-md);background:var(--primary-tint);cursor:pointer;display:flex}.trpg-rulecard[aria-disabled=true]{border-color:var(--line);background:var(--surface);opacity:.6;cursor:default}.trpg-rulecard__mark{color:var(--primary-text);line-height:1.5}.trpg-rulecard__body{gap:var(--sp-1);justify-items:start;display:grid}.trpg-field--grow{flex-direction:column;flex:1;min-height:0;margin-bottom:0;display:flex}.trpg-shelf{border:var(--border) solid var(--line-ctrl);border-radius:var(--r-md);background:var(--surface);flex:1;align-content:start;min-height:180px;overflow:auto}.trpg-shelf__group{border-bottom:var(--border) solid var(--line)}.trpg-shelf__group:last-child{border-bottom:0}.trpg-shelf__sum{align-items:center;gap:var(--sp-2);min-height:var(--hit);padding:var(--sp-1) var(--sp-3);font-weight:var(--fw-semibold);background:var(--bg-sunk);cursor:pointer;list-style:none;display:flex}.trpg-shelf__sum::-webkit-details-marker{display:none}.trpg-shelf__group:not([open]) .trpg-shelf__chev-open,.trpg-shelf__group[open] .trpg-shelf__chev-closed{display:none}.trpg-shelf__sum small{font-weight:var(--fw-regular);color:var(--text2);margin-left:auto}.trpg-shelf__row{align-items:center;gap:var(--sp-3);min-height:40px;padding:0 var(--sp-3);border-top:var(--border) solid var(--line);transition:background var(--dur-fast) var(--ease-std);display:flex}.trpg-shelf__row:hover{background:var(--bg-hover)}.trpg-shelf__row small{color:var(--text2);white-space:nowrap;margin-left:auto}.trpg-shelf__row .trpg-check{flex:1;min-width:0}.trpg-summary{gap:var(--sp-1);margin-top:var(--sp-4);padding:var(--sp-3) var(--sp-4);border-radius:var(--r-md);background:var(--bg-sunk);border:var(--border) solid var(--line);display:grid}.trpg-summary b{font-size:var(--fs-lg);font-weight:var(--fw-semibold);overflow-wrap:anywhere}.trpg-drawer{gap:var(--sp-3);flex-direction:column;flex:1;min-height:0;display:flex;position:relative}.trpg-drawer__current{gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);border:var(--border) solid var(--primary-tint-line);border-radius:var(--r-md);background:var(--primary-tint);display:grid}.trpg-drawer__title{font-weight:var(--fw-semibold);font-size:var(--fs-lg);overflow-wrap:anywhere}.trpg-drawer__buttons{gap:var(--sp-2);flex-wrap:wrap;align-items:center;display:flex}.trpg-drawer__body{gap:var(--sp-2);flex:1;align-content:start;min-height:0;display:grid;overflow:auto}.trpg-drawer__bottom{gap:var(--sp-2);padding-top:var(--sp-3);border-top:var(--border) solid var(--line);flex:none;display:flex}.trpg-drawer__bottom--confirm{justify-content:flex-end}.trpg-window[data-layout=narrow] .trpg-drawer__bottom--confirm{flex-direction:column-reverse}.trpg-window[data-layout=narrow] .trpg-drawer__bottom--confirm .trpg-btn{width:100%}.trpg-drawer[data-dragging=true]:after{content:\"松开以导入\";z-index:5;border:2px dashed var(--primary);border-radius:var(--r-md);background:color-mix(in srgb, var(--bg) 88%, transparent);color:var(--primary-text);font-weight:var(--fw-semibold);place-items:center;display:grid;position:absolute;inset:0}.trpg-camp{border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);box-shadow:var(--shadow-1)}.trpg-camp>summary{gap:var(--sp-2);padding:var(--sp-3);cursor:pointer;grid-template-columns:auto 1fr auto;align-items:center;list-style:none;display:grid}.trpg-camp>summary::-webkit-details-marker{display:none}.trpg-camp:not([open]) .trpg-camp__chev-open,.trpg-camp[open] .trpg-camp__chev-closed{display:none}.trpg-camp__name{font-weight:var(--fw-semibold);font-size:var(--fs-lg);overflow-wrap:anywhere;min-width:0;display:grid}.trpg-camp__name small{font-weight:var(--fw-regular);font-size:var(--fs-xs);color:var(--text2)}.trpg-saves{padding:0 var(--sp-2) var(--sp-2);gap:4px;margin:0;list-style:none;display:grid}.trpg-saves li{align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-sm);border:2px solid #0000;display:flex}.trpg-saves li[data-current=true]{border-color:var(--primary);background:var(--primary-tint)}.trpg-saves__main{flex:1;min-width:0;display:grid}.trpg-saves__top{gap:var(--sp-2);flex-wrap:wrap;align-items:center;display:flex}.trpg-saves__top b{font-weight:var(--fw-semibold);overflow-wrap:anywhere}.trpg-saves__meta{font-size:var(--fs-xs);color:var(--text2);overflow-wrap:anywhere}.trpg-saves__end{align-items:center;gap:var(--sp-1);flex:none;display:flex}.trpg-saves__rename{flex:1;min-width:0;min-height:32px}.trpg-saves__renamerow{align-items:center;gap:var(--sp-1);min-width:0;display:flex}.trpg-saves__renamebtns{flex:none;gap:2px;display:inline-flex}.trpg-saves__noteedit{gap:var(--sp-2);margin-top:var(--sp-1);display:grid}.trpg-saves__noteactions{justify-content:flex-end;gap:var(--sp-2);display:flex}.trpg-fold{border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface)}.trpg-fold>summary{align-items:center;gap:var(--sp-2);min-height:var(--hit);padding:var(--sp-1) var(--sp-3);font-weight:var(--fw-semibold);cursor:pointer;list-style:none;display:flex}.trpg-fold>summary::-webkit-details-marker{display:none}.trpg-fold:not([open]) .trpg-fold__chev-open,.trpg-fold[open] .trpg-fold__chev-closed{display:none}.trpg-fold>summary small{font-weight:var(--fw-regular);color:var(--text2);margin-left:auto}.trpg-fold__actions{gap:var(--sp-2);padding:var(--sp-1) var(--sp-3) var(--sp-3);flex-wrap:wrap;display:flex}.trpg-checks{gap:var(--sp-2);display:grid}.trpg-checks>div{gap:var(--sp-1);padding:var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);display:grid}.trpg-checks>div[data-kind=block]{border:2px solid var(--danger-line)}.trpg-checks b{gap:var(--sp-2);font-weight:var(--fw-semibold);align-items:center;display:flex}.trpg-checks .trpg-check{min-height:32px}.trpg-menu{display:grid}.trpg-menu__row{gap:2px var(--sp-3);width:100%;min-height:60px;padding:var(--sp-3) var(--sp-5);border:0;border-bottom:var(--border) solid var(--line);color:var(--text);text-align:left;transition:background var(--dur-fast) var(--ease-std);background:0 0;border-radius:0;grid-template-columns:1fr auto;align-items:center;display:grid}.trpg-window[data-layout=narrow] .trpg-menu__row{min-height:68px;padding:var(--sp-3) var(--sp-4)}.trpg-menu__row:last-child{border-bottom:0}.trpg-menu__row:hover{background:var(--bg-hover)}.trpg-menu__row b{font-weight:var(--fw-semibold)}.trpg-menu__row small{color:var(--text2);grid-column:1}.trpg-menu__row>span{color:var(--text2);grid-area:1/2/span 2;display:grid}.trpg-back{min-height:var(--hit-touch);padding:0 var(--sp-5);color:var(--primary-text);font-weight:var(--fw-semibold);background:0 0;border:0;align-items:center;gap:2px;display:inline-flex}.trpg-pagehead{padding:0 var(--sp-5) var(--sp-2);font-size:var(--fs-xl);font-weight:var(--fw-semibold)}.trpg-settings{display:grid}.trpg-settings__row{gap:4px var(--sp-4);padding:var(--sp-4) var(--sp-5);border-bottom:var(--border) solid var(--line);grid-template-columns:1fr auto;align-items:center;display:grid}.trpg-settings__row:last-child{border-bottom:0}.trpg-settings__row .trpg-field__hint{grid-column:1}.trpg-window[data-layout=narrow] .trpg-settings__row{padding:var(--sp-4);grid-template-columns:1fr}.trpg-window[data-layout=narrow] .trpg-settings__row>.trpg-stepper,.trpg-window[data-layout=narrow] .trpg-settings__row>.trpg-ctrl{justify-self:start}.trpg-diag,.trpg-about{padding:0 var(--sp-5)}.trpg-window[data-layout=narrow] .trpg-diag,.trpg-window[data-layout=narrow] .trpg-about{padding:0 var(--sp-4)}.probe{padding:var(--sp-3) 0;border-bottom:var(--border) solid var(--line)}.probe__head{justify-content:space-between;align-items:center;gap:var(--sp-2);display:flex}.probe__title{font-size:var(--fs-lg);font-weight:var(--fw-semibold)}.probe__hint{margin:var(--sp-1) 0;color:var(--text2);font-size:var(--fs-sm)}.probe__summary{margin:var(--sp-1) 0}.probe__actions{gap:var(--sp-2);margin-top:var(--sp-2);flex-wrap:wrap;display:flex}.probe pre{max-height:200px;margin:var(--sp-2) 0 0;padding:var(--sp-2);background:var(--surface);border:var(--border) solid var(--line);border-radius:var(--r-sm);font-size:var(--fs-xs);white-space:pre-wrap;word-break:break-all;overflow:auto}.probe summary{cursor:pointer;color:var(--text2);font-size:var(--fs-sm)}.report-bar{gap:var(--sp-2);padding:var(--sp-3) 0;flex-wrap:wrap;align-items:center;display:flex}.trpg-import__ok{color:var(--success-text);font-weight:var(--fw-semibold)}", bRe = ".pp{flex-direction:column;min-height:100%;display:flex}.pp-top{justify-content:space-between;align-items:center;gap:var(--sp-3);padding:var(--sp-4) var(--sp-5) var(--sp-2);flex-wrap:wrap;display:flex}.trpg-window[data-layout=narrow] .pp-top{padding:var(--sp-3) var(--sp-4) var(--sp-2)}.pp-tabs{border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--bg-sunk);display:inline-flex;overflow:hidden}.pp-tabs button{min-height:34px;padding:0 var(--sp-4);color:var(--text);align-items:center;gap:var(--sp-1);background:0 0;border:0;display:inline-flex}.pp-tabs button+button{border-left:var(--border) solid var(--line-ctrl)}.pp-tabs button small{color:var(--text2);font-size:var(--fs-xs)}.pp-tabs button:hover:not([aria-pressed=true]){background:var(--bg-hover)}.pp-tabs button[aria-pressed=true]{background:var(--primary);color:var(--on-primary);font-weight:var(--fw-semibold)}.pp-tabs button[aria-pressed=true] small{color:inherit;opacity:.85}.trpg-window[data-layout=narrow] .pp-tabs{width:100%}.trpg-window[data-layout=narrow] .pp-tabs button{padding:0 var(--sp-2);min-height:var(--hit-touch);flex:1;justify-content:center}.pp-title{align-items:center;gap:var(--sp-2);font-size:var(--fs-lg);display:flex}.pp-tools{align-items:center;gap:var(--sp-2);margin-left:auto;display:flex}.pp-search{align-items:center;gap:var(--sp-2);margin:0 var(--sp-5) var(--sp-3);color:var(--text2);display:flex;position:relative}.trpg-window[data-layout=narrow] .pp-search{margin:0 var(--sp-4) var(--sp-3)}.pp-search svg{left:var(--sp-3);pointer-events:none;position:absolute}.pp-search .trpg-input{padding-left:34px}.pp-error,.pp-note{align-items:center;gap:var(--sp-2);margin:0 var(--sp-5) var(--sp-3);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-sm);background:var(--warn-bg);color:var(--text);font-size:var(--fs-sm);display:flex}.pp-error{border:var(--border) solid var(--danger-line);color:var(--danger-text);background:var(--danger-bg)}.pp-error .trpg-btn{margin-left:auto}.pp-strip{padding:var(--sp-1) var(--sp-5);background:var(--bg-side);border-block:var(--border) solid var(--line);color:var(--text2);font-size:var(--fs-sm);font-weight:var(--fw-semibold);justify-content:space-between;display:flex}.pp-strip small{margin-left:var(--sp-2);font-weight:var(--fw-regular)}.pp-strip span:last-child{text-align:center;width:150px;margin-right:96px}.trpg-window[data-layout=narrow] .pp-strip{padding-inline:var(--sp-4)}.trpg-window[data-layout=narrow] .pp-strip span:last-child{display:none}.pp-list{background:var(--surface);margin:0;padding:0;list-style:none}.pp-row{align-items:center;gap:var(--sp-3);padding:var(--sp-3) var(--sp-5);border-bottom:var(--border) solid var(--line);grid-template-columns:44px minmax(0,1fr) 150px auto;display:grid;position:relative}.pp-row[data-selecting]{cursor:pointer}.pp-row[data-selected]{background:var(--primary-tint);box-shadow:inset 3px 0 0 var(--accent)}.trpg-window[data-layout=narrow] .pp-row{padding:var(--sp-3) var(--sp-4);grid-template-columns:44px minmax(0,1fr) auto}.trpg-window[data-layout=narrow] .pp-hp{align-items:flex-start;gap:var(--sp-3);flex-direction:row;grid-area:2/2}.pp-avatar{border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--bg-sunk);width:44px;height:44px;color:var(--text2);place-items:center;display:grid;overflow:hidden}.pp-avatar img{object-fit:cover;width:100%;height:100%}.pp-main{flex-direction:column;gap:2px;min-width:0;display:flex}.pp-name{align-items:center;gap:var(--sp-1);font-size:var(--fs-lg);display:flex}.pp-name b{font-weight:var(--fw-semibold);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.pp-name svg{color:var(--accent-text);flex:none}.pp-facts{gap:0 var(--sp-3);color:var(--text2);font-size:var(--fs-sm);flex-wrap:wrap;display:flex}.pp-facts--small{font-size:var(--fs-xs)}.pp-tags{align-items:center;gap:var(--sp-2);flex-wrap:wrap;margin-top:2px;display:flex}.pp-tag{align-items:center;gap:var(--sp-1);padding:0 var(--sp-2);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-xs);background:var(--warn-bg);color:var(--text);font-size:var(--fs-xs);display:inline-flex}.pp-hp{flex-direction:column;align-items:center;gap:4px;display:flex}.pp-hp__num{font-size:var(--fs-md)}.pp-hp__num b{font-size:var(--fs-lg)}.pp-hp__num em{color:var(--accent-text);font-style:normal}.pp-hp__none{color:var(--text3)}.pp-bar{border-radius:var(--r-pill);background:var(--line);width:100%;min-width:80px;max-width:150px;height:6px;display:flex;overflow:hidden}.pp-bar>i{background:var(--success-text)}.pp-bar>i[data-low]{background:var(--accent)}.pp-bar>u{background:var(--accent-light,var(--accent))}.pp-act{align-items:center;gap:var(--sp-2);justify-content:flex-end;min-width:36px;display:flex}.pp-skel{grid-column:1/-1;height:44px}.pp-empty{padding:var(--sp-8) var(--sp-5);text-align:center;color:var(--text2);gap:var(--sp-2);flex-direction:column;align-items:center;display:flex}.pp-empty b{color:var(--text);font-size:var(--fs-lg)}.pp-selbar{align-items:center;gap:var(--sp-2);padding:var(--sp-3) 84px var(--sp-3) var(--sp-5);background:var(--bg-side);border-top:var(--border) solid var(--line-ctrl);z-index:2;margin-top:auto;display:flex;position:sticky;bottom:0}.pp-selbar__gap{flex:1}.pp-selbar__n{font-weight:var(--fw-semibold);margin-right:var(--sp-2)}.trpg-window[data-layout=narrow] .pp-selbar{padding:var(--sp-2) 76px var(--sp-2) var(--sp-3);flex-wrap:wrap}.tp{grid-template-rows:minmax(0,1fr) auto;grid-template-columns:minmax(240px,5fr) 7fr;height:100%;min-height:0;display:grid}.trpg-window[data-layout=narrow] .tp,.trpg-window[data-layout=mid] .tp{grid-template-columns:1fr}.tp-list{border-right:var(--border) solid var(--line);flex-direction:column;min-height:0;display:flex}.tp-search{gap:var(--sp-2);display:grid}.tp-search .trpg-select-trigger{width:100%;min-width:0}.tp-card{min-height:0;overflow:auto}.tp-row[data-picked]{background:var(--primary-tint);box-shadow:inset 3px 0 0 var(--accent)}.tp-bar{align-items:center;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);background:var(--bg-side);border-top:var(--border) solid var(--line-ctrl);flex-wrap:wrap;grid-column:1/-1;display:flex}.tp-gap{flex:1}.tp-lbl{color:var(--text2);font-size:var(--fs-sm)}.tp-added{align-items:center;gap:var(--sp-2);font-size:var(--fs-sm);display:inline-flex}.bp{flex-direction:column;height:100%;min-height:0;display:flex}.bp-form{gap:var(--sp-3);padding:var(--sp-3) var(--sp-5);flex-direction:column;flex:1;display:flex}.bp-first-step{padding:var(--sp-2) 0;border-bottom:var(--border) solid var(--line)}.bp-first-step span{border-radius:var(--r-pill);background:var(--primary);color:var(--on-primary);padding:var(--sp-1) var(--sp-3);display:inline-flex}.bp-name{gap:var(--sp-2);flex-direction:column;display:flex}.bp-lbl{color:var(--text2)}.bp-form .trpg-seg{align-self:flex-start}.bp-error{color:var(--danger-text);font-size:var(--fs-sm)}.bp-first-footer{padding-top:var(--sp-3);justify-content:flex-end;margin-top:auto;display:flex}.bp-slot{background:var(--surface);flex:1;min-height:0;position:relative}.bp-hint{color:var(--text2);place-items:center;margin:0;display:grid;position:absolute;inset:0}.trpg-modal__page:has(.bp){padding:0;overflow:hidden}.trpg-modal:has(.bp) .trpg-page-leave-active{pointer-events:none}.trpg-window:not([data-layout=narrow]) .trpg-modal:has(.bp) .trpg-modal__card{width:min(880px,100%);height:min(680px,100%)}.pp-busy{align-items:center;gap:var(--sp-2);color:var(--text2);font-size:var(--fs-sm);display:inline-flex}.pp-busy:before{content:\"\";border:2px solid var(--line-ctrl);border-top-color:var(--accent);border-radius:50%;width:10px;height:10px;animation:.8s linear infinite ask-spin}@media (prefers-reduced-motion:reduce){.pp-busy:before{animation:none}}", xRe = ".ps{flex-direction:column;min-height:100%;display:flex}.ps-bar{align-items:center;gap:var(--sp-2);padding:var(--sp-3) var(--sp-5);border-bottom:var(--border) solid var(--line);background:var(--surface);z-index:2;flex-wrap:wrap;display:flex;position:sticky;top:0}.ps-bar-name{font-size:var(--fs-lg);font-weight:var(--fw-semibold);text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.ps-bar-tools{align-items:center;gap:var(--sp-1);margin-left:auto;display:inline-flex}.trpg-window[data-layout=narrow] .ps-bar{padding:var(--sp-2) var(--sp-4)}.trpg-window[data-layout=narrow] .ps-bar [data-testid=ps-history]{display:none}.ps-skeleton{margin:var(--sp-5);padding:var(--sp-6) var(--sp-5);border:var(--border) dashed var(--line);border-radius:var(--r-sm);color:var(--text2)}.ps-tabs{border-bottom:var(--border) solid var(--line);background:var(--surface);z-index:1;align-items:stretch;gap:0;display:flex;position:sticky;top:49px;overflow-x:auto}.ps-tabs button{min-height:40px;padding:0 var(--sp-4);color:var(--text);cursor:pointer;background:0 0;border:0;border-bottom:2px solid #0000;flex:none}.ps-tabs button[aria-selected=true]{border-bottom-color:var(--primary);font-weight:var(--fw-semibold)}.ps-side-toggle{color:var(--text2)}.ps-body{flex:1;grid-template-columns:minmax(0,1fr);display:grid}.ps-body[data-side]{grid-template-columns:260px minmax(0,1fr)}.trpg-window[data-layout=narrow] .ps-body[data-side]{grid-template-columns:minmax(0,1fr)}.ps-side{padding:var(--sp-4);border-right:var(--border) solid var(--line);background:var(--bg-side)}.ps-side h3{margin:0 0 var(--sp-2);font-size:var(--fs-md)}.ps-skills{margin:0;padding:0;list-style:none}.ps-skills li{align-items:center;gap:var(--sp-1);border-bottom:var(--border) solid var(--line);min-height:30px;font-size:var(--fs-sm);grid-template-columns:22px 3.2em minmax(0,1fr) auto auto 2.2em;display:grid}.ps-skills small,.ps-skill-ab{color:var(--text2);text-align:right}.ps-skill-ab{text-align:left}.ps-prof{color:var(--text2)}.ps-prof[data-level=\"1\"],.ps-prof[data-level=\"2\"]{color:var(--primary)}.ps-tab{padding:var(--sp-5);min-width:0;container:pstab/inline-size}.ps-drawer{gap:var(--sp-3);padding:var(--sp-4) var(--sp-5);flex-direction:column;display:flex}.ps-drawer-row{justify-content:space-between;align-items:center;gap:var(--sp-3);flex-wrap:wrap;display:flex}.ps-drawer-label{color:var(--text)}.ps-drawer-num{width:96px}.ps-drawer-note{color:var(--text2);font-size:var(--fs-sm);margin:0}.ps-drawer-note--warn{color:var(--danger-text)}.ps-drawer-actions{justify-content:flex-end;gap:var(--sp-2);display:flex}.ps-field{gap:var(--sp-1);flex-direction:column;display:flex}.ps-field span{color:var(--text2);font-size:var(--fs-sm)}.ps-pips{gap:var(--sp-2);display:inline-flex}.ps-pip{border:var(--border) solid var(--line-ctrl);background:var(--surface);width:36px;height:36px;color:var(--text2);cursor:pointer;border-radius:50%}.ps-pip[data-on]{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}.ps-pip[data-on][data-kind=failure]{background:var(--danger-text);border-color:var(--danger-text)}.ps-avatar-form{grid-template-columns:minmax(0,1fr) 160px;grid-template-areas:\"fields preview\"\"actions actions\";display:grid}.ps-avatar-fields{gap:var(--sp-2);flex-direction:column;grid-area:fields;display:flex}.ps-avatar-preview{border:var(--border) dashed var(--line-ctrl);border-radius:var(--r-sm);background:var(--bg-sunk);grid-area:preview;width:160px;height:160px;overflow:hidden}.ps-avatar-preview img{object-fit:cover;width:100%;height:100%}.ps-avatar-form .ps-drawer-actions{grid-area:actions}.ps-history-list{margin:0;padding:0;list-style:none}.ps-history-row{padding:var(--sp-3) 0;border-bottom:var(--border) solid var(--line)}.ps-history-head{color:var(--text2);font-size:var(--fs-sm);justify-content:space-between;align-items:center;display:flex}.ps-history-actor span{color:var(--text2);font-size:var(--fs-sm)}.ps-history-actor ul{margin:var(--sp-1) 0 0;padding-left:var(--sp-5);color:var(--text);font-size:var(--fs-sm)}.ps-death-count{margin-left:var(--sp-2)}.ps-actions-bar{align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-4);flex-wrap:wrap;display:flex}.ps-actions-search{flex:200px;max-width:320px}.ps-act-table{border-collapse:collapse;width:100%;margin-bottom:var(--sp-5);font-size:var(--fs-sm)}.ps-act-table thead th{text-align:left;font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:var(--text2);padding:var(--sp-1) var(--sp-2);border-bottom:var(--border) solid var(--line);white-space:nowrap}.ps-act-table thead th:first-child{font-size:var(--fs-md);color:var(--text);padding-left:0}.ps-act-table td,.ps-act-table tbody th{padding:var(--sp-2);border-bottom:var(--border) solid var(--line);vertical-align:middle;text-align:left;font-weight:400}.ps-act-table tbody th{padding-left:0}.ps-act-table td{white-space:nowrap;color:var(--text)}.ps-act-name{color:var(--text);font:inherit;font-weight:var(--fw-semibold);text-align:left;cursor:pointer;-webkit-line-clamp:2;background:0 0;border:0;-webkit-box-orient:vertical;padding:0;display:-webkit-box;overflow:hidden}.ps-act-name:hover{text-decoration:underline}.ps-act-row[data-open] .ps-act-name{color:var(--primary)}.ps-act-sub{color:var(--text2);display:none}.ps-box{padding:1px var(--sp-2);border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--surface);font-variant-numeric:tabular-nums;display:inline-block}.ps-act-detail td{white-space:normal;padding:var(--sp-3) 0 var(--sp-4);background:var(--bg-side)}.trpg-window[data-layout=narrow] .ps-act-table th:nth-child(4),.trpg-window[data-layout=narrow] .ps-act-effect{display:none}.trpg-window[data-layout=narrow] .ps-act-sub{display:block}.trpg-window[data-layout=narrow] .ps-act-table tbody th{width:auto}.ps-attr{gap:var(--sp-5);grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;display:grid}@container pstab (width<=640px){.ps-attr{grid-template-columns:minmax(0,1fr)}}.ps-attr-col{gap:var(--sp-5);min-width:0;display:grid}.ps-card h3{margin:0 0 var(--sp-2);font-size:var(--fs-md);padding-bottom:var(--sp-1);border-bottom:var(--border) solid var(--line)}.ps-saves{column-gap:var(--sp-4);grid-template-columns:repeat(2,minmax(0,1fr));margin:0;padding:0;list-style:none;display:grid}.ps-saves li{align-items:center;gap:var(--sp-1);border-bottom:var(--border) solid var(--line);min-height:30px;font-size:var(--fs-sm);grid-template-columns:22px minmax(0,1fr) auto 22px;display:grid}.ps-saves-wide{grid-column:1/-1}.ps-traits{gap:var(--sp-2) var(--sp-4);font-size:var(--fs-sm);grid-template-columns:max-content minmax(0,1fr);margin:0;display:grid}.ps-traits dt{color:var(--text2)}.ps-traits dd{justify-content:space-between;align-items:flex-start;gap:var(--sp-2);margin:0;display:flex}.ps-traits dd .ps-skill-icon{opacity:.55;flex:none}.ps-traits dd:hover .ps-skill-icon{opacity:1}.ps-fact-part{white-space:nowrap;margin-right:var(--sp-3);display:inline-block}.ps-act-table{table-layout:fixed}.ps-act-table thead th:nth-child(2){width:112px}.ps-act-table thead th:nth-child(3){width:20%}.ps-act-table thead th:nth-child(4){width:30%}.ps-act-table td:last-child{white-space:normal}.trpg-window[data-layout=narrow] .ps-act-table thead th:nth-child(2){width:24%}.trpg-window[data-layout=narrow] .ps-act-table thead th:nth-child(3){width:34%}.ps-box{white-space:nowrap;margin:1px var(--sp-1) 1px 0}.ps-pills{padding:0 0 var(--sp-3);flex-wrap:wrap;overflow:visible}.ps-act-rec{color:var(--text2);font-size:var(--fs-xs);display:block}.ps-enc-bar{border-radius:var(--r-pill);background:var(--line);flex:auto;max-width:320px;height:8px;overflow:hidden}.ps-enc-bar i{background:var(--primary);height:100%;display:block}.ps-enc-bar[data-over] i{background:var(--danger-text)}.ps-bag-table thead th:nth-child(2){width:104px}.ps-bag-table thead th:nth-child(3){width:116px}.ps-bag-tags{gap:2px var(--sp-2);color:var(--text2);font-size:var(--fs-xs);flex-wrap:wrap;margin-top:2px;display:flex}.ps-tag{padding:0 var(--sp-1);border:var(--border) solid var(--line);border-radius:var(--r-xs)}.ps-tag--on{background:var(--text);color:var(--surface);border-color:var(--text)}.ps-tag--gold{border-color:var(--accent)}.ps-bag-row[data-depth] th{padding-left:var(--sp-5)}.ps-bag-act{text-align:right;white-space:nowrap}.ps-bag-act>*{vertical-align:middle}.ps-bag-foot{color:var(--text2);font-size:var(--fs-sm);text-align:right}.ps-bag-uses{align-items:center;gap:var(--sp-2);margin-top:var(--sp-1);font-size:var(--fs-xs);color:var(--text2);display:inline-flex}.ps-act-table .trpg-stepper__btn{min-width:26px;min-height:28px;padding:0}.ps-act-table .trpg-stepper__val{min-width:2.6em;padding:0 var(--sp-1);font-size:var(--fs-sm)}.ps-side .trpg-seg{width:100%;margin-bottom:var(--sp-3)}.ps-side .trpg-seg button{flex:1}.ps-side-head{align-items:center;gap:var(--sp-1);padding-bottom:var(--sp-1);border-bottom:var(--border) solid var(--line);font-size:var(--fs-sm);grid-template-columns:minmax(0,1fr) 3em 2.6em 28px;display:grid}.ps-side-head small{color:var(--text2);font-size:var(--fs-xs);text-align:right}.ps-favs{gap:var(--sp-1);margin:0;padding:0;list-style:none;display:grid}.ps-favs li{align-items:center;gap:var(--sp-2);border-bottom:var(--border) solid var(--line);min-height:36px;font-size:var(--fs-sm);display:flex}.ps-fav-name{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;overflow:hidden}.ps-attr .ps-card{padding:var(--sp-3) var(--sp-4)}@container pstab (width<=420px){.ps-bag-table thead th:nth-child(2){width:96px}.ps-bag-table thead th:nth-child(3){width:112px}.ps-bag-act .trpg-btn{padding:0 var(--sp-2)}}.ps-prof-btn{width:22px;height:22px;font:inherit;cursor:pointer;background:0 0;border:0;border-radius:50%;padding:0;line-height:1}.ps-prof-btn:hover:not(:disabled){background:var(--bg-hover)}.ps-prof-btn:disabled{cursor:default}.ps-skill-ab .trpg-btn{min-height:24px;color:var(--text2);font-size:var(--fs-xs);background:0 0;border-color:#0000;gap:0;padding:0 2px}.ps-skill-ab .trpg-btn:hover{border-color:var(--line-ctrl);color:var(--text)}.ps-skill-ab .trpg-btn svg{opacity:.6;width:10px;height:10px}.ps-skill-aux{opacity:0;transition:opacity var(--dur-fast) var(--ease-std);gap:0;display:inline-flex}.ps-skills li:hover .ps-skill-aux,.ps-skill-aux:focus-within{opacity:1}.ps-skill-icon{border-radius:var(--r-xs);width:20px;height:20px;color:var(--text3);cursor:pointer;background:0 0;border:0;place-items:center;padding:0;display:inline-grid}.ps-skill-icon:hover:not(:disabled){color:var(--text);background:var(--surface)}.ps-skill-icon[data-on]{color:var(--accent)}.ps-skills li:has(.ps-skill-icon[data-on]) .ps-skill-aux{opacity:1}@media (hover:none){.ps-skill-aux{opacity:1}}.ps-saves li .ps-skill-icon{opacity:0}.ps-saves li:hover .ps-skill-icon,.ps-saves li .ps-skill-icon:focus-visible{opacity:1}@media (hover:none){.ps-saves li .ps-skill-icon{opacity:1}}.ps-conc-on{background:var(--primary);width:22px;height:22px;color:var(--on-primary);cursor:pointer;border:0;border-radius:50%;place-items:center;padding:0;display:inline-grid}.ps-card-head{justify-content:space-between;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-2);border-bottom:var(--border) solid var(--line);display:flex}.ps-card-head h3{border-bottom:0;margin:0}.ps-trait-add{gap:var(--sp-1) var(--sp-2);margin-top:var(--sp-3);flex-wrap:wrap;display:flex}.ps-build{margin:0 0 var(--sp-3);padding-bottom:var(--sp-2);border-bottom:var(--border) solid var(--line);display:grid}.ps-build-row{align-items:center;gap:var(--sp-2);min-height:38px;font-size:var(--fs-sm);grid-template-columns:3.2em minmax(0,1fr) 32px;display:grid}.ps-build-row+.ps-build-row:not(.ps-build-sub){border-top:var(--border) dashed var(--line)}.ps-build-label{color:var(--text2);font-size:var(--fs-xs)}.ps-build-main{align-items:center;gap:var(--sp-1) var(--sp-2);flex-wrap:wrap;min-width:0;display:flex}.ps-build-name{min-width:0;font-weight:var(--fw-semibold);flex:auto}.ps-build-level .trpg-btn{min-height:28px}.ps-build-turn{color:var(--text3)}.ps-build-sub{min-height:32px}.ps-favs .ps-fav{align-items:center;gap:var(--sp-2);border-bottom:var(--border) solid var(--line);min-height:40px;font-size:var(--fs-sm);grid-template-columns:minmax(0,1fr) auto 24px;padding:2px 0;display:grid}.ps-fav[data-off] .ps-fav-main{opacity:.6}.ps-fav-main{flex-direction:column;min-width:0;display:flex}.ps-fav-main .ps-fav-name{font-weight:var(--fw-medium);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.ps-fav-main>small{color:var(--text2);font-size:var(--fs-xs);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.ps-fav-val{align-items:center;gap:var(--sp-2);font-variant-numeric:tabular-nums;display:inline-flex}.ps-fav-passive{color:var(--text3);font-weight:var(--fw-regular);font-size:var(--fs-xs);margin-left:2px}.ps-fav-x{opacity:.5}.ps-fav:hover .ps-fav-x{opacity:1}.ps-tab{padding-bottom:72px}.ps-card-head-acts{gap:var(--sp-1);display:inline-flex}.ps-build-crown{margin-left:var(--sp-1);color:var(--accent);vertical-align:-2px}", SRe = ".ps-head{gap:var(--sp-4);padding:var(--sp-4) var(--sp-5) var(--sp-5);background:var(--bg-side);border-bottom:var(--border) solid var(--line);flex-direction:column;display:flex}.ps-top{align-items:start;gap:var(--sp-4);grid-template-columns:112px minmax(0,1fr) minmax(220px,280px);grid-template-areas:\"portrait ident level\";display:grid}.ps-mid{align-items:stretch;gap:var(--sp-3);grid-template-columns:minmax(220px,272px) auto minmax(0,1fr);grid-template-areas:\"vitals combat abilities\";display:grid}.ps{container:pspage/inline-size}.ps-card{border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--surface);position:relative}.ps-pen{z-index:1;border:var(--border) solid var(--line-ctrl);background:var(--surface);width:28px;height:28px;color:var(--text2);cursor:pointer;box-shadow:var(--shadow-1);border-radius:50%;place-items:center;padding:0;display:grid;position:absolute;top:-10px;right:-10px}.ps-pen:hover:not(:disabled){color:var(--text);border-color:var(--accent)}.ps-pen--inline{width:24px;height:24px;box-shadow:none;background:0 0;border-color:#0000;position:static}.ps-card-label{color:var(--text2);font-size:var(--fs-xs)}.ps-portrait{aspect-ratio:1;border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--bg-sunk);width:100%;color:var(--text2);cursor:pointer;grid-area:portrait;place-items:center;padding:0;display:grid;position:relative;overflow:hidden}.ps-portrait img{object-fit:cover;width:100%;height:100%}.ps-portrait-badge{background:var(--surface);border:var(--border) solid var(--line);border-radius:50%;place-items:center;width:22px;height:22px;display:grid;position:absolute;bottom:6px;right:6px}.ps-ident{align-items:flex-start;gap:var(--sp-2);flex-direction:column;grid-area:ident;min-width:0;display:flex}.ps-name-line{align-self:stretch;align-items:baseline;gap:var(--sp-2);flex-wrap:wrap;display:flex}.ps-name{font-family:var(--font-serif);font-size:var(--fs-3xl);font-weight:var(--fw-semibold);line-height:var(--lh-tight);color:var(--text);margin:0}.ps-pin{width:28px;height:28px;color:var(--text3);cursor:pointer;background:0 0;border:0;align-self:center;place-items:center;padding:0;display:grid}.ps-pin[aria-pressed=true]{color:var(--accent)}.ps-english{color:var(--text2);font-size:var(--fs-md)}.ps-sub{gap:0 var(--sp-3);color:var(--text2);flex-wrap:wrap;margin:0;display:flex}.ps-sub-strong{color:var(--text);font-weight:var(--fw-semibold)}.ps-rests{gap:var(--sp-2);align-self:center;margin-left:auto;display:inline-flex}.ps-level{gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);grid-area:level;display:grid}.ps-level-nums{align-items:flex-end;gap:var(--sp-5);flex-wrap:wrap;display:flex}.ps-level-nums>div{flex-direction:column;display:flex}.ps-level-nums small,.ps-box small,.ps-ability small,.ps-xp small,.ps-fact dt{color:var(--text2);font-size:var(--fs-xs)}.ps-level-nums b{font-size:var(--fs-3xl);font-weight:var(--fw-semibold);font-variant-numeric:tabular-nums;line-height:1.1}.ps-level-nums b.ps-num-md{font-size:var(--fs-xl)}.ps-insp{align-self:center;align-items:center;gap:var(--sp-1);min-height:32px;padding:0 var(--sp-3);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-pill);background:var(--surface);color:var(--text2);cursor:pointer;margin-left:auto;display:inline-flex}.ps-insp[aria-pressed=true]{border-color:var(--accent);color:var(--accent-text);background:var(--bg-sunk)}.ps-xp{gap:var(--sp-1);display:grid}.ps-xp b{color:var(--text);font-size:var(--fs-lg)}.ps-meter,.ps-hp-bar{border-radius:var(--r-pill);background:var(--bg-sunk);height:6px;display:block;overflow:hidden}.ps-meter i{background:var(--accent);border-radius:inherit;height:100%;display:block}.ps-level-foot{justify-content:flex-end;display:flex}.ps-leg{gap:var(--sp-2) var(--sp-4);flex-wrap:wrap;display:flex}.ps-leg span{align-items:center;gap:var(--sp-1);display:inline-flex}.ps-leg small{color:var(--text2);font-size:var(--fs-xs);margin-right:var(--sp-1)}.ps-dot{border:var(--border) solid var(--primary);border-radius:50%;width:10px;height:10px}.ps-dot[data-on]{background:var(--primary)}.ps-facts{gap:var(--sp-1) var(--sp-5);font-size:var(--fs-sm);flex-wrap:wrap;margin:0;display:flex}.ps-fact{align-items:baseline;gap:var(--sp-2);min-width:0;display:flex}.ps-fact dt{color:var(--text2);font-size:var(--fs-xs);flex:none}.ps-fact dd{min-width:0;color:var(--text);margin:0}.ps-fact-btn{gap:0 var(--sp-2);color:var(--text);font:inherit;text-align:left;cursor:pointer;background:0 0;border:0;flex-wrap:wrap;padding:0;display:inline-flex}.ps-fact-btn:hover:not(:disabled){text-decoration:underline;-webkit-text-decoration-color:var(--accent);text-decoration-color:var(--accent);text-underline-offset:3px}.ps-fact-part{white-space:nowrap}.ps-vitals{gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);flex-direction:column;grid-area:vitals;display:flex}.ps-hp-line{align-items:baseline;gap:var(--sp-2);flex-wrap:wrap;display:flex}.ps-hp-now{font-size:2.25rem;font-weight:var(--fw-semibold);min-width:44px;padding:0 var(--sp-1);border:var(--border) solid transparent;border-radius:var(--r-sm);color:var(--text);cursor:text;font-variant-numeric:tabular-nums;background:0 0;line-height:1.1}.ps-hp-now:hover:not(:disabled){border-color:var(--line-ctrl)}.ps-hp-input{width:96px;padding:0 var(--sp-2);border:var(--border) solid var(--accent);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-size:1.5rem}.ps-hp-input--temp{width:64px;font-size:var(--fs-md)}.ps-hp-max{color:var(--text2);font-size:var(--fs-lg)}.ps-hp-temp{padding:2px var(--sp-2);border:var(--border) solid var(--accent);border-radius:var(--r-pill);background:var(--bg-sunk);color:var(--accent-text);font-size:var(--fs-sm);cursor:pointer}.ps-hp-temp[data-empty]{border-style:dashed;border-color:var(--line-ctrl);color:var(--text2);background:0 0}.ps-hp-hint{color:var(--text2);font-size:var(--fs-sm);margin:0}.ps-hp-bar i{background:var(--success-text);border-radius:inherit;height:100%;display:block}.ps-vital-rows{gap:var(--sp-1) var(--sp-2);flex-wrap:wrap;margin-top:auto;display:flex}.ps-vital-row{align-items:center;gap:var(--sp-2);min-height:32px;padding:0 var(--sp-2);border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--bg-sunk);color:var(--text);font-size:var(--fs-sm);cursor:pointer;display:inline-flex}.ps-vital-row:hover{border-color:var(--line-ctrl);background:var(--bg-hover)}.ps-vital-row span{white-space:nowrap;color:var(--text2);font-size:var(--fs-xs)}.ps-vital-row b{font-weight:var(--fw-semibold);font-variant-numeric:tabular-nums;text-align:right}.ps-vital-row[data-alert]{border-color:var(--danger-line);color:var(--danger-text)}.ps-death-count{font-weight:var(--fw-regular)}.ps-combat{gap:var(--sp-2);padding:var(--sp-2);grid-area:combat;display:flex}.ps-box{justify-content:center;align-items:center;gap:var(--sp-1);min-width:64px;padding:var(--sp-2) var(--sp-3);border:var(--border) solid var(--line);border-top:3px solid var(--accent);border-radius:var(--r-sm);background:var(--bg-sunk);color:var(--text);cursor:pointer;flex-direction:column;flex:1 1 0;display:flex}.ps-box small,.ps-ability small{color:var(--text2);font-size:var(--fs-xs)}.ps-box b{font-size:var(--fs-3xl);font-weight:var(--fw-semibold);font-variant-numeric:tabular-nums;line-height:1.1}.ps-box:hover,.ps-ability:hover{border-color:var(--line-ctrl);background:var(--bg-hover)}.ps-abilities{gap:var(--sp-2);min-width:0;padding:var(--sp-2);grid-area:abilities;grid-template-columns:repeat(6,minmax(0,1fr));display:grid}.ps-ability{min-width:0;padding:var(--sp-2) var(--sp-1);border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--surface);color:var(--text);cursor:pointer;flex-direction:column;justify-content:center;align-items:center;gap:2px;display:flex}.ps-ability b{font-size:var(--fs-2xl);font-weight:var(--fw-semibold);font-variant-numeric:tabular-nums;line-height:1.15}.ps-ability span{color:var(--text2);font-size:var(--fs-sm);font-variant-numeric:tabular-nums}.ps-ability em{border-top:var(--border) solid var(--line);color:var(--text2);font-style:normal;font-size:var(--fs-xs);white-space:nowrap;font-variant-numeric:tabular-nums;justify-content:center;align-self:stretch;align-items:center;gap:4px;margin-top:2px;padding-top:4px;display:flex}.ps-ability em[data-prof]{color:var(--primary)}.ps-ability em[data-prof]:before{content:\"\";background:currentColor;border-radius:50%;width:6px;height:6px}.ps-blank-cta{align-self:stretch;gap:var(--sp-1);padding:var(--sp-2) var(--sp-3);border:var(--border) dashed var(--accent);border-radius:var(--r-md);background:var(--bg-sunk);color:var(--text);flex-direction:column;display:flex}.ps-blank-cta b{align-items:center;gap:var(--sp-1);display:inline-flex}.ps-blank-cta>span{color:var(--text2);font-size:var(--fs-sm)}.ps-blank-steps{gap:var(--sp-2);margin-top:var(--sp-1);flex-wrap:wrap;display:flex}@container pspage (width<=980px){.ps-mid{grid-template-columns:auto minmax(0,1fr);grid-template-areas:\"vitals vitals\"\"combat abilities\"}.ps-head{gap:var(--sp-3);padding-top:var(--sp-3);padding-bottom:var(--sp-4)}.ps-vitals{align-items:center;column-gap:var(--sp-4);padding:var(--sp-2) var(--sp-4);grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:\"label hp rows\";row-gap:0;display:grid}.ps-vitals>.ps-card-label{grid-area:label}.ps-vitals .ps-hp-now{font-size:1.75rem}.ps-vitals .ps-hp-line{gap:var(--sp-1);flex-wrap:nowrap}.ps-vitals .ps-hp-temp{white-space:nowrap;padding:1px var(--sp-2);font-size:var(--fs-xs)}.ps-vitals>.ps-hp{grid-area:hp}.ps-vitals>.ps-vital-rows{grid-area:rows;margin-top:0}}@container pspage (width<=640px){.ps-head{padding:var(--sp-4)}.ps-top{gap:var(--sp-3);grid-template-columns:80px minmax(0,1fr);grid-template-areas:\"portrait ident\"\"level level\"}.ps-mid{grid-template-columns:minmax(0,1fr);grid-template-areas:\"vitals\"\"combat\"\"abilities\"}.ps-vitals{display:flex}.ps-abilities{grid-template-columns:repeat(3,minmax(0,1fr))}.ps-name{font-size:var(--fs-2xl)}}.ps-name-btn{color:inherit;font:inherit;cursor:text;background:0 0;border:0;border-bottom:1px dashed #0000;padding:0}.ps-name-btn:hover:not(:disabled){border-bottom-color:var(--line-ctrl)}.ps-name-btn:disabled{cursor:default}.ps-name-input{font-family:var(--font-serif);font-size:var(--fs-2xl);font-weight:var(--fw-semibold);min-width:10em;max-width:100%}.ps-ability{cursor:default}.ps-ability-cfg{color:inherit;font:inherit;cursor:pointer;background:0 0;border:0;flex-direction:column;align-items:center;gap:2px;padding:0;display:flex}.ps-ability-cfg b{font-size:var(--fs-2xl);font-weight:var(--fw-semibold);font-variant-numeric:tabular-nums;line-height:1.15}.ps-ability-score .ps-num-in{width:2.6em;color:var(--text2);font-size:var(--fs-sm)}.ps-vital-row--pips{cursor:default}.ps-vital-row--pips:hover{border-color:var(--line);background:0 0}.ps-vital-name{color:var(--text2);font:inherit;font-size:var(--fs-xs);white-space:nowrap;cursor:pointer;-webkit-text-decoration:underline dotted var(--line-ctrl);text-decoration:underline dotted var(--line-ctrl);text-underline-offset:3px;background:0 0;border:0;padding:0}.ps-vital-name:hover{color:var(--text)}.ps-vital-row .ps-pips{gap:3px}.ps-vital-row .ps-pips small{color:var(--text3);font-size:10px}.ps-vital-row .ps-pip{width:12px;height:12px;padding:0}.ps-vital-row .ps-pip--sq{border-radius:3px}.ps-vital-row .ps-pip:hover:not(:disabled){border-color:var(--primary)}", CRe = ".pf{flex-direction:column;height:100%;min-height:0;display:flex}.pf-body{overscroll-behavior:contain;min-height:0;padding:var(--sp-4) var(--sp-5);gap:var(--sp-4);flex:auto;grid-auto-rows:max-content;align-content:start;display:grid;overflow:auto}.trpg-modal__page:has(>.pf){padding:0;overflow:hidden}.pf-intro{color:var(--text2);font-size:var(--fs-sm);line-height:var(--lh-body);margin:0}.pf-total{align-items:baseline;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);border:var(--border) solid var(--line);border-top:3px solid var(--accent);border-radius:var(--r-sm);background:var(--bg-sunk);flex-wrap:wrap;display:flex}.pf-total span{color:var(--text2);font-size:var(--fs-sm)}.pf-total b{font-size:var(--fs-2xl);font-weight:var(--fw-semibold);font-variant-numeric:tabular-nums}.pf-total small{color:var(--text2);font-size:var(--fs-sm)}.pf-card{border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--surface);overflow:hidden}.pf-card>h4{justify-content:space-between;align-items:baseline;gap:var(--sp-3);padding:var(--sp-2) var(--sp-3);background:var(--bg-side);border-bottom:var(--border) solid var(--line);font-size:var(--fs-sm);font-weight:var(--fw-semibold);margin:0;display:flex}.pf-card>h4 small{color:var(--text2);font-weight:var(--fw-regular);font-size:var(--fs-xs)}.pf-entry{align-items:center;gap:var(--sp-3);min-height:44px;padding:0 var(--sp-2) 0 var(--sp-3);border-bottom:var(--border) solid var(--line);font-size:var(--fs-sm);grid-template-columns:minmax(0,1fr) auto auto 28px;display:grid}.pf-entry:last-of-type{border-bottom:0}.pf-entry>span{text-overflow:ellipsis;min-width:0;overflow:hidden}.pf-entry>span small{color:var(--text2)}.pf-entry>b{font-variant-numeric:tabular-nums;font-weight:var(--fw-semibold)}.pf-entry[data-manual]>span{text-decoration:underline;-webkit-text-decoration-color:var(--accent);text-decoration-color:var(--accent);text-underline-offset:4px}.pf-src{padding:1px var(--sp-2);border:var(--border) solid var(--line);border-radius:var(--r-pill);color:var(--text2);font-size:var(--fs-xs);white-space:nowrap;text-overflow:ellipsis;max-width:12em;font-style:normal;overflow:hidden}.pf-src[data-kind=manual]{border-color:var(--accent);color:var(--accent-text)}.pf-x{width:28px;height:28px}.pf-removed .pf-entry{color:var(--text2);grid-template-columns:minmax(0,1fr) auto auto auto}.pf-add{margin:var(--sp-2) var(--sp-3)}.pf-add-row{gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);border-top:var(--border) solid var(--line);grid-template-columns:minmax(0,1fr) 88px auto;display:grid}.pf-base>.pf-fields{padding:var(--sp-2) var(--sp-3) var(--sp-3)}.pf-fields{gap:var(--sp-2);display:grid}.pf-row{align-items:center;gap:var(--sp-3);grid-template-columns:minmax(0,11em) minmax(0,1fr);min-height:40px;display:grid}.pf-row[data-kind=html],.pf-row[data-kind=multi],.pf-row[data-kind=tags]{align-items:start}.pf-label{font-size:var(--fs-sm);color:var(--text);gap:2px;display:grid}.pf-hint{color:var(--text2);font-size:var(--fs-xs);line-height:var(--lh-ui)}.pf-control{min-width:0}.pf-control>.trpg-input{width:100%}.pf-num{font-variant-numeric:tabular-nums;max-width:120px}.pf-text{resize:vertical;width:100%;min-height:96px;line-height:var(--lh-body)}.pf-chips,.pf-tags{gap:var(--sp-1) var(--sp-2);flex-wrap:wrap;align-items:center;display:flex}.pf-chip{cursor:pointer;background:var(--surface)}.pf-chip[aria-pressed=true]{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}.pf-tag-input{flex:140px;min-width:120px}.pf-group{border-top:var(--border) solid var(--line)}.pf-group[data-plain]{border-top:0}.pf-group>.pf-fields{padding:0 0 var(--sp-3)}.pf-group[data-plain]>.pf-fields{padding:0}.pf-group>.pf-fields>.pf-group[data-plain]{margin-top:var(--sp-1)}.pf-group-title{align-items:center;gap:var(--sp-2);cursor:pointer;min-height:40px;font-size:var(--fs-sm);font-weight:var(--fw-semibold);color:var(--text);margin:0;list-style:none;display:flex}.pf-group-title::-webkit-details-marker{display:none}.pf-group-title:hover{color:var(--primary-text)}.pf-group-title svg{color:var(--text2);transition:transform var(--dur-fast) var(--ease-std)}.pf-group[open]>.pf-group-title svg{transform:rotate(90deg)}.pf-group[data-depth=\"1\"]>.pf-group-title,.pf-group[data-depth=\"2\"]>.pf-group-title{font-weight:var(--fw-regular);color:var(--text2)}.pf-foot{align-items:center;gap:var(--sp-2);padding:var(--sp-3) var(--sp-5);border-top:var(--border) solid var(--line);background:var(--surface);flex:none;display:flex}.pf-gap{flex:1}.pf-count{color:var(--text2);font-size:var(--fs-xs)}.trpg-window[data-layout=narrow] .pf-row{gap:var(--sp-1);grid-template-columns:minmax(0,1fr)}.trpg-window[data-layout=narrow] .pf-body,.trpg-window[data-layout=narrow] .pf-foot{padding:var(--sp-3)}.pf-id-actions{gap:var(--sp-2);padding:var(--sp-2) var(--sp-3) 0;flex-wrap:wrap;display:flex}.pf-id-actions .pf-add{margin:0}.pf-id-note{padding:var(--sp-2) var(--sp-3) var(--sp-3);font-size:var(--fs-xs)}.pf-base>.pf-fields>.pf-group:first-child{border-top:0}.pf-formula{max-width:280px}.pf-name{align-items:center;gap:var(--sp-3);font-size:var(--fs-sm);grid-template-columns:minmax(0,11em) minmax(0,1fr);display:grid}.pf-change{align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);border-bottom:var(--border) solid var(--line);grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) 6em 28px;display:grid}.trpg-window[data-layout=narrow] .pf-change{grid-template-columns:minmax(0,1fr) 28px}.pf-tree{padding:var(--sp-2) 0;max-height:none;margin:0;list-style:none;display:grid}.pf-tree li{align-items:center;gap:var(--sp-2);min-height:32px;padding-right:var(--sp-3);font-size:var(--fs-sm);display:flex}.pf-tree li[data-cat]{min-height:28px;margin-top:var(--sp-1);color:var(--text2);font-size:var(--fs-xs);font-weight:var(--fw-semibold)}.pf-tree-label{min-width:0}.pf-dur{align-items:center;gap:var(--sp-2);display:flex}.pf-dur .trpg-select-trigger{width:8em}", wRe = ".ps-tables{gap:var(--sp-4);display:grid}.ps-grp{border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);overflow:hidden}.ps-grp-head{align-items:center;gap:var(--sp-2);min-height:38px;padding:0 var(--sp-2) 0 var(--sp-3);background:var(--bg-side);border-bottom:var(--border) solid var(--line);font-size:var(--fs-sm);display:flex}.ps-grp-head>b{font-weight:var(--fw-semibold);white-space:nowrap}.ps-grp-head>small{color:var(--text3);font-size:var(--fs-xs)}.ps-grp-cols{color:var(--text2);font-size:var(--fs-xs);align-items:center;margin-left:auto;display:flex}.ps-grp-cols>span{text-align:center;flex:none}.ps-grp-menu-col{flex:none;justify-content:center;width:36px;display:flex}.ps-rows{margin:0;padding:0;list-style:none}.ps-row{border-bottom:var(--border) solid var(--line)}.ps-row:last-child{border-bottom:0}.ps-row-main{align-items:center;gap:var(--sp-2);min-height:48px;padding:var(--sp-1) var(--sp-2) var(--sp-1) var(--sp-3);display:flex}.ps-row[data-open] .ps-row-main{background:var(--bg-sunk)}.ps-row-name{flex-direction:column;flex:auto;gap:1px;min-width:120px;display:flex}.ps-row-title{color:var(--text);font:inherit;font-weight:var(--fw-semibold);font-size:var(--fs-md);text-align:left;cursor:pointer;text-overflow:ellipsis;-webkit-line-clamp:2;background:0 0;border:0;-webkit-box-orient:vertical;padding:0;display:-webkit-box;overflow:hidden}.ps-row-title:hover{text-decoration:underline;-webkit-text-decoration-color:var(--accent);text-decoration-color:var(--accent);text-underline-offset:3px}.ps-row-name>small{color:var(--text2);font-size:var(--fs-xs);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.ps-cell{font-size:var(--fs-sm);font-variant-numeric:tabular-nums;text-align:center;flex-wrap:wrap;flex:none;justify-content:center;align-items:center;gap:2px;display:flex}.ps-row-detail{padding:var(--sp-3) var(--sp-4) var(--sp-4);background:var(--bg-sunk);border-top:var(--border) solid var(--line)}.ps-pips{align-items:center;gap:4px;display:inline-flex}.ps-pipbtn{border:var(--border) solid var(--primary);cursor:pointer;background:0 0;border-radius:50%;width:14px;height:14px;padding:0}.ps-pipbtn[data-on]{background:var(--primary)}.ps-pipbtn:disabled{cursor:default}.ps-toolbar{align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-3);flex-wrap:wrap;display:flex}.ps-toolbar .ps-actions-search{flex:200px;max-width:360px}.ps-toolbar .tp-gap{flex:1}.ps-mark{border:var(--border) solid var(--line-ctrl);background:var(--surface);width:22px;height:22px;color:var(--text3);font-size:var(--fs-xs);cursor:pointer;border-radius:50%;flex:none;place-items:center;padding:0;display:inline-grid}.ps-mark[data-on]{border-color:var(--primary);background:var(--primary);color:var(--on-primary)}.ps-mark:disabled{cursor:default;opacity:.7}.ps-toolbar--end{margin-top:var(--sp-4);justify-content:flex-end}.ps-grp-info{padding:var(--sp-2) var(--sp-3);color:var(--text2);font-size:var(--fs-xs);border-bottom:var(--border) solid var(--line);margin:0}.ps-row-title--static{cursor:default}.ps-row-title--static:hover{text-decoration:none}.ps-conds{gap:var(--sp-2);padding:var(--sp-3);flex-wrap:wrap;display:flex}.ps-cond{align-items:center;gap:var(--sp-2);min-height:32px;padding:0 var(--sp-3);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-pill);background:var(--surface);color:var(--text);font-size:var(--fs-sm);cursor:pointer;display:inline-flex}.ps-cond[aria-pressed=true],.ps-cond--level[data-on]{background:var(--text);border-color:var(--text);color:var(--surface)}.ps-cond--level{cursor:default;padding-right:4px}.ps-cond--level .trpg-stepper{background:var(--surface)}.ps-cond--level .trpg-stepper__btn{min-width:26px;min-height:26px}.ps-cond--level .trpg-stepper__val{min-width:2em;color:var(--text)}.ps-casting,.ps-classes{gap:var(--sp-3);margin-bottom:var(--sp-4);flex-wrap:wrap;display:flex}.ps-casting-card,.ps-class-card{align-items:center;gap:var(--sp-2) var(--sp-5);padding:var(--sp-3) var(--sp-4);flex-wrap:wrap;display:flex}.ps-casting-card>span,.ps-class-card>span{font-size:var(--fs-lg);font-weight:var(--fw-semibold);font-variant-numeric:tabular-nums;flex-direction:column;display:flex}.ps-casting-card small,.ps-class-card small{color:var(--text2);font-size:var(--fs-xs);font-weight:var(--fw-regular)}.ps-casting-title{font-size:var(--fs-md)}.ps-box-sm{padding:1px var(--sp-2);border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--surface);white-space:nowrap;font-size:var(--fs-sm);display:inline-block}.ps-text-card{border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);overflow:hidden}.ps-text-card[data-editing]{border-color:var(--accent)}.ps-text-pen{margin-left:auto}.ps-text-body{padding:var(--sp-3) var(--sp-4);line-height:var(--lh-body);font-size:var(--fs-md)}.ps-text-body p{margin:0 0 var(--sp-2)}.ps-text-body p:last-child{margin-bottom:0}.ps-text-edit{gap:var(--sp-2);padding:var(--sp-3);display:grid}.ps-text-edit textarea{resize:vertical;width:100%;min-height:120px;line-height:var(--lh-body)}.ps-text-actions{justify-content:flex-end;gap:var(--sp-2);display:flex}.ps-bio{gap:var(--sp-4);grid-template-columns:minmax(0,1fr) minmax(200px,280px);align-items:start;display:grid}.ps-bio-main{gap:var(--sp-3);display:grid}.ps-bio-empty{color:var(--text2);font-size:var(--fs-sm);align-items:center;gap:var(--sp-2);flex-wrap:wrap;margin:0;display:flex}.ps-add-chip{min-height:28px;padding:0 var(--sp-3);border:var(--border) dashed var(--line-ctrl);border-radius:var(--r-pill);color:var(--text2);cursor:pointer;background:0 0}.ps-add-chip:hover:not(:disabled){color:var(--text);border-color:var(--accent)}.ps-bio-trait-grid{display:grid}.ps-bio-trait{border:0;border-bottom:var(--border) solid var(--line);border-radius:0}.ps-bio-trait:last-child{border-bottom:0}.ps-bio-trait .ps-grp-head{min-height:30px;color:var(--text2);background:0 0;border-bottom:0}.ps-bio-trait .ps-grp-head b{font-weight:var(--fw-regular);font-size:var(--fs-xs)}.ps-bio-trait .ps-text-body{padding-top:0}.ps-notes{gap:var(--sp-4);grid-template-columns:minmax(220px,300px) minmax(0,1fr);align-items:start;display:grid}.ps-notes-empty{padding:var(--sp-3);margin:0}.ps-note-n{border:var(--border) solid var(--line);border-radius:var(--r-sm);width:24px;height:24px;color:var(--text2);font-size:var(--fs-xs);flex:none;place-items:center;display:grid}.ps-note-pick{text-align:left;cursor:pointer;color:var(--text);background:0 0;border:0;padding:0}.ps-notes-page{gap:var(--sp-3);display:grid}.ps-notes-nav{justify-content:flex-end;gap:var(--sp-2);display:flex}.ps-initial{border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--bg-sunk);width:28px;height:28px;color:var(--text2);font-size:var(--fs-sm);flex:none;place-items:center;display:grid}.ps-narrow-only{color:var(--text2);font-size:var(--fs-xs);display:none}.ps-pips small{white-space:nowrap;color:var(--text2);font-size:var(--fs-xs)}@container pstab (width<=640px){[data-wide]{display:none}.ps-narrow-only{display:block}.ps-bio,.ps-notes{grid-template-columns:minmax(0,1fr)}}@container pstab (width<=420px){.ps-initial{display:none}.ps-row-main{gap:4px}.ps-row-name{min-width:72px}.ps-grp-cols>span:not(.ps-grp-menu-col){display:none}.ps-row-main{padding-left:var(--sp-2)}}.ps-indent{color:var(--text3);text-align:right;flex:none;padding-right:4px;display:inline-block}.ps-enc{align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-4);padding:var(--sp-3) var(--sp-4);font-size:var(--fs-sm);display:flex}.ps-cell .trpg-stepper__btn{min-width:26px;min-height:28px;padding:0}.ps-cell .trpg-stepper__val{min-width:2.4em;padding:0 var(--sp-1);font-size:var(--fs-sm)}.ps-bio-traits-add{padding:var(--sp-2) var(--sp-3) var(--sp-3)}", TRe = ".dt{gap:var(--sp-3);display:grid;container:dt/inline-size}.dt-grp{border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--surface);overflow:hidden}.dt-head{align-items:center;gap:var(--sp-2);min-height:36px;padding:0 var(--sp-2) 0 var(--sp-1);background:var(--bg-side);border-bottom:var(--border) solid var(--line);box-shadow:inset 0 2px 0 var(--primary-tint-line,var(--line));font-size:var(--fs-sm);display:flex}.dt-grp[data-collapsed] .dt-head{border-bottom:0}.dt-fold{align-items:center;gap:var(--sp-2);min-height:32px;padding:0 var(--sp-2);color:var(--text);font:inherit;cursor:pointer;border-radius:var(--r-xs);background:0 0;border:0;display:inline-flex}.dt-fold:hover{background:var(--bg-hover)}.dt-fold svg{color:var(--text3);transition:transform var(--dur-fast) var(--ease-std);transform:rotate(90deg)}.dt-grp[data-collapsed] .dt-fold svg{transform:none}.dt-fold b{font-weight:var(--fw-semibold);white-space:nowrap}.dt-fold small{color:var(--text3);font-size:var(--fs-xs);font-variant-numeric:tabular-nums}.dt-cols{color:var(--text2);font-size:var(--fs-xs);align-items:center;margin-left:auto;display:flex}.dt-cols>span{text-align:center;flex:none}.dt-acts-col{justify-content:flex-end;display:flex}.dt-add{border:var(--border) solid transparent;border-radius:var(--r-xs);width:28px;height:28px;color:var(--text2);cursor:pointer;background:0 0;place-items:center;display:inline-grid}.dt-add:hover:not(:disabled){border-color:var(--line-ctrl);color:var(--primary-text);background:var(--surface)}.dt-rows{margin:0;padding:0;list-style:none}.dt-row+.dt-row{border-top:var(--border) solid var(--line)}.dt-row[data-depth]{background:var(--bg-sunk)}.dt-main{align-items:center;gap:var(--sp-2);min-height:44px;padding:2px var(--sp-1) 2px var(--sp-3);display:flex}.dt-main:hover{background:var(--bg-hover)}.dt-row[data-open]>.dt-main{background:var(--bg-sunk)}.dt-indent{color:var(--text3);flex:none;justify-content:flex-end;display:inline-flex}.dt-initial,.dt-box{border:var(--border) solid var(--line);border-radius:var(--r-xs);background:var(--bg-sunk);width:26px;height:26px;color:var(--text2);font-size:var(--fs-xs);flex:none;place-items:center;display:grid}.dt-box{cursor:pointer;padding:0}.dt-box svg{transition:transform var(--dur-fast) var(--ease-std)}.dt-box[aria-expanded=true] svg{transform:rotate(90deg)}.dt-name{flex-direction:column;flex:auto;gap:1px;min-width:0;display:flex}.dt-title{color:var(--text);font:inherit;font-size:var(--fs-md);font-weight:var(--fw-medium);text-align:left;cursor:pointer;text-overflow:ellipsis;white-space:nowrap;background:0 0;border:0;padding:0;overflow:hidden}.dt-title:hover{color:var(--primary-text)}.dt-qty{margin-left:var(--sp-1);color:var(--text2);font-weight:var(--fw-regular);font-size:var(--fs-xs)}.dt-name>small{color:var(--text2);font-size:var(--fs-xs);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.dt-cell{font-size:var(--fs-sm);font-variant-numeric:tabular-nums;text-align:center;flex:none;justify-content:center;align-items:center;gap:2px;min-width:0;display:flex}.dt-acts{flex:none;align-items:center;gap:0;display:flex}.dt-act,.dt-act-gap{flex:none;width:1.9rem;height:28px}.dt-act{border-radius:var(--r-xs);color:var(--text3);cursor:pointer;background:0 0;border:0;place-items:center;padding:0;display:inline-grid}.dt-act:hover:not(:disabled){color:var(--text);background:var(--surface)}.dt-act[data-on]{color:var(--primary)}.dt-act--danger:hover:not(:disabled){color:var(--danger-text)}.dt-act:disabled{cursor:default;opacity:.55}.dt-detail{padding:var(--sp-3) var(--sp-4) var(--sp-4) calc(var(--sp-3) + 34px);background:var(--bg-sunk);border-top:var(--border) solid var(--line);font-size:var(--fs-sm);line-height:var(--lh-body)}.dt-desc{white-space:pre-line;margin:0}.dt-activities{margin:var(--sp-3) 0 0;gap:var(--sp-1);padding:0;list-style:none;display:grid}.dt-activities li{gap:var(--sp-1) var(--sp-3);padding:var(--sp-1) var(--sp-2);border-left:2px solid var(--primary-tint-line,var(--line));flex-wrap:wrap;align-items:baseline;display:flex}.dt-activities span{color:var(--text2);font-size:var(--fs-xs)}.ps-dim{color:var(--text3)}.ps-mod{font-weight:var(--fw-semibold)}.ps-stack{flex-direction:column;line-height:1.1;display:flex}.ps-stack small{color:var(--accent-text);font-size:10px}.ps-formula{text-overflow:ellipsis;white-space:nowrap;max-width:100%;display:inline-block;overflow:hidden}.ps-uses{align-items:baseline;gap:2px;display:inline-flex}.ps-uses small{color:var(--text2);font-size:var(--fs-xs)}.ps-recharge{padding:0 var(--sp-1);border-radius:var(--r-xs);color:var(--text2);font-size:var(--fs-xs)}.ps-recharge[data-cooldown]{color:var(--warn-text);background:var(--warn-bg)}.ps-cap{width:100%;padding:0 var(--sp-1);flex-direction:column;align-items:stretch;gap:2px;display:inline-flex}.ps-cap small{color:var(--text2);font-size:10px}.ps-cap-bar,.ps-enc-bar{border-radius:var(--r-pill);background:var(--bg-sunk);border:var(--border) solid var(--line);height:5px;display:block;overflow:hidden}.ps-cap-bar i,.ps-enc-bar i{background:var(--primary);height:100%;display:block}.ps-comps{gap:2px;display:inline-flex}.ps-comp{border:var(--border) solid var(--line);border-radius:var(--r-xs);min-width:16px;color:var(--text2);padding:0 2px;font-size:10px}.ps-comp[data-special]{border-color:var(--accent);color:var(--accent-text)}.ps-school{font-size:var(--fs-xs);color:var(--text2)}.ps-num{align-items:center;gap:0;display:inline-flex}.ps-num-in{border:var(--border) solid transparent;border-radius:var(--r-xs);width:3.2em;min-height:26px;color:var(--text);font:inherit;font-size:var(--fs-sm);font-variant-numeric:tabular-nums;text-align:center;background:0 0;padding:0 2px}.ps-num-in:hover:not(:disabled){border-color:var(--line-ctrl);background:var(--surface)}.ps-num-in:focus{border-color:var(--focus,var(--primary));background:var(--surface);outline:none}.ps-num[data-step] .ps-num-in{width:2.6em}.ps-num-btn{border-radius:var(--r-xs);width:20px;height:22px;color:var(--text3);cursor:pointer;opacity:0;transition:opacity var(--dur-fast) var(--ease-std);background:0 0;border:0;place-items:center;padding:0;display:inline-grid}.dt-main:hover .ps-num-btn,.ps-num:focus-within .ps-num-btn{opacity:1}.ps-num-btn:hover:not(:disabled){color:var(--text);background:var(--surface)}.ps-num-btn:disabled{cursor:default;opacity:0!important}@media (hover:none){.ps-num-btn{opacity:1}}.dt-bar{align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-3);flex-wrap:wrap;display:flex}.dt-search{flex:200px;align-items:center;max-width:340px;display:inline-flex;position:relative}.dt-search>svg{color:var(--text3);pointer-events:none;position:absolute;left:10px}.dt-search>.trpg-input{width:100%;padding-left:30px;padding-right:28px}.dt-search>.trpg-icon-btn{position:absolute;right:2px}.dt-bar-gap{flex:1}.dt-foot{align-items:center;gap:var(--sp-2) var(--sp-4);margin-top:var(--sp-3);padding:var(--sp-2) var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--bg-side);font-size:var(--fs-sm);flex-wrap:wrap;display:flex}.dt-conc{color:var(--primary-text);border-color:var(--primary-tint-line,var(--line-ctrl))}.ps-coins{gap:var(--sp-1) var(--sp-3);flex-wrap:wrap;display:inline-flex}.ps-coin{align-items:center;gap:2px;display:inline-flex}.ps-coin small{color:var(--text2);font-size:var(--fs-xs)}.ps-coin .ps-num-in{border-color:var(--line);background:var(--surface);width:4.2em}.ps-attune-count{align-items:center;gap:var(--sp-1);color:var(--text2);display:inline-flex}.ps-attune-count[data-over]{color:var(--danger-text)}.ps-enc{align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-3);padding:var(--sp-2) var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--surface);font-size:var(--fs-sm);display:flex}.ps-enc>svg{color:var(--text2);flex:none}.ps-enc-bar{flex:auto;height:7px}.ps-enc[data-level=over] .ps-enc-bar i{background:var(--danger-text)}.ps-enc b{font-weight:var(--fw-semibold);font-variant-numeric:tabular-nums;white-space:nowrap}.ps-link-btn{margin-left:var(--sp-2);color:var(--primary-text);font:inherit;font-size:var(--fs-xs);font-weight:var(--fw-regular);cursor:pointer;text-underline-offset:3px;background:0 0;border:0;padding:0;text-decoration:underline}.ps-tag{margin-left:var(--sp-2);padding:0 var(--sp-1);border:var(--border) solid var(--line);border-radius:var(--r-xs);color:var(--text2);font-size:10px;font-style:normal;font-weight:var(--fw-regular)}@container dt (width<=520px){.dt-initial{display:none}.dt-main{padding-left:var(--sp-2)}.dt-detail{padding-left:var(--sp-3)}}.dt-filters{align-items:center;gap:var(--sp-1) var(--sp-2);flex-wrap:wrap;flex-basis:100%;display:flex}.dt-filter{min-height:26px;padding:0 var(--sp-2);border:var(--border) solid var(--line);border-radius:var(--r-pill);background:var(--surface);color:var(--text2);font-size:var(--fs-xs);cursor:pointer;align-items:center;gap:2px;display:inline-flex}.dt-filter:hover{border-color:var(--line-ctrl);color:var(--text)}.dt-filter[data-state=on]{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}.dt-filter[data-state=off]{border-color:var(--danger-line,var(--line-ctrl));color:var(--danger-text);text-decoration:line-through}.ps-pins-strip{gap:var(--sp-2);flex-wrap:wrap;display:flex}.ps-pin-card{align-items:center;gap:var(--sp-2);min-height:36px;padding:0 var(--sp-1) 0 var(--sp-3);border:var(--border) solid var(--line);border-left:3px solid var(--accent);border-radius:var(--r-sm);background:var(--surface);font-size:var(--fs-sm);display:inline-flex}.ps-pin-icon{color:var(--accent)}.ps-pin-name{font-weight:var(--fw-medium);white-space:nowrap}@container dt (width<=600px){.dt-opt-1{display:none}}@container dt (width<=440px){.dt-opt-2{display:none}}.dt-filter-count{border-radius:var(--r-pill);background:var(--primary);min-width:18px;height:18px;color:var(--on-primary);place-items:center;margin-left:2px;padding:0 4px;font-size:11px;display:inline-grid}", ERe = ".ask{grid-template-rows:auto auto minmax(0,1fr) auto;height:100%;min-height:0;display:grid}.ask-head{align-items:center;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);border-bottom:var(--border) solid var(--line);background:var(--surface);display:flex}.ask-what{font-family:var(--font-serif);font-size:var(--fs-lg);font-weight:var(--fw-semibold)}.ask-count{color:var(--text2);font-size:var(--fs-xs);margin-left:auto}.ask-done{gap:var(--sp-1) var(--sp-2);padding:var(--sp-2) var(--sp-4);border-bottom:var(--border) solid var(--line);background:var(--bg-side);flex-wrap:wrap;max-height:96px;margin:0;list-style:none;display:flex;overflow-y:auto}.ask-done button{align-items:baseline;gap:var(--sp-1);max-width:100%;padding:2px var(--sp-2);border:var(--border) solid var(--line);border-radius:var(--r-pill);background:var(--surface);color:var(--text);font:inherit;font-size:var(--fs-xs);cursor:pointer;display:inline-flex}.ask-done button:hover:not(:disabled){border-color:var(--accent)}.ask-done span{color:var(--text2);white-space:nowrap}.ask-done b{font-weight:var(--fw-semibold);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.ask-body{min-height:0;padding:var(--sp-4) var(--sp-5);gap:var(--sp-3);flex-direction:column;display:flex;overflow-y:auto}.ask-title{font-size:var(--fs-xl);font-weight:var(--fw-semibold);margin:0}.ask-note,.ask-slow{color:var(--text2);font-size:var(--fs-sm);margin:0}.ask-slow:before{content:\"\";width:10px;height:10px;margin-right:var(--sp-2);border:2px solid var(--line-ctrl);border-top-color:var(--accent);vertical-align:-1px;border-radius:50%;animation:.8s linear infinite ask-spin;display:inline-block}@keyframes ask-spin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.ask-slow:before{animation:none}}.ask-foot{align-items:center;gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);border-top:var(--border) solid var(--line-ctrl);background:var(--bg-side);display:flex}.ask[aria-busy] .ask-form{opacity:.6;transition:opacity .15s}.ask-form{gap:var(--sp-3);flex-direction:column;display:flex}.ask-yesno{gap:var(--sp-2);flex-wrap:wrap;display:flex}.ask-yesno .trpg-btn{min-width:120px;min-height:40px}.ask-list{flex-direction:column;gap:2px;display:flex}.ask-row{align-items:baseline;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);border:var(--border) solid transparent;border-radius:var(--r-sm);cursor:pointer;display:flex}.ask-row:hover{background:var(--bg-hover)}.ask-row[data-on]{border-color:var(--line-ctrl);background:var(--surface)}.ask-row[data-off]{color:var(--text3);cursor:default}.ask-row input{accent-color:var(--primary)}.ask-level b{font-variant-numeric:tabular-nums;flex:none;min-width:3.5em}.ask-level .ask-note{flex:1}.ask-num{width:8em}.ask-fixed{color:var(--text2);font-size:var(--fs-sm);margin:0}.ask-group{gap:var(--sp-2);flex-direction:column;display:flex}.ask-group-head{align-items:baseline;gap:var(--sp-3);display:flex}.ask-group-head b{font-size:var(--fs-sm)}.ask-group-head small{color:var(--accent-text);font-size:var(--fs-xs)}.ask-group-head small[data-done]{color:var(--success-text)}.ask-chips{gap:var(--sp-1) var(--sp-3);grid-template-columns:repeat(auto-fill,minmax(140px,1fr));display:grid}.ask-chips[data-wide]{grid-template-columns:minmax(0,1fr)}.ask-own{gap:var(--sp-2);display:grid}.ask-equip .ask-group{padding:var(--sp-2) var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--surface)}.ask-equip-choices{flex-direction:column;gap:2px;display:flex}.ask-equip-choice{align-items:baseline;gap:var(--sp-2);padding:var(--sp-1) var(--sp-2);border-radius:var(--r-sm);cursor:pointer;display:flex}.ask-equip-choice[data-on]{background:var(--bg-sunk)}.ask-letter{color:var(--text2);font-weight:var(--fw-regular);flex:none}.ask-equip-items{align-items:baseline;gap:var(--sp-1) 0;flex-wrap:wrap;display:flex}.ask-equip-item:not(:last-of-type):after{content:\"、\";color:var(--text3)}.ask-equip-pick{min-width:180px}.ask-gold{gap:var(--sp-2);flex-direction:column;display:flex}.ask-gold label{align-items:center;gap:var(--sp-2);display:flex}.ask-asi-grid{gap:2px;max-width:420px;display:grid}.ask-asi-row{align-items:center;gap:var(--sp-2);padding:var(--sp-1) var(--sp-2);border-radius:var(--r-sm);grid-template-columns:4em 3em auto 4em;display:grid}.ask-asi-row[data-up]{background:var(--bg-sunk)}.ask-asi-now,.ask-asi-to{font-variant-numeric:tabular-nums;color:var(--text2)}.ask-asi-row[data-up] .ask-asi-to{color:var(--text);font-weight:var(--fw-semibold)}.ask-asi-ctl{align-items:center;gap:var(--sp-1);display:inline-flex}.ask-asi-ctl i{text-align:center;font-variant-numeric:tabular-nums;min-width:2em;font-style:normal}.ask-note[data-done]{color:var(--success-text)}.ask-feat{gap:var(--sp-2);grid-template-rows:auto minmax(160px,280px) auto;display:grid}.ask-feat-list{border:var(--border) solid var(--line);border-radius:var(--r-sm)}.ask-added{gap:var(--sp-2) var(--sp-4);grid-template-columns:auto minmax(0,1fr);margin:0;display:grid}.ask-added dt{color:var(--text2);font-size:var(--fs-sm);white-space:nowrap}.ask-added dd{line-height:var(--lh-normal,1.6);margin:0}", DRe = ".trpg-root{z-index:100000;width:0;height:0;position:fixed;top:0;left:0}.trpg-ball{background:var(--primary);width:48px;height:48px;color:var(--on-primary);box-shadow:var(--shadow-2);cursor:grab;touch-action:none;transition:background var(--dur-fast) var(--ease-std);border:0;border-radius:50%;place-items:center;padding:0;display:grid;position:fixed}.trpg-ball:hover{background:var(--primary-hover)}.trpg-ball:active{background:var(--primary-pressed)}.trpg-window{background:var(--bg);border:var(--border) solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-3);color:var(--text);display:flex;position:fixed;overflow:hidden}.trpg-window[data-fullscreen=true]{border:0;border-radius:0;height:100dvh;inset:0}.trpg-shell{flex:1;min-width:0;min-height:0;display:flex}.trpg-window[data-layout=narrow] .trpg-shell{padding-top:env(safe-area-inset-top);background:var(--surface)}.trpg-side{z-index:5;width:var(--side-w);padding-bottom:var(--sp-2);background:var(--side);color:var(--side-ink);border-right:var(--border) solid var(--side-line);flex-direction:column;flex:none;display:flex;position:relative}.trpg-window[data-layout=mid] .trpg-side{width:56px}.trpg-side__brand{height:var(--head-h);align-items:center;gap:var(--sp-2);padding:0 var(--sp-4);font-weight:var(--fw-semibold);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;flex:none;display:flex}.trpg-window[data-layout=mid] .trpg-side__brand{justify-content:center;padding:0}.trpg-brandmark{border-radius:var(--r-sm);background:var(--primary-hover);width:28px;height:28px;color:var(--on-primary);flex:none;place-items:center;display:grid}.trpg-side__list{padding:var(--sp-2);gap:2px;margin:0;display:grid}.trpg-side__list li{position:relative}.trpg-side__bottom{margin-top:auto}.trpg-nav{width:100%;min-height:var(--hit-touch);align-items:center;gap:var(--sp-3);padding:0 var(--sp-3);border-radius:var(--r-sm);color:var(--side-ink2);text-align:left;transition:background var(--dur-fast) var(--ease-std), color var(--dur-fast) var(--ease-std);background:0 0;border:0;display:flex}.trpg-window[data-layout=mid] .trpg-nav{justify-content:center;padding:0}.trpg-nav:hover{background:var(--side-hover);color:var(--side-ink)}.trpg-nav:active{background:var(--side-active)}.trpg-nav[aria-current=page]{background:var(--side-active);color:var(--side-ink);font-weight:var(--fw-semibold);box-shadow:inset 3px 0 0 var(--primary-hover)}.trpg-side :focus-visible,.trpg-tabs :focus-visible{box-shadow:0 0 0 2px var(--side), 0 0 0 4px var(--side-ink2)}.trpg-main{background:var(--bg);flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.trpg-head{height:var(--head-h);align-items:center;gap:var(--sp-3);padding:0 var(--sp-3) 0 var(--sp-5);background:var(--head-bg);color:var(--head-ink);border-bottom:var(--border) solid var(--head-line);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;flex:none;display:flex}.trpg-window[data-fullscreen=true] .trpg-head{cursor:default}.trpg-window[data-layout=narrow] .trpg-head{padding:0 var(--sp-2) 0 var(--sp-4)}.trpg-head__title{min-width:0;font-size:var(--fs-xl);font-weight:var(--fw-semibold);text-overflow:ellipsis;white-space:nowrap;flex:1;overflow:hidden}.trpg-head__chips{align-items:center;gap:var(--sp-2);min-width:0;display:flex}.trpg-chip{cursor:pointer;max-width:260px}.trpg-chip__camp{font-weight:var(--fw-semibold);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.trpg-chip__save{color:var(--head-ink2);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.trpg-head .trpg-pill,.trpg-head .trpg-chip{color:var(--head-ink);border-color:var(--head-line);background:0 0}.trpg-head .trpg-icon-btn{color:var(--head-ink)}.trpg-head .trpg-icon-btn:hover{background:var(--head-hover);color:var(--head-ink)}.trpg-body{flex:1;min-height:0;display:flex;position:relative}.trpg-content{min-width:0;padding:var(--sp-4) var(--sp-5) 88px;outline:none;flex:1;overflow:auto}.trpg-window[data-layout=narrow] .trpg-content{padding:var(--sp-3) var(--sp-4) 88px}.trpg-content[data-flush=true],.trpg-window[data-layout=narrow] .trpg-content[data-flush=true]{padding:0}.trpg-dice-btn{right:var(--sp-5);bottom:var(--sp-5);z-index:6;background:var(--primary);width:52px;height:52px;color:var(--on-primary);box-shadow:var(--shadow-2);transition:transform var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-std);border:0;border-radius:50%;place-items:center;padding:0;display:grid;position:absolute}.trpg-window[data-layout=narrow] .trpg-dice-btn{right:var(--sp-4);bottom:var(--sp-4)}.trpg-dice-btn:hover{background:var(--primary-hover);transform:translateY(-1px)}.trpg-dice-btn:active{background:var(--primary-pressed);transform:none}.trpg-dice-btn[aria-pressed=true]{box-shadow:0 0 0 3px var(--surface), 0 0 0 5px var(--primary), var(--shadow-2)}.trpg-tabs{background:var(--side);height:56px;color:var(--side-ink2);padding-bottom:env(safe-area-inset-bottom);box-sizing:content-box;flex:none;display:flex}.trpg-tab{min-width:64px;color:inherit;font-size:var(--fs-xs);background:0 0;border:0;flex-direction:column;flex:1;justify-content:center;align-items:center;gap:2px;display:flex;position:relative}.trpg-tab[aria-current=page]{color:var(--side-ink);box-shadow:inset 0 3px 0 var(--primary-hover)}.trpg-resize{z-index:30;cursor:nwse-resize;touch-action:none;background:linear-gradient(135deg, transparent 50%, var(--line-ctrl) 50%, var(--line-ctrl) 58%, transparent 58%, transparent 70%, var(--line-ctrl) 70%, var(--line-ctrl) 78%, transparent 78%);opacity:.6;width:22px;height:22px;position:absolute;bottom:0;right:0}.trpg-libmark{flex:none;width:30px;height:30px;display:inline-flex;position:relative}.trpg-libmark__icon{place-items:center;width:30px;height:30px;display:inline-grid;position:relative}.trpg-libmark__icon>.trpg-ring{position:absolute;inset:0}.trpg-count{border-radius:var(--r-pill);background:var(--accent);min-width:16px;height:16px;color:var(--side);font-size:10px;line-height:16px;font-weight:var(--fw-semibold);text-align:center;box-sizing:border-box;pointer-events:none;padding:0 4px;position:absolute;bottom:-3px;right:-5px}.trpg-ring{flex:none;place-items:center;display:inline-grid;position:relative}.trpg-ring svg{display:block}.trpg-ring [data-part=track]{stroke:var(--line-ctrl)}.trpg-ring [data-part=arc]{stroke:var(--primary);transition:stroke-dasharray var(--dur-ring) var(--ease-std)}.trpg-ring[data-state=spin] svg{animation:trpg-spin var(--dur-spin) linear infinite}.trpg-ring__badge{background:var(--accent);min-width:14px;height:14px;color:var(--on-accent);font-size:10px;font-weight:var(--fw-bold);border-radius:50%;place-items:center;line-height:1;display:grid;position:absolute;top:-4px;right:-4px}.trpg-side .trpg-ring [data-part=track],.trpg-tabs .trpg-ring [data-part=track]{stroke:var(--side-hover)}.trpg-side .trpg-ring [data-part=arc],.trpg-tabs .trpg-ring [data-part=arc]{stroke:var(--accent)}.trpg-pop{z-index:100003;overflow-wrap:anywhere;width:min(320px,100vw - 16px);max-height:min(60vh,420px);padding:var(--sp-2) var(--sp-3) var(--sp-3);gap:var(--sp-2);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--text);box-shadow:var(--shadow-3);animation:trpg-fade var(--dur-fast) var(--ease-out);text-align:left;font-weight:var(--fw-regular);display:grid;position:fixed;overflow:auto}.trpg-pop h3{font-size:var(--fs-sm);color:var(--text2);font-weight:var(--fw-semibold);margin:0}.trpg-pop__row{gap:var(--sp-2);padding-top:var(--sp-2);border-top:var(--border) solid var(--line);grid-template-columns:26px minmax(0,1fr) auto;align-items:center;display:grid}.trpg-pop__row:first-of-type{border-top:0;padding-top:0}.trpg-pop__ring{width:26px;height:26px;display:inline-flex}.trpg-pop__main{min-width:0;display:grid}.trpg-pop__main b{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.trpg-pop__main small{color:var(--text2);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.trpg-pop__row[data-status=failed] .trpg-pop__main small{color:var(--danger-text);white-space:normal;-webkit-line-clamp:2;-webkit-box-orient:vertical;display:-webkit-box;overflow:hidden}.trpg-pop__acts{gap:var(--sp-1);align-items:center;display:inline-flex}.trpg-pop__foot{justify-content:flex-end;display:flex}@keyframes trpg-fade{0%{opacity:0}}@keyframes trpg-spin{to{transform:rotate(360deg)}}.trpg-toasts{left:0;right:0;top:var(--trpg-host-top,48px);z-index:var(--z-toast);justify-items:center;gap:var(--sp-2);padding:0 var(--sp-3);pointer-events:none;display:grid;position:fixed}.trpg-toast{pointer-events:auto;align-items:center;gap:var(--sp-3);max-width:min(92vw,520px);padding:var(--sp-2) var(--sp-4);border-radius:var(--r-md);background:var(--hero-bg);color:var(--hero-ink);box-shadow:var(--shadow-2);cursor:pointer;display:flex}.trpg-toast[data-kind=error]{background:var(--surface);color:var(--text);box-shadow:var(--shadow-2), inset 0 0 0 2px var(--danger-line)}.trpg-toast[data-kind=error] .trpg-icon{color:var(--danger-text)}.trpg-toast[data-kind=success] .trpg-icon{color:var(--accent)}.trpg-toasts__banners,.trpg-toasts__list{justify-items:center;gap:var(--sp-2);display:grid}.trpg-toasts__banners{max-height:60vh;padding:var(--sp-1);overflow:auto}.trpg-toast--banner{cursor:default;width:min(92vw,520px)}.trpg-toast--more{justify-self:center;gap:var(--sp-1);padding:2px var(--sp-3);font:inherit;font-size:var(--fs-xs);border:0}.trpg-toast__text{overflow-wrap:anywhere;flex:1;min-width:0}.trpg-toast small{color:var(--hero-ink2);white-space:nowrap}.trpg-toast[data-kind=error] small{color:var(--text2)}.trpg-toast__btn{color:var(--accent);font-weight:var(--fw-semibold);min-height:32px;padding:0 var(--sp-2);background:0 0;border:0}.trpg-toast[data-kind=error] .trpg-toast__btn{color:var(--primary-text)}.trpg-toast-enter-active{animation:trpg-drop var(--dur-base) var(--ease-out)}.trpg-toast-leave-active{transition:opacity var(--dur-fast) var(--ease-in), transform var(--dur-fast) var(--ease-in)}.trpg-toast-leave-to{opacity:0;transform:translateY(-6px)}@keyframes trpg-drop{0%{opacity:0;transform:translateY(-8px)}}", $9 = "trpg-assistant-root";
+function ORe(e) {
 	if (document.getElementById($9)) return null;
 	let t = document.createElement("div");
 	t.id = $9;
@@ -78285,39 +78344,39 @@ function ERe(e) {
 	r.textContent = [
 		ue,
 		oe,
-		fRe,
-		TRe,
-		hRe,
+		mRe,
+		DRe,
 		_Re,
-		gRe,
-		vRe,
 		yRe,
+		vRe,
 		bRe,
 		xRe,
 		SRe,
 		CRe,
 		wRe,
-		mRe,
-		dRe,
-		pRe
+		TRe,
+		ERe,
+		gRe,
+		pRe,
+		hRe
 	].join("\n");
 	let i = document.createElement("div");
 	i.className = "trpg-portal";
 	let a = document.createElement("div");
 	n.append(r, a, i), document.body.appendChild(t);
 	let o = Ak();
-	return cd(uRe, {
+	return cd(fRe, {
 		ctx: e,
 		portalTarget: i
 	}).use(o).mount(a), o;
 }
 // src/main.ts
-async function DRe() {
+async function kRe() {
 	if (window.__trpgAssistantBooted) return;
 	window.__trpgAssistantBooted = !0, await Ue();
-	let e = Ve(), t = ERe(e);
+	let e = Ve(), t = ORe(e);
 	t && await uie(e, t);
 }
-DRe().catch((e) => {
+kRe().catch((e) => {
 	window.__trpgAssistantBooted = !1, console.error("[trpg-assistant] 启动失败", e);
 });

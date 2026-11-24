@@ -54,10 +54,21 @@ const titleCase = (text: string): string => g.Renderer.stripTags(text).toTitleCa
 
 /** 作者加载器的三块来源：官方、预发布、自制包（读哪些由本战役装了什么决定，这里一块都不挑；本战役看得见哪些在主线按战役范围筛）。 */
 const LOAD_SPACES = ['pCacheAndGetAllSite', 'pCacheAndGetAllPrerelease', 'pCacheAndGetAllBrew']
-let cache: any[] | null = null
-const allItems = async (): Promise<any[]> => (cache ??= (await Promise.all(LOAD_SPACES.map(async (fn) => (await g.DataLoader[fn]('item')) ?? []))).flat())
+let cache: Promise<any[]> | null = null
+function allItems(): Promise<any[]> {
+  if (cache) return cache
+  const pending = Promise.all(LOAD_SPACES.map(async (fn) => (await g.DataLoader[fn]('item')) ?? [])).then((rows) => rows.flat())
+  cache = pending
+  void pending.catch(() => { if (cache === pending) cache = null })
+  return pending
+}
 /** 预读物品资料（起始装备「任选一件」的候选要用）：只读资料、不改人物；问答开始后在后台跑，到装备题不用再等。 */
-export const warmItems = async (): Promise<number> => (await allItems()).length
+export const warmItems = async (): Promise<number> => {
+  const items = await allItems()
+  // 作者第一次导入装备时会对照 dnd5e 的职业 / 装备合集包和作者附加资料（实测：classes24 / equipment24 两个包）：先读好合集包里的条目（只读）
+  for (const id of ['dnd5e.classes24', 'dnd5e.equipment24']) await g.game.packs.get(id)?.getDocuments?.()
+  return items.length
+}
 
 const expanderOf = (type: string) => {
   const expanders = plutoniumBuild?.EQUIPMENT_TYPE_EXPANDERS

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, markRaw, onMounted } from 'vue'
+import { computed, markRaw, ref, onMounted } from 'vue'
 import { useCampaignStore } from '../../stores/campaign'
 import { CATEGORIES, SORTS, useRosterStore, type CategoryId, type ListView } from '../../stores/roster'
 import Icon from '../kit/Icon.vue'
@@ -46,12 +46,18 @@ async function bulk(kind: 'move' | 'copy' | 'remove' | 'restore', category?: str
 /** [＋新建] 菜单：新建人物（作者完整建卡器，整页接管）、从模板加入。 */
 const off = computed(() => (readOnly.value ? { disabled: true, reason: '另一个窗口在改' } : {}))
 const NEW_ITEMS = computed(() => [{ key: 'blank', label: '直接新建（空白人物卡）', ...off.value }, { key: 'native', label: '分步建卡…', ...off.value }, { key: 'template', label: '从模板加入…', ...off.value }])
+/** 正在直接新建：点下去马上有反馈（这个战役第一次要先启动规则引擎，要一两秒），期间不能重复点。 */
+const creating = ref(false)
 async function onNew(key: string): Promise<void> {
   if (key === 'blank') {
+    if (creating.value) return
     // 空白人物（照 DiceCloud）：建好直接进详情页填
     const category = CATEGORIES.some((c) => c.id === store.view) ? (store.view as CategoryId) : 'party'
-    const id = await store.addBlank(`新人物 ${store.counts.all + 1}`, category)
-    if (id) person.open(id)
+    creating.value = true
+    try {
+      const id = await store.addBlank(`新人物 ${store.counts.all + 1}`, category)
+      if (id) person.open(id)
+    } finally { creating.value = false }
     return
   }
   if (key === 'native') {
@@ -74,6 +80,7 @@ const headerMenu = computed(() => [trash.value ? { key: 'back', label: '回到�
       <div class="pp-tools">
         <MoreMenu label="排序" :text="sortLabel" :items="SORTS.map((s) => ({ key: s.id, label: s.label }))" @select="(k) => (store.sort = k as 'manual' | 'name')" />
         <button class="trpg-btn trpg-btn--small" type="button" data-testid="pp-select" :aria-pressed="store.selecting" @click="store.toggleSelecting()">{{ store.selecting ? '完成' : '选择' }}</button>
+        <span v-if="creating" class="pp-busy" role="status" data-testid="pp-creating">正在新建…</span>
         <MoreMenu v-if="!trash" label="新建" text="＋ 新建" primary :items="NEW_ITEMS" @select="onNew" />
         <MoreMenu label="人物页" :items="headerMenu" @select="(k) => store.setView(k === 'back' ? 'party' : 'trash')" />
       </div>

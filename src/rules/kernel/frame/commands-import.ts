@@ -41,7 +41,7 @@ export function createImportCommands(operate: Operate, actor: ActorGetter) {
       if (!importer) throw Error(`作者没有「${row.prop}」的导入器`)
       const before = new Set(a.items.map((item: any) => item.id))
       try {
-        const { value: summary, asked } = await withAuthorAnswers<any>(answers, () => importer.pImportEntry(structuredClone(row.entry), new api.importer.ImportOpts({ actor: a })))
+        const summary = await withAuthorAnswers<any>(answers, () => importer.pImportEntry(structuredClone(row.entry), new api.importer.ImportOpts({ actor: a })))
         // 种类名按 dnd5e 自己的种类语言键（CONFIG.Item.typeLabels）交出，主线过显示出口
         // 作者导入时跟着条目来的物品（起始装备等）标记只有 页面 + 来源 + 编号：按作者自己的页面 → 类别登记补上类别（物品页 → item，
         // 和作者单独换算时写的一样），存档里「用了哪些库条目」、取名、删书提示才认得它；不是真页面（raceFeature 等）的不动
@@ -55,7 +55,7 @@ export function createImportCommands(operate: Operate, actor: ActorGetter) {
         const added = a.items.filter((item: any) => !before.has(item.id)).map((item: any) => ({ _id: item.id, name: item.name, label: itemText(item, [row.entry]).name, type: item.type, typeLabel: keyText(String(g.CONFIG.Item.typeLabels?.[item.type] ?? '')), flags: { plutonium: item.flags?.plutonium ?? null } }))
         // 作者的结果状态是符号（ConstsTaskRunner.TASK_EXIT_*），交它的描述：taskExitComplete / taskExitCancelled / taskExitCompleteFailed …
         const exit = typeof summary?.status === 'symbol' ? summary.status.description ?? null : null
-        return { exit, asked, added }
+        return { exit, added }
       } catch (error) {
         if (error instanceof NeedsAnswer) return { kernelStatus: 'pending', pending: { question: error.question }, question: error.question }
         throw error

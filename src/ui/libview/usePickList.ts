@@ -20,6 +20,7 @@ export function usePickList(propOf: (lib: CampaignLibrary) => string, scrollEl: 
   const rows = shallowRef<PickItem[] | null>(null)
   const error = ref<string | null>(null)
   const q = ref('')
+  const source = ref('all')
   const picked = ref<string | null>(null)
   async function load(): Promise<void> {
     error.value = null
@@ -33,12 +34,32 @@ export function usePickList(propOf: (lib: CampaignLibrary) => string, scrollEl: 
   }
   // 资料卡（库的条目页）要读「本战役选书设置」：没读过就先读
   onMounted(() => { void load(); if (!lib.campaignLib || !lib.bound) void lib.load(app.svc(), campaign.owner?.ownerKey ?? null) })
-  const shown = computed(() => { const n = q.value.trim().toLowerCase(); return (rows.value ?? []).filter((r) => !n || r.name.toLowerCase().includes(n)) })
+  const sources = computed(() => {
+    const installed = new Set((rows.value ?? []).flatMap(({ row }) => row.source ? [row.source] : []))
+    const names = new Map<string, string>()
+    for (const group of lib.shelf?.groups ?? []) {
+      for (const book of [...group.books, ...group.adventures]) names.set(book.source, book.name)
+    }
+    return [
+      { value: 'all', label: '全部来源' },
+      ...[...installed].sort().map((value) => ({ value, label: names.has(value) ? `${names.get(value)}（${value}）` : value })),
+    ]
+  })
+  const shown = computed(() => {
+    const n = q.value.trim().toLowerCase()
+    return (rows.value ?? []).filter(({ name, row }) => {
+      if (source.value !== 'all' && row.source !== source.value) return false
+      if (!n) return true
+      const english = (row.item as { ENG_name?: unknown } | null)?.ENG_name
+      return name.toLowerCase().includes(n) || (typeof english === 'string' && english.toLowerCase().includes(n))
+    })
+  })
   const current = computed(() => shown.value.find((r) => pickKey(r.row) === picked.value) ?? null)
   // 搜索后当前这条不在结果里：自动换成结果里的第一条
   watch(shown, (list) => { if (!list.some((r) => pickKey(r.row) === picked.value)) picked.value = list[0] ? pickKey(list[0].row) : null }, { immediate: true })
-  const { range } = useVirtual(scrollEl, computed(() => shown.value.length))
+  const { range, toTop } = useVirtual(scrollEl, computed(() => shown.value.length))
+  watch([q, source], toTop)
   const visible = computed(() => shown.value.slice(range.value.start, range.value.end))
   const ref_ = computed<EntryRef | null>(() => current.value?.row.ref ?? null)
-  return { rows, error, q, picked, load, shown, current, range, visible, ref_, lib }
+  return { rows, error, q, source, sources, picked, load, shown, current, range, visible, ref_, lib }
 }

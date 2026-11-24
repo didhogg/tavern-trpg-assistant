@@ -58,6 +58,8 @@
 .tp { display: grid; grid-template-columns: minmax(240px, 5fr) 7fr; grid-template-rows: minmax(0, 1fr) auto; height: 100%; min-height: 0; }
 .trpg-window[data-layout='narrow'] .tp, .trpg-window[data-layout='mid'] .tp { grid-template-columns: 1fr; }
 .tp-list { display: flex; flex-direction: column; min-height: 0; border-right: var(--border) solid var(--line); }
+.tp-search { display: grid; gap: var(--sp-2); }
+.tp-search .trpg-select-trigger { width: 100%; min-width: 0; }
 .tp-card { min-height: 0; overflow: auto; }
 .tp-row[data-picked] { background: var(--primary-tint); box-shadow: inset 3px 0 0 var(--accent); }
 .tp-bar { grid-column: 1 / -1; display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); background: var(--bg-side); border-top: var(--border) solid var(--line-ctrl); }
@@ -79,3 +81,7 @@
 .trpg-modal:has(.bp) .trpg-page-leave-active { pointer-events: none; }
 /* 分步建卡弹窗宽屏放宽到 880（驾驶员 2026-11-22 选 A：10 个步骤一行放下）；窄屏仍铺满 */
 .trpg-window:not([data-layout='narrow']) .trpg-modal:has(.bp) .trpg-modal__card { width: min(880px, 100%); height: min(680px, 100%); }
+/* 直接新建进行中（第一次要启动规则引擎）：按钮旁小转圈 + 文字 */
+.pp-busy { display: inline-flex; align-items: center; gap: var(--sp-2); color: var(--text2); font-size: var(--fs-sm); }
+.pp-busy::before { content: ''; width: 10px; height: 10px; border: 2px solid var(--line-ctrl); border-top-color: var(--accent); border-radius: 50%; animation: ask-spin .8s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .pp-busy::before { animation: none; } }
