@@ -21,8 +21,8 @@ export function openPick(kind: AddKind, replace?: { id: string; name: string }, 
 }
 
 /** 已经知道是哪一条（升级：这个人的职业）：直接一问一答导入（作者「导入到人物」整路，第一题选到第几级）。 */
-export function openImport(entryRef: unknown, name: string, title: string): void {
-  useModalStore().open({ key: 'person-import', title, component: markRaw(ImportAsk), props: { entryRef, name, closeOnBack: true }, variant: 'dialog', width: 760, height: 680 })
+export function openImport(entryRef: unknown, name: string, title: string, level?: number): void {
+  useModalStore().open({ key: 'person-import', title, component: markRaw(ImportAsk), props: { entryRef, name, closeOnBack: true, level }, variant: 'dialog', width: 760, height: 680 })
 }
 
 /** 用作者完整建卡器改这个人（升级 / 兼职 / 要做选择的成长；空白人物从头建）。 */

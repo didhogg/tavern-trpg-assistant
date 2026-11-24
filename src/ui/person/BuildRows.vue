@@ -33,7 +33,7 @@ const levelItems = (c: ClassBuild) => c.levelsMenu.filter((o) => o.delta).map((o
 const canUp = (c: ClassBuild): boolean => !!c.ref && c.levelsMenu.some((o) => o.delta === 1 && !o.disabled)
 /** 升级 = 作者「导入到人物」同一个职业（第一题选到第几级，要做的选择一题一题问）；降级 = 官方 forLevelChange（退回成长，不用选）。 */
 function setLevel(c: ClassBuild, delta: number): void {
-  if (delta > 0 && c.ref) openImport(c.ref, c.name, `${c.name}升级`)
+  if (delta > 0 && c.ref) openImport(c.ref, c.name, `${c.name}升级`, c.levels + delta)
   else if (delta < 0) void person.level(`${c.name}降到 ${c.levels + delta} 级`, c.id, delta)
 }
 /** 选子职业：从库里只列这个职业的子职业（子职业条目记着所属职业的名字和来源，和库里职业条目同一套）。 */

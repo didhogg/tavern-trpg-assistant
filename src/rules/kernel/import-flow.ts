@@ -17,7 +17,8 @@ import { executed } from './host'
 interface AddedRow { _id: string; name: string; label?: FrameText; type: string; typeLabel?: FrameText | null }
 export type ImportQuestion = Displayed<AskQuestion>
 export type ImportStep =
-  | { status: 'question'; question: ImportQuestion; ms: number }
+  /** missed = 显示出口没翻到的字（检查用，界面不显示）。 */
+  | { status: 'question'; question: ImportQuestion; ms: number; missed: string[] }
   | { status: 'ready'; changes: KernelChange[]; added: Array<{ id: string; type: string; typeLabel: string; name: string }>; ms: number }
   | { status: 'error'; error: string; ms: number }
 
@@ -30,9 +31,11 @@ export class KernelImportFlow {
     const ms = () => Math.round(performance.now() - t0)
     const out = await this.run(ownerKey, actorId, ref, answers, replaceItemId)
     if (out.status === 'pending' && out.question) {
+      // 第一题出来后玩家要想一会儿：后台先把物品资料读好（起始装备题要用），不等它
+      if (!answers.length) void this.deps.runtime.session(ownerKey).then(({ session }) => session.call('warmImport')).catch((e: unknown) => console.warn('[trpg-assistant] 预读物品资料没成功', e))
       await this.deps.people.cancel(ownerKey, [actorId])
       const shown = await (await this.deps.runtime.displayFor(ownerKey, [ref])).show(out.question as AskQuestion)
-      return { status: 'question', question: shown.value as ImportQuestion, ms: ms() }
+      return { status: 'question', question: shown.value as ImportQuestion, ms: ms(), missed: shown.missed }
     }
     if (out.status !== 'complete') {
       if (out.changes?.length) await this.deps.people.cancel(ownerKey, [actorId])

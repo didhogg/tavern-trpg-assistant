@@ -56,6 +56,8 @@ const titleCase = (text: string): string => g.Renderer.stripTags(text).toTitleCa
 const LOAD_SPACES = ['pCacheAndGetAllSite', 'pCacheAndGetAllPrerelease', 'pCacheAndGetAllBrew']
 let cache: any[] | null = null
 const allItems = async (): Promise<any[]> => (cache ??= (await Promise.all(LOAD_SPACES.map(async (fn) => (await g.DataLoader[fn]('item')) ?? []))).flat())
+/** 预读物品资料（起始装备「任选一件」的候选要用）：只读资料、不改人物；问答开始后在后台跑，到装备题不用再等。 */
+export const warmItems = async (): Promise<number> => (await allItems()).length
 
 const expanderOf = (type: string) => {
   const expanders = plutoniumBuild?.EQUIPMENT_TYPE_EXPANDERS

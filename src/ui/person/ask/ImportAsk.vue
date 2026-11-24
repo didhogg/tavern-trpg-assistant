@@ -14,7 +14,8 @@ import AskEquipment from './AskEquipment.vue'
 import AskForm from './AskForm.vue'
 
 /** closeOnBack：直接打开的（升级）没有上一页，返回 = 关掉弹窗。 */
-const props = defineProps<{ entryRef: EntryRef; name: string; replace?: { id: string; name: string }; closeOnBack?: boolean }>()
+/** level：从等级菜单「改到第几级」进来的，等级题预先选好这一级。 */
+const props = defineProps<{ entryRef: EntryRef; name: string; replace?: { id: string; name: string }; closeOnBack?: boolean; level?: number }>()
 const emit = defineEmits<{ back: [] }>()
 const person = usePersonStore()
 const modal = useModalStore()
@@ -116,7 +117,7 @@ const formKind = computed(() => question.value?.form.type === 'equipment' ? AskE
       <template v-else-if="question">
         <h3 class="ask-title" data-testid="ask-title">{{ question.title ?? '请选择' }}</h3>
         <p v-if="question.note" class="ask-note">{{ question.note }}</p>
-        <component :is="formKind" :key="answers.length" :question="question" :busy="busy" @answer="(a: AskAnswer | null) => (pending = a)" @submit="(a: AskAnswer) => next(a)" />
+        <component :is="formKind" :key="answers.length" :question="question" :busy="busy" :level="level" @answer="(a: AskAnswer | null) => (pending = a)" @submit="(a: AskAnswer) => next(a)" />
       </template>
       <div v-else-if="step.status === 'ready'" class="ask-ready" data-testid="ask-ready">
         <h3 class="ask-title">{{ replace ? `换成${name}后会加上` : `加上${name}会带来` }}</h3>

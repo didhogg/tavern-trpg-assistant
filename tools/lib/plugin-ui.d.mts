@@ -16,6 +16,8 @@ export interface ApprovedRow {
   translation: string
 }
 export const PLUGIN_UI: { lang: 'zh'; package: 'plutonium' }
+/** 模板句英文原文的编号（和 upstreamKey 同一个摘要，前缀 UpstreamSource）。 */
+export function upstreamSourceKey(text: string): string
 export function checkPlaceholders(text: string, translation: string): true
 export function pluginUiRows(draft: unknown): PluginUiRow[]
 export function pluginUiStats(rows: PluginUiRow[]): { total: number; final: number; review: number; byFrom: Record<string, number> }

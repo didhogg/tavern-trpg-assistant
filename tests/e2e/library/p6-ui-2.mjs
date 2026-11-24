@@ -58,7 +58,8 @@ try {
   const act = await page.getByTestId('ps-actions').innerText()
   const axe = await page.getByTestId('ps-act-action').innerText()
   check('玩家角色也按动作类型分组：有「动作」组，武器在里面，带命中和中文伤害', /动作/.test(axe) && /\+\d/.test(axe) && /\d+d\d+[^\n]*[一-鿿]/.test(axe), axe.replace(/\s+/g, ' '))
-  check('被动特性放最后一组「特性」', (await page.locator('[data-testid=ps-act] .dt-grp').last().getAttribute('data-testid')) === 'ps-act-passive')
+  // 行动页照 Tidy5e isItemInActionList：没有动作类型的被动特性不进行动页（11-24 改）
+  check('行动页照 Tidy5e：被动特性不进行动页', !(await page.locator('[data-testid=ps-act-passive]').count()))
   check('行动页没有生的语言键或英文类别', !raw(act), act.replace(/\s+/g, ' ').slice(0, 300))
   await page.getByTestId('ps-act-action').locator('.dt-title').first().click(); await settle(page, 2500)
   const detail = await page.locator('.dt-detail').innerText()

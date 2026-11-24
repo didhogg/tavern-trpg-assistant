@@ -43,6 +43,14 @@ export function createImportCommands(operate: Operate, actor: ActorGetter) {
       try {
         const { value: summary, asked } = await withAuthorAnswers<any>(answers, () => importer.pImportEntry(structuredClone(row.entry), new api.importer.ImportOpts({ actor: a })))
         // 种类名按 dnd5e 自己的种类语言键（CONFIG.Item.typeLabels）交出，主线过显示出口
+        // 作者导入时跟着条目来的物品（起始装备等）标记只有 页面 + 来源 + 编号：按作者自己的页面 → 类别登记补上类别（物品页 → item，
+        // 和作者单独换算时写的一样），存档里「用了哪些库条目」、取名、删书提示才认得它；不是真页面（raceFeature 等）的不动
+        const fill = a.items.filter((item: any) => !before.has(item.id)).flatMap((item: any) => {
+          const f = item.flags?.plutonium
+          const prop = f && !f.propDroppable && typeof f.page === 'string' && f.page.endsWith('.html') ? g.UrlUtil?.PAGE_TO_PROPS?.[f.page]?.[0] : null
+          return prop ? [{ _id: item.id, 'flags.plutonium.propDroppable': prop }] : []
+        })
+        if (fill.length) await a.updateEmbeddedDocuments('Item', fill)
         // 名字和人物页同一个取名出口（itemText：作者编号 / 在这条条目里的位置）；条目顺序 = 主线 displayFor([这条]) 的顺序
         const added = a.items.filter((item: any) => !before.has(item.id)).map((item: any) => ({ _id: item.id, name: item.name, label: itemText(item, [row.entry]).name, type: item.type, typeLabel: keyText(String(g.CONFIG.Item.typeLabels?.[item.type] ?? '')), flags: { plutonium: item.flags?.plutonium ?? null } }))
         // 作者的结果状态是符号（ConstsTaskRunner.TASK_EXIT_*），交它的描述：taskExitComplete / taskExitCancelled / taskExitCompleteFailed …

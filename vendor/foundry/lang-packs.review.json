@@ -1784,7 +1784,7 @@
   {
    "package": "module:plutonium",
    "total": 1099,
-   "translated": 571,
+   "translated": 575,
    "fromCommunity": 0,
    "conflicts": 0,
    "groupsWithCategory": 2,
@@ -12056,11 +12056,11 @@
   }
  ],
  "pluginUi": {
-  "total": 373,
-  "final": 339,
+  "total": 377,
+  "final": 343,
   "review": 34,
   "byFrom": {
-   "agent": 226,
+   "agent": 230,
    "dnd5e:DND5E.Abilities": 1,
    "dnd5e:DND5E.ActionAbil": 1,
    "dnd5e:DND5E.ADVANCEMENT.AbilityScoreImprovement.Journal.Name": 1,
@@ -12163,7 +12163,7 @@
    "dnd5e:DND5E.ComponentVerbal": 1,
    "dnd5e:DND5E.AbilityWis": 1
   },
-  "included": 327,
+  "included": 331,
   "sharedWithUpstream": 36,
   "approvedOverrides": 22,
   "conflicts": [

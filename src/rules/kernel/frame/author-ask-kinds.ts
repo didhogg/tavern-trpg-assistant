@@ -7,7 +7,7 @@ import { asData, joined, named, plugin, type FrameText } from '../shown'
 import type { AskOption } from '../author-ask-types'
 import { uiTextOf as ui } from './system-text'
 import { plutoniumBuild } from './plutonium-build'
-import { abilityIncreaseApp, abilityScoreComponent, characteristicsComponent, chooseComponent, featureOptionsComponent } from './author-ask-forms'
+import { abilityIncreaseApp, abilityScoreComponent, cantripModal, characteristicsComponent, chooseComponent, featureOptionsComponent } from './author-ask-forms'
 import { equipmentApp } from './author-ask-equipment'
 import type { AskAnswer, AskQuestion } from '../author-ask-types'
 
@@ -124,6 +124,7 @@ export const ASK_KINDS: Record<string, AskKind> = {
   /** 背景特性：作者的下拉（用这个背景的特性 / 另一个背景的 / 自定义）。 */
   Charactermancer_Background_Features: selectComponent,
   EquipmentApp: equipmentApp,
+  Charactermancer_Spell_Modal: cantripModal,
   ActorAbilityScoreIncrease: abilityIncreaseApp,
   Charactermancer_Class_ProficiencyImportModeSelect: selectComponent,
   /** 选职业等级：作者把特性按等级分好（_featureArr）；交回和作者 pGetFormData 同形的等级序号（单选 = 从已有等级补到所选等级）。 */

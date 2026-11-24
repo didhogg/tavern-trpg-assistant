@@ -46,7 +46,7 @@ try {
   await page.locator('.trpg-window nav').getByRole('button', { name: '人物', exact: true }).click()
   await page.waitForSelector('[data-testid=pp-row]'); await settle(page, 600)
   // 空白人物（照 DiceCloud）：＋ 新建 ▸ 空白人物 → 直接进详情
-  await page.getByRole('button', { name: '新建' }).click(); await page.getByRole('menuitem', { name: '空白人物' }).click()
+  await page.getByRole('button', { name: '新建' }).click(); await page.getByRole('menuitem', { name: '直接新建（空白人物卡）' }).click()
   await page.getByTestId('ps-head').waitFor(); await settle(page, 1200)
   await shot('00-blank-head')
   check('空白人物建好并进了详情', /新人物/.test(await page.locator('.ps-name-line').innerText()))

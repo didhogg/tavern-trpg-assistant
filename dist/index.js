@@ -25985,7 +25985,7 @@ var sO = class {
 			refKey: Cv(e.ref),
 			entry: e.entry
 		})));
-		return ZE(a.status) ? (await this.trackAdded(r, t, a.result?.added), {
+		return ZE(a.status) ? (await this.trackAdded(e, t, a.result?.added), {
 			status: "complete",
 			result: a.result,
 			changes: a.changes ?? [],
@@ -25997,38 +25997,11 @@ var sO = class {
 			changes: a.changes ?? []
 		};
 	}
-	async importToActor(e, t, n, r = [], i) {
-		let a = await this.get(e), o = r.flatMap((e) => e.featRef ? [e.featRef] : []), s = await this.entries(e, [n, ...o]);
-		if (s.status !== "complete") return {
-			status: s.status,
-			error: s.error
-		};
-		let [c, ...l] = s.rows, u = 0, d = r.map((e) => e.featRef ? {
-			...e,
-			featRef: void 0,
-			featEntry: l[u++]?.entry
-		} : e), f = await a.session.call("importToActor", t, {
-			prop: c.ref.prop,
-			entry: c.entry
-		}, d, i);
-		return f.status === "pending" ? {
-			status: "pending",
-			question: f.result?.question ?? null,
-			changes: f.changes ?? []
-		} : ZE(f.status) ? (await this.trackAdded(a, t, f.result?.added), {
-			status: "complete",
-			result: f.result,
-			changes: f.changes ?? []
-		}) : {
-			status: f.status,
-			error: f.error ?? `导入状态：${f.status}`,
-			changes: f.changes ?? []
-		};
-	}
 	async trackAdded(e, t, n) {
-		if (!e.bases.has(t) || e.bases.isStored(t) || !Array.isArray(n)) return;
-		let r = new Map(((await OD(e.session, t))?.items ?? []).map((e) => [e._id, e]));
-		e.bases.addItems(t, n.map((e) => r.get(e._id) ?? e));
+		let r = await this.get(e);
+		if (!r.bases.has(t) || r.bases.isStored(t) || !Array.isArray(n)) return;
+		let i = new Map(((await OD(r.session, t))?.items ?? []).map((e) => [e._id, e]));
+		r.bases.addItems(t, n.map((e) => i.get(e._id) ?? e));
 	}
 	async createActors(e, t) {
 		let n = await this.get(e), r = await this.entries(e, t);
@@ -26712,12 +26685,17 @@ var lO = (e) => e.replace(/ \d+$/, ""), uO = (e, t) => t.split(".").reduce((e, t
 		this.deps = e;
 	}
 	async step(e, t, n, r, i) {
-		let a = performance.now(), o = () => Math.round(performance.now() - a), s = await this.deps.runtime.importToActor(e, t, n, r, i);
-		if (s.status === "pending" && s.question) return await this.deps.people.cancel(e, [t]), {
-			status: "question",
-			question: (await (await this.deps.runtime.displayFor(e, [n])).show(s.question)).value,
-			ms: o()
-		};
+		let a = performance.now(), o = () => Math.round(performance.now() - a), s = await this.run(e, t, n, r, i);
+		if (s.status === "pending" && s.question) {
+			r.length || this.deps.runtime.session(e).then(({ session: e }) => e.call("warmImport")).catch((e) => console.warn("[trpg-assistant] 预读物品资料没成功", e)), await this.deps.people.cancel(e, [t]);
+			let i = await (await this.deps.runtime.displayFor(e, [n])).show(s.question);
+			return {
+				status: "question",
+				question: i.value,
+				ms: o(),
+				missed: i.missed
+			};
+		}
 		if (s.status !== "complete") return s.changes?.length && await this.deps.people.cancel(e, [t]), {
 			status: "error",
 			error: s.error ?? `导入没有完成（${s.status}）`,
@@ -26743,6 +26721,34 @@ var lO = (e) => e.replace(/ \d+$/, ""), uO = (e, t) => t.split(".").reduce((e, t
 				typeLabel: String(d.value.types[t] ?? e.type),
 				name: String(d.value.names[t] ?? e.name)
 			}))
+		};
+	}
+	async run(e, t, n, r, i) {
+		let a = this.deps.runtime, o = r.flatMap((e) => e.featRef ? [e.featRef] : []), s = await a.entries(e, [n, ...o]);
+		if (s.status !== "complete") return {
+			status: s.status,
+			error: s.error
+		};
+		let [c, ...l] = s.rows, u = 0, d = r.map((e) => e.featRef ? {
+			...e,
+			featRef: void 0,
+			featEntry: l[u++]?.entry
+		} : e), { session: f } = await a.session(e), p = await f.call("importToActor", t, {
+			prop: c.ref.prop,
+			entry: c.entry
+		}, d, i);
+		return p.status === "pending" ? {
+			status: "pending",
+			question: p.result?.question ?? null,
+			changes: p.changes ?? []
+		} : ZE(p.status) ? (await a.trackAdded(e, t, p.result?.added), {
+			status: "complete",
+			result: p.result,
+			changes: p.changes ?? []
+		}) : {
+			status: p.status,
+			error: p.error ?? `导入状态：${p.status}`,
+			changes: p.changes ?? []
 		};
 	}
 	confirm(e, t) {
@@ -65927,26 +65933,14 @@ var gye = {
 		} catch (t) {
 			return r.error(`${e}失败：${L8(t)}`), await y(), !1;
 		}
-		return await Promise.all([y(), n.refresh()]), r.undoable(e, () => he()), !0;
+		return await Promise.all([y(), n.refresh()]), r.undoable(e, () => pe()), !0;
 	}
-	let w = (e, t) => C(e, (e) => f().edit(e, i.value, t)), T = (e, t) => C(e, async (e) => {
-		let n = await f().add(e, i.value, t);
-		return { outcome: {
-			status: n.added.status,
-			error: n.added.error
-		} };
-	}), E = (e) => C(e === "short" ? "短休" : "长休", (t) => f().act(t, i.value, "rest", i.value, e, [], {})), D = (e, t, n) => C(e, (e) => f().act(e, i.value, "levelUpApply", i.value, t, n)), O = (e, t) => C(e, (e) => f().act(e, i.value, "addToActor", i.value, t.map((e) => ({
+	let w = (e, t) => C(e, (e) => f().edit(e, i.value, t)), T = (e) => C(e === "short" ? "短休" : "长休", (t) => f().act(t, i.value, "rest", i.value, e, [], {})), E = (e, t, n) => C(e, (e) => f().act(e, i.value, "levelUpApply", i.value, t, n)), D = (e, t) => C(e, (e) => f().act(e, i.value, "addToActor", i.value, t.map((e) => ({
 		prop: String(e.type ?? "item"),
 		entry: null,
 		data: e
-	})))), ee = (e, t, n) => C(e, (e) => f().act(e, i.value, "splitStack", i.value, t, n)), te = (e, t, n) => C(e, (e) => f().act(e, i.value, "createScroll", i.value, t, n)), ne = (e, t, n) => C(e, (e) => f().act(e, i.value, "duplicateItem", i.value, t, n)), re = () => C("钱币换算成最少枚数", (e) => f().act(e, i.value, "convertCurrency", i.value)), ie = (e, t) => C(e, (e) => f().remove(e, i.value, t)), ae = (e, t, n) => C(e, async (e) => {
-		let r = await f().replace(e, i.value, t, n);
-		return { outcome: {
-			status: r.added.status,
-			error: r.added.error
-		} };
-	});
-	async function oe(t, n, r) {
+	})))), O = (e, t, n) => C(e, (e) => f().act(e, i.value, "splitStack", i.value, t, n)), ee = (e, t, n) => C(e, (e) => f().act(e, i.value, "createScroll", i.value, t, n)), te = (e, t, n) => C(e, (e) => f().act(e, i.value, "duplicateItem", i.value, t, n)), ne = () => C("钱币换算成最少枚数", (e) => f().act(e, i.value, "convertCurrency", i.value)), re = (e, t) => C(e, (e) => f().remove(e, i.value, t));
+	async function ie(t, n, r) {
 		let a = p(), o = i.value;
 		if (!a || !o) return null;
 		let s = (e) => JSON.parse(JSON.stringify(e));
@@ -65960,12 +65954,12 @@ var gye = {
 			};
 		}
 	}
-	let se = (t, n) => C(t, (t) => e.svc().backend.importFlow.confirm(t, n));
-	async function ce() {
+	let ae = (t, n) => C(t, (t) => e.svc().backend.importFlow.confirm(t, n));
+	async function oe() {
 		let t = p(), n = i.value;
 		t && n && await d(() => e.svc().backend.importFlow.cancel(t, n));
 	}
-	async function le(e) {
+	async function se(e) {
 		let a = p(), o = i.value;
 		if (!a || !o) return "failed";
 		if (t.readOnly) return r.error("另一个窗口正在使用助手，这里只能查看"), "failed";
@@ -65976,13 +65970,13 @@ var gye = {
 		} catch (e) {
 			return r.error(`建卡器没改成：${L8(e)}`), await y(), "failed";
 		}
-		return await Promise.all([y(), n.refresh()]), r.undoable("用建卡器改了这个人", () => he()), "done";
+		return await Promise.all([y(), n.refresh()]), r.undoable("用建卡器改了这个人", () => pe()), "done";
 	}
-	let ue = () => {
+	let ce = () => {
 		let e = p();
 		e && f().stopNative(e);
-	}, de = (e, t) => C(e, (e) => f().adjust(e, [i.value], t));
-	async function fe(e) {
+	}, le = (e, t) => C(e, (e) => f().adjust(e, [i.value], t));
+	async function ue(e) {
 		let t = p();
 		if (!t || !i.value) return null;
 		let n = i.value, r = await d(() => f().attempt(t, n, "damage", n, e, [], {})), o = r.outcome.result?.hp, s = a.value?.system.attributes.hp;
@@ -65993,48 +65987,48 @@ var gye = {
 			changes: r.changes
 		};
 	}
-	let pe = async () => {
+	let de = async () => {
 		let e = p(), t = i.value;
 		e && t && await d(() => f().cancel(e, [t]));
-	}, me = (e, t) => C(e, (e) => f().confirm(e, t.changes));
-	async function he() {
+	}, fe = (e, t) => C(e, (e) => f().confirm(e, t.changes));
+	async function pe() {
 		try {
 			await d(() => t.backendWrite((e) => f().undo(e)));
 		} catch (e) {
 			r.error(`撤销失败：${L8(e)}`);
 		}
-		await _e();
+		await he();
 	}
-	async function ge(e) {
+	async function me(e) {
 		try {
 			await d(() => t.backendWrite((t) => f().undoTo(t, e)));
 		} catch (e) {
 			r.error(`撤销失败：${L8(e)}`);
 		}
-		await _e();
+		await he();
 	}
-	async function _e() {
+	async function he() {
 		await n.refresh(), i.value && !n.rows.some((e) => e.id === i.value) ? S() : await y();
 	}
-	let ve = async () => {
+	let ge = async () => {
 		let e = p();
 		return e ? d(() => f().history(e)) : [];
 	};
-	async function ye(e) {
+	async function _e(e) {
 		let t = p(), n = i.value;
 		if (!t || !n || !e.length) return null;
 		let r = await d(() => f().filterItems(t, n, [...e].map(String)));
 		return r ? new Set(r) : null;
 	}
-	async function be() {
+	async function ve() {
 		let e = p(), t = i.value;
 		return e && t ? d(() => f().shown(e, "specialTraits", t)) : null;
 	}
-	async function xe(e) {
+	async function ye(e) {
 		let t = p();
 		return t ? d(() => f().shown(t, "traitChoices", e)) : null;
 	}
-	async function Se(e) {
+	async function be(e) {
 		let t = p();
 		if (!t || !i.value) return null;
 		let n = i.value, a = await d(() => f().fields(t, n, e));
@@ -66054,32 +66048,30 @@ var gye = {
 		close: S,
 		reload: y,
 		edit: w,
-		add: T,
-		importStep: oe,
-		importConfirm: se,
-		importCancel: ce,
-		create: O,
-		splitStack: ee,
-		createScroll: te,
-		convertCurrency: re,
-		duplicate: ne,
-		remove: ie,
-		replace: ae,
-		adjust: de,
-		fields: Se,
-		traitChoices: xe,
-		specialTraits: be,
-		filterIds: ye,
-		rest: E,
-		level: D,
-		levelNative: le,
-		stopNative: ue,
-		previewHp: fe,
-		cancelHp: pe,
-		confirmHp: me,
-		undo: he,
-		undoTo: ge,
-		history: ve
+		importStep: ie,
+		importConfirm: ae,
+		importCancel: oe,
+		create: D,
+		splitStack: O,
+		createScroll: ee,
+		convertCurrency: ne,
+		duplicate: te,
+		remove: re,
+		adjust: le,
+		fields: be,
+		traitChoices: ye,
+		specialTraits: ve,
+		filterIds: _e,
+		rest: T,
+		level: E,
+		levelNative: se,
+		stopNative: ce,
+		previewHp: ue,
+		cancelHp: de,
+		confirmHp: fe,
+		undo: pe,
+		undoTo: me,
+		history: ge
 	};
 }), Rye = {
 	key: 0,
@@ -67319,14 +67311,15 @@ var abe = ["data-testid"], obe = { class: "ps-drawer-label" }, sbe = ["disabled"
 	__name: "AskForm",
 	props: {
 		question: {},
-		busy: { type: Boolean }
+		busy: { type: Boolean },
+		level: {}
 	},
 	emits: ["answer", "submit"],
 	setup(e, { emit: t }) {
 		let n = e, r = t, i = q(() => n.question.form), a = /* @__PURE__ */ j(null), o = /* @__PURE__ */ j(null), s = /* @__PURE__ */ j(""), c = /* @__PURE__ */ j("0"), l = /* @__PURE__ */ xr({}), u = /* @__PURE__ */ xr({});
 		F(() => n.question, () => {
 			let e = n.question.form;
-			a.value = e.type === "enum" ? e.selected : e.type === "levels" && e.subclass && e.from > 0 ? e.from - 1 : null, o.value = e.type === "number" ? e.value : null, s.value = e.type === "string" ? e.value : "", c.value = e.type === "choose" ? String(e.set) : "0";
+			a.value = e.type === "enum" ? e.selected : e.type === "levels" && n.level && n.level - 1 >= (e.subclass ? 0 : e.from) ? n.level - 1 : e.type === "levels" && e.subclass && e.from > 0 ? e.from - 1 : null, o.value = e.type === "number" ? e.value : null, s.value = e.type === "string" ? e.value : "", c.value = e.type === "choose" ? String(e.set) : "0";
 			for (let e of Object.keys(l)) delete l[e];
 			for (let e of Object.keys(u)) delete u[Number(e)];
 		}, { immediate: !0 });
@@ -67507,7 +67500,8 @@ var abe = ["data-testid"], obe = { class: "ps-drawer-label" }, sbe = ["disabled"
 		entryRef: {},
 		name: {},
 		replace: {},
-		closeOnBack: { type: Boolean }
+		closeOnBack: { type: Boolean },
+		level: {}
 	},
 	emits: ["back"],
 	setup(e, { emit: t }) {
@@ -67615,9 +67609,14 @@ var abe = ["data-testid"], obe = { class: "ps-drawer-label" }, sbe = ["disabled"
 					key: o.value.length,
 					question: m.value,
 					busy: u.value,
+					level: e.level,
 					onAnswer: n[0] ||= (e) => l.value = e,
 					onSubmit: n[1] ||= (e) => h(e)
-				}, null, 40, ["question", "busy"]))
+				}, null, 40, [
+					"question",
+					"busy",
+					"level"
+				]))
 			], 64)) : c.value.status === "ready" ? (B(), V("div", pSe, [U("h3", mSe, A(e.replace ? `换成${e.name}后会加上` : `加上${e.name}会带来`), 1), U("dl", hSe, [(B(!0), V(z, null, R(b.value, (e) => (B(), V(z, { key: e.label }, [U("dt", null, A(e.label), 1), U("dd", null, A(e.names.join("、")), 1)], 64))), 128))])])) : (B(), V("p", gSe, [W(Z, {
 				name: "warning",
 				size: 16
@@ -67864,7 +67863,7 @@ function e5(e, t, n) {
 		height: 680
 	});
 }
-function t5(e, t, n) {
+function t5(e, t, n, r) {
 	hA().open({
 		key: "person-import",
 		title: n,
@@ -67872,7 +67871,8 @@ function t5(e, t, n) {
 		props: {
 			entryRef: e,
 			name: t,
-			closeOnBack: !0
+			closeOnBack: !0,
+			level: r
 		},
 		variant: "dialog",
 		width: 760,
@@ -68447,7 +68447,7 @@ var o5 = (e, t) => (e.items ?? []).find((e) => e.type === t)?.id ?? null, TCe = 
 				return;
 			}
 			let [n, r] = e.split(":"), a = a5(i.value).find((e) => e.id === r);
-			a && (n === "up" && a.ref ? t5(a.ref, a.name, `${a.name}升级`) : t.level(`${a.name}降一级`, r, -1));
+			a && (n === "up" && a.ref ? t5(a.ref, a.name, `${a.name}升级`, a.levels + 1) : t.level(`${a.name}降一级`, r, -1));
 		}
 		return (e, n) => (B(), V("section", kCe, [U("div", ACe, [
 			U("button", {
@@ -70808,7 +70808,7 @@ var HEe = {
 			disabled: r.value || t.disabled
 		})), d = (e) => !!e.ref && e.levelsMenu.some((e) => e.delta === 1 && !e.disabled);
 		function f(e, n) {
-			n > 0 && e.ref ? t5(e.ref, e.name, `${e.name}升级`) : n < 0 && t.level(`${e.name}降到 ${e.levels + n} 级`, e.id, n);
+			n > 0 && e.ref ? t5(e.ref, e.name, `${e.name}升级`, e.levels + n) : n < 0 && t.level(`${e.name}降到 ${e.levels + n} 级`, e.id, n);
 		}
 		function p(e) {
 			e5("subclasses", void 0, (t) => String(t.className ?? "") === e.name && (!e.source || String(t.classSource ?? "").toLowerCase() === e.source.toLowerCase()));
@@ -72781,7 +72781,7 @@ var HEe = {
 			variant: "dialog",
 			width: 560,
 			height: 600
-		}), x = q(() => t.sheet ? q8(t.sheet) : []), S = /* @__PURE__ */ j("skills"), C = q(() => Object.fromEntries(x.value.map((e) => [e.key, e.label]))), w = q(() => t.row?.missing ?? []);
+		}), x = q(() => t.sheet ? q8(t.sheet) : []), S = /* @__PURE__ */ j("favs"), C = q(() => Object.fromEntries(x.value.map((e) => [e.key, e.label]))), w = q(() => t.row?.missing ?? []);
 		return (e, n) => (B(), V("div", EAe, [
 			U("div", DAe, [
 				U("button", {
@@ -72897,11 +72897,11 @@ var HEe = {
 					"onUpdate:modelValue": n[6] ||= (e) => S.value = e,
 					label: "侧栏",
 					options: [{
-						value: "skills",
-						label: "技能"
-					}, {
 						value: "favs",
 						label: "收藏"
+					}, {
+						value: "skills",
+						label: "技能"
 					}]
 				}, null, 8, ["modelValue"]), S.value === "skills" ? (B(), V(z, { key: 0 }, [U("div", BAe, [
 					n[10] ||= U("b", null, "技能", -1),
@@ -72995,7 +72995,7 @@ var HEe = {
 		} : {}), h = q(() => [
 			{
 				key: "blank",
-				label: "空白人物",
+				label: "直接新建（空白人物卡）",
 				...m.value
 			},
 			{

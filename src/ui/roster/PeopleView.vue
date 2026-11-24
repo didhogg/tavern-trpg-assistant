@@ -45,7 +45,7 @@ async function bulk(kind: 'move' | 'copy' | 'remove' | 'restore', category?: str
 }
 /** [＋新建] 菜单：新建人物（作者完整建卡器，整页接管）、从模板加入。 */
 const off = computed(() => (readOnly.value ? { disabled: true, reason: '另一个窗口在改' } : {}))
-const NEW_ITEMS = computed(() => [{ key: 'blank', label: '空白人物', ...off.value }, { key: 'native', label: '分步建卡…', ...off.value }, { key: 'template', label: '从模板加入…', ...off.value }])
+const NEW_ITEMS = computed(() => [{ key: 'blank', label: '直接新建（空白人物卡）', ...off.value }, { key: 'native', label: '分步建卡…', ...off.value }, { key: 'template', label: '从模板加入…', ...off.value }])
 async function onNew(key: string): Promise<void> {
   if (key === 'blank') {
     // 空白人物（照 DiceCloud）：建好直接进详情页填

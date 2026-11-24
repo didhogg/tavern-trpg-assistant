@@ -55,6 +55,8 @@ export function itemText(i: any, entries: unknown[]): { name: FrameText; author?
   //（物品页的第一个类别就是作者给物品记的 item）；raceFeature 这类不是真页面的，照旧按编号在条目里定位
   const derived = raw && !raw.propDroppable && typeof raw.page === 'string' && raw.page.endsWith('.html') ? g.UrlUtil?.PAGE_TO_PROPS?.[raw.page]?.[0] : null
   const f = derived ? { ...raw, propDroppable: derived } : raw
+  // 跟着条目来的（不是作者「直接导入」的那一条本身）：名字可能是条目里写的显示名或杂项文字
+  const follower = !!f?.propDroppable && typeof f.page === 'string' && f.page.endsWith('.html') && !f.isDirectImport
   // 玩家改过名（我们界面改名 / 复制副本时记下 flags.tavern-trpg.named）：名字原样显示玩家起的，不再按作者编号取原名；作者编号照留（还能看库里资料）
   const renamed = i.flags?.['tavern-trpg']?.named === true
   if (f?.propDroppable && typeof f.hash === 'string') {
@@ -62,7 +64,7 @@ export function itemText(i: any, entries: unknown[]): { name: FrameText; author?
     if (renamed) return { name: asData(String(i.name ?? '')), author }
     // 跟着条目来的物品（类别是补的）：名字可能是条目里写的显示名（Prayer Book → 底层物品 Book）或杂项文字，先按名字在条目原文里找，找不到再按编号取库名
     // 都取不到（作者自己生成、库里没有的，如徒手打击）：dnd5e 语言包里同样英文原文的键，再按作者程序字串编号（uiText）
-    return { name: derived ? fromEntry(i.name, namedOr(i.name, author, nameText(String(i.name ?? ''), null) ?? uiText(String(i.name ?? '')))) : named(i.name, author), author }
+    return { name: follower ? fromEntry(i.name, namedOr(i.name, author, nameText(String(i.name ?? ''), null) ?? uiText(String(i.name ?? '')))) : named(i.name, author), author }
   }
   if (renamed) return { name: asData(String(i.name ?? '')) }
   const at = typeof f?.hash === 'string' ? locate(entries, f.hash, String(i.name ?? '')) : null

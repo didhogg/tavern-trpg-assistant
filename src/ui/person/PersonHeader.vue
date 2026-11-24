@@ -120,7 +120,7 @@ function onLevel(key: string): void {
   const [dir, id] = key.split(':')
   const c = classBuilds(s.value).find((x) => x.id === id)
   if (!c) return
-  if (dir === 'up' && c.ref) openImport(c.ref, c.name, `${c.name}升级`)
+  if (dir === 'up' && c.ref) openImport(c.ref, c.name, `${c.name}升级`, c.levels + 1)
   else void person.level(`${c.name}降一级`, id, -1)
 }
 </script>

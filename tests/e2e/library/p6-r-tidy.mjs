@@ -5,6 +5,7 @@ import { rm, mkdir } from 'node:fs/promises'
 import { startStatic } from './static.mjs'
 import { buildAll, E2E_PORT, engines, freshFromBase } from './chain-common.mjs'
 import { check, failures, settle } from '../helpers.mjs'
+import { answerImport } from './ask-helper.mjs'
 
 if (!process.env.SKIP_BUILD) await buildAll()
 const engineName = process.env.ENGINE === 'webkit' ? 'webkit' : 'chrome'
@@ -115,14 +116,16 @@ try {
   check('属性页：豁免熟练开关', (await S('s.system.abilities.str.proficient')) === 1)
   const lv = () => S(`s.items.filter((i) => i.type === 'class').map((i) => i.system.levels)[0]`)
   await attr.getByRole('button', { name: /牧师改到几级/ }).click(); await settle(page, 300)
-  await page.getByRole('menuitem', { name: /改到 3 级/ }).scrollIntoViewIfNeeded(); await page.getByRole('menuitem', { name: /改到 3 级/ }).click(); await settle(page, 3000)
-  check('属性页：等级菜单改到 3 级', (await lv()) === 3)
-  await attr.getByTestId('ps-build-up').click(); await settle(page, 3500)
+  // 升级走作者「导入到人物」问答（等级题已按菜单预选，要做的选择一题一题答完再确认）
+  await page.getByRole('menuitem', { name: /改到 3 级/ }).scrollIntoViewIfNeeded(); await page.getByRole('menuitem', { name: /改到 3 级/ }).click()
+  await page.getByTestId('import-ask').waitFor(); await answerImport(page); await settle(page, 1500)
+  check('属性页：等级菜单改到 3 级（问答）', (await lv()) === 3)
+  await attr.getByTestId('ps-build-up').click(); await page.getByTestId('import-ask').waitFor(); await answerImport(page); await settle(page, 1500)
   check('属性页：升一级只升一级（4）', (await lv()) === 4)
   await attr.getByTestId('ps-build-race').getByRole('button', { name: /更多操作/ }).click(); await settle(page, 300)
   await page.getByRole('menuitem', { name: /换种族/ }).click(); await page.getByTestId('item-pick').waitFor()
   await page.getByTestId('ip-search').fill('矮人'); await settle(page, 800); await page.getByTestId('ip-row').first().click(); await settle(page, 600); await page.getByTestId('ip-add').click()
-  await page.getByTestId('item-pick').waitFor({ state: 'detached', timeout: 120_000 }); await settle(page, 1500)
+  await page.getByTestId('import-ask').waitFor(); await answerImport(page); await settle(page, 1500)
   const traits = await attr.locator('.ps-traits').innerText()
   check('属性页：换成矮人，武器熟练按作者编号显示中文', /手斧/.test(traits) && !/Handaxe|Warhammer/.test(traits), traits.replace(/\s+/g, ' '))
   await attr.getByRole('button', { name: '改语言' }).click(); await page.getByTestId('trait-page').waitFor(); await settle(page, 1500)

@@ -9625,5 +9625,77 @@
       }
     ],
     "note": "问答桥（导入到人物）读题时出现；驾驶员 11-24 授权细节自定"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Select Class Proficiency Import Mode",
+    "translation": "选择职业熟练怎么加",
+    "from": "agent",
+    "status": "final",
+    "seen": [
+      "2014:import-to-actor"
+    ],
+    "candidates": [
+      {
+        "zh": "选择职业熟练怎么加",
+        "from": "agent"
+      }
+    ],
+    "note": "问答桥（导入到人物）读题时出现；驾驶员 11-24 授权细节自定"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Add multiclass proficiencies (this is my second+ class)",
+    "translation": "加兼职熟练（这是我的第二个及以后的职业）",
+    "from": "agent",
+    "status": "final",
+    "seen": [
+      "2014:import-to-actor"
+    ],
+    "candidates": [
+      {
+        "zh": "加兼职熟练（这是我的第二个及以后的职业）",
+        "from": "agent"
+      }
+    ],
+    "note": "问答桥（导入到人物）读题时出现；驾驶员 11-24 授权细节自定"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Add base class proficiencies and equipment (this is my first class)",
+    "translation": "加职业基础熟练和起始装备（这是我的第一个职业）",
+    "from": "agent",
+    "status": "final",
+    "seen": [
+      "2014:import-to-actor"
+    ],
+    "candidates": [
+      {
+        "zh": "加职业基础熟练和起始装备（这是我的第一个职业）",
+        "from": "agent"
+      }
+    ],
+    "note": "问答桥（导入到人物）读题时出现；驾驶员 11-24 授权细节自定"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Do not add proficiencies or equipment",
+    "translation": "不加熟练和装备",
+    "from": "agent",
+    "status": "final",
+    "seen": [
+      "2014:import-to-actor"
+    ],
+    "candidates": [
+      {
+        "zh": "不加熟练和装备",
+        "from": "agent"
+      }
+    ],
+    "note": "问答桥（导入到人物）读题时出现；驾驶员 11-24 授权细节自定"
   }
 ]

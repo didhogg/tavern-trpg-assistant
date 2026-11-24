@@ -79,7 +79,8 @@ async function onMore(key: string): Promise<void> {
 }
 const openHistory = () => modal.open({ key: 'person-history', title: '改动记录', component: markRaw(HistoryDrawer), variant: 'dialog', width: 560, height: 600 })
 const skillRows = computed(() => (person.sheet ? skills(person.sheet) : []))
-const sideTab = ref('skills')
+// 侧栏照 Tidy5e（CharacterSheetQuadroneSidebarRuntime 默认 [收藏, 技能与特质]，先显示收藏）
+const sideTab = ref('favs')
 const skillNames = computed(() => Object.fromEntries(skillRows.value.map((k) => [k.key, k.label])))
 const missing = computed(() => person.row?.missing ?? [])
 </script>
@@ -114,7 +115,7 @@ const missing = computed(() => person.row?.missing ?? [])
       </div>
       <div ref="bodyEl" class="ps-body" :data-side="sideOpen || undefined">
         <aside v-if="sideOpen" class="ps-side" data-testid="ps-side">
-          <Segmented v-model="sideTab" label="侧栏" :options="[{ value: 'skills', label: '技能' }, { value: 'favs', label: '收藏' }]" />
+          <Segmented v-model="sideTab" label="侧栏" :options="[{ value: 'favs', label: '收藏' }, { value: 'skills', label: '技能' }]" />
           <template v-if="sideTab === 'skills'">
             <div class="ps-side-head"><b>技能</b><small>加值</small><small>被动</small><button class="trpg-icon-btn" type="button" aria-label="改技能熟练" :disabled="person.readOnly" @click="openFields('技能', { path: 'system.skills' }, { names: skillNames, width: 620 })"><Icon name="pencil-simple" :size="13" /></button></div>
             <p v-if="!skillRows.length" class="ps-drawer-note">没有列出的技能。</p>

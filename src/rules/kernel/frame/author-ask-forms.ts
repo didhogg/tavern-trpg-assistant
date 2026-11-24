@@ -183,3 +183,36 @@ export const abilityIncreaseApp = {
     return c.getFeat()
   },
 }
+
+/**
+ * 选戏法（Charactermancer_Spell_Modal：建职业时作者问的「Select Cantrips」）：
+ * 候选照作者——0 环、在这个职业 / 子职业 / 扩展列表上（isAvailableClassSpell_ 等），已有的、总是会的不算；
+ * 选中照作者——0 环那一组的 ix_learned_<序号> + 父组件「已学戏法数」，再交作者自己的表单数据。名字按作者法术编号取。
+ */
+const spellName = (sp: any): FrameText => named(String(sp.name), { propDroppable: 'spell', source: sp.source, hash: g.UrlUtil.URL_TO_HASH_BUILDER[g.UrlUtil.PG_SPELLS](sp) }, true)
+function cantripRows(comp: any): number[] {
+  const out: number[] = []
+  comp._spellDatas.forEach((sp: any, i: number) => {
+    if (sp.level !== 0) return
+    if (!comp.isAvailableClassSpell_(sp) && !comp.isAvailableSubclassSpell_(sp) && !comp.isAvailableExpandedSpell_(sp)) return
+    if (comp.isAlwaysKnownSpell_?.(sp) || comp.getExistingSpellMeta_?.(sp)) return
+    out.push(i)
+  })
+  return out.sort((a, b) => String(comp._spellDatas[a].name).localeCompare(String(comp._spellDatas[b].name)))
+}
+export const cantripModal = {
+  read({ comp, opts }: { comp?: any; opts: any }, kind: string): Read {
+    const rows = cantripRows(comp)
+    const count = Number(comp._state.maxLearnedCantrips ?? 0) - Number(comp._state.cntLearnedCantrips ?? 0)
+    return { kind, title: ui(comp.modalTitle), note: null, form: { type: 'choose', sets: [{ label: null, groups: [{ title: null, count: Math.max(0, count), options: rows.map((i) => ({ label: spellName(comp._spellDatas[i]) })) }] }], set: 0 }, skippable: !opts?.isUnskippable }
+  },
+  async write({ comp }: { comp?: any }, answer: AskAnswer): Promise<unknown> {
+    if (answer.default) return comp.pGetFormData()
+    const rows = cantripRows(comp)
+    const level0 = comp._compsLevel[0]
+    const picks = answer.picks?.[0] ?? []
+    for (const ix of picks) { const i = rows[ix]; if (i == null) throw Error('戏法不在作者给的候选里'); level0._state[level0.constructor._getProps(i).ixLearned] = true }
+    comp.cntLearnedCantrips = Number(comp.cntLearnedCantrips ?? 0) + picks.length
+    return comp.pGetFormData()
+  },
+}

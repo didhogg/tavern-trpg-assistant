@@ -569,5 +569,9 @@
  "TRPGAssistant.UpstreamText.cbc8a8ffa86a593fb890aea1": "理想",
  "TRPGAssistant.UpstreamText.f21dea74d898cfeaf836ecc9": "羁绊",
  "TRPGAssistant.UpstreamText.031a0427b237efb39953cbd9": "缺点",
- "TRPGAssistant.UpstreamText.d7fedf2fc8079c32516e15fa": "经 DM 允许，可以选一门异域语言或秘密语言。"
+ "TRPGAssistant.UpstreamText.d7fedf2fc8079c32516e15fa": "经 DM 允许，可以选一门异域语言或秘密语言。",
+ "TRPGAssistant.UpstreamText.f1efd9a28bd6640e3b9c06ca": "选择职业熟练怎么加",
+ "TRPGAssistant.UpstreamText.a4f4cc9453bfeab289718f90": "加兼职熟练（这是我的第二个及以后的职业）",
+ "TRPGAssistant.UpstreamText.100ead44bea7a230524e3e61": "加职业基础熟练和起始装备（这是我的第一个职业）",
+ "TRPGAssistant.UpstreamText.9d01a6237894b51fe3822203": "不加熟练和装备"
 }

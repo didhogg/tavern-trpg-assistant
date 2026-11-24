@@ -4,6 +4,7 @@ import { rm, mkdir } from 'node:fs/promises'
 import { startStatic } from './static.mjs'
 import { buildAll, E2E_PORT, engines, freshFromBase } from './chain-common.mjs'
 import { check, failures, settle } from '../helpers.mjs'
+import { answerImport } from './ask-helper.mjs'
 
 if (!process.env.SKIP_BUILD) await buildAll()
 const engineName = process.env.ENGINE === 'webkit' ? 'webkit' : 'chrome'
@@ -39,7 +40,7 @@ try {
   await page.locator('.trpg-window nav').getByRole('button', { name: '人物', exact: true }).click(); await settle(page, 800)
 
   // ① 空白人物
-  await page.getByRole('button', { name: '新建' }).click(); await page.getByRole('menuitem', { name: '空白人物' }).click()
+  await page.getByRole('button', { name: '新建' }).click(); await page.getByRole('menuitem', { name: '直接新建（空白人物卡）' }).click()
   await page.getByTestId('ps-head').waitFor(); await settle(page, 1200)
   check('① 空白人物：建好、进了详情', /新人物/.test(await page.locator('.ps-name-line').innerText()))
   const str0 = await str()
@@ -121,7 +122,9 @@ try {
     await page.getByTestId(testid).click(); await page.getByTestId('item-pick').waitFor()
     await page.getByTestId('ip-search').fill(query); await settle(page, 800)
     await page.getByTestId('ip-row').first().click(); await settle(page, 600); await page.getByTestId('ip-add').click()
-    await page.getByTestId('item-pick').waitFor({ state: 'detached', timeout: 120_000 }); await settle(page, 1500)
+    // 作者「导入到人物」问答：要做的选择一题一题答完再确认
+    await page.getByTestId('import-ask').waitFor(); const steps = await answerImport(page); await settle(page, 1500)
+    if (steps.some((x) => x.error || x.stuck)) console.log('问答', query, JSON.stringify(steps))
   }
   await pick('ps-id-race', '精灵')
   check('⑪ 选种族：名字行 / 事实表出现「精灵」', /精灵/.test(await page.getByTestId('ps-head').innerText()))
@@ -130,7 +133,8 @@ try {
   await pick('ps-id-class', '战士')
   check('⑪ 选职业：名字行「战士 1」', /战士 1/.test(await page.getByTestId('ps-sub').innerText()), await page.getByTestId('ps-sub').innerText())
   await shot('07-identity-built')
-  await page.getByTestId('ps-level').getByRole('button', { name: '等级管理' }).click(); await page.getByRole('menuitem', { name: /升一级/ }).click(); await settle(page, 2500)
+  await page.getByTestId('ps-level').getByRole('button', { name: '等级管理' }).click(); await page.getByRole('menuitem', { name: /升级/ }).first().click()
+  await page.getByTestId('import-ask').waitFor(); await answerImport(page); await settle(page, 1500)
   check('⑪ 等级管理升一级：战士 2', /战士 2/.test(await page.getByTestId('ps-sub').innerText()), await page.getByTestId('ps-sub').innerText())
   await pick('ps-id-race', '矮人')
   const facts = await page.getByTestId('ps-facts').innerText()

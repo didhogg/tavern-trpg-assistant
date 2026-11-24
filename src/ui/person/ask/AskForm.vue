@@ -7,7 +7,8 @@ import type { ImportQuestion } from '../../../rules/kernel/import-flow'
 import Checkbox from '../../kit/Checkbox.vue'
 import Segmented from '../../kit/Segmented.vue'
 
-const props = defineProps<{ question: ImportQuestion; busy: boolean }>()
+/** level：等级题预先选好的等级（从等级菜单「改到第几级」进来）。 */
+const props = defineProps<{ question: ImportQuestion; busy: boolean; level?: number }>()
 /** answer：当前选择是否答完（null = 还没答完，下一步按钮不亮）；submit：是 / 否这种一点就答完的题直接交。 */
 const emit = defineEmits<{ answer: [AskAnswer | null]; submit: [AskAnswer] }>()
 const f = computed(() => props.question.form)
@@ -21,7 +22,9 @@ const own = reactive<Record<number, string[]>>({})
 watch(() => props.question, () => {
   const form = props.question.form
   // 加子职业：默认选好到现在的等级（已有几级就选到第几级）
-  pick.value = form.type === 'enum' ? form.selected : form.type === 'levels' && form.subclass && form.from > 0 ? form.from - 1 : null
+  pick.value = form.type === 'enum' ? form.selected
+    : form.type === 'levels' && props.level && props.level - 1 >= (form.subclass ? 0 : form.from) ? props.level - 1
+      : form.type === 'levels' && form.subclass && form.from > 0 ? form.from - 1 : null
   num.value = form.type === 'number' ? form.value : null
   text.value = form.type === 'string' ? form.value : ''
   set.value = form.type === 'choose' ? String(form.set) : '0'

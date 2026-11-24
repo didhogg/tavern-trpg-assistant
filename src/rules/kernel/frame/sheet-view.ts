@@ -146,14 +146,18 @@ export async function sheetView(a: any, entries: unknown[]): Promise<{ sheet: st
   // 官方数据里那份人物原始数据（_source）和读数交出的原始数据重复，按“是同一个对象”去掉
   const skip = new Set<object>([a._source].filter(Boolean))
   // 行动页：照搬 Tidy5e 行动列表（frame/action-list.ts）
-  out.actions = await actionsOf(a)
+  out.actions = await actionsOf(a, app, out)
   await markNeedsSubclass(a, (base as any).itemContext)
   const names = [...itemNames(a, entries), ...await baseItemNames(a)]
   return { sheet: app.constructor.name, base: mark(copy(base, entries, skip), texts, codes, names), parts: mark(copy(out, entries, skip), texts, codes, names) }
 }
 
-/** 行动页：照搬 Tidy5e 的行动列表（哪些进、按动作类型分组，frame/action-list.ts）。 */
-async function actionsOf(a: any): Promise<{ sections: unknown }> {
+/**
+ * 行动页：玩家角色照搬 Tidy5e 的行动列表（哪些进、按动作类型分组，frame/action-list.ts）；
+ * 怪物照官方 NPC 表的「特性」分组（Tidy5e 怪物用能力表那一套，天生武器不算「装备着」）。
+ */
+async function actionsOf(a: any, app: any, out: Record<string, any>): Promise<{ sections: unknown }> {
+  if (app instanceof g.dnd5e.applications.actor.NPCActorSheet) return { sections: out.features?.sections ?? [] }
   return { sections: actionSections(a) }
 }
 

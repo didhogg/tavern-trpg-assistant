@@ -20,6 +20,7 @@ import { createFieldCommands } from './commands-fields'
 import { createImportCommands } from './commands-import'
 import { createNativeCommands } from './commands-native'
 import { settled } from './server'
+import { warmItems } from './commands-equipment'
 
 /**
  * 五种结果状态（上位设计 §3.5）：
@@ -167,6 +168,8 @@ const CONVERT_TIMEOUT_MS = 15_000
 const NO_MESSAGE = { create: false }
 
 export const KERNEL_COMMANDS = {
+  /** 问答（导入到人物）开始后的后台预读：只读资料、不写文档，所以不经 operate（不记变更计划）。 */
+  warmImport: () => warmItems(),
   ...IMPORT_COMMANDS,
   ...NATIVE_COMMANDS,
   ...ITEM_COMMANDS,
