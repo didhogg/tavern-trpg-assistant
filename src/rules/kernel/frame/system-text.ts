@@ -1,7 +1,7 @@
 // 把实际语言键交给主线；主线再按同一小窗语言取字。找不到键的文字不能冒充语言包文字。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方本地化对象没有类型声明 */
 import { sha256Hex } from '../../../core/hash'
-import { fromAuthor, joined, type FrameText } from '../shown'
+import { asData, fromAuthor, joined, type FrameText } from '../shown'
 
 const g = globalThis as any
 let indexed: object | null = null
@@ -54,3 +54,39 @@ export function keyText(key: string): FrameText | null {
 export function keyChain(keys: string[], text: string): FrameText | null {
   return keys.reduceRight<FrameText | null>((fallback, key) => ({ $t: 'system', key, text, ...(fallback ? { fallback } : {}) }), null)
 }
+
+const SOURCE_PREFIX = 'TRPGAssistant.UpstreamSource.'
+let templatesOf: object | null = null
+let templates: Array<{ key: string; pattern: RegExp }> = []
+/** 生成器给作者模板句（含 {}）另放的英文原文（UpstreamSource.<编号>）→ 匹配用的正则，编号换回 UpstreamText。 */
+function templateIndex(): Array<{ key: string; pattern: RegExp }> {
+  const i18n = g.game.i18n
+  if (templatesOf === i18n) return templates
+  templatesOf = i18n
+  const flat = g.foundry?.utils?.flattenObject?.(i18n.translations ?? {}) ?? {}
+  templates = Object.entries(flat)
+    .filter(([key, value]) => key.startsWith(SOURCE_PREFIX) && typeof value === 'string' && value.includes('{}'))
+    .map(([key, value]) => ({
+      key: `TRPGAssistant.UpstreamText.${key.slice(SOURCE_PREFIX.length)}`,
+      pattern: new RegExp(`^${String(value).trim().split('{}').map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('(.+?)')}$`, 'i'),
+    }))
+  return templates
+}
+
+/**
+ * 作者程序界面字（Plutonium 写死的英文；问答桥读题用）：先按作者程序字串编号（生成器从底稿出的 UpstreamText 键），
+ * 再按作者模板句（含 {}，空位作参数），最后按原文反查已加载的语言字典。
+ */
+export function uiText(text: string): FrameText {
+  const t = text.trim()
+  const exact = generatedText(t) as Extract<FrameText, { $t: 'system' }>
+  if (g.game.i18n.has(exact.key)) return exact
+  for (const tpl of templateIndex()) {
+    const m = tpl.pattern.exec(t)
+    if (m && g.game.i18n.has(tpl.key)) return { $t: 'system', key: tpl.key, text: t, args: m.slice(1).map((arg) => asData(arg)) }
+  }
+  return systemText(t)
+}
+
+/** 问答桥读题用：作者给的可能是空 / 非文字，空 = null。 */
+export const uiTextOf = (text: unknown): FrameText | null => (typeof text === 'string' && text.trim() ? uiText(text) : null)

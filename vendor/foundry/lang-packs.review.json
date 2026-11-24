@@ -1784,7 +1784,7 @@
   {
    "package": "module:plutonium",
    "total": 1099,
-   "translated": 532,
+   "translated": 571,
    "fromCommunity": 0,
    "conflicts": 0,
    "groupsWithCategory": 2,
@@ -3086,7 +3086,7 @@
    "origins": [
     "modules/plutonium/js/Bundle.js:151447"
    ],
-   "translation": null
+   "translation": "一并导入较低等级？"
   },
   {
    "key": "TRPGAssistant.UpstreamText.040c0a4d197e6019fa693cd3",
@@ -3868,7 +3868,7 @@
    "origins": [
     "modules/plutonium/js/Bundle.js:133608"
    ],
-   "translation": null
+   "translation": "应用属性值？"
   },
   {
    "key": "TRPGAssistant.UpstreamText.1839fba7e0280f72e970b813",
@@ -7257,7 +7257,7 @@
    "origins": [
     "modules/plutonium/js/Bundle.js:152686"
    ],
-   "translation": null
+   "translation": "自定义背景：语言与工具"
   },
   {
    "key": "TRPGAssistant.UpstreamText.75d3232d3f23c9a6aa02f087",
@@ -9380,7 +9380,7 @@
    "origins": [
     "modules/plutonium/js/Bundle.js:152661"
    ],
-   "translation": null
+   "translation": "自定义背景：技能"
   },
   {
    "key": "TRPGAssistant.UpstreamText.b1b590e7b7ae68cedcfbaa56",
@@ -10724,7 +10724,7 @@
    "origins": [
     "modules/plutonium/js/Bundle.js:150913"
    ],
-   "translation": null
+   "translation": "填充法术书"
   },
   {
    "key": "TRPGAssistant.UpstreamText.d59fae71669b2ea32b01e33f",
@@ -12056,11 +12056,11 @@
   }
  ],
  "pluginUi": {
-  "total": 345,
-  "final": 309,
-  "review": 36,
+  "total": 373,
+  "final": 339,
+  "review": 34,
   "byFrom": {
-   "agent": 198,
+   "agent": 226,
    "dnd5e:DND5E.Abilities": 1,
    "dnd5e:DND5E.ActionAbil": 1,
    "dnd5e:DND5E.ADVANCEMENT.AbilityScoreImprovement.Journal.Name": 1,
@@ -12163,7 +12163,7 @@
    "dnd5e:DND5E.ComponentVerbal": 1,
    "dnd5e:DND5E.AbilityWis": 1
   },
-  "included": 299,
+  "included": 327,
   "sharedWithUpstream": 36,
   "approvedOverrides": 22,
   "conflicts": [
@@ -12239,25 +12239,6 @@
    }
   ],
   "reviewRows": [
-   {
-    "text": "Ability Score Increase",
-    "translation": "属性值提升",
-    "from": "agent",
-    "seen": [
-     "2014:previous-probe"
-    ],
-    "candidates": [
-     {
-      "zh": "属性值加成",
-      "from": "terms:常规"
-     },
-     {
-      "zh": "属性值提升",
-      "from": "site:js/render.js"
-     }
-    ],
-    "note": "复核：中文站 / 译名表分别给“属性值提升 / 属性值加成”。"
-   },
    {
     "text": "Armor Training",
     "translation": "护甲训练",

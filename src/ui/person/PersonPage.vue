@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // P6 单元 1 人物详情外壳（线框 p6-6，驾驶员 2026-11-23 批准）：应用条 · 页头 · 分页条 · 左侧栏（技能）；分页内容从 A 批起逐页接上。
 // 从人物列表点一行进来（整页，列表和详情不并排）；‹ 人物 回到列表。
-import { computed, markRaw, onMounted, ref, watch } from 'vue'
+import { computed, markRaw, nextTick, onMounted, ref, watch } from 'vue'
 import { usePersonStore } from '../../stores/person'
 import { useModalStore } from '../../stores/modal'
 import { useUiStore } from '../../stores/ui'
@@ -42,6 +42,22 @@ const TABS = [
   { id: 'feat', label: '特性' }, { id: 'effect', label: '效果' }, { id: 'bio', label: '背景' }, { id: 'note', label: '日志' },
 ] as const
 const tab = ref<(typeof TABS)[number]['id']>('action')
+const tabsEl = ref<HTMLElement | null>(null)
+const bodyEl = ref<HTMLElement | null>(null)
+/** 点分页：换页后把页头滚上去，分页条吸顶、下面整屏是这一页（小窗里页头占满一屏时也看得到内容）。 */
+function pick(id: (typeof TABS)[number]['id']): void {
+  tab.value = id
+  void nextTick(() => {
+    const body = bodyEl.value; const tabs = tabsEl.value
+    let sc = body?.parentElement ?? null
+    while (sc && !/(auto|scroll)/.test(getComputedStyle(sc).overflowY)) sc = sc.parentElement
+    if (!body || !tabs || !sc) return
+    const stuck = (parseFloat(getComputedStyle(tabs).top) || 0) + tabs.offsetHeight // 分页条吸住后的下沿
+    const top = sc.scrollTop + body.getBoundingClientRect().top - sc.getBoundingClientRect().top - stuck
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (Math.abs(top - sc.scrollTop) > 2) sc.scrollTo({ top: Math.max(0, top), behavior: calm ? 'auto' : 'smooth' })
+  })
+}
 const sideOpen = ref(ui.layout !== 'narrow')
 watch(() => ui.layout, (l) => { if (l === 'narrow') sideOpen.value = false })
 
@@ -92,11 +108,11 @@ const missing = computed(() => person.row?.missing ?? [])
     <div v-if="!person.sheet" class="ps-skeleton" aria-busy="true" data-testid="ps-loading">{{ person.error ? '' : '正在读取人物…' }}</div>
     <template v-else>
       <PersonHeader />
-      <div class="ps-tabs" role="tablist" aria-label="人物分页">
+      <div ref="tabsEl" class="ps-tabs" role="tablist" aria-label="人物分页">
         <button class="ps-side-toggle" type="button" :aria-pressed="sideOpen" :aria-label="sideOpen ? '收起侧栏' : '打开侧栏'" @click="sideOpen = !sideOpen"><Icon :name="sideOpen ? 'caret-left' : 'caret-right'" :size="14" /></button>
-        <button v-for="t in TABS" :key="t.id" type="button" role="tab" :aria-selected="tab === t.id" :data-testid="`ps-tab-${t.id}`" @click="tab = t.id">{{ t.label }}</button>
+        <button v-for="t in TABS" :key="t.id" type="button" role="tab" :aria-selected="tab === t.id" :data-testid="`ps-tab-${t.id}`" @click="pick(t.id)">{{ t.label }}</button>
       </div>
-      <div class="ps-body" :data-side="sideOpen || undefined">
+      <div ref="bodyEl" class="ps-body" :data-side="sideOpen || undefined">
         <aside v-if="sideOpen" class="ps-side" data-testid="ps-side">
           <Segmented v-model="sideTab" label="侧栏" :options="[{ value: 'skills', label: '技能' }, { value: 'favs', label: '收藏' }]" />
           <template v-if="sideTab === 'skills'">

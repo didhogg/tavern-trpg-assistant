@@ -27,6 +27,14 @@ const EXPORTS = [
   'veE',
   'EQUIPMENT_TYPE_EXPANDERS',
   'UtilEntityItem',
+  // 作者问玩家的两个总入口（导入到人物的问答桥 author-ask.ts 接住它们）
+  'UtilApplications',
+  'InputUiUtil',
+  // 作者自己画窗口等玩家的两种（起始装备、属性提升 / 专长），问答期间不画、由问答桥作答
+  'EquipmentApp',
+  'ActorAbilityScoreIncrease',
+  // 作者给背景特性起名的规则（去掉条目名前的「Feature:」）：取名出口按编号在背景条目里定位时照它
+  'UtilEntityBackgroundFeature',
 ]
 
 export let plutoniumBuild: Record<string, any> | null = null

@@ -15,7 +15,8 @@ import HpBlock from './HpBlock.vue'
 import VitalDrawers from './VitalDrawers.vue'
 import IdentityDrawer from './IdentityDrawer.vue'
 import AvatarDrawer from './AvatarDrawer.vue'
-import { openFields, openLevel } from './edit-open'
+import { openFields, openImport, openPick } from './edit-open'
+import { classBuilds } from './view-tabs'
 import { alignment, background, classes, creatureType, crText, deathShown, exhaustionPips, isNpc, legendary, named, senses, showExperience, signed, size, species, speeds } from './view'
 import NumIn from './table/NumIn.vue'
 
@@ -106,19 +107,21 @@ const editAbilities = () => openFields('属性值', { path: 'system.abilities' }
 const editLevel = () => (npc.value
   ? openFields('挑战等级与经验', { path: 'system.details.cr' })
   : openFields('经验', { path: 'system.details.xp' }, { total: { label: '等级', value: String(sys.value.details.level ?? '') } }))
-// 等级管理：作者建卡器（升级、兼职、带选择的成长，职业特性一起加）在最上面；下面是每个职业的快速升 / 降一级（官方成长，自动选第一项）
+// 等级管理（照 Tidy5e 等级下拉）：每个职业「升级」= 作者「导入到人物」同一个职业（选到第几级，要做的选择一题一题问）；「降一级」= 官方退回；最后「加职业 / 兼职」从库里选
 const levelItems = computed(() => [
-  { key: 'native', label: classes(s.value).length ? '用建卡器升级 / 兼职…' : '用建卡器建这个人…', disabled: ro.value },
-  ...classes(s.value).flatMap((c) => [
-    { key: `up:${c.id}`, label: `${c.name} 快速升一级`, disabled: ro.value },
-    { key: `down:${c.id}`, label: `${c.name} 降一级`, disabled: ro.value || (c.levels ?? 0) <= 1 },
+  ...classBuilds(s.value).flatMap((c) => [
+    { key: `up:${c.id}`, label: `${c.name} 升级…`, disabled: ro.value || !c.ref },
+    { key: `down:${c.id}`, label: `${c.name} 降一级`, disabled: ro.value || c.levels <= 1 },
   ]),
+  { key: 'add', label: classBuilds(s.value).length ? '兼职（再加一个职业）…' : '选职业…', disabled: ro.value },
 ])
 function onLevel(key: string): void {
-  if (key === 'native') { openLevel(classes(s.value).length ? '用建卡器升级 / 兼职' : '用建卡器建这个人'); return }
+  if (key === 'add') { openPick('classes'); return }
   const [dir, id] = key.split(':')
-  const c = classes(s.value).find((x) => x.id === id)
-  if (c) void person.level(`${c.name}${dir === 'up' ? '升' : '降'}一级`, id, dir === 'up' ? 1 : -1)
+  const c = classBuilds(s.value).find((x) => x.id === id)
+  if (!c) return
+  if (dir === 'up' && c.ref) openImport(c.ref, c.name, `${c.name}升级`)
+  else void person.level(`${c.name}降一级`, id, -1)
 }
 </script>
 
@@ -138,6 +141,10 @@ function onLevel(key: string): void {
         <button class="ps-pin" type="button" :aria-pressed="pinned" :aria-label="pinned ? '取消置顶' : '置顶'" :disabled="ro" @click="togglePin"><Icon :name="pinned ? 'star-fill' : 'star'" :size="16" /></button>
         <small v-if="english" class="ps-english">{{ english }}</small>
         <button class="ps-pen ps-pen--inline" type="button" aria-label="改身份" :disabled="ro" data-testid="ps-ident-edit" @click="openIdentity"><Icon name="pencil-simple" :size="14" /></button>
+        <span class="ps-rests">
+          <button class="trpg-btn trpg-btn--small" type="button" :disabled="ro" data-testid="ps-short-rest" @click="person.rest('short')"><Icon name="hourglass" :size="13" />短休</button>
+          <button class="trpg-btn trpg-btn--small" type="button" :disabled="ro" data-testid="ps-long-rest" @click="person.rest('long')"><Icon name="moon" :size="13" />长休</button>
+        </span>
       </div>
       <p v-if="subtitle.length" class="ps-sub" data-testid="ps-sub"><span v-for="(t, i) in subtitle" :key="t" :class="{ 'ps-sub-strong': i === 0 }">{{ t }}</span></p>
       <dl class="ps-facts" data-testid="ps-facts">
@@ -153,12 +160,14 @@ function onLevel(key: string): void {
           </dd>
         </div>
       </dl>
-      <button v-if="!npc && !classes(s).length" class="ps-blank-cta" type="button" :disabled="ro" data-testid="ps-blank-build" @click="openLevel('用建卡器建这个人')">
-        <b>这个人还是空白的</b><span>用建卡器建：种族、背景、职业、属性一起选，特性都会加上</span>
-      </button>
-      <div class="ps-rests">
-        <button class="trpg-btn trpg-btn--small" type="button" :disabled="ro" data-testid="ps-short-rest" @click="person.rest('short')">短休</button>
-        <button class="trpg-btn trpg-btn--small" type="button" :disabled="ro" data-testid="ps-long-rest" @click="person.rest('long')">长休</button>
+      <div v-if="!npc && !classes(s).length" class="ps-blank-cta" data-testid="ps-blank-build">
+        <b><Icon name="sparkle" :size="15" />从空白开始</b>
+        <span>依次选种族、背景、职业，特性、熟练和起始装备会一起加上；属性值在下面直接填。</span>
+        <span class="ps-blank-steps">
+          <button class="trpg-btn trpg-btn--small" type="button" :disabled="ro" data-testid="ps-blank-race" @click="openPick('races')"><Icon name="plus" :size="13" />选种族</button>
+          <button class="trpg-btn trpg-btn--small" type="button" :disabled="ro" data-testid="ps-blank-bg" @click="openPick('backgrounds')"><Icon name="plus" :size="13" />选背景</button>
+          <button class="trpg-btn trpg-btn--primary trpg-btn--small" type="button" :disabled="ro" data-testid="ps-blank-class" @click="openPick('classes')"><Icon name="plus" :size="13" />选职业</button>
+        </span>
       </div>
     </div>
 

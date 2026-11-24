@@ -153,6 +153,7 @@ var m = {
 			races: "race",
 			backgrounds: "background",
 			classes: "class",
+			subclasses: "subclass",
 			kernel: {
 				adapter: "foundry",
 				settings: {
@@ -191,7 +192,8 @@ var m = {
 			feats: "feat",
 			races: "race",
 			backgrounds: "background",
-			classes: "class"
+			classes: "class",
+			subclasses: "subclass"
 		}
 	}
 }, h = m.scopes, g = m.rules;

@@ -31,7 +31,7 @@ export async function buildEnglishPairsFor(ctx: PairContext, s: SourceEntry, vie
   if (x?.status !== 'installed' || y?.status !== 'installed') throw new Error(`${s.id} 或 ${pair.id} 还没安装，不能配对`)
   const key = `english:${s.id}`
   // 补装单本书通常不会改变上游提交号。旧版本的派生记录可以继承，但不能沿用没装齐时的配对表。
-  const fingerprint = `gen5:${hashValue([
+  const fingerprint = `gen6:${hashValue([
     [await view.commitOf(s), installedContent(x)],
     [await view.commitOf(pair), installedContent(y)],
   ])}`

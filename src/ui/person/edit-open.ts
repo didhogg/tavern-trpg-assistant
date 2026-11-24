@@ -4,6 +4,7 @@ import { markRaw } from 'vue'
 import { useModalStore } from '../../stores/modal'
 import FieldEditor from './FieldEditor.vue'
 import ItemPickPage from './ItemPickPage.vue'
+import ImportAsk from './ask/ImportAsk.vue'
 import LevelPage from './LevelPage.vue'
 import type { AddKind } from '../../rules/kernel/card-types'
 
@@ -14,9 +15,14 @@ export function openFields(title: string, target: { itemId?: string; path: strin
 }
 
 /** 从库里给人物加东西（物品 / 法术 / 专长），和「从模板加入」同一个两栏页。 */
-export function openPick(kind: AddKind, replace?: { id: string; name: string }): void {
-  const title = replace ? `换掉「${replace.name}」` : { items: '加物品', spells: '加法术', feats: '加专长', races: '选种族', backgrounds: '选背景', classes: '加职业' }[kind]
-  useModalStore().open({ key: `person-pick:${kind}`, title, component: markRaw(ItemPickPage), props: { kind, replace }, variant: 'dialog', width: 920, height: 680 })
+export function openPick(kind: AddKind, replace?: { id: string; name: string }, keep?: (item: Record<string, unknown>) => boolean): void {
+  const title = replace ? `换掉「${replace.name}」` : { items: '加物品', spells: '加法术', feats: '加专长', races: '选种族', backgrounds: '选背景', classes: '加职业', subclasses: '选子职业' }[kind]
+  useModalStore().open({ key: `person-pick:${kind}`, title, component: markRaw(ItemPickPage), props: { kind, replace, keep }, variant: 'dialog', width: 920, height: 680 })
+}
+
+/** 已经知道是哪一条（升级：这个人的职业）：直接一问一答导入（作者「导入到人物」整路，第一题选到第几级）。 */
+export function openImport(entryRef: unknown, name: string, title: string): void {
+  useModalStore().open({ key: 'person-import', title, component: markRaw(ImportAsk), props: { entryRef, name, closeOnBack: true }, variant: 'dialog', width: 760, height: 680 })
 }
 
 /** 用作者完整建卡器改这个人（升级 / 兼职 / 要做选择的成长；空白人物从头建）。 */

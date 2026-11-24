@@ -5,7 +5,7 @@ import { computed, ref } from 'vue'
 import { usePersonStore } from '../../stores/person'
 import { useModalStore } from '../../stores/modal'
 import Icon from '../kit/Icon.vue'
-import { openLevel, openPick } from './edit-open'
+import { openPick } from './edit-open'
 import { alignment, background, classes, isNpc, species } from './view'
 
 const person = usePersonStore()
@@ -60,10 +60,9 @@ async function save(): Promise<void> {
         <div class="pf-entry"><span>背景</span><b>{{ bg?.name || '—' }}</b><span /><button class="trpg-btn trpg-btn--small" type="button" :disabled="person.readOnly" data-testid="ps-id-bg" @click="change('backgrounds', 'background', bg?.name)">{{ bg ? '换…' : '选…' }}</button></div>
         <div v-for="c in cls" :key="c.id" class="pf-entry"><span>职业</span><b>{{ c.name }} {{ c.levels }} 级</b><span /><span /></div>
         <div class="pf-id-actions">
-          <button class="trpg-btn trpg-btn--small pf-add" type="button" :disabled="person.readOnly" data-testid="ps-id-native" @click="openLevel(cls.length ? '用建卡器升级 / 兼职' : '用建卡器建这个人')"><Icon name="plus" :size="14" />{{ cls.length ? '用建卡器加兼职 / 升级…' : '用建卡器建这个人…' }}</button>
-          <button class="trpg-btn trpg-btn--small trpg-btn--quiet pf-add" type="button" :disabled="person.readOnly" data-testid="ps-id-class" @click="openPick('classes')">只加职业（不带特性）…</button>
+          <button class="trpg-btn trpg-btn--small pf-add" type="button" :disabled="person.readOnly" data-testid="ps-id-class" @click="openPick('classes')"><Icon name="plus" :size="14" />{{ cls.length ? '兼职（再加一个职业）…' : '选职业…' }}</button>
         </div>
-        <p class="pf-intro pf-id-note">建卡器会把种族、职业带来的特性和要做的选择一起处理；上面「换…」和「只加职业」是快速改，不带这些特性。</p>
+        <p class="pf-intro pf-id-note">选或换种族、背景、职业时，它带来的特性、熟练和起始装备会一起加上，要做的选择会一题一题问；换掉的会把它带来的东西一起退回。</p>
       </section>
     </div>
     <div class="pf-foot">

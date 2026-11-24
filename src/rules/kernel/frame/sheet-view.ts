@@ -11,6 +11,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档 / 程序窗口对象没有类型声明。 */
 import { asData, fromEntry, joined, named, type FrameText } from '../shown'
 import { baseItemIds } from './author-classes'
+import { actionSections } from './action-list'
 import { keyText } from './system-text'
 import { nameText, registryCodes } from './registry-keys'
 import { itemText } from './sheet-texts'
@@ -144,40 +145,35 @@ export async function sheetView(a: any, entries: unknown[]): Promise<{ sheet: st
   const codes = registryCodes()
   // 官方数据里那份人物原始数据（_source）和读数交出的原始数据重复，按“是同一个对象”去掉
   const skip = new Set<object>([a._source].filter(Boolean))
-  // 行动页：按动作类型分组用官方 NPC 表自己的“特性”部分；玩家角色也走它（驾驶员 11-23 批 G1）
-  out.actions = await actionsOf(a, app, out)
+  // 行动页：照搬 Tidy5e 行动列表（frame/action-list.ts）
+  out.actions = await actionsOf(a)
+  await markNeedsSubclass(a, (base as any).itemContext)
   const names = [...itemNames(a, entries), ...await baseItemNames(a)]
   return { sheet: app.constructor.name, base: mark(copy(base, entries, skip), texts, codes, names), parts: mark(copy(out, entries, skip), texts, codes, names) }
 }
 
-/** 官方 NPC 表“特性”部分的分组（每件物品的次数、命中、豁免 DC 在共用部分的 itemContext，两种表算法相同）。怪物直接用本表已算好的。 */
-async function actionsOf(a: any, app: any, out: Record<string, any>): Promise<{ sections: unknown }> {
-  const NPC = g.dnd5e.applications.actor.NPCActorSheet
-  let sections: any[]
-  if (app instanceof NPC) sections = out.features?.sections ?? []
-  else {
-    const npc = new NPC({ document: a })
-    const opt = (o: unknown): any => JSON.parse(JSON.stringify(o))
-    const ctx = await npc._prepareContext(opt({ parts: ['features'] }))
-    const part = await npc._preparePartContext('features', Object.assign({}, ctx), opt({}))
-    sections = part.sections ?? []
-  }
-  return { sections: withActionOverrides(a, sections) }
+/** 行动页：照搬 Tidy5e 的行动列表（哪些进、按动作类型分组，frame/action-list.ts）。 */
+async function actionsOf(a: any): Promise<{ sections: unknown }> {
+  return { sections: actionSections(a) }
 }
 
 /**
- * 「显示到行动页 / 从行动页拿掉」（照 Tidy5e actionFilterOverride）：物品上 flags.tavern-trpg.actionList = true 硬加进来
- * （按它第一个活动的动作类型放进对应组，官方组里没有这种动作就放进被动组），= false 拿掉；没标记照官方默认。
+ * 该选子职业了（照 Tidy5e 职业行的「选子职业」）：作者导入的职业物品里没有 dnd5e 的子职业成长，官方判断不出来；
+ * 用作者自己的资料加载器取这个职业的作者条目，最早带 gainSubclassFeature 的职业特性在第几级——到了这一级、还没有子职业 = 该选了。
  */
-function withActionOverrides(a: any, sections: any[]): any[] {
-  const flag = (i: any): boolean | undefined => i.flags?.['tavern-trpg']?.actionList
-  const kept = sections.map((sec) => ({ ...sec, items: (sec.items ?? []).filter((i: any) => flag(i) !== false) }))
-  const listed = new Set(kept.flatMap((sec) => (sec.items ?? []).map((i: any) => i.id)))
-  for (const item of a.items) {
-    if (flag(item) !== true || listed.has(item.id)) continue
-    const type = [...(item.system.activities ?? [])].map((x: any) => x.activation?.type).find(Boolean)
-    const home = kept.find((sec) => sec.id === type) ?? kept.find((sec) => sec.id === 'passive') ?? kept[kept.length - 1]
-    if (home) home.items = [...home.items, item]
+async function markNeedsSubclass(a: any, itemContext: Record<string, any> | undefined): Promise<void> {
+  if (!itemContext) return
+  const subs = new Set([...a.items].filter((i: any) => i.type === 'subclass').map((i: any) => i.system?.classIdentifier))
+  for (const cls of [...a.items].filter((i: any) => i.type === 'class')) {
+    const ctx = itemContext[cls.id]
+    const f = cls.flags?.plutonium
+    if (!ctx || ctx.needsSubclass || subs.has(cls.system?.identifier) || !f?.source || !f?.hash) continue
+    const entry = await g.DataLoader.pCacheAndGet(g.UrlUtil.PG_CLASSES, f.source, f.hash).catch(() => null)
+    // 作者加载器交出的 classFeatures 按等级分好（数组套数组，每个是带 level 的完整特性对象）
+    const levels = [entry?.classFeatures ?? []].flat(2).filter((x: any) => x?.gainSubclassFeature)
+      .map((x: any) => Number(x.level ?? g.DataUtil.class.unpackUidClassFeature(String(x.classFeature ?? ''))?.level))
+      .filter((n: number) => Number.isFinite(n))
+    if (levels.length && Number(cls.system?.levels ?? 0) >= Math.min(...levels)) ctx.needsSubclass = true
   }
-  return kept
 }
+

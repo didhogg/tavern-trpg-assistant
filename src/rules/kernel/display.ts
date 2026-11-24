@@ -39,9 +39,9 @@ export async function display<T>(value: T, ctx: DisplayContext): Promise<Display
     if (!node || typeof node !== 'object') return
     if (isFrameText(node)) {
       paths.set(node, path)
-      if (node.$t === 'plugin') node.args?.forEach((v, i) => collect(v, `${path}.args[${i}]`))
+      if (node.$t === 'plugin' || node.$t === 'system') node.args?.forEach((v, i) => collect(v, `${path}.args[${i}]`))
       if (node.$t === 'join') node.parts.forEach((v, i) => collect(v, `${path}.parts[${i}]`))
-      if ((node.$t === 'entry' || node.$t === 'value' || node.$t === 'system') && node.fallback) collect(node.fallback, `${path}.fallback`)
+      if ((node.$t === 'entry' || node.$t === 'value' || node.$t === 'system' || node.$t === 'name') && node.fallback) collect(node.fallback, `${path}.fallback`)
       return
     }
     Object.entries(node).filter(([key]) => key !== 'raw' && key !== 'author').forEach(([key, v]) => collect(v, path ? `${path}.${key}` : key))
@@ -84,12 +84,16 @@ export async function display<T>(value: T, ctx: DisplayContext): Promise<Display
   }
   const textOf = (l: FrameText): string => {
     const done = resolved.get(l)
-    if (done?.text != null) return done.text
+    if (done?.text != null) {
+      // 作者模板句：中文模板里的 {} 按顺序填空位参数
+      if (l.$t === 'system' && l.args?.length) { let i = 0; return done.text.replace(/\{\}/g, () => (l.args![i] ? textOf(l.args![i++]) : '')) }
+      return done.text
+    }
     switch (l.$t) {
       case 'library': case 'data': return l.text
       case 'entry': return ctx.translate ? entryText(l.text, ctx.pairs) ?? (l.fallback ? textOf(l.fallback) : miss(l, 'entry-position-unresolved')) : l.text
       case 'author': return ctx.translate ? miss(l, 'author-position-unresolved') : l.text
-      case 'name': return ctx.translate && l.strict ? miss(l, done!.reason) : l.text
+      case 'name': return l.fallback ? textOf(l.fallback) : ctx.translate && l.strict ? miss(l, done!.reason) : l.text
       case 'system': return ctx.translate ? (l.fallback ? textOf(l.fallback) : miss(l, 'language-key-missing')) : l.text
       case 'proficiency': return miss(l, 'author-rule-unresolved')
       case 'value': return l.fallback ? textOf(l.fallback) : miss(l, 'author-rule-unresolved')

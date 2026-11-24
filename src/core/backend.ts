@@ -42,6 +42,7 @@ import { DownloadTasks } from '../library/tasks'
 import type { RuleRegistry } from '../rules/registry'
 import { KernelRuntime } from '../rules/kernel/runtime'
 import { KernelPeople } from '../rules/kernel/people'
+import { KernelImportFlow } from '../rules/kernel/import-flow'
 import { KernelNativeBuild } from '../rules/kernel/native-build'
 import { KernelPrecompute } from '../rules/kernel/precompute'
 import { kernelFilesVersion } from '../rules/kernel/cache'
@@ -129,6 +130,8 @@ export interface Backend {
   kernelSave: KernelSaveService
   /** 人物页统一入口（P6 B1，rules/kernel/people.ts）：读人、改人、回到自动、掷骰、先预览的大操作、加人删人、撤销与改动记录。 */
   people: KernelPeople
+  /** 空白卡建人 / 从库里加（作者「导入到人物」+ 问答桥，rules/kernel/import-flow.ts）：一问一答，答完先看会加上什么再确认。 */
+  importFlow: KernelImportFlow
   /** 开局向导：wizardOptions / startCampaign（缺的资料和冒险在【库】后台下载）。 */
   starter: CampaignStarter
   /** 导出 / 导入存档文件要带的【库】那一半：完整备份里的自制 / 范围 / 房规，和导入后"依赖还在不在"的核对（P4 界面接线）。 */
@@ -392,5 +395,6 @@ export function createBackend(opts: BackendOptions): Backend {
   const types: Backend['cards']['types'] = (rule, codeSet) => cardTypes({ pluginRoot, files, scoped, db, revisions, container }, rule, codeSet)
   const cards: Backend['cards'] = { types, fields: (rule, type, codeSet) => cardFields({ types, fields: (cs, p) => custom.fields(cs, p), plan: (cs, p) => custom.formPlan(cs, p) }, rule, type, codeSet) }
   const people = new KernelPeople({ runtime: kernel, saves: kernelSave, native })
-  return { library, texts: service.texts, kernel, kernelSave, people, starter, transfer, removalImpact, entryChangeImpact, houseExisting: houseExistingOf, removalExecute, removalImpactMany, removalExecuteMany, removalSizes: removalSizesOf, reclaim, cards }
+  const importFlow = new KernelImportFlow({ runtime: kernel, people })
+  return { library, texts: service.texts, kernel, kernelSave, people, importFlow, starter, transfer, removalImpact, entryChangeImpact, houseExisting: houseExistingOf, removalExecute, removalImpactMany, removalExecuteMany, removalSizes: removalSizesOf, reclaim, cards }
 }

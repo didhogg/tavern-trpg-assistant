@@ -15,6 +15,7 @@ import personHead from '../styles/person-head.css?inline'
 import personForm from '../styles/person-form.css?inline'
 import personTable from '../styles/person-table.css?inline'
 import personDoc from '../styles/person-doc.css?inline'
+import personAsk from '../styles/person-ask.css?inline'
 import palette from '../styles/palette.css?inline'
 import shell from '../styles/shell.css?inline'
 import tokens from '../styles/tokens.css?inline'
@@ -28,7 +29,7 @@ export function mountApp(ctx: StContext): Pinia | null {
   host.id = HOST_ID
   const shadow = host.attachShadow({ mode: 'open' })
   const style = document.createElement('style')
-  style.textContent = [tokens, palette, base, shell, kit, pages, library, roster, person, personHead, personForm, personTable, personDoc, edit, author, dice].join('\n')
+  style.textContent = [tokens, palette, base, shell, kit, pages, library, roster, person, personHead, personForm, personTable, personDoc, personAsk, edit, author, dice].join('\n')
   const portal = document.createElement('div')
   portal.className = 'trpg-portal'
   const container = document.createElement('div')

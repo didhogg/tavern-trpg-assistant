@@ -94,7 +94,10 @@ export async function englishMatch(docs: LocatedDoc[]): Promise<EnglishMatch[]> 
     const isMatch = (ent: any): boolean => ent?.name === locator.name && (locator.source == null || ent.source === locator.source)
     const sourcePageMatches = entities?.filter((ent) => ent.source === locator.source && ent.page === locator.page) || []
     let via: EnglishMatch['via'] = null
-    let jsonObj: any = entities?.find(isMatch)
+    // 同一数组里名字 + 来源相同的不止一条（职业特性「属性值提升」在 4、6、8… 级同名）：作者第 ① 步只取第一条，会把每一级都配到同一条；
+    // 两边原始文件结构相同（同一版本），用作者第 ③ 步的「同一位置」分辨，同位置那条也同名同来源才取它
+    const named = entities?.filter(isMatch) ?? []
+    let jsonObj: any = named.length > 1 && entities?.length === locator.count && named.includes(entities[locator.ix]) ? entities[locator.ix] : named[0]
     if (jsonObj) via = 'name'
     else if ((jsonObj = (Object.values(englishJson).filter(Array.isArray) as any[][]).flat().find(isMatch))) via = 'name-any-array'
     else if ((jsonObj = entities?.length === locator.count ? entities[locator.ix] : null)) via = 'position'

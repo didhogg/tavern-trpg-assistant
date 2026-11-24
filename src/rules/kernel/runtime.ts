@@ -245,13 +245,14 @@ export class KernelRuntime {
     if (rows.status !== 'complete') return { status: rows.status, error: rows.error, detail: rows }
     const result = await o.session.call('addToActor', actorId, rows.rows.map((row) => ({ prop: row.ref.prop, refKey: refKey(row.ref), entry: row.entry })))
     if (!executed(result.status)) return { status: result.status, error: result.error ?? `加条目状态：${result.status}`, detail: result, changes: result.changes ?? [] }
-    // B′ 人物的完整基准是存档里固定那份：新条目算后来的改动（整份存进状态），不进基准
-    if (o.bases.has(actorId) && !o.bases.isStored(actorId) && Array.isArray(result.result?.added)) {
-      const current = await actorData(o.session, actorId)
-      const byId = new Map(((current?.items ?? []) as any[]).map((item: any) => [item._id, item]))
-      o.bases.addItems(actorId, result.result.added.map((item: any) => byId.get(item._id) ?? item))
-    }
+    await this.trackAdded(ownerKey, actorId, result.result?.added)
     return { status: 'complete', result: result.result, changes: result.changes ?? [], noEnglish: rows.noEnglish }
+  }
+  /** B′ 人物的完整基准是存档里固定那份：新加的条目算后来的改动（整份存进状态），不进基准。 */
+  async trackAdded(ownerKey: string, actorId: string, added: unknown): Promise<void> {
+    const o = await this.get(ownerKey); if (!o.bases.has(actorId) || o.bases.isStored(actorId) || !Array.isArray(added)) return
+    const byId = new Map((((await actorData(o.session, actorId))?.items ?? []) as any[]).map((item: any) => [item._id, item]))
+    o.bases.addItems(actorId, added.map((item: any) => byId.get(item._id) ?? item))
   }
 
   /** T5：批量建怪物/NPC/载具/物件；单个也走这里。换算结果由会话缓存读写。 */
@@ -273,7 +274,7 @@ export class KernelRuntime {
   }
 
   /** 引用 → 【库】条目（中文战役交英文对照，zh 带同一编号的中文条目给 locale.ts 换显示文字），建卡/加条目/批量建共用。 */
-  private async entries(ownerKey: string, refs: EntryRef[]): Promise<{ status: 'complete'; rows: Array<{ ref: EntryRef; entry: unknown; zh: unknown | null; name: string | null }>; noEnglish: EntryRef[] } | { status: 'missing' | 'error'; error: string; rows: []; noEnglish: [] }> {
+  async entries(ownerKey: string, refs: EntryRef[]): Promise<{ status: 'complete'; rows: Array<{ ref: EntryRef; entry: unknown; zh: unknown | null; name: string | null }>; noEnglish: EntryRef[] } | { status: 'missing' | 'error'; error: string; rows: []; noEnglish: [] }> {
     const lib = await this.library(ownerKey)
     const existing = this.open.get(ownerKey)
     const opened = existing ? await existing : null

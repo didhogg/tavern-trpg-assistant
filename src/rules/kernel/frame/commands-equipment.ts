@@ -90,7 +90,7 @@ export function goldExpressionOf(entry: any): string | null {
 }
 
 /** 一条起始装备写法 → 界面用的视图；认得但没有候选 → null（照 Plutonium 去掉）；不认得 → { unsupported }（不静默丢）。 */
-async function viewOf(equi: any): Promise<Omit<EquipEntryView, 'index'> | { unsupported: string } | null> {
+export async function viewOf(equi: any): Promise<Omit<EquipEntryView, 'index'> | { unsupported: string } | null> {
   const loaded = async (uid: string) => { const [name, source] = uid.split('|'); const i = await g.DataLoader.pCacheAndGetHash(g.UrlUtil.PG_ITEMS, hashOfUid(uid)); return { uid, name: itemName(i?.name ?? name, i?.source ?? source, hashOfUid(uid)), source: i?.source ?? source, hash: hashOfUid(uid), found: !!i } }
   if (typeof equi === 'string') return { raw: equi, kind: 'item', quantity: 1, ...(await loaded(equi)) }
   if (equi.item) return { raw: equi, kind: 'item', quantity: equi.quantity || 1, ...(await loaded(equi.item)), ...(equi.displayName ? { displayName: fromEntry(titleCase(equi.displayName)) } : {}), ...(equi.containsValue ? { cp: equi.containsValue } : {}) }

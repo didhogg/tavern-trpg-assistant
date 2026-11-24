@@ -1,15 +1,15 @@
 <script setup lang="ts">
 // 特质卡上半：职业 · 子职业 · 种族 · 背景（照 Tidy5e parts/ActorTraitClasses.svelte、traits/CharacterTraitSpecies.svelte、parts/ActorTraitBackground.svelte）。
-//   职业行：名字（看资料）· 等级菜单（官方 availableLevels：改到几级 = 官方 forLevelChange）· 升一级 · ⋯（看资料 / 用建卡器做选择 / 删除）
-//   子职业行 或「选子职业」（官方 needsSubclass）· 加职业（建卡器兼职 / 从库里加）· 种族 / 背景行（看资料 · ⋯ 换 / 删；没有 =「从库里选」）。
-// 写入只调人物 store 现成动作（level / remove / 选库条目页 / 作者建卡器），界面只读官方显示数据。
+//   职业行：名字（看资料）· 等级菜单（官方 availableLevels：降级 = 官方 forLevelChange）· 升级（作者「导入到人物」：选到第几级，要做的选择一题一题问）· ⋯
+//   子职业行 或「选子职业」（官方 needsSubclass；从库里只列这个职业的子职业）· 兼职（从库里加职业）· 种族 / 背景行（看资料 · ⋯ 换 / 删；没有 =「从库里选」）。
+// 加 / 换 / 升级都走同一个问答页（ask/ImportAsk.vue，作者整路：特性、熟练、装备随条目一起来）；写入只调人物 store 现成动作，界面只读官方显示数据。
 import { computed } from 'vue'
 import { usePersonStore } from '../../stores/person'
 import Icon from '../kit/Icon.vue'
 import MoreMenu from '../kit/MoreMenu.vue'
 import Term from '../kit/Term.vue'
 import { openEntry } from '../libview/open'
-import { openFields, openLevel, openPick } from './edit-open'
+import { openFields, openImport, openPick } from './edit-open'
 import { background, species } from './view'
 import { classBuilds, originId, type ClassBuild } from './view-tabs'
 
@@ -30,20 +30,24 @@ const createCustom = (type: string, label: string): void => { void person.create
 
 /** 等级菜单：官方给的每一档（差几级），超过总等级上限的官方标了不可选。 */
 const levelItems = (c: ClassBuild) => c.levelsMenu.filter((o) => o.delta).map((o) => ({ key: String(o.delta), label: `改到 ${c.levels + o.delta} 级（${o.delta > 0 ? '+' : ''}${o.delta}）`, disabled: ro.value || o.disabled }))
-const canUp = (c: ClassBuild): boolean => c.levelsMenu.some((o) => o.delta === 1 && !o.disabled)
+const canUp = (c: ClassBuild): boolean => !!c.ref && c.levelsMenu.some((o) => o.delta === 1 && !o.disabled)
+/** 升级 = 作者「导入到人物」同一个职业（第一题选到第几级，要做的选择一题一题问）；降级 = 官方 forLevelChange（退回成长，不用选）。 */
 function setLevel(c: ClassBuild, delta: number): void {
-  if (delta) void person.level(`${c.name}${delta > 0 ? '升' : '降'}到 ${c.levels + delta} 级`, c.id, delta)
+  if (delta > 0 && c.ref) openImport(c.ref, c.name, `${c.name}升级`)
+  else if (delta < 0) void person.level(`${c.name}降到 ${c.levels + delta} 级`, c.id, delta)
+}
+/** 选子职业：从库里只列这个职业的子职业（子职业条目记着所属职业的名字和来源，和库里职业条目同一套）。 */
+function pickSubclass(c: ClassBuild): void {
+  openPick('subclasses', undefined, (item) => String(item.className ?? '') === c.name && (!c.source || String(item.classSource ?? '').toLowerCase() === c.source.toLowerCase()))
 }
 const classMenu = (c: ClassBuild) => [
   { key: 'view', label: '看资料', disabled: !c.ref },
   { key: 'edit', label: '编辑', disabled: ro.value },
-  { key: 'native', label: '用建卡器升级 / 做选择…', disabled: ro.value },
   { key: 'remove', label: `删除这个职业（退回 ${c.levels} 级）`, danger: true, disabled: ro.value },
 ]
 function onClass(c: ClassBuild, key: string): void {
   if (key === 'view') view(c.ref, c.name)
   else if (key === 'edit') edit(c.id, c.name)
-  else if (key === 'native') openLevel('用建卡器升级 / 兼职')
   else if (key === 'remove') void person.remove(`删除了职业${c.name}`, c.id)
 }
 function onSub(c: ClassBuild, key: string): void {
@@ -72,8 +76,7 @@ function onOrigin(o: Origin, key: string): void {
     <div v-if="!cls.length" class="ps-build-row" data-testid="ps-build-class-empty">
       <span class="ps-build-label">职业</span>
       <span class="ps-build-main">
-        <button class="trpg-btn trpg-btn--primary trpg-btn--small" type="button" :disabled="ro" @click="openLevel('用建卡器建这个人')"><Icon name="plus" :size="14" />用建卡器选职业…</button>
-        <button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" :disabled="ro" @click="openPick('classes')">从库里加职业</button>
+        <button class="trpg-btn trpg-btn--primary trpg-btn--small" type="button" :disabled="ro" data-testid="ps-build-add-class" @click="openPick('classes')"><Icon name="plus" :size="14" />选职业</button>
         <button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" :disabled="ro" @click="createCustom('class', '职业')">新建自定义职业</button>
       </span>
       <span />
@@ -98,7 +101,7 @@ function onOrigin(o: Origin, key: string): void {
       <div v-else-if="c.needsSubclass" class="ps-build-row ps-build-sub" data-testid="ps-build-needs-sub">
         <span class="ps-build-label" />
         <span class="ps-build-main"><Icon name="arrow-elbow-down-right" :size="13" class="ps-build-turn" />
-          <button class="trpg-btn trpg-btn--primary trpg-btn--small" type="button" :disabled="ro" @click="openLevel('用建卡器选子职业')">选子职业…</button>
+          <button class="trpg-btn trpg-btn--primary trpg-btn--small" type="button" :disabled="ro" data-testid="ps-build-pick-sub" @click="pickSubclass(c)">选子职业</button>
         </span>
         <span />
       </div>
@@ -106,8 +109,7 @@ function onOrigin(o: Origin, key: string): void {
     <div v-if="cls.length" class="ps-build-row ps-build-sub" data-testid="ps-build-class-add">
       <span class="ps-build-label" />
       <span class="ps-build-main">
-        <button class="trpg-btn trpg-btn--small" type="button" :disabled="ro" @click="openLevel('用建卡器兼职')"><Icon name="plus" :size="13" />兼职…</button>
-        <button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" :disabled="ro" @click="openPick('classes')">从库里加职业（不带特性）</button>
+        <button class="trpg-btn trpg-btn--small" type="button" :disabled="ro" data-testid="ps-build-multiclass" @click="openPick('classes')"><Icon name="plus" :size="13" />兼职（再加一个职业）</button>
       </span>
       <span />
     </div>
@@ -116,7 +118,7 @@ function onOrigin(o: Origin, key: string): void {
       <span class="ps-build-main">
         <template v-if="o.row"><Term v-if="o.row.ref" :label="`查看${o.row.name}`" @open="view(o.row!.ref, o.row!.name)">{{ o.row.name }}</Term><span v-else>{{ o.row.name }}</span></template>
         <template v-else>
-          <button class="trpg-btn trpg-btn--primary trpg-btn--small" type="button" :disabled="ro" @click="openPick(o.kind)"><Icon name="plus" :size="13" />从库里选{{ o.label }}</button>
+          <button class="trpg-btn trpg-btn--primary trpg-btn--small" type="button" :disabled="ro" :data-testid="`ps-build-pick-${o.key}`" @click="openPick(o.kind)"><Icon name="plus" :size="13" />选{{ o.label }}</button>
           <button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" :disabled="ro" @click="createCustom(o.key, o.label)">新建自定义{{ o.label }}</button>
         </template>
       </span>

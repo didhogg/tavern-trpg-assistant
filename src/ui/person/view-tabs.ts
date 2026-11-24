@@ -33,7 +33,9 @@ export const characteristics = (s: PersonSheet): Array<{ path: string; label: st
 
 // ---- 构建（职业 · 子职业 · 种族 · 背景；照 dnd5e 官方 actor-classes 与 Tidy5e CharacterTraits）----
 /** 一个职业：等级、官方给的“可改到几级”（差几级）、子职业或“该选子职业了”（官方 needsSubclass）。 */
-export interface ClassBuild { id: string; name: string; levels: number; ref?: unknown; levelsMenu: Array<{ delta: number; disabled: boolean }>; subclass: { id: string; name: string; ref?: unknown } | null; needsSubclass: boolean }
+export interface ClassBuild { id: string; name: string; source: string; levels: number; ref?: unknown; levelsMenu: Array<{ delta: number; disabled: boolean }>; subclass: { id: string; name: string; ref?: unknown } | null; needsSubclass: boolean }
+const shownItemName = (s: PersonSheet, id: string): string | undefined => (s as any).shown?.items?.find?.((x: any) => x.id === id)?.name
+const shownItemRef = (s: PersonSheet, id: string): unknown => (s as any).shown?.items?.find?.((x: any) => x.id === id)?.ref
 export function classBuilds(s: PersonSheet): ClassBuild[] {
   const ic: Record<string, any> = s.view?.base?.itemContext ?? {}
   const subsShown = list<any>(s.view?.base?.itemCategories?.subclasses)
@@ -43,9 +45,10 @@ export function classBuilds(s: PersonSheet): ClassBuild[] {
     const sub = (s.items ?? []).find((x: any) => x.type === 'subclass' && x.system?.classIdentifier === it?.system?.identifier)
     const subShown = sub ? subsShown.find((x) => x.id === sub.id) : null
     return {
-      id: String(c.id), name: String(c.name ?? ''), levels: Number(it?.system?.levels ?? 0), ref: c.ref,
+      id: String(c.id), name: String(c.name ?? ''), source: String(it?.flags?.plutonium?.source ?? it?.system?.source?.book ?? ''), levels: Number(it?.system?.levels ?? 0), ref: c.ref,
       levelsMenu: list<any>(ic[c.id]?.availableLevels).map((o) => ({ delta: Number(o.value ?? 0), disabled: !!o.disabled })),
-      subclass: sub ? { id: String(sub.id), name: String(subShown?.name ?? sub.name ?? ''), ref: subShown?.ref } : null,
+      // 子职业名和别的条目同一个出口（人物页统一取好的名字）；官方子职业分组没给就不用它
+      subclass: sub ? { id: String(sub.id), name: String(subShown?.name ?? shownItemName(s, String(sub.id)) ?? sub.name ?? ''), ref: subShown?.ref ?? shownItemRef(s, String(sub.id)) } : null,
       needsSubclass: !!ic[c.id]?.needsSubclass || !!parts(s).features?.classes?.find?.((x: any) => x.id === c.id)?.needsSubclass,
     }
   }).sort((a, b) => b.levels - a.levels)

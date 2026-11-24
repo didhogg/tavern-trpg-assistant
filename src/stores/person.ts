@@ -4,6 +4,8 @@ import type { Glossary, ShownFieldInfo, SpecialTraits, TraitChoices } from '../r
 import type { EntryRef } from '../library/scopes'
 import type { SheetEdit } from '../rules/kernel/frame/commands-sheet'
 import type { KernelChange } from '../schemas/kernel'
+import type { AskAnswer } from '../rules/kernel/author-ask-types'
+import type { ImportStep } from '../rules/kernel/import-flow'
 import { useAppStore } from './app'
 import { useCampaignStore } from './campaign'
 import { useRosterStore } from './roster'
@@ -94,11 +96,6 @@ export const usePersonStore = defineStore('person', () => {
   }
 
   const edit = (label: string, edits: SheetEdit[]) => write(label, (k) => backend().edit(k, id.value!, edits))
-  /** 从库里加条目（物品等）：后端加条目的结果改成和改字段同一种 outcome，失败原因照常提示。 */
-  const add = (label: string, refs: EntryRef[]) => write(label, async (k) => {
-    const r = await backend().add(k, id.value!, refs)
-    return { outcome: { status: r.added.status, error: r.added.error } }
-  })
   /** 短休 / 长休（官方休息，不弹官方窗口；需要掷骰的部分等 P7）。 */
   const rest = (type: 'short' | 'long') => write(type === 'short' ? '短休' : '长休', (k) => backend().act(k, id.value!, 'rest', id.value!, type, [], {}))
   /** 某个职业改几级（官方 forLevelChange，和官方 / Tidy5e 等级下拉同一条路）；要玩家做选择的成长会报“没有完成”。 */
@@ -112,11 +109,24 @@ export const usePersonStore = defineStore('person', () => {
   const convertCurrency = () => write('钱币换算成最少枚数', (k) => backend().act(k, id.value!, 'convertCurrency', id.value!))
   /** 拿掉一件条目（官方退回它带来的成长再删）。 */
   const remove = (label: string, itemId: string) => write(label, (k) => backend().remove(k, id.value!, itemId))
-  /** 换掉一件条目（换种族 / 背景）：官方拿掉旧的 + 加新的，一条撤销。 */
-  const replace = (label: string, oldItemId: string, ref: EntryRef) => write(label, async (k) => {
-    const r = await backend().replace(k, id.value!, oldItemId, ref)
-    return { outcome: { status: r.added.status, error: r.added.error } }
-  })
+  /**
+   * 空白卡建人 / 从库里加（作者「导入到人物」+ 问答桥）：带着玩家已答的题目问一步；
+   * 交回下一题（这个人已按存档退回）或「会加上什么」（改动留在小窗等 importConfirm / importCancel）。
+   */
+  async function importStep(ref: EntryRef, answers: AskAnswer[], replaceItemId?: string): Promise<ImportStep | null> {
+    const key = ownerKey(); const who = id.value
+    if (!key || !who) return null
+    // 界面给的是响应式对象，跨窗口传不过去：回答和条目编号都是纯数据，先转成普通对象
+    const plain = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T
+    try { return await serial(() => app.svc().backend.importFlow.step(key, who, plain(ref), plain(answers), replaceItemId)) } catch (e) { return { status: 'error', error: message(e), ms: 0 } }
+  }
+  /** 确认：留在小窗里的改动写进存档（一条撤销，提示条可撤）。 */
+  const importConfirm = (label: string, changes: KernelChange[]) => write(label, (k) => app.svc().backend.importFlow.confirm(k, changes))
+  /** 取消：这个人按存档退回（小窗里没确认的改动丢掉）。 */
+  async function importCancel(): Promise<void> {
+    const key = ownerKey(); const who = id.value
+    if (key && who) await serial(() => app.svc().backend.importFlow.cancel(key, who))
+  }
   /** 用作者完整建卡器改这个人（升级、兼职、带选择的成长；空白人物 = 从头建）：完成 = 一条撤销，取消 = 不变。 */
   async function levelNative(slot: HTMLElement): Promise<'done' | 'cancelled' | 'failed'> {
     const key = ownerKey()
@@ -197,5 +207,5 @@ export const usePersonStore = defineStore('person', () => {
     return out.result as ShownFieldInfo
   }
 
-  return { id, sheet, glossary, loading, error, prevId, nextId, row, readOnly, open, close, reload, edit, add, create, splitStack, createScroll, convertCurrency, duplicate, remove, replace, adjust, fields, traitChoices, specialTraits, filterIds, rest, level, levelNative, stopNative, previewHp, cancelHp, confirmHp, undo, undoTo, history }
+  return { id, sheet, glossary, loading, error, prevId, nextId, row, readOnly, open, close, reload, edit, importStep, importConfirm, importCancel, create, splitStack, createScroll, convertCurrency, duplicate, remove, adjust, fields, traitChoices, specialTraits, filterIds, rest, level, levelNative, stopNative, previewHp, cancelHp, confirmHp, undo, undoTo, history }
 })

@@ -11,7 +11,7 @@ type Cleanup = Array<() => void>
 type Option = { label: string; text?: FrameText; select: () => void; clear: () => void }
 /** 存不进原生进阶的候选：名字 + 作者编号（是物品时）。 */
 export type Withheld = { label: string; text?: FrameText }
-type Slot = { count: number; hints?: string[]; options: Option[] }
+export type Slot = { count: number; hints?: string[]; options: Option[] }
 export type NativeSlot = { count: number; pool: string[] }
 interface Plan {
   index: number
@@ -32,7 +32,7 @@ function setOption(component: any, key: string, value: any, label: string, text?
 /** 作者物品 → 作者编号（与 Plutonium 写进物品 flags 同形）。 */
 const itemId = (entity: { name: string; source: string }): KernelRefFlags => ({ propDroppable: 'item', source: entity.source, hash: g.UrlUtil.URL_TO_HASH_BUILDER[g.UrlUtil.PG_ITEMS](entity) })
 
-function proficiencySlots(api: Api, component: any, set: any, cleanup: Cleanup, scope?: Set<string>): Slot[] {
+export function proficiencySlots(api: Api, component: any, set: any, cleanup: Cleanup, scope?: Set<string>): Slot[] {
   return (set.choose ?? []).map((slot: any, ixChoose: number) => {
     if (slot.fromFilter) {
       const { propState } = component._getPropsChooseFromFilter({ ixChoose, ixCount: 0 })
@@ -55,7 +55,7 @@ function proficiencySlots(api: Api, component: any, set: any, cleanup: Cleanup, 
   })
 }
 
-function expertiseSlots(api: Api, component: any, set: any, cleanup: Cleanup): Slot[] {
+export function expertiseSlots(api: Api, component: any, set: any, cleanup: Cleanup): Slot[] {
   component._stgGroup = api.veE(document.createElement('div'))
   const slots: Slot[] = []
   component._render_renderPtChooseAnyProficient = ({ profSet, propProfSet, propIxProps, fnGetValues }: any) => {
@@ -68,7 +68,7 @@ function expertiseSlots(api: Api, component: any, set: any, cleanup: Cleanup): S
   return slots
 }
 
-function resistanceSlots(api: Api, component: any): Slot[] | null {
+export function resistanceSlots(api: Api, component: any): Slot[] | null {
   component.render(api.veE(document.createElement('div')))
   const nodes = component._lastChoiceMeta.children.filter((node: any) => node.children)
   if (nodes.some((node: any) => !node.children.every((option: any) => option.isChoosable))) return null

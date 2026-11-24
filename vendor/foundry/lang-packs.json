@@ -3,7 +3,7 @@
  "packs": {
   "zh": {
    "name": "中文",
-   "hash": "886e7a4eb4790ed891e2b09cdab75f38de26520b3421ad700507373bd3afbef2",
+   "hash": "2ccff3e1ae697cbbaccd1951b04ac09a955e4e5443718eee935db2ce56d71259",
    "files": [
     {
      "package": "system",
@@ -21,7 +21,7 @@
      "package": "module",
      "id": "plutonium",
      "path": "lang/zh.json",
-     "sha256": "f2206c517c5d6b3d8b8965c92ee54f7870cf2389b029f69a48099f2ace446898"
+     "sha256": "307febdb3d59547bc38ef868805836dda6e7f0fd62f7f648209d6f873b2e1188"
     },
     {
      "package": "core",

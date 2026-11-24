@@ -1,0 +1,72 @@
+/* 从库里加 · 作者提问一问一答（ui/person/ask/*）：只用色板变量。整页 = 头（返回 · 条目名 · 已答几题）/ 已答一行行 / 当前题 / 底栏。 */
+.ask { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; height: 100%; min-height: 0; }
+.ask-head { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border-bottom: var(--border) solid var(--line); background: var(--surface); }
+.ask-what { font-family: var(--font-serif); font-size: var(--fs-lg); font-weight: var(--fw-semibold); }
+.ask-count { margin-left: auto; color: var(--text2); font-size: var(--fs-xs); }
+/* 已答：一行一题（题目灰、选择黑），点一行回到那题重答 */
+.ask-done { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-2); margin: 0; padding: var(--sp-2) var(--sp-4); list-style: none; border-bottom: var(--border) solid var(--line); background: var(--bg-side); max-height: 96px; overflow-y: auto; }
+.ask-done button { display: inline-flex; align-items: baseline; gap: var(--sp-1); max-width: 100%; padding: 2px var(--sp-2); border: var(--border) solid var(--line); border-radius: var(--r-pill); background: var(--surface); color: var(--text); font: inherit; font-size: var(--fs-xs); cursor: pointer; }
+.ask-done button:hover:not(:disabled) { border-color: var(--accent); }
+.ask-done span { color: var(--text2); white-space: nowrap; }
+.ask-done b { font-weight: var(--fw-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ask-body { min-height: 0; overflow-y: auto; padding: var(--sp-4) var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-3); }
+.ask-title { margin: 0; font-size: var(--fs-xl); font-weight: var(--fw-semibold); }
+.ask-note { margin: 0; color: var(--text2); font-size: var(--fs-sm); }
+.ask-slow { margin: 0; color: var(--text2); font-size: var(--fs-sm); }
+.ask-slow::before { content: ''; display: inline-block; width: 10px; height: 10px; margin-right: var(--sp-2); border: 2px solid var(--line-ctrl); border-top-color: var(--accent); border-radius: 50%; animation: ask-spin .8s linear infinite; vertical-align: -1px; }
+@keyframes ask-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ask-slow::before { animation: none; } }
+.ask-foot { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); border-top: var(--border) solid var(--line-ctrl); background: var(--bg-side); }
+.ask[aria-busy] .ask-form { opacity: .6; transition: opacity .15s; }
+
+/* 题型 */
+.ask-form { display: flex; flex-direction: column; gap: var(--sp-3); }
+.ask-yesno { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+.ask-yesno .trpg-btn { min-width: 120px; min-height: 40px; }
+.ask-list { display: flex; flex-direction: column; gap: 2px; }
+.ask-row { display: flex; align-items: baseline; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); border: var(--border) solid transparent; border-radius: var(--r-sm); cursor: pointer; }
+.ask-row:hover { background: var(--bg-hover); }
+.ask-row[data-on] { border-color: var(--line-ctrl); background: var(--surface); }
+.ask-row[data-off] { color: var(--text3); cursor: default; }
+.ask-row input { accent-color: var(--primary); }
+.ask-level b { flex: none; min-width: 3.5em; font-variant-numeric: tabular-nums; }
+.ask-level .ask-note { flex: 1; }
+.ask-num { width: 8em; }
+.ask-fixed { margin: 0; color: var(--text2); font-size: var(--fs-sm); }
+.ask-group { display: flex; flex-direction: column; gap: var(--sp-2); }
+.ask-group-head { display: flex; align-items: baseline; gap: var(--sp-3); }
+.ask-group-head b { font-size: var(--fs-sm); }
+.ask-group-head small { color: var(--accent-text); font-size: var(--fs-xs); }
+.ask-group-head small[data-done] { color: var(--success-text); }
+.ask-chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--sp-1) var(--sp-3); }
+.ask-chips[data-wide] { grid-template-columns: minmax(0, 1fr); }
+.ask-own { display: grid; gap: var(--sp-2); }
+
+/* 起始装备：每组一张卡，方案 (a)(b) 一行一个 */
+.ask-equip .ask-group { padding: var(--sp-2) var(--sp-3); border: var(--border) solid var(--line); border-radius: var(--r-sm); background: var(--surface); }
+.ask-equip-choices { display: flex; flex-direction: column; gap: 2px; }
+.ask-equip-choice { display: flex; align-items: baseline; gap: var(--sp-2); padding: var(--sp-1) var(--sp-2); border-radius: var(--r-sm); cursor: pointer; }
+.ask-equip-choice[data-on] { background: var(--bg-sunk); }
+.ask-letter { flex: none; color: var(--text2); font-weight: var(--fw-regular); }
+.ask-equip-items { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) 0; }
+.ask-equip-item:not(:last-of-type)::after { content: '、'; color: var(--text3); }
+.ask-equip-pick { min-width: 180px; }
+.ask-gold { display: flex; flex-direction: column; gap: var(--sp-2); }
+.ask-gold label { display: flex; align-items: center; gap: var(--sp-2); }
+
+/* 属性提升 / 专长 */
+.ask-asi-grid { display: grid; gap: 2px; max-width: 420px; }
+.ask-asi-row { display: grid; grid-template-columns: 4em 3em auto 4em; align-items: center; gap: var(--sp-2); padding: var(--sp-1) var(--sp-2); border-radius: var(--r-sm); }
+.ask-asi-row[data-up] { background: var(--bg-sunk); }
+.ask-asi-now, .ask-asi-to { font-variant-numeric: tabular-nums; color: var(--text2); }
+.ask-asi-row[data-up] .ask-asi-to { color: var(--text); font-weight: var(--fw-semibold); }
+.ask-asi-ctl { display: inline-flex; align-items: center; gap: var(--sp-1); }
+.ask-asi-ctl i { min-width: 2em; text-align: center; font-style: normal; font-variant-numeric: tabular-nums; }
+.ask-note[data-done] { color: var(--success-text); }
+.ask-feat { display: grid; grid-template-rows: auto minmax(160px, 280px) auto; gap: var(--sp-2); }
+.ask-feat-list { border: var(--border) solid var(--line); border-radius: var(--r-sm); }
+
+/* 答完：会加上什么 */
+.ask-added { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-2) var(--sp-4); margin: 0; }
+.ask-added dt { color: var(--text2); font-size: var(--fs-sm); white-space: nowrap; }
+.ask-added dd { margin: 0; line-height: var(--lh-normal, 1.6); }

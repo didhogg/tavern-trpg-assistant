@@ -14,6 +14,19 @@ function flagsOf(item: any): string | null {
   return f?.propDroppable && f.source && f.hash ? `${f.propDroppable}|${f.source}|${f.hash}` : null
 }
 
+/** 官方「删带成长的条目」：把它带来的成长一步步退回再删；没有成长直接删。交回没退完的那一步（null = 删好了）。 */
+export async function removeOfficially(a: any, itemId: string): Promise<any> {
+  const item = a.items.get(itemId)
+  if (!item) throw Error(`人物身上没有这件：${itemId}`)
+  const manager = Manager().forDeletedItem(a, itemId, { automaticApplication: true })
+  if (manager.steps.length) {
+    const outcome = await applyManager(manager, undefined)
+    return outcome.finished ? null : outcome.step
+  }
+  await item.delete()
+  return null
+}
+
 export function createAddCommands(operate: Operate, actor: ActorGetter) {
   return {
     /** 给已有人物加一组条目；兼职、子职业、专长、装备、法术、消耗品都走这里。 */
@@ -51,13 +64,8 @@ export function createAddCommands(operate: Operate, actor: ActorGetter) {
      */
     removeItem: (actorId: string, itemId: string) => operate([], async () => {
       const a = actor(actorId)
-      const item = a.items.get(itemId)
-      if (!item) throw Error(`人物身上没有这件：${itemId}`)
-      const manager = Manager().forDeletedItem(a, itemId, { automaticApplication: true })
-      if (manager.steps.length) {
-        const outcome = await applyManager(manager, undefined)
-        if (!outcome.finished) return { kernelStatus: 'pending', reason: 'remove-step-not-complete', step: outcome.step, pending: { step: outcome.step } }
-      } else await item.delete()
+      const step = await removeOfficially(a, itemId)
+      if (step) return { kernelStatus: 'pending', reason: 'remove-step-not-complete', step, pending: { step } }
       return { ...actorLevel(a), removed: itemId }
     }, [actorId]),
   }

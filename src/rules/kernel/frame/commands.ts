@@ -85,11 +85,19 @@ async function capture<T>(run: () => Promise<T>): Promise<{ value: T; changes: C
   finally { socket.emit = emit }
 }
 
-/** 界面渲染即“需玩家输入”（蓝图 §3.4 兜底）：任何应用窗口要显示就停在那里。 */
+/**
+ * 界面渲染即“需玩家输入”（蓝图 §3.4 兜底）：任何应用窗口要显示就停在那里。
+ * 侧边栏页（物品 / 人物目录等，AbstractSidebarTab）只是显示、从不要输入：dnd5e 加删物品后会顺手刷新它（_renderContainers，发出去不等），
+ * 小窗里不画它、也不算要输入（以前会变成未捕获的 KERNEL_NEEDS_INPUT）。
+ */
 function guardRender<T>(run: () => Promise<T>): Promise<T> {
   const App = g.foundry.applications.api.ApplicationV2.prototype
+  const Sidebar = g.foundry.applications.sidebar?.AbstractSidebarTab
   const render = App.render
-  App.render = function(this: any) { throw new NeedsInput(this.constructor.name) }
+  App.render = function(this: any) {
+    if (Sidebar && this instanceof Sidebar) return Promise.resolve(this)
+    throw new NeedsInput(this.constructor.name)
+  }
   return run().finally(() => { App.render = render })
 }
 
@@ -150,7 +158,7 @@ const FIELD_COMMANDS = createFieldCommands(operate, actor)
 const OPTIONS_COMMANDS = createOptionsCommands(operate)
 const EQUIPMENT_COMMANDS = createEquipmentCommands(operate)
 /** P6 建卡走作者整机（Plutonium「导入到人物」）。 */
-const IMPORT_COMMANDS = createImportCommands(operate)
+const IMPORT_COMMANDS = createImportCommands(operate, actor)
 /** P6 第 2 段：建卡专用小窗跑作者完整建卡器。 */
 const NATIVE_COMMANDS = createNativeCommands(operate)
 

@@ -1,4 +1,4 @@
-import { d as e, n as t, x as n } from "./images--0Ll1fRr.js";
+import { d as e, n as t, x as n } from "./images-r5X34dbN.js";
 import { s as r, t as i } from "./protocol-CoIo3UiI.js";
 // src/library/runtime/frame/author.ts
 var a = globalThis, o = null;
@@ -296,12 +296,12 @@ async function ue(e, t) {
 	let n = le[e], r = n ? n(t) : t?.name;
 	return typeof r == "string" && r ? r : null;
 }
-async function de(e) {
+async function S(e) {
 	await s();
 	let t = a.Renderer.get().render(e), n = document.createElement("div");
 	return n.innerHTML = t, (n.textContent ?? "").replace(/\s+/g, " ").trim();
 }
-async function fe(e) {
+async function de(e) {
 	await s();
 	let t = a.Renderer.utils.getStatblockEntryMeta(e), n = String(t.prop ?? ""), r = !!t.isFluff;
 	return {
@@ -314,9 +314,9 @@ async function fe(e) {
 	};
 }
 // src/library/runtime/frame/sort-commands.ts
-var pe = (e) => ["js/filter-common.js", `js/filter-${e}.js`], S = /* @__PURE__ */ new Set();
+var fe = (e) => ["js/filter-common.js", `js/filter-${e}.js`], pe = /* @__PURE__ */ new Set();
 async function me(e) {
-	S.has(e) || (S.add(e), await new Promise((t) => {
+	pe.has(e) || (pe.add(e), await new Promise((t) => {
 		let n = document.createElement("script");
 		n.src = e, n.onload = () => t(), n.onerror = () => t(), document.head.appendChild(n);
 	}));
@@ -325,14 +325,14 @@ async function C(e) {
 	await s();
 	let t = String(a.DataLoader.getPropPage(e) ?? "").replace(/\.html$/, "");
 	if (!t) return null;
-	for (let e of pe(t)) await me(e);
+	for (let e of fe(t)) await me(e);
 	let n = Object.keys(a).find((e) => e.startsWith("ModalFilter") && e.toLowerCase() === `modalfilter${t}`);
 	return n && typeof a[n] == "function" ? {
 		Cls: a[n],
 		page: t
 	} : null;
 }
-function he(e, t) {
+function w(e, t) {
 	let n = a.UrlUtil.getCurrentPage;
 	a.UrlUtil.getCurrentPage = () => `${e}.html`;
 	try {
@@ -341,7 +341,7 @@ function he(e, t) {
 		a.UrlUtil.getCurrentPage = n;
 	}
 }
-async function w(e) {
+async function T(e) {
 	let t = await C(e);
 	return t ? t.Cls.prototype._getColumnHeaders.call({}).map((e) => ({
 		sort: e.getAttribute("data-sort"),
@@ -349,10 +349,10 @@ async function w(e) {
 		title: e.getAttribute("title")
 	})).filter((e) => !!e.sort) : [];
 }
-async function T(e, t) {
+async function he(e, t) {
 	await x(t);
 	let n = [...await a.DataLoader.pCacheAndGetAllSite(t) ?? [], ...await a.DataLoader.pCacheAndGetAllBrew(t) ?? []];
-	return he(e.page, () => {
+	return w(e.page, () => {
 		let t = new e.Cls({ namespace: "trpg-sort" }), r = n.map((e) => structuredClone(e));
 		r.forEach((e) => t._pageFilter.mutateAndAddToFilters(e));
 		let i = {
@@ -369,9 +369,9 @@ async function T(e, t) {
 }
 async function ge(e, t, n) {
 	let r = await C(e);
-	if (!r || !(await w(e)).some((e) => e.sort === t)) return null;
-	let { inst: i, entities: o, items: s } = await T(r, e);
-	return he(r.page, () => {
+	if (!r || !(await T(e)).some((e) => e.sort === t)) return null;
+	let { inst: i, entities: o, items: s } = await he(r, e);
+	return w(r.page, () => {
 		let r = {
 			_filteredItems: s,
 			_sortBy: t,
@@ -393,7 +393,7 @@ async function _e(e) {
 		sort: e.getAttribute("data-sort"),
 		text: e.textContent ?? "",
 		title: e.getAttribute("title")
-	})), { entities: r, items: i } = await T(t, e), a = {};
+	})), { entities: r, items: i } = await he(t, e), a = {};
 	return i.forEach((t, i) => {
 		let o = l(e, r[i]);
 		if (!o || o in a) return;
@@ -800,12 +800,12 @@ async function Ve(e) {
 			});
 			continue;
 		}
-		let i = t.locator, o = i ? a.Omnidexer.getProperty(e, i.prop) : null, s = (e) => e?.name === i.name && (i.source == null || e.source === i.source), c = o?.filter((e) => e.source === i.source && e.page === i.page) || [], u = null, f = o?.find(s);
-		f ? u = "name" : (f = Object.values(e).filter(Array.isArray).flat().find(s)) ? u = "name-any-array" : (f = o?.length === i.count ? o[i.ix] : null) ? u = "position" : (f = c[i.ixSourcePage]) && (u = "source-page"), r.push({
+		let i = t.locator, o = i ? a.Omnidexer.getProperty(e, i.prop) : null, s = (e) => e?.name === i.name && (i.source == null || e.source === i.source), c = o?.filter((e) => e.source === i.source && e.page === i.page) || [], u = null, f = o?.filter(s) ?? [], p = f.length > 1 && o?.length === i.count && f.includes(o[i.ix]) ? o[i.ix] : f[0];
+		p ? u = "name" : (p = Object.values(e).filter(Array.isArray).flat().find(s)) ? u = "name-any-array" : (p = o?.length === i.count ? o[i.ix] : null) ? u = "position" : (p = c[i.ixSourcePage]) && (u = "source-page"), r.push({
 			prop: t.prop,
 			hash: t.hash,
-			enHash: f ? l(i.prop, f) : null,
-			enSource: f ? d(f) : null,
+			enHash: p ? l(i.prop, p) : null,
+			enSource: p ? d(p) : null,
 			via: u
 		});
 	}
@@ -2064,7 +2064,7 @@ async function bn(e) {
 	let t = /* @__PURE__ */ new Map(), n = {
 		author: async (e) => (await vn([e.path]))[0] ?? null,
 		requirement: async (e) => (await yn([e.raw]))[0] ?? null,
-		render: async (e) => await de(e.text) || null,
+		render: async (e) => await S(e.text) || null,
 		proficiency: async (e) => a.Renderer.generic.getMappedAnyProficiency({
 			keyAny: e.key,
 			countRaw: e.count
@@ -2286,15 +2286,15 @@ var Rn = {
 	tagRefs: h,
 	brewDependencyPreview: Ae,
 	brewMergeCheck: ke,
-	sortColumns: w,
+	sortColumns: T,
 	sortRanks: ge,
 	listCells: _e,
 	authorFields: ne,
 	displayName: ue,
-	renderText: de,
+	renderText: S,
 	renderContent: v,
 	renderEntity: ce,
-	statblockMeta: fe,
+	statblockMeta: de,
 	tokenPath: jt,
 	extractTables: Nt,
 	directory: ft,

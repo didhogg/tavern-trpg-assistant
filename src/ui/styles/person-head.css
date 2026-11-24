@@ -21,14 +21,14 @@
 
 /* 身份：名字最大（衬线），★ 置顶、英文名、✎ */
 .ps-ident { grid-area: ident; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-2); }
-.ps-name-line { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--sp-2); }
+.ps-name-line { align-self: stretch; display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--sp-2); }
 .ps-name { margin: 0; font-family: var(--font-serif); font-size: var(--fs-3xl); font-weight: var(--fw-semibold); line-height: var(--lh-tight); color: var(--text); }
 .ps-pin { align-self: center; width: 28px; height: 28px; display: grid; place-items: center; padding: 0; border: 0; background: none; color: var(--text3); cursor: pointer; }
 .ps-pin[aria-pressed='true'] { color: var(--accent); }
 .ps-english { color: var(--text2); font-size: var(--fs-md); }
 .ps-sub { display: flex; flex-wrap: wrap; gap: 0 var(--sp-3); margin: 0; color: var(--text2); }
 .ps-sub-strong { color: var(--text); font-weight: var(--fw-semibold); }
-.ps-rests { display: flex; gap: var(--sp-2); }
+.ps-rests { display: inline-flex; gap: var(--sp-2); margin-left: auto; align-self: center; }
 
 /* 等级卡 */
 .ps-level { grid-area: level; display: grid; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); }
@@ -93,16 +93,19 @@
 .ps-ability em { align-self: stretch; display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 2px; padding-top: 4px; border-top: var(--border) solid var(--line); font-style: normal; color: var(--text2); font-size: var(--fs-xs); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .ps-ability em[data-prof] { color: var(--primary); }
 .ps-ability em[data-prof]::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.ps-blank-cta { display: grid; gap: 2px; justify-items: start; padding: var(--sp-2) var(--sp-3); border: var(--border) dashed var(--accent); border-radius: var(--r-md); background: var(--bg-sunk); color: var(--text); text-align: left; cursor: pointer; }
-.ps-blank-cta span { color: var(--text2); font-size: var(--fs-sm); }
-.ps-blank-cta:hover:not(:disabled) { border-style: solid; }
+.ps-blank-cta { align-self: stretch; display: flex; flex-direction: column; gap: var(--sp-1); padding: var(--sp-2) var(--sp-3); border: var(--border) dashed var(--accent); border-radius: var(--r-md); background: var(--bg-sunk); color: var(--text); }
+.ps-blank-cta b { display: inline-flex; align-items: center; gap: var(--sp-1); }
+.ps-blank-cta > span { color: var(--text2); font-size: var(--fs-sm); }
+.ps-blank-steps { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-1); }
 
 /* 按页面宽度（不是窗口宽度：小窗和全屏里内容区差得多）换排法 */
 /* 中等宽度：生命卡横铺一整条（数字和生命条在左、生命骰 / 力竭 / 死亡豁免在右），下面 AC 先攻 专注 + 六属性合成一条统计条（Tidy5e） */
 @container pspage (max-width: 980px) {
   .ps-mid { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: 'vitals vitals' 'combat abilities'; }
-  .ps-vitals { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'label rows' 'hp rows'; align-items: center; column-gap: var(--sp-5); row-gap: 0; }
+  .ps-head { gap: var(--sp-3); padding-top: var(--sp-3); padding-bottom: var(--sp-4); }
+  .ps-vitals { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: 'label hp rows'; align-items: center; column-gap: var(--sp-4); row-gap: 0; padding: var(--sp-2) var(--sp-4); }
   .ps-vitals > .ps-card-label { grid-area: label; }
+  .ps-vitals .ps-hp-now { font-size: 1.75rem; }
   .ps-vitals > .ps-hp { grid-area: hp; }
   .ps-vitals > .ps-vital-rows { grid-area: rows; margin-top: 0; }
 }

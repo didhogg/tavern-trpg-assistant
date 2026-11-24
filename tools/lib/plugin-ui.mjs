@@ -4,6 +4,9 @@ import { upstreamKey } from './upstream-messages.mjs'
 
 export const PLUGIN_UI = { lang: 'zh', package: 'plutonium' }
 
+/** 模板句英文原文的编号：和 upstreamKey 同一个摘要，只换前缀。 */
+export const upstreamSourceKey = (text) => upstreamKey(text).replace('.UpstreamText.', '.UpstreamSource.')
+
 /** 译文和原文的 {} 个数必须一样；空位顺序可调。 */
 export function checkPlaceholders(text, translation) {
   const a = (String(text).match(/\{\}/g) ?? []).length
@@ -76,6 +79,8 @@ export function applyPluginUi(flat, rows, approved = []) {
       continue
     }
     out[key] = translation
+    // 模板句（含 {}）另放英文原文：运行时 system-text.ts uiText 用它匹配作者的实际句子、取出空位参数
+    if (row.text.includes('{}')) out[upstreamSourceKey(row.text)] = row.text.trim()
     added.push({ key, text: row.text, translation, from: override ? 'approved-translations' : row.from })
     if (override) approvedRows++
   }

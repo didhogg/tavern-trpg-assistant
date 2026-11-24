@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyPluginUi, checkPlaceholders, pluginUiKeyCollisions, pluginUiRows, pluginUiStats } from '../../tools/lib/plugin-ui.mjs'
+import { applyPluginUi, checkPlaceholders, pluginUiKeyCollisions, pluginUiRows, pluginUiStats, upstreamSourceKey } from '../../tools/lib/plugin-ui.mjs'
 import { upstreamKey } from '../../tools/lib/upstream-messages.mjs'
 
 const row = (text: string, translation: string, status: 'final' | 'review' = 'final', from = 'agent') => ({ lang: 'zh', package: 'plutonium', text, translation, status, from })
@@ -19,6 +19,17 @@ describe('作者界面字底稿', () => {
     expect(got.flat[upstreamKey('Select a Class')]).toBe('选择职业')
     expect(got.flat[upstreamKey('Mod.')]).toBeUndefined()
     expect(got.added).toHaveLength(1)
+  })
+  it('模板句（含 {}）另放英文原文：编号同一个摘要、只换前缀；普通句不放', () => {
+    const rows = pluginUiRows([
+      { lang: 'zh', package: 'plutonium', text: 'Import Levels 1-{}', translation: '导入 1–{} 级', from: 'agent', status: 'final' },
+      { lang: 'zh', package: 'plutonium', text: 'Select Class Levels', translation: '选择职业等级', from: 'agent', status: 'final' },
+    ])
+    const { flat } = applyPluginUi({}, rows)
+    expect(upstreamSourceKey('Import Levels 1-{}')).toBe(upstreamKey('Import Levels 1-{}').replace('.UpstreamText.', '.UpstreamSource.'))
+    expect(flat[upstreamSourceKey('Import Levels 1-{}')]).toBe('Import Levels 1-{}')
+    expect(flat[upstreamKey('Import Levels 1-{}')]).toBe('导入 1–{} 级')
+    expect(flat[upstreamSourceKey('Select Class Levels')]).toBeUndefined()
   })
   it('approved 覆盖底稿，即使底稿还是 review', () => {
     const got = applyPluginUi({}, [row('Mod.', '调整值', 'review')], [{ lang: 'zh', package: 'plutonium', text: 'Mod.', translation: '调整' }])
