@@ -71,3 +71,4 @@
 .pf-tree li { display: flex; align-items: center; gap: var(--sp-2); min-height: 32px; padding-right: var(--sp-3); font-size: var(--fs-sm); }
 .pf-tree li[data-cat] { min-height: 28px; margin-top: var(--sp-1); color: var(--text2); font-size: var(--fs-xs); font-weight: var(--fw-semibold); }
 .pf-tree-label { min-width: 0; }
+.pf-dur { display: flex; align-items: center; gap: var(--sp-2); } .pf-dur .trpg-select-trigger { width: 8em; }

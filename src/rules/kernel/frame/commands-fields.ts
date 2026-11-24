@@ -144,22 +144,29 @@ export function createFieldCommands(operate: Operate, actor: ActorGetter) {
       const source = getProp(doc._source, path)
       const tree = node(field, path, source, 0, doc)
       // 改到这一块的效果（人物身上生效的全部效果；物品上的字段不看效果）
-      const effects = target.itemId ? [] : [...(a.allApplicableEffects?.() ?? [])].flatMap((e: any) => (e.changes ?? [])
+      // Foundry 14：改动在 system.changes，写 type 字符串；改法清单与名字取官方 ActiveEffect.CHANGE_TYPES（核心 + 登记的，带语言键）
+      const TYPES: Record<string, { label: string }> = g.CONFIG.ActiveEffect.documentClass.CHANGE_TYPES ?? {}
+      const typeOf = (c: any): string => typeof c.type === 'string' ? c.type : (Object.entries(g.CONST.ACTIVE_EFFECT_MODES ?? {}).find(([, v]) => v === c.mode)?.[0] ?? '').toLowerCase()
+      const typeLabel = (t: string): FrameText | null => text(String(TYPES[t]?.label ?? t))
+      const effects = target.itemId ? [] : [...(a.allApplicableEffects?.() ?? [])].flatMap((e: any) => [...(e.system?.changes ?? e.changes ?? [])]
         .filter((c: any) => c.key === path || c.key.startsWith(`${path}.`) || path.startsWith(`${c.key}.`))
         .map((c: any) => {
           const origin = e.parent && e.parent !== a ? itemText(e.parent, []).name : null
-          const mode = Object.entries(g.CONST.ACTIVE_EFFECT_MODES ?? {}).find(([, v]) => v === c.mode)?.[0]
+          const type = typeOf(c)
           return {
             effect: e.id, itemId: e.parent && e.parent !== a ? e.parent.id : null, name: text(e.name), origin,
             active: !e.disabled && !e.isSuppressed, disabled: !!e.disabled, manual: !!e.flags?.['tavern-trpg']?.manual,
-            key: c.key, keyLabel: text(fieldLabel(a, c.key)), mode: mode ? text(`EFFECT.MODE_${mode}`) : null, modeCode: c.mode, value: c.value,
+            key: c.key, keyLabel: text(fieldLabel(a, c.key)), mode: type ? typeLabel(type) : null, modeCode: type, value: c.value,
           }
         }))
       // 明细 = 官方不存、算出来的字段（AC 的护甲 / 盾牌 / 加值 / 掩护……，见 derived 节点）+ 上面的效果；
       // dnd5e 的 getAttributionData 会开官方窗口，小窗里当成等输入，不用
       // 效果的改法（官方常量 + 官方语言键），给“添加效果”选
-      const modes = Object.entries(g.CONST.ACTIVE_EFFECT_MODES ?? {}).map(([k, v]) => ({ value: Number(v), label: text(`EFFECT.MODE_${k}`) ?? asData(k) }))
-      return { tree, effects, attribution: null, derived: null, modes }
+      // 效果改法（给“添加条目 / 效果页”选）：官方 ActiveEffect.CHANGE_TYPES
+      const modes = Object.entries(TYPES).map(([value, t]) => ({ value, label: text(String(t.label ?? value)) ?? asData(value) }))
+      // 效果持续的单位（照 Foundry 14 自己的效果表 ActiveEffectConfig：CONST.ACTIVE_EFFECT_DURATION_UNITS，名字 = EFFECT.DURATION.UNITS.<单位>）
+      const durationUnits = [...(g.CONST.ACTIVE_EFFECT_DURATION_UNITS ?? [])].map((value: string) => ({ value, label: text(`EFFECT.DURATION.UNITS.${value}`) ?? asData(value) }))
+      return { tree, effects, attribution: null, derived: null, modes, durationUnits }
     }),
 
     /**

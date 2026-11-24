@@ -131,7 +131,7 @@ export function createSheetCommands(operate: Operate, actor: ActorGetter, rollSu
         effects: [...a.allApplicableEffects()].map((e: any) => ({
           id: e.id, name: e.name, img: e.img, disabled: e.disabled, suppressed: e.isSuppressed ?? false,
           origin: e.origin ?? null, from: e.parent?.documentName === 'Item' ? { itemId: e.parent.id, name: e.parent.name } : null,
-          statuses: [...(e.statuses ?? [])], duration: plain(e.duration), changes: plain(e.system?.changes ?? e.changes ?? []),
+          statuses: [...(e.statuses ?? [])], duration: plain(e.duration), durationSource: plain(e._source?.duration ?? null), changes: plain(e.system?.changes ?? e.changes ?? []),
         })),
         // 界面显示的文字：标好来路，主线交唯一显示出口（kernel/display.ts）换成本战役语言；数值与编号照上面原样
         shown: {

@@ -116,7 +116,7 @@ async function save(): Promise<void> {
       edits.push(op === 'delete' ? { kind: 'effectDelete', effectId, ...at } : { kind: 'effect', effectId, ...at, path: 'disabled', value: op === 'disable' })
     }
     for (const a of added.value) {
-      edits.push({ kind: 'effectCreate', data: { name: a.note || '手动', changes: [{ key: props.addKey!, mode: 2, value: a.value }], flags: { 'tavern-trpg': { manual: true } } } })
+      edits.push({ kind: 'effectCreate', data: { name: a.note || '手动', system: { changes: [{ key: props.addKey!, type: 'add', value: a.value }] }, flags: { 'tavern-trpg': { manual: true } } } })
     }
     if (!edits.length || await person.edit(`改了${props.title}`, edits)) modal.close()
   } finally { busy.value = false }
@@ -142,7 +142,7 @@ async function save(): Promise<void> {
           <h4>条目</h4>
           <div v-for="e in activeRows" :key="`${e.effect}:${e.key}`" class="pf-entry" :data-manual="e.manual || undefined">
             <span>{{ e.name }}<small v-if="e.keyLabel"> · {{ e.keyLabel }}</small></span>
-            <b>{{ e.modeCode === 2 ? signed(e.value) : `${e.mode} ${e.value}` }}</b>
+            <b>{{ e.modeCode === 'add' ? signed(e.value) : `${e.mode} ${e.value}` }}</b>
             <em class="pf-src" :data-kind="e.manual ? 'manual' : 'auto'">{{ e.manual ? '手动' : e.origin ?? '效果' }}</em>
             <button class="trpg-icon-btn pf-x" type="button" :aria-label="`移除${e.name}`" :disabled="person.readOnly" @click="remove(e)"><Icon name="x" :size="14" /></button>
           </div>

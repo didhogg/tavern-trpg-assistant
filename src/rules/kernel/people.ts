@@ -38,8 +38,8 @@ interface FrameGlossary { tables: Record<string, Record<string, FrameText>>; sta
 export type Glossary = Displayed<FrameGlossary> & { untranslated?: string[] }
 /** 编辑窗口信息（小窗原样，FrameText 过出口后成字）。 */
 /** 改到某一块的效果（一条效果里的一项改动）：manual = 人物页“添加条目”加的手动效果。 */
-export interface FieldEffect { effect: string; itemId: string | null; name: FrameText | null; origin: FrameText | null; active: boolean; disabled: boolean; manual: boolean; key: string; keyLabel: FrameText | null; mode: FrameText | null; modeCode: number; value: string }
-export interface FieldInfo { tree: FieldNode | null; effects: FieldEffect[]; attribution: string | null; derived: unknown; modes: Array<{ value: number; label: FrameText }> }
+export interface FieldEffect { effect: string; itemId: string | null; name: FrameText | null; origin: FrameText | null; active: boolean; disabled: boolean; manual: boolean; key: string; keyLabel: FrameText | null; mode: FrameText | null; modeCode: string; value: string }
+export interface FieldInfo { tree: FieldNode | null; effects: FieldEffect[]; attribution: string | null; derived: unknown; modes: Array<{ value: string; label: FrameText }>; durationUnits?: Array<{ value: string; label: FrameText }> }
 export type ShownField = Displayed<FieldNode>
 export type ShownFieldInfo = Displayed<FieldInfo>
 
