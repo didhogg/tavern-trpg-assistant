@@ -127,7 +127,7 @@ export function createSheetCommands(operate: Operate, actor: ActorGetter, rollSu
         flags: plain(a.flags ?? {}),
         system: live(a.system),
         statuses: [...(a.statuses ?? [])],
-        items: [...a.items].map((i: any) => ({ ...itemState(i), img: i.img, sort: i.sort, system: live(i.system), labels: plain(i.labels ?? {}) })),
+        items: [...a.items].map((i: any) => ({ ...itemState(i), img: i.img, sort: i.sort, flags: plain(i.flags ?? {}), system: live(i.system), labels: plain(i.labels ?? {}) })),
         effects: [...a.allApplicableEffects()].map((e: any) => ({
           id: e.id, name: e.name, img: e.img, disabled: e.disabled, suppressed: e.isSuppressed ?? false,
           origin: e.origin ?? null, from: e.parent?.documentName === 'Item' ? { itemId: e.parent.id, name: e.parent.name } : null,

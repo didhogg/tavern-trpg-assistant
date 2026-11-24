@@ -57,7 +57,8 @@ function refsOf(data: Record<string, unknown>, mapRef: KernelRefMapper, stored =
   for (const item of data.items) {
     if (!isObject(item) || typeof item._id !== 'string') continue
     const flags = isObject(item.flags) && isObject(item.flags.plutonium) ? item.flags.plutonium as KernelRefFlags : null
-    if (!flags) continue
+    // 没有作者编号的条目（玩家新建的空白条目、只带“普通拖放”标记的）不是库里的东西：不去库里对号，整份数据随人物存
+    if (!flags || typeof flags.hash !== 'string' || !flags.hash) continue
     const ref = mapRef(flags)
     if (!ref) { if (stored) continue; throw new Error(`无法把作者编号对应到【库】条目：${flags.source}/${flags.hash}`) }
     out.push({ ...ref, itemId: item._id, label: ref.label ?? (typeof item.name === 'string' ? item.name : undefined) })

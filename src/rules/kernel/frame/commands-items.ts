@@ -131,5 +131,42 @@ export function createItemCommands(operate: Operate, actor: ActorGetter) {
       }
       return { period, items: rows, actor: actorState(a) }
     }, [actorId]),
+
+    /** 官方物品筛选（人物页工具条的筛选开关）：官方角色表 _filterChildren('items', 条件)，条件 = 官方 listControls.filters 的 key，前面带 ! = 排除。交回通过的物品编号。 */
+    filterItems: (actorId: string, filters: string[]) => operate([], async () => {
+      const sheet = actor(actorId).sheet
+      if (!sheet?._filterChildren) throw Error(`人物 ${actorId} 没有官方人物表单实例`)
+      return { ids: sheet._filterChildren('items', new Set(filters)).map((i: any) => i.id) }
+    }),
+
+    /** 拆分一堆物品（官方 PhysicalItemTemplate#split：原物数量减少 + 新建一份同样的，一次批量写）。 */
+    splitStack: (actorId: string, itemId: string, quantity: number) => operate([], async () => {
+      await itemOf(actorId, itemId).system.split(quantity)
+      return { actor: actorState(actor(actorId)) }
+    }, [actorId]),
+
+    /** 把法术做成卷轴放进人物背包（官方 Item5e.createScrollFromSpell，再按官方建到人物身上）。name = 界面给的显示名（官方按法术英文原名起名）。 */
+    createScroll: (actorId: string, itemId: string, name?: string) => operate([], async () => {
+      const a = actor(actorId)
+      const scroll = await g.CONFIG.Item.documentClass.createScrollFromSpell(itemOf(actorId, itemId), {}, { dialog: false })
+      if (!scroll) throw Error('官方没有生成卷轴')
+      const data = scroll.toObject ? scroll.toObject() : scroll
+      if (name) { data.name = name; data.flags = { ...(data.flags ?? {}), 'tavern-trpg': { ...(data.flags?.['tavern-trpg'] ?? {}), named: true } } }
+      const created = await a.createEmbeddedDocuments('Item', [data])
+      return { created: created.map((i: any) => i.id), actor: actorState(a) }
+    }, [actorId]),
+
+    /** 复制一件物品（照 Tidy5e / 官方 item.clone(…, { save: true })）：新名字由界面给，记下“玩家起的名字”标记，显示出口就原样显示。 */
+    duplicateItem: (actorId: string, itemId: string, name: string) => operate([], async () => {
+      const copy = await itemOf(actorId, itemId).clone({ name, 'flags.tavern-trpg.named': true }, { save: true })
+      return { created: copy?.id ?? null, actor: actorState(actor(actorId)) }
+    }, [actorId]),
+
+    /** 钱币换算成最少枚数（官方 CurrencyManager.convertCurrency）。 */
+    convertCurrency: (actorId: string) => operate([], async () => {
+      const a = actor(actorId)
+      await g.dnd5e.applications.CurrencyManager.convertCurrency(a)
+      return { currency: a.system.currency }
+    }, [actorId]),
   }
 }

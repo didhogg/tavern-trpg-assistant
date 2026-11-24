@@ -61,6 +61,15 @@ describe('P3-3b 拆分：引用 / 选择 / 状态差别', () => {
     expect(applyActorState(rebuilt, split.state)).toEqual(current)
   })
 
+  it('没有作者编号的条目（玩家新建 / 只带普通拖放标记）不去库里对号，也不让拆分失败', () => {
+    const rebuilt = rebuiltData()
+    const current = structuredClone(rebuilt)
+    ;(current.items as unknown[]).push(item('new1', 'weapon', '新武器', { isStandardDragDrop: true }))
+    const out = splitActor({ id: 'actor1', name: '测试角色', data: current }, { id: 'actor1', name: '测试角色', data: rebuilt }, mapRef, {})
+    expect(out.refs.map((r) => r.itemId)).not.toContain('new1')
+    expect(out.refs.length).toBe(3)
+  })
+
   it('没有基准的物品/效果进 added；基准有而现在的没有进 removed', () => {
     const rebuilt = rebuiltData()
     const current = structuredClone(rebuilt)

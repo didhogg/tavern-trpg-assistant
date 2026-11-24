@@ -127,10 +127,31 @@ export async function sheetView(a: any, entries: unknown[]): Promise<{ sheet: st
 /** 官方 NPC 表“特性”部分的分组（每件物品的次数、命中、豁免 DC 在共用部分的 itemContext，两种表算法相同）。怪物直接用本表已算好的。 */
 async function actionsOf(a: any, app: any, out: Record<string, any>): Promise<{ sections: unknown }> {
   const NPC = g.dnd5e.applications.actor.NPCActorSheet
-  if (app instanceof NPC) return { sections: out.features?.sections ?? [] }
-  const npc = new NPC({ document: a })
-  const opt = (o: unknown): any => JSON.parse(JSON.stringify(o))
-  const ctx = await npc._prepareContext(opt({ parts: ['features'] }))
-  const part = await npc._preparePartContext('features', Object.assign({}, ctx), opt({}))
-  return { sections: part.sections ?? [] }
+  let sections: any[]
+  if (app instanceof NPC) sections = out.features?.sections ?? []
+  else {
+    const npc = new NPC({ document: a })
+    const opt = (o: unknown): any => JSON.parse(JSON.stringify(o))
+    const ctx = await npc._prepareContext(opt({ parts: ['features'] }))
+    const part = await npc._preparePartContext('features', Object.assign({}, ctx), opt({}))
+    sections = part.sections ?? []
+  }
+  return { sections: withActionOverrides(a, sections) }
+}
+
+/**
+ * 「显示到行动页 / 从行动页拿掉」（照 Tidy5e actionFilterOverride）：物品上 flags.tavern-trpg.actionList = true 硬加进来
+ * （按它第一个活动的动作类型放进对应组，官方组里没有这种动作就放进被动组），= false 拿掉；没标记照官方默认。
+ */
+function withActionOverrides(a: any, sections: any[]): any[] {
+  const flag = (i: any): boolean | undefined => i.flags?.['tavern-trpg']?.actionList
+  const kept = sections.map((sec) => ({ ...sec, items: (sec.items ?? []).filter((i: any) => flag(i) !== false) }))
+  const listed = new Set(kept.flatMap((sec) => (sec.items ?? []).map((i: any) => i.id)))
+  for (const item of a.items) {
+    if (flag(item) !== true || listed.has(item.id)) continue
+    const type = [...(item.system.activities ?? [])].map((x: any) => x.activation?.type).find(Boolean)
+    const home = kept.find((sec) => sec.id === type) ?? kept.find((sec) => sec.id === 'passive') ?? kept[kept.length - 1]
+    if (home) home.items = [...home.items, item]
+  }
+  return kept
 }

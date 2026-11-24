@@ -103,6 +103,13 @@ export const usePersonStore = defineStore('person', () => {
   const rest = (type: 'short' | 'long') => write(type === 'short' ? '短休' : '长休', (k) => backend().act(k, id.value!, 'rest', id.value!, type, [], {}))
   /** 某个职业升 / 降一级（官方成长流程）；要玩家做选择的成长会报“没有完成”。 */
   const level = (label: string, classId: string, delta: 1 | -1) => write(label, (k) => backend().act(k, id.value!, 'levelUpApply', id.value!, classId, delta))
+  /** 按一份物品数据新建条目（复制 / 新建空白条目，照 Tidy5e item.clone、createItem）：小窗现成的加条目命令收数据，走官方成长；一条撤销。 */
+  const create = (label: string, data: Array<Record<string, unknown>>) => write(label, (k) => backend().act(k, id.value!, 'addToActor', id.value!, data.map((d) => ({ prop: String(d.type ?? 'item'), entry: null, data: d }))))
+  /** 官方物品小操作（拆分堆叠 / 法术做成卷轴 / 钱币换算）：小窗现成命令，一条撤销。 */
+  const splitStack = (label: string, itemId: string, n: number) => write(label, (k) => backend().act(k, id.value!, 'splitStack', id.value!, itemId, n))
+  const createScroll = (label: string, itemId: string, name: string) => write(label, (k) => backend().act(k, id.value!, 'createScroll', id.value!, itemId, name))
+  const duplicate = (label: string, itemId: string, name: string) => write(label, (k) => backend().act(k, id.value!, 'duplicateItem', id.value!, itemId, name))
+  const convertCurrency = () => write('钱币换算成最少枚数', (k) => backend().act(k, id.value!, 'convertCurrency', id.value!))
   /** 拿掉一件条目（官方退回它带来的成长再删）。 */
   const remove = (label: string, itemId: string) => write(label, (k) => backend().remove(k, id.value!, itemId))
   /** 换掉一件条目（换种族 / 背景）：官方拿掉旧的 + 加新的，一条撤销。 */
@@ -164,6 +171,13 @@ export const usePersonStore = defineStore('person', () => {
   }
   const history = async () => { const key = ownerKey(); return key ? serial(() => backend().history(key)) : [] }
   /** 编辑窗口：一块字段的官方定义 + 改到它的效果（P6-R）；读不出来交回 null 并提示原因。 */
+  /** 官方筛选：哪些物品通过这组筛选条件（只读）；读不出 = null（界面就不筛）。 */
+  async function filterIds(filters: string[]): Promise<Set<string> | null> {
+    const key = ownerKey(); const who = id.value
+    if (!key || !who || !filters.length) return null
+    const ids = await serial(() => backend().filterItems(key, who, [...filters].map(String)))
+    return ids ? new Set(ids) : null
+  }
   async function fields(target: { itemId?: string; path: string }): Promise<ShownFieldInfo | null> {
     const key = ownerKey()
     if (!key || !id.value) return null
@@ -173,5 +187,5 @@ export const usePersonStore = defineStore('person', () => {
     return out.result as ShownFieldInfo
   }
 
-  return { id, sheet, glossary, loading, error, prevId, nextId, row, readOnly, open, close, reload, edit, add, remove, replace, adjust, fields, rest, level, levelNative, stopNative, previewHp, cancelHp, confirmHp, undo, undoTo, history }
+  return { id, sheet, glossary, loading, error, prevId, nextId, row, readOnly, open, close, reload, edit, add, create, splitStack, createScroll, convertCurrency, duplicate, remove, replace, adjust, fields, filterIds, rest, level, levelNative, stopNative, previewHp, cancelHp, confirmHp, undo, undoTo, history }
 })

@@ -21,6 +21,8 @@ const props = defineProps<{
   addKey?: string
   /** 官方没给名字的分组按路径最后一段取名（属性、技能名表）。 */
   names?: Record<string, string>
+  /** 编辑一件物品时它现在的名字（照 Tidy5e 物品表顶上的名字栏，可改）。 */
+  itemName?: string
 }>()
 const person = usePersonStore()
 const modal = useModalStore()
@@ -34,6 +36,8 @@ const kinds = new Map<string, ShownField>()
 /** 暂存的效果操作：停用 / 重新启用 / 删除（手动的）。 */
 const ops = reactive<Record<string, 'disable' | 'enable' | 'delete'>>({})
 const added = ref<Array<{ value: string; note: string }>>([])
+const nameDraft = ref(props.itemName ?? '')
+const nameChanged = computed(() => props.itemName !== undefined && nameDraft.value.trim() !== '' && nameDraft.value.trim() !== props.itemName)
 const adding = ref<{ value: string; note: string } | null>(null)
 
 const htmlToText = (html: string): string => html.replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|div|li|h\d)>/gi, '\n\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/\n{3,}/g, '\n\n').trim()
@@ -93,13 +97,14 @@ function valueOf(path: string): { ok: boolean; value?: unknown } {
   return { ok: true, value: v }
 }
 const changedPaths = computed(() => [...kinds.keys()].filter((p) => JSON.stringify(draft[p]) !== original.get(p)))
-const pending = computed(() => changedPaths.value.length + Object.keys(ops).length + added.value.length)
+const pending = computed(() => changedPaths.value.length + Object.keys(ops).length + added.value.length + (nameChanged.value ? 1 : 0))
 async function save(): Promise<void> {
   if (busy.value) return
   if (!pending.value) { modal.close(); return }
   busy.value = true
   try {
     const edits: SheetEdit[] = []
+    if (nameChanged.value && props.target.itemId) edits.push({ kind: 'item', itemId: props.target.itemId, path: 'name', value: nameDraft.value.trim() }, { kind: 'item', itemId: props.target.itemId, path: 'flags.tavern-trpg.named', value: true })
     for (const path of changedPaths.value) {
       const got = valueOf(path)
       if (got.ok) edits.push(props.target.itemId ? { kind: 'item', itemId: props.target.itemId, path, value: got.value } : { kind: 'set', path, value: got.value })
@@ -124,6 +129,7 @@ async function save(): Promise<void> {
     <template v-else-if="info?.tree">
       <div class="pf-body">
         <p v-if="hint" class="pf-intro">{{ hint }}</p>
+        <label v-if="itemName !== undefined" class="pf-name"><span>名字</span><input v-model="nameDraft" class="trpg-input" maxlength="120" :disabled="person.readOnly" data-testid="pf-item-name"></label>
         <div v-if="total" class="pf-total" data-testid="pf-total">
           <span>{{ total.label }}</span><b>{{ total.value }}</b>
         </div>

@@ -7,7 +7,7 @@ import ItemPickPage from './ItemPickPage.vue'
 import LevelPage from './LevelPage.vue'
 import type { AddKind } from '../../rules/kernel/card-types'
 
-export interface FieldsOpts { hint?: string; total?: { label: string; value: string }; addKey?: string; names?: Record<string, string>; width?: number }
+export interface FieldsOpts { itemName?: string; hint?: string; total?: { label: string; value: string }; addKey?: string; names?: Record<string, string>; width?: number }
 export function openFields(title: string, target: { itemId?: string; path: string }, opts: FieldsOpts = {}): void {
   const { width = 560, ...rest } = opts
   useModalStore().open({ key: `person-fields:${target.itemId ?? ''}:${target.path}`, title, component: markRaw(FieldEditor), props: { target, title, ...rest }, variant: 'dialog', width, height: 760 })

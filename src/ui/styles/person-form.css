@@ -62,3 +62,4 @@
 .pf-id-note { padding: var(--sp-2) var(--sp-3) var(--sp-3); font-size: var(--fs-xs); }
 .pf-base > .pf-fields > .pf-group:first-child { border-top: 0; }
 .pf-formula { max-width: 280px; }
+.pf-name { display: grid; grid-template-columns: minmax(0, 11em) minmax(0, 1fr); align-items: center; gap: var(--sp-3); font-size: var(--fs-sm); }

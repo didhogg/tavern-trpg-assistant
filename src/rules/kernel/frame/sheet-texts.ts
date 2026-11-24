@@ -1,6 +1,6 @@
 // 人物页显示文字的出处（小窗这一头，只标来路，不取字；取字在主线唯一出口 kernel/display.ts）：物品 / 特性名按作者编号。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档对象没有类型声明。 */
-import { fromEntry, named, type EntryAt, type FrameText } from '../shown'
+import { asData, fromEntry, named, type EntryAt, type FrameText } from '../shown'
 import { nameText } from './registry-keys'
 
 const g = globalThis as any
@@ -46,10 +46,13 @@ function locate(entries: unknown[], hash: string, itemName: string): EntryAt | n
  */
 export function itemText(i: any, entries: unknown[]): { name: FrameText; author?: { propDroppable: string; source?: string; hash: string } } {
   const f = i.flags?.plutonium
+  // 玩家改过名（我们界面改名 / 复制副本时记下 flags.tavern-trpg.named）：名字原样显示玩家起的，不再按作者编号取原名；作者编号照留（还能看库里资料）
+  const renamed = i.flags?.['tavern-trpg']?.named === true
   if (f?.propDroppable && typeof f.hash === 'string') {
     const author = { propDroppable: f.propDroppable, ...(f.source ? { source: f.source } : {}), hash: f.hash }
-    return { name: named(i.name, author), author }
+    return { name: renamed ? asData(String(i.name ?? '')) : named(i.name, author), author }
   }
+  if (renamed) return { name: asData(String(i.name ?? '')) }
   const at = typeof f?.hash === 'string' ? locate(entries, f.hash, String(i.name ?? '')) : null
   if (at) return { name: fromEntry(i.name, undefined, at) }
   // 没有作者编号、也不在条目里的（作者 / dnd5e 自己加的东西，如“徒手打击”）：dnd5e 语言包里有同样英文原文的键就按它取

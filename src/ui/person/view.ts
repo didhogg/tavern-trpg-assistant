@@ -57,69 +57,11 @@ export function crText(cr: unknown): string {
 }
 export const signed = (n: unknown): string => { const v = Number(n); return Number.isFinite(v) ? (v >= 0 ? `+${v}` : `−${Math.abs(v)}`) : '' }
 
-// ---- A 批：行动页 / 属性页 ----
-export interface ActionRow { id: string; name: string; ref?: unknown; uses: string; count: { value: number; max: number } | null; roll: string; effects: string[] }
-export interface ActionGroup { id: string; label: string; rows: ActionRow[] }
-/** 行动页：分组用官方 NPC 表“特性”部分（玩家角色也一样）；每格文字取官方：次数 / 恢复、命中或豁免 DC、伤害标签。被动特性放最后。 */
-export function actionGroups(s: PersonSheet, g: Glossary | null): ActionGroup[] {
-  const ic: Record<string, any> = s.view?.base?.itemContext ?? {}
-  const sections = list<any>(parts(s).actions?.sections).filter((x) => list(x.items).length)
-  const ordered = [...sections.filter((x) => x.id !== 'passive'), ...sections.filter((x) => x.id === 'passive')]
-  return ordered.map((sec) => ({
-    id: String(sec.id), label: String(sec.label ?? ''),
-    rows: list<any>(sec.items).map((it) => {
-      const c = ic[it.id] ?? {}
-      const L = it.labels ?? {}
-      const uses = c.uses?.hasRecharge ? String(L.recharge ?? '') : c.uses?.hasUses ? [`${c.uses.value} / ${c.uses.max}`, L.recovery].filter(Boolean).join(' ') : ''
-      const roll = c.toHit !== null && c.toHit !== undefined ? signed(c.toHit) : c.save?.ability ? `DC ${c.save.dc?.value ?? ''} ${named(g, 'abilities', c.save.ability)}` : ''
-      const effects = list<any>(L.damages).map((d) => String(d.label ?? d.formula ?? '')).filter(Boolean)
-      const max = Number(c.uses?.max)
-      const count = c.uses?.hasUses && !c.uses?.hasRecharge && max > 0 ? { value: Number(c.uses.value ?? 0), max } : null
-      return { id: String(it.id), name: String(it.name ?? ''), ref: it.ref, uses: count ? String(L.recovery ?? '') : uses, count, roll, effects }
-    }),
-  }))
-}
+// ---- 属性页 ----
 /** 工具熟练：和技能同样的官方列表。 */
 export const tools = (s: PersonSheet): ReturnType<typeof skills> => list<any>(parts(s).details?.tools ?? parts(s).sidebar?.tools)
 /** 特质：官方整理好的各组（抗性 / 免疫 / 语言 / 武器护甲熟练……），组名查名字表。 */
 export function traits(s: PersonSheet, g: Glossary | null): Array<{ key: string; label: string; items: string[] }> {
   const t: Record<string, any> = parts(s).details?.traits ?? parts(s).sidebar?.traits ?? {}
   return Object.entries(t).map(([key, rows]) => ({ key, label: named(g, 'traits', key), items: list<any>(rows).map((r) => [r.label, r.value].filter((x) => x !== undefined && x !== null && x !== '').join(' ')) })).filter((x) => x.items.length)
-}
-
-// ---- B 批：背包 ----
-export interface BagRow {
-  id: string; name: string; ref?: unknown; subtitle: string; quantity: number; weight: number | null
-  equip: { on: boolean; title: string } | null; attune: { on: boolean; title: string } | null
-  uses: { value: number; max: number } | null; capacity: { value: number; max: number; units: string } | null; children: BagRow[]
-}
-export interface BagGroup { id: string; label: string; rows: BagRow[] }
-/** 背包：分组用官方背包部分的“按物品类型”分组（组名官方给），容器里的东西挂在容器下；数量、装备、同调、次数、重量都取官方。 */
-export function bag(s: PersonSheet): { groups: BagGroup[]; units: string } {
-  const inv = parts(s).inventory ?? {}
-  const ic: Record<string, any> = s.view?.base?.itemContext ?? {}
-  const raw = new Map<string, any>((s.items ?? []).map((i: any) => [i.id, i]))
-  const viewItems = new Map<string, any>()
-  for (const sec of list<any>(inv.sections)) for (const it of list<any>(sec.items)) viewItems.set(it.id, it)
-  for (const it of list<any>(inv.containers)) viewItems.set(it.id, it)
-  const row = (id: string): BagRow => {
-    const it = viewItems.get(id) ?? {}; const c = ic[id] ?? {}; const r = raw.get(id)?.system ?? {}
-    const max = Number(c.uses?.max)
-    return {
-      id, name: String(it.name ?? raw.get(id)?.name ?? ''), ref: it.ref, subtitle: String(c.subtitle ?? ''),
-      quantity: Number(r.quantity ?? 1), weight: Number.isFinite(Number(c.totalWeight)) ? Number(c.totalWeight) : null,
-      equip: c.equip?.applicable ? { on: c.equip.cls === 'active', title: String(c.equip.title ?? '') } : null,
-      attune: c.attunement?.applicable ? { on: c.attunement.cls === 'active', title: String(c.attunement.title ?? '') } : null,
-      uses: c.uses?.hasUses && max > 0 ? { value: Number(c.uses.value ?? 0), max } : null,
-      capacity: c.capacity ? { value: Number(c.capacity.value ?? 0), max: Number(c.capacity.max), units: String(c.capacity.units ?? '') } : null,
-      children: [...viewItems.keys()].filter((k) => raw.get(k)?.system?.container === id).map(row),
-    }
-  }
-  const top = [...viewItems.keys()].filter((k) => !viewItems.has(raw.get(k)?.system?.container))
-  const groups = list<any>(inv.sections).filter((sec) => sec.groups?.type).map((sec) => ({
-    id: String(sec.id), label: String(sec.label ?? ''),
-    rows: top.filter((k) => ic[k]?.groups?.type === sec.groups.type).map(row),
-  })).filter((grp) => grp.rows.length)
-  const anyWeight = [...raw.values()].find((i: any) => i.system?.weight?.units)?.system.weight.units
-  return { groups, units: String(anyWeight ?? '') }
 }

@@ -166,6 +166,12 @@ export class KernelPeople {
     return { ...out, result: shown.value }
   }
 
+  /** 官方物品筛选（人物页工具条筛选开关）：只读，交回通过的物品编号。 */
+  async filterItems(ownerKey: string, actorId: string, filters: string[]): Promise<string[] | null> {
+    const out = await this.call(ownerKey, 'filterItems', actorId, filters)
+    return out.status === 'complete' ? (out.result?.ids ?? []) as string[] : null
+  }
+
   /** 编号的显示名（伤害类型、语言、体型、技能、物品属性……整表 + 能开关的状态），过唯一出口；本战役只取一次。 */
   glossary(ownerKey: string) {
     let pending = this.glossaries.get(ownerKey)
