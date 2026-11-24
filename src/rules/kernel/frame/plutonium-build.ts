@@ -35,6 +35,8 @@ const EXPORTS = [
   'ActorAbilityScoreIncrease',
   // 作者给背景特性起名的规则（去掉条目名前的「Feature:」）：取名出口按编号在背景条目里定位时照它
   'UtilEntityBackgroundFeature',
+  // 背景特性三种用法里「自定义背景」没有「用本背景特性」这一项（作者 Charactermancer_Background_Features.render）
+  'UtilsEntityBackground',
   // 作者导入时对照的附加资料合集包（按作者设置）和它的缓存读取：问答开始时用它预读（frame/commands-equipment.ts warmItems）
   'CompendiumCacheUtil',
 ]

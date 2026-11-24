@@ -25,6 +25,11 @@ export type AskForm =
   | { type: 'equipment'; groups: Array<{ choices: Array<{ entries: AskEquip[] }> }>; gold: string | null }
   /** 属性提升或专长：points 点加到属性上（单项结果不超过 max），或改选一个专长（从库里选）。 */
   | { type: 'asi'; abilities: Array<{ key: string; label: FrameText; value: number }>; points: number; max: number }
+  /** 组合题：作者一个组件里套着几个小组件（技能、语言、额外法术……），每个小组件一道小题，一起答。 */
+  | { type: 'parts'; parts: AskPart[] }
+
+/** 组合题里的一道小题（和单独一道题同样的格式，只是不单独编号）。 */
+export type AskPart = Omit<AskQuestion, 'index'>
 
 export interface AskQuestion {
   index: number
@@ -51,6 +56,8 @@ export interface AskAnswer {
   choice?: number[]; slots?: Record<string, string>; gold?: number
   /** asi：bonus = 每项加几点；featRef = 改选的专长（库编号，界面给）→ 主线换成作者认得的条目 featEntry 再交小窗。 */
   bonus?: Record<string, number>; featRef?: { set: string; prop: string; hash: string }; featEntry?: unknown
+  /** parts：组合题每道小题的回答（顺序同题目里的 parts）。 */
+  parts?: AskAnswer[]
 }
 
 /** 起始装备里的一条：一件物品 / 任选一件（candidates）/ 杂项文字 / 钱（铜币）。 */

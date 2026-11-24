@@ -29,7 +29,9 @@ const afterPaint = (run: () => void): void => {
 }
 
 /** 正在问的一次导入（一个战役同时只有一次）：哪个人、哪条、已经交给作者几个回答、各段写入。 */
-interface Live { actorId: string; key: string; answers: AskAnswer[]; changes: KernelChange[] }
+interface Live { actorId: string; key: string; answers: AskAnswer[]; changes: KernelChange[]; shows?: Promise<Shows> }
+/** 这一次导入的显示出口（条目对照、取名表）：同一次导入里条目不变，建一次各步共用。 */
+type Shows = Awaited<ReturnType<KernelRuntime['displayFor']>>
 type FrameResult = { status: string; result?: any; changes?: unknown[]; error?: string }
 
 export class KernelImportFlow {
@@ -63,7 +65,7 @@ export class KernelImportFlow {
     const ran = ms()
     const question = out.status === 'pending' ? out.result?.question : null
     if (question) {
-      const shown = await (await this.deps.runtime.displayFor(ownerKey, [ref])).show(question as AskQuestion)
+      const shown = await (await this.showsOf(ownerKey, ref)).show(question as AskQuestion)
       const all = ms()
       // 玩家读题时在后台预读作者接下来要对照的资料（只读、不改人物；等题目画出来再开始，不抢出题的时间）。
       // 作者的合集包缓存只留 60 秒，所以每出一题都续一次：还在的只刷新时间，过期的重新读（frame/commands-equipment.ts warmItems）
@@ -82,11 +84,17 @@ export class KernelImportFlow {
     const tracked = ms()
     const rows = (out.result?.added ?? []) as AddedRow[]
     const names: FrameText[] = rows.map((row) => row.label ?? named(row.name, []))
-    const shown = await (await this.deps.runtime.displayFor(ownerKey, [ref])).show({ names, types: rows.map((row) => row.typeLabel ?? named(row.type, [])) })
+    const shown = await (await this.showsOf(ownerKey, ref)).show({ names, types: rows.map((row) => row.typeLabel ?? named(row.type, [])) })
     return {
       status: 'ready', changes: [...live.changes], ms: ms(), split: { run: ran, track: tracked - ran, display: ms() - tracked },
       added: rows.map((row, i) => ({ id: row._id, type: row.type, typeLabel: String(shown.value.types[i] ?? row.type), name: String(shown.value.names[i] ?? row.name) })),
     }
+  }
+
+  private showsOf(ownerKey: string, ref: EntryRef): Promise<Shows> {
+    const live = this.live.get(ownerKey)
+    if (!live) return this.deps.runtime.displayFor(ownerKey, [ref])
+    return (live.shows ??= this.deps.runtime.displayFor(ownerKey, [ref]))
   }
 
   /** 回答里玩家从库里选的专长（属性提升改选专长）：按库编号换成作者认得的条目（和建卡、加条目同一条换法）。 */

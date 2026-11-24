@@ -12,6 +12,7 @@ import Icon from '../../kit/Icon.vue'
 import AskAsi from './AskAsi.vue'
 import AskEquipment from './AskEquipment.vue'
 import AskForm from './AskForm.vue'
+import AskParts from './AskParts.vue'
 
 /** closeOnBack：直接打开的（升级）没有上一页，返回 = 关掉弹窗。 */
 /** level：从等级菜单「改到第几级」进来的，等级题预先选好这一级。 */
@@ -87,6 +88,7 @@ function said(q: ImportQuestion, a: AskAnswer): string {
     case 'choose': return (a.picks ?? []).flatMap((p, g) => p.map((o) => String(f.sets[a.set ?? 0]?.groups[g]?.options[o]?.label ?? ''))).join('、')
     case 'texts': return [...(a.picks ?? []).flatMap((p, g) => p.map((o) => String(f.groups[g]?.options[o]?.label ?? ''))), ...(a.texts ?? []).flat()].map((t) => (t.length > 12 ? `${t.slice(0, 12)}…` : t)).join('；')
     case 'equipment': return a.gold != null ? `起始金币 ${a.gold}` : `方案 ${(a.choice ?? []).map((c) => String.fromCharCode(97 + c)).join(' ')}`
+    case 'parts': return f.parts.map((p, i) => said({ ...p, index: i } as ImportQuestion, a.parts?.[i] ?? {})).filter(Boolean).join('；')
     case 'asi': return a.featRef ? '改选专长' : Object.entries(a.bonus ?? {}).filter(([, n]) => n).map(([k, n]) => `${f.abilities.find((x) => x.key === k)?.label ?? k} +${n}`).join('、')
     default: return ''
   }
@@ -97,7 +99,7 @@ const groups = computed(() => {
   for (const row of step.value.added) by.set(row.typeLabel, [...(by.get(row.typeLabel) ?? []), row.name])
   return [...by.entries()].map(([label, names]) => ({ label, names }))
 })
-const formKind = computed(() => question.value?.form.type === 'equipment' ? AskEquipment : question.value?.form.type === 'asi' ? AskAsi : AskForm)
+const formKind = computed(() => { const t = question.value?.form.type; return t === 'equipment' ? AskEquipment : t === 'asi' ? AskAsi : t === 'parts' ? AskParts : AskForm })
 </script>
 
 <template>
@@ -117,7 +119,7 @@ const formKind = computed(() => question.value?.form.type === 'equipment' ? AskE
       <template v-else-if="question">
         <h3 class="ask-title" data-testid="ask-title">{{ question.title ?? '请选择' }}</h3>
         <p v-if="question.note" class="ask-note">{{ question.note }}</p>
-        <component :is="formKind" :key="answers.length" :question="question" :busy="busy" :level="level" @answer="(a: AskAnswer | null) => (pending = a)" @submit="(a: AskAnswer) => next(a)" />
+        <component :is="formKind" :key="answers.length" :question="question" :busy="busy" :level="level" :data-testid="question.form.type === 'parts' ? 'ask-parts' : undefined" @answer="(a: AskAnswer | null) => (pending = a)" @submit="(a: AskAnswer) => next(a)" />
       </template>
       <div v-else-if="step.status === 'ready'" class="ask-ready" data-testid="ask-ready">
         <h3 class="ask-title">{{ replace ? `换成${name}后会加上` : `加上${name}会带来` }}</h3>

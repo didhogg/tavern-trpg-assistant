@@ -19,6 +19,10 @@ const text = ref('')
 const set = ref('0')
 const picks = reactive<Record<string, boolean>>({})
 const own = reactive<Record<number, string[]>>({})
+/** 候选很长的组（专长、法术）：就地搜索，只藏不删（序号不变）。 */
+const find = reactive<Record<number, string>>({})
+const LONG = 16
+const shownOpt = (g: number, i: number) => { const q = (find[g] ?? '').trim().toLowerCase(); return !q || String(groups.value[g].options[i].label).toLowerCase().includes(q) || !!picks[keyOf(g, i)] }
 watch(() => props.question, () => {
   const form = props.question.form
   // 加子职业：默认选好到现在的等级（已有几级就选到第几级）
@@ -30,6 +34,7 @@ watch(() => props.question, () => {
   set.value = form.type === 'choose' ? String(form.set) : '0'
   for (const k of Object.keys(picks)) delete picks[k]
   for (const k of Object.keys(own)) delete own[Number(k)]
+  for (const k of Object.keys(find)) delete find[Number(k)]
 }, { immediate: true })
 
 const groups = computed(() => f.value.type === 'choose' ? f.value.sets[Number(set.value)]?.groups ?? [] : f.value.type === 'texts' ? f.value.groups : [])
@@ -107,8 +112,9 @@ function setOwn(g: number, i: number, value: string): void { const list = [...(o
       <p v-else-if="f.type === 'choose' && f.sets[0]?.label" class="ask-fixed">固定：{{ f.sets[0].label }}</p>
       <section v-for="(grp, g) in groups" :key="`${set}:${g}`" class="ask-group">
         <header class="ask-group-head"><b>{{ grp.title ?? '选择' }}</b><small :data-done="left(g) === 0 || undefined">{{ left(g) > 0 ? `还差 ${left(g)} 项` : `已选够 ${grp.count} 项` }}</small></header>
+        <input v-if="grp.options.length > LONG" v-model="find[g]" class="trpg-input ask-find" type="search" :placeholder="`在 ${grp.options.length} 项里搜`" :aria-label="`搜${grp.title ?? '选项'}`" :data-testid="`ask-find-${g}`">
         <div class="ask-chips" :data-wide="f.type === 'texts' || undefined">
-          <Checkbox v-for="(o, i) in grp.options" :key="i" :model-value="!!picks[keyOf(g, i)]" :disabled="o.disabled || busy || !canTick(g, i)" class="ask-chip" :data-testid="`ask-opt-${g}-${i}`" @update:model-value="(v: boolean) => toggle(g, i, v)">{{ o.label }}</Checkbox>
+          <Checkbox v-for="(o, i) in grp.options" v-show="shownOpt(g, i)" :key="i" :model-value="!!picks[keyOf(g, i)]" :disabled="o.disabled || busy || !canTick(g, i)" class="ask-chip" :data-testid="`ask-opt-${g}-${i}`" @update:model-value="(v: boolean) => toggle(g, i, v)">{{ o.label }}</Checkbox>
         </div>
         <div v-if="f.type === 'texts' && 'custom' in grp && grp.custom" class="ask-own">
           <input v-for="n in grp.count" :key="n" :value="own[g]?.[n - 1] ?? ''" class="trpg-input" :placeholder="`或者自己写第 ${n} 条`" :disabled="busy" :aria-label="`${grp.title ?? ''}自己写第 ${n} 条`" @input="setOwn(g, n - 1, ($event.target as HTMLInputElement).value)">

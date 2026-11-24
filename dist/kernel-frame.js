@@ -754,7 +754,7 @@ async function Pe(e, t, n = fetch) {
 	}
 }
 // src/rules/kernel/frame/plutonium-build.ts
-var Fe = "13b1a03b99eab99f4b078e11075c7092c175a365d076d5319914f376c583e245", Ie = "608e0a5497354d1937c3d3e780f85a103c4ddffb846d4bb1cdcfb00bdffb0bf2", Le = /* @__PURE__ */ "Charactermancer_FeatureOptionsSelect.Charactermancer_AdditionalFeatsSelect.StatGenUtilAdditionalFeats.DataPrimerFauxFeatureClassSubclassFeat.DataPrimerFauxFeatureClassSubclassOptionalfeature.UtilDataConverter.Config.Charactermancer_AvailableProficiencyManager.CharactermancerFeatureSubCompManagerProficiencyOtherBase.Charactermancer_ItemMasteries_Util.Charactermancer_Class_Util.Charactermancer_OtherProficiencySelect.Charactermancer_ExpertiseSelect.Charactermancer_ImmResVulnSelect.UtilAdvancementsEntry.UtilAdvancements.ComponentUiUtil.veE.EQUIPMENT_TYPE_EXPANDERS.UtilEntityItem.UtilApplications.InputUiUtil.EquipmentApp.ActorAbilityScoreIncrease.UtilEntityBackgroundFeature.CompendiumCacheUtil".split("."), N = null, Re;
+var Fe = "13b1a03b99eab99f4b078e11075c7092c175a365d076d5319914f376c583e245", Ie = "608e0a5497354d1937c3d3e780f85a103c4ddffb846d4bb1cdcfb00bdffb0bf2", Le = /* @__PURE__ */ "Charactermancer_FeatureOptionsSelect.Charactermancer_AdditionalFeatsSelect.StatGenUtilAdditionalFeats.DataPrimerFauxFeatureClassSubclassFeat.DataPrimerFauxFeatureClassSubclassOptionalfeature.UtilDataConverter.Config.Charactermancer_AvailableProficiencyManager.CharactermancerFeatureSubCompManagerProficiencyOtherBase.Charactermancer_ItemMasteries_Util.Charactermancer_Class_Util.Charactermancer_OtherProficiencySelect.Charactermancer_ExpertiseSelect.Charactermancer_ImmResVulnSelect.UtilAdvancementsEntry.UtilAdvancements.ComponentUiUtil.veE.EQUIPMENT_TYPE_EXPANDERS.UtilEntityItem.UtilApplications.InputUiUtil.EquipmentApp.ActorAbilityScoreIncrease.UtilEntityBackgroundFeature.UtilsEntityBackground.CompendiumCacheUtil".split("."), N = null, Re;
 async function ze(e, t = !1) {
 	if (!e.pathname.endsWith("/modules/plutonium/js/Bundle.js")) {
 		await import(
@@ -2222,16 +2222,16 @@ async function vr(e, t, n, a, o) {
 	return gr(S);
 }
 // src/rules/kernel/frame/commands-level.ts
-var yr = globalThis;
-function br() {
-	let e = yr.dnd5e?.applications?.advancement?.AdvancementManager;
+var R = globalThis;
+function yr() {
+	let e = R.dnd5e?.applications?.advancement?.AdvancementManager;
 	if (!e) throw Error("dnd5e AdvancementManager is not available");
 	return e;
 }
-function xr(e, t, n, r = {}) {
-	return br().forLevelChange(e, t, n, r);
+function br(e, t, n, r = {}) {
+	return yr().forLevelChange(e, t, n, r);
 }
-function R(e) {
+function z(e) {
 	return {
 		level: e.system.details?.level ?? null,
 		hp: e.system.attributes?.hp?.toObject?.() ?? e.system.attributes?.hp ?? null,
@@ -2252,7 +2252,7 @@ function R(e) {
 		})) ?? []
 	};
 }
-function Sr(e) {
+function xr(e) {
 	let t = e?.toObject ? e.toObject() : structuredClone(e);
 	for (let e of [
 		"_id",
@@ -2264,18 +2264,18 @@ function Sr(e) {
 	]) delete t[e];
 	return t.system && "container" in t.system && (t.system.container = null), We(t), t;
 }
-function Cr(e) {
+function Sr(e) {
 	let t = e?.toObject ? e.toObject() : structuredClone(e);
 	return t.flags ??= {}, t.flags.plutonium ??= {}, t.flags.plutonium.isStandardDragDrop = !0, t;
 }
-function wr(e) {
+function Cr(e) {
 	let t = e?.flags?.plutonium;
 	return t?.propDroppable && t.source && t.hash ? `${t.propDroppable}|${t.source}|${t.hash}` : null;
 }
-function Tr(e) {
+function wr(e) {
 	return JSON.parse(JSON.stringify(e, (e, t) => t instanceof Set ? [...t] : t));
 }
-async function Er(e, t, { strict: n = !1, picks: r, blank: i = !1, expertise: a } = {}) {
+async function Tr(e, t, { strict: n = !1, picks: r, blank: i = !1, expertise: a } = {}) {
 	if (!e.steps.length) return { finished: !0 };
 	for (let o of e.steps) {
 		if (o.automatic || !o.flow) continue;
@@ -2284,7 +2284,7 @@ async function Er(e, t, { strict: n = !1, picks: r, blank: i = !1, expertise: a 
 			if (s?.error || n && !s) return {
 				finished: !1,
 				step: {
-					...Dr(o),
+					...Er(o),
 					error: s?.error
 				}
 			};
@@ -2292,7 +2292,7 @@ async function Er(e, t, { strict: n = !1, picks: r, blank: i = !1, expertise: a 
 			if (!t) return {
 				finished: !1,
 				step: {
-					...Dr(o),
+					...Er(o),
 					error: "建卡选择已不在当前候选内"
 				}
 			};
@@ -2303,7 +2303,7 @@ async function Er(e, t, { strict: n = !1, picks: r, blank: i = !1, expertise: a 
 			if (s.error) return {
 				finished: !1,
 				step: {
-					...Dr(o),
+					...Er(o),
 					error: s.error
 				}
 			};
@@ -2316,7 +2316,7 @@ async function Er(e, t, { strict: n = !1, picks: r, blank: i = !1, expertise: a 
 			if (!t) return {
 				finished: !1,
 				step: {
-					...Dr(o),
+					...Er(o),
 					error: "属性提升的选择不合规"
 				}
 			};
@@ -2325,27 +2325,27 @@ async function Er(e, t, { strict: n = !1, picks: r, blank: i = !1, expertise: a 
 		}
 		if (n) return {
 			finished: !1,
-			step: Dr(o)
+			step: Er(o)
 		};
 		let l = (i ? await fn(o.flow) : void 0) ?? await pn(o.flow);
 		l !== void 0 && (o.flow.getAutomaticApplicationValue = async () => l);
 	}
 	let o = new Promise((t) => {
-		let n = yr.Hooks.on("dnd5e.advancementManagerComplete", (r) => {
-			r === e && (yr.Hooks.off(n), t(!0));
+		let n = R.Hooks.on("dnd5e.advancementManagerComplete", (r) => {
+			r === e && (R.Hooks.off(n), t(!0));
 		});
 		setTimeout(() => {
-			yr.Hooks.off(n), t(!1);
+			R.Hooks.off(n), t(!1);
 		}, 3e3);
 	});
 	await e.render();
 	let s = await o;
 	return s && await C(), s ? { finished: !0 } : {
 		finished: !1,
-		step: Dr(e.step)
+		step: Er(e.step)
 	};
 }
-function Dr(e) {
+function Er(e) {
 	if (!e) return null;
 	let t = e.flow, n = t?.advancement;
 	return {
@@ -2361,7 +2361,7 @@ function Dr(e) {
 		} : null
 	};
 }
-async function Or(e) {
+async function Dr(e) {
 	let t = [];
 	for (let n of e.steps) {
 		let e = n.flow, r = e?.advancement, i = null;
@@ -2388,21 +2388,21 @@ async function Or(e) {
 	}
 	return t;
 }
-function kr(e) {
+function Or(e) {
 	return Object.fromEntries(Object.entries(e.system?.abilities ?? {}).map(([e, t]) => [e, t.value]));
 }
-async function Ar(e, t, n, r = {}, { strict: i = !1, seed: a, id: o, picks: s, blank: c = !1, traitScope: l, onManager: u } = {}) {
+async function kr(e, t, n, r = {}, { strict: i = !1, seed: a, id: o, picks: s, blank: c = !1, traitScope: l, onManager: u } = {}) {
 	a !== void 0 && k(a);
-	let d = await yr.CONFIG.Actor.documentClass.create({
+	let d = await R.CONFIG.Actor.documentClass.create({
 		...o ? { _id: o } : {},
 		name: e,
 		type: cn,
 		system: { details: { level: 1 } }
-	}, { keepId: !!o }), f = l ? new Set(l) : void 0, p = kr(d), m = [];
+	}, { keepId: !!o }), f = l ? new Set(l) : void 0, p = Or(d), m = [];
 	for (let e of t) {
-		let t = Sr(e?.data ?? e);
-		yr.CONFIG.Item.dataModels[t.type]?.resetData?.(t.system);
-		let n = e?.refKey ?? wr(t), a = n ? r[n] : void 0, o = n && (!i || a?.some((e) => or(e.id))), l = /* @__PURE__ */ new Map(), h = /* @__PURE__ */ new Map(), g = n ? s?.[n] : void 0, _ = o ? await _r(t, e, n, d.items.some((e) => e.type === "class"), {
+		let t = xr(e?.data ?? e);
+		R.CONFIG.Item.dataModels[t.type]?.resetData?.(t.system);
+		let n = e?.refKey ?? Cr(t), a = n ? r[n] : void 0, o = n && (!i || a?.some((e) => or(e.id))), l = /* @__PURE__ */ new Map(), h = /* @__PURE__ */ new Map(), g = n ? s?.[n] : void 0, _ = o ? await _r(t, e, n, d.items.some((e) => e.type === "class"), {
 			actor: d,
 			plans: l,
 			scope: f,
@@ -2423,12 +2423,12 @@ async function Ar(e, t, n, r = {}, { strict: i = !1, seed: a, id: o, picks: s, b
 				id: v.id,
 				refKey: n
 			},
-			built: R(d),
+			built: z(d),
 			actor: d,
 			initial: p,
 			missingTraits: m
 		};
-		let y = br().forNewItem(d, t, { automaticApplication: !0 });
+		let y = yr().forNewItem(d, t, { automaticApplication: !0 });
 		await u?.({
 			manager: y,
 			key: n,
@@ -2437,7 +2437,7 @@ async function Ar(e, t, n, r = {}, { strict: i = !1, seed: a, id: o, picks: s, b
 			traitPlans: l,
 			expertise: h
 		});
-		let b = await Er(y, a, {
+		let b = await Tr(y, a, {
 			strict: i,
 			blank: c,
 			picks: g,
@@ -2446,31 +2446,31 @@ async function Ar(e, t, n, r = {}, { strict: i = !1, seed: a, id: o, picks: s, b
 		if (!b.finished) return {
 			pending: !0,
 			step: b.step,
-			built: R(d),
+			built: z(d),
 			actor: d,
 			initial: p,
 			missingTraits: m
 		};
-		d.items.contents.some((e) => e.type === t.type && e.flags?.plutonium?.hash === t.flags?.plutonium?.hash) || await d.createEmbeddedDocuments("Item", [Cr(Sr(t))]);
+		d.items.contents.some((e) => e.type === t.type && e.flags?.plutonium?.hash === t.flags?.plutonium?.hash) || await d.createEmbeddedDocuments("Item", [Sr(xr(t))]);
 	}
-	return n.length && await d.createEmbeddedDocuments("Item", n.map((e) => Cr(Sr(e?.data ?? e)))), {
+	return n.length && await d.createEmbeddedDocuments("Item", n.map((e) => Sr(xr(e?.data ?? e)))), {
 		actor: d,
 		initial: p,
 		missingTraits: m
 	};
 }
-function jr(e, t) {
+function Ar(e, t) {
 	return {
 		levelUpSteps: (n, r, i = 1) => e([], async () => {
-			let e = await Or(xr(t(n), r, i));
+			let e = await Dr(br(t(n), r, i));
 			return {
 				status: e.length ? "pending" : "complete",
 				steps: e
 			};
 		}, [n]),
 		levelUpApply: (n, r, i = 1, a) => e([], async () => {
-			let e = t(n), o = xr(e, r, i, { automaticApplication: !0 }), s = await Er(o, a);
-			return s.finished ? R(e) : {
+			let e = t(n), o = br(e, r, i, { automaticApplication: !0 }), s = await Tr(o, a);
+			return s.finished ? z(e) : {
 				kernelStatus: "pending",
 				reason: o.step ? "awaiting-choice" : "advancement-manager-not-complete",
 				step: s.step
@@ -2486,7 +2486,7 @@ function jr(e, t) {
 						id: t.adv.id,
 						type: t.type,
 						level: t.level,
-						data: Tr(n)
+						data: wr(n)
 					});
 				} catch (e) {
 					(r[t.key] ??= []).push({
@@ -2504,10 +2504,10 @@ function jr(e, t) {
 			return await e.update({
 				name: r,
 				"prototypeToken.name": r
-			}), R(e);
+			}), z(e);
 		}, [n]),
 		createActorsFromBase: (t) => e([], async () => {
-			let e = yr.CONFIG.Actor.documentClass, n = await e.createDocuments(t.map((e) => ({
+			let e = R.CONFIG.Actor.documentClass, n = await e.createDocuments(t.map((e) => ({
 				...structuredClone(e.base),
 				...e.id ? { _id: e.id } : {}
 			})), { keepId: !0 }), r = [];
@@ -2519,7 +2519,7 @@ function jr(e, t) {
 				};
 				r.push({
 					id: n[i].id,
-					...R(n[i]),
+					...z(n[i]),
 					data: n[i].toObject(),
 					base: t[i].base,
 					view: a.view,
@@ -2539,7 +2539,7 @@ function jr(e, t) {
 				data: e.data ?? await P(e.prop, e.entry),
 				refKey: e.refKey
 			});
-			let i = t.starting ? await Nn(t.items.filter((e) => e.entry?.startingEquipment), t.starting, t.startingExcluded) : null, a = await Ar(t.name, n, [...r, ...i?.equipment ?? []], t.choices ?? {}, {
+			let i = t.starting ? await Nn(t.items.filter((e) => e.entry?.startingEquipment), t.starting, t.startingExcluded) : null, a = await kr(t.name, n, [...r, ...i?.equipment ?? []], t.choices ?? {}, {
 				strict: !1,
 				seed: e,
 				picks: t.picks,
@@ -2558,15 +2558,15 @@ function jr(e, t) {
 				initial: a.initial,
 				skipped: i?.skipped ?? [],
 				missingTraits: a.missingTraits,
-				...R(a.actor)
+				...z(a.actor)
 			});
 		}),
 		buildSteps: (t) => e([], async () => {
-			let e = yr.CONFIG.Actor.documentClass, n = new e({
+			let e = R.CONFIG.Actor.documentClass, n = new e({
 				name: "Build preview",
 				type: cn,
 				system: { details: { level: 1 } }
-			}), r = await Or(br().forNewItem(n, t));
+			}), r = await Dr(yr().forNewItem(n, t));
 			return {
 				status: r.length ? "pending" : "complete",
 				steps: r
@@ -2590,7 +2590,7 @@ function jr(e, t) {
 				refKey: e.refKey,
 				itemId: e.itemId
 			});
-			let i = await Ar(t.name, n, r, t.choices, {
+			let i = await kr(t.name, n, r, t.choices, {
 				strict: !0,
 				seed: e,
 				id: t.id
@@ -2609,7 +2609,7 @@ function jr(e, t) {
 			}) : {
 				id: i.actor.id,
 				seed: e,
-				...R(i.actor),
+				...z(i.actor),
 				data: i.actor.toObject(),
 				base: a,
 				view: o.view,
@@ -2619,31 +2619,31 @@ function jr(e, t) {
 	};
 }
 // src/rules/kernel/frame/commands-add.ts
-var Mr = globalThis;
-function Nr(e) {
+var jr = globalThis;
+function Mr(e) {
 	let t = e?.flags?.plutonium;
 	return t?.propDroppable && t.source && t.hash ? `${t.propDroppable}|${t.source}|${t.hash}` : null;
 }
-async function Pr(e, t) {
+async function Nr(e, t) {
 	let n = e.items.get(t);
 	if (!n) throw Error(`人物身上没有这件：${t}`);
-	let r = br().forDeletedItem(e, t, { automaticApplication: !0 });
+	let r = yr().forDeletedItem(e, t, { automaticApplication: !0 });
 	if (r.steps.length) {
-		let e = await Er(r, void 0);
+		let e = await Tr(r, void 0);
 		return e.finished ? null : e.step;
 	}
 	return await n.delete(), null;
 }
-function Fr(e, t) {
+function Pr(e, t) {
 	return {
 		addToActor: (n, r) => e([], async () => {
 			let e = t(n), i = e.sheet;
 			if (!i?._onDropSingleItem) throw Error(`人物 ${n} 没有官方人物表单实例`);
 			let a = [];
 			for (let t of r) {
-				let n = Cr(Sr(t.data ? structuredClone(t.data) : await P(t.prop, t.entry))), r = new Set(e.items.map((e) => e.id)), o = br().forNewItem(e, n, { automaticApplication: !0 });
+				let n = Sr(xr(t.data ? structuredClone(t.data) : await P(t.prop, t.entry))), r = new Set(e.items.map((e) => e.id)), o = yr().forNewItem(e, n, { automaticApplication: !0 });
 				if (o.steps.length) {
-					let e = await Er(o, t.choices, { strict: !1 });
+					let e = await Tr(o, t.choices, { strict: !1 });
 					if (!e.finished) return {
 						kernelStatus: "pending",
 						reason: "add-step-not-complete",
@@ -2651,49 +2651,49 @@ function Fr(e, t) {
 						pending: { step: e.step }
 					};
 				} else {
-					let t = await i._onDropSingleItem({ target: Mr.document.createElement("div") }, n);
+					let t = await i._onDropSingleItem({ target: jr.document.createElement("div") }, n);
 					if (t === !1 || t === void 0) continue;
 					let r = await e.createEmbeddedDocuments("Item", [t], { keepId: !0 });
 					a.push(...r.map((e) => e.toObject()));
 				}
-				for (let t of e.items) !r.has(t.id) && Nr(t) && a.push(t.toObject());
+				for (let t of e.items) !r.has(t.id) && Mr(t) && a.push(t.toObject());
 			}
 			return {
-				...R(e),
+				...z(e),
 				added: a
 			};
 		}, [n]),
 		removeItem: (n, r) => e([], async () => {
-			let e = t(n), i = await Pr(e, r);
+			let e = t(n), i = await Nr(e, r);
 			return i ? {
 				kernelStatus: "pending",
 				reason: "remove-step-not-complete",
 				step: i,
 				pending: { step: i }
 			} : {
-				...R(e),
+				...z(e),
 				removed: r
 			};
 		}, [n])
 	};
 }
 // src/rules/kernel/frame/commands-batch.ts
-var Ir = globalThis;
-function Lr(e, t) {
+var Fr = globalThis;
+function Ir(e, t) {
 	let n = structuredClone(e);
 	delete n._id;
 	for (let e of n.items ?? []) delete e._id;
 	for (let e of n.effects ?? []) delete e._id;
 	return t && (n.name = t), n;
 }
-function Rr(e) {
+function Lr(e) {
 	return { createActorsBatch: (t) => e([], async () => {
 		let e = [];
 		for (let n of t) {
 			let t = n.data ?? await P(n.prop, n.entry);
-			e.push(Lr(t, n.name));
+			e.push(Ir(t, n.name));
 		}
-		return (await Ir.CONFIG.Actor.documentClass.createDocuments(e)).map((e) => ({
+		return (await Fr.CONFIG.Actor.documentClass.createDocuments(e)).map((e) => ({
 			id: e.id,
 			name: e.name,
 			type: e.type,
@@ -2702,7 +2702,7 @@ function Rr(e) {
 	}) };
 }
 // src/rules/kernel/frame/build-extras.ts
-var z = globalThis, zr = (e) => (t) => z.UrlUtil.URL_TO_HASH_BUILDER[e](t), Br = (e, t) => new Map(e.map((e) => [t(e.entry), e])), Vr = [{
+var B = globalThis, Rr = (e) => (t) => B.UrlUtil.URL_TO_HASH_BUILDER[e](t), zr = (e, t) => new Map(e.map((e) => [t(e.entry), e])), Br = [{
 	field: "featProgression",
 	kind: "feat",
 	primer: "DataPrimerFauxFeatureClassSubclassFeat"
@@ -2711,7 +2711,7 @@ var z = globalThis, zr = (e) => (t) => z.UrlUtil.URL_TO_HASH_BUILDER[e](t), Br =
 	kind: "optionalfeature",
 	primer: "DataPrimerFauxFeatureClassSubclassOptionalfeature"
 }];
-function Hr(e, t) {
+function Vr(e, t) {
 	let n = "dataSources", r = "isGmUseBlocklist", i = e.Config.get(n, r);
 	e.Config.setTemp(n, r, !1, { isSkipPermissionCheck: !0 });
 	try {
@@ -2720,38 +2720,38 @@ function Hr(e, t) {
 		e.Config.setTemp(n, r, i, { isSkipPermissionCheck: !0 });
 	}
 }
-function Ur(e, t) {
-	let n = t === "classFeature" ? z.DataUtil.class.unpackUidClassFeature : z.DataUtil.class.unpackUidSubclassFeature;
+function Hr(e, t) {
+	let n = t === "classFeature" ? B.DataUtil.class.unpackUidClassFeature : B.DataUtil.class.unpackUidSubclassFeature;
 	return (e[`${t}s`] ?? []).flat(Infinity).map((e) => {
 		let r = e?.[t] ?? e;
 		return typeof r == "string" ? {
-			...n.call(z.DataUtil.class, r),
+			...n.call(B.DataUtil.class, r),
 			...typeof e == "object" ? e : {},
 			[t]: r
 		} : e;
 	});
 }
-function Wr(e, n, r, i, a, o) {
+function Ur(e, n, r, i, a, o) {
 	let s = structuredClone(n.entry);
-	if (s.classFeatures = Ur(s, "classFeature"), s.subclasses = [], e.Charactermancer_Class_Util.getAllFeatures(s).find((e) => e.gainSubclassFeature)?.level === i) {
-		let e = new Set([s, o].filter(Boolean).map((e) => z.UrlUtil.URL_TO_HASH_BUILDER.class(e))), c = (r.subclass ?? []).filter((t) => [t.entry, t.local].filter(Boolean).some((t) => e.has(z.UrlUtil.URL_TO_HASH_BUILDER.class({
+	if (s.classFeatures = Hr(s, "classFeature"), s.subclasses = [], e.Charactermancer_Class_Util.getAllFeatures(s).find((e) => e.gainSubclassFeature)?.level === i) {
+		let e = new Set([s, o].filter(Boolean).map((e) => B.UrlUtil.URL_TO_HASH_BUILDER.class(e))), c = (r.subclass ?? []).filter((t) => [t.entry, t.local].filter(Boolean).some((t) => e.has(B.UrlUtil.URL_TO_HASH_BUILDER.class({
 			name: t.className,
 			source: t.classSource
 		}))));
 		a.extras.push({
 			id: `${n.refKey}|subclass|${i}`,
 			kind: "subclass",
-			title: s.subclassTitle ? t(String(s.subclassTitle)) : F(z.game.i18n.localize("DND5E.ADVANCEMENT.Subclass.Title")),
+			title: s.subclassTitle ? t(String(s.subclassTitle)) : F(B.game.i18n.localize("DND5E.ADVANCEMENT.Subclass.Title")),
 			count: 1,
 			candidates: c.map(({ key: e }) => ({ key: e }))
 		});
 	}
 }
-function Gr(e, n, r, a, o) {
+function Wr(e, n, r, a, o) {
 	let s = n.entry;
-	for (let { field: c, kind: l, primer: u } of Vr) {
+	for (let { field: c, kind: l, primer: u } of Br) {
 		if (!s[c]?.length) continue;
-		let d = new e[u](), f = zr(l), p = Br(r[l] ?? [], f), m = d._addFauxFeatureFeatures_getFauxFeature, h = 0;
+		let d = new e[u](), f = Rr(l), p = zr(r[l] ?? [], f), m = d._addFauxFeatureFeatures_getFauxFeature, h = 0;
 		d._addFauxFeatureFeatures_getFauxFeature = function(...e) {
 			let r = m.apply(this, e);
 			return r.level === a && e[5] > 0 && (e[6].length ? o.blocked.push(i("{0}：这组包含固定选项，暂时无法在这里应用", t(String(r.name)))) : o.extras.push({
@@ -2769,36 +2769,36 @@ function Gr(e, n, r, a, o) {
 			...structuredClone(s),
 			subclasses: []
 		};
-		if (n.prop === "class" && (g.classFeatures = Ur(g, "classFeature")), n.prop === "subclass") {
-			g.subclassFeatures = Ur(g, "subclassFeature");
+		if (n.prop === "class" && (g.classFeatures = Hr(g, "classFeature")), n.prop === "subclass") {
+			g.subclassFeatures = Hr(g, "subclassFeature");
 			let t = {
 				name: g.className,
 				source: g.classSource,
 				subclasses: [g]
 			};
-			Hr(e, () => d.addFauxFeatureFeatures([t], [...p.values()].map(({ entry: e }) => e)));
-		} else n.prop === "class" && Hr(e, () => d.addFauxFeatureFeatures([g], [...p.values()].map(({ entry: e }) => e)));
+			Vr(e, () => d.addFauxFeatureFeatures([t], [...p.values()].map(({ entry: e }) => e)));
+		} else n.prop === "class" && Vr(e, () => d.addFauxFeatureFeatures([g], [...p.values()].map(({ entry: e }) => e)));
 	}
 }
-async function Kr(e, t, n, a, o) {
+async function Gr(e, t, n, a, o) {
 	let c = t.entry.feats;
 	if (e.StatGenUtilAdditionalFeats.isNoChoice(c)) return;
 	if (c.length !== 1) {
 		o.blocked.push(i("专长有多套备选方案，建卡暂时无法在方案间切换"));
 		return;
 	}
-	let l = await a(), u = Br(n, zr("feat")), d = new e.Charactermancer_AdditionalFeatsSelect({
+	let l = await a(), u = zr(n, Rr("feat")), d = new e.Charactermancer_AdditionalFeatsSelect({
 		available: c,
 		modalFilterFeats: l,
 		modalFilterSpells: {},
 		availableProficiencyManager: {}
 	});
 	d._render_renderPtStatic = () => void 0, d._render_renderPtChooseFromFilter = ({ count: e, filterExpression: n, titleNote: i, featsAdditionType: a }) => {
-		let c = l.getEntitiesMatchingFilterExpression({ filterExpression: n }), d = i ? [...new Set(c.map((e) => e.category).filter((e) => !!e))] : [], f = r([s(z.Parser.getPropDisplayName("feat"), [
+		let c = l.getEntitiesMatchingFilterExpression({ filterExpression: n }), d = i ? [...new Set(c.map((e) => e.category).filter((e) => !!e))] : [], f = r([s(B.Parser.getPropDisplayName("feat"), [
 			"Parser",
 			"CAT_ID_TO_FULL",
-			String(z.Parser.CAT_ID_FEAT)
-		]), ...d.map((e) => s(z.Parser.featCategoryToFull(e), [
+			String(B.Parser.CAT_ID_FEAT)
+		]), ...d.map((e) => s(B.Parser.featCategoryToFull(e), [
 			"Parser",
 			"FEAT_CATEGORY_TO_FULL",
 			e
@@ -2809,7 +2809,7 @@ async function Kr(e, t, n, a, o) {
 			title: f,
 			count: e,
 			candidates: c.flatMap((e) => {
-				let t = u.get(zr("feat")(e));
+				let t = u.get(Rr("feat")(e));
 				return t ? [{ key: t.key }] : [];
 			})
 		});
@@ -2821,14 +2821,14 @@ async function Kr(e, t, n, a, o) {
 		featSet: c[0]
 	});
 }
-function qr(e, t, n, r) {
+function Kr(e, t, n, r) {
 	t.candidates = t.candidates.filter((t) => {
 		let i = r.get(t.key)?.entry, a = i?.prerequisite;
 		if (!Array.isArray(a) || !a.length) return !0;
 		let [o] = a;
 		if (a.length === 1 && typeof o?.level == "number" && Object.keys(o).length === 1) {
 			let t = e.UtilDataConverter.getPrerequisiteLevelNumber({ prereqs: a });
-			return new z.CONFIG.Item.documentClass({
+			return new B.CONFIG.Item.documentClass({
 				name: i?.name,
 				type: "feat",
 				system: { prerequisites: { level: t } }
@@ -2837,7 +2837,7 @@ function qr(e, t, n, r) {
 		return t.needsCheck = !0, !0;
 	});
 }
-async function Jr(e, t, n, r) {
+async function qr(e, t, n, r) {
 	if (!N) throw Error("此版本 Plutonium 缺少建卡选择入口");
 	let i = N, a = t.feat ?? [], o = new Map(Object.values(t).flat().map((e) => [e.key, e])), s, c = () => s ??= i.Charactermancer_AdditionalFeatsSelect._pGetUserInput_pGetModalFilterFeats({ allData: { feat: a.map(({ entry: { prerequisite: e, ...t } }) => t) } }), l = [];
 	for (let s of e) {
@@ -2846,24 +2846,24 @@ async function Jr(e, t, n, r) {
 			extras: [],
 			blocked: []
 		};
-		s.prop === "class" && Wr(i, s, t, 1, e, r[s.refKey]), (s.prop === "class" || s.prop === "subclass") && Gr(i, s, t, 1, e), s.entry.feats?.length && await Kr(i, s, a, c, e);
-		for (let t of e.extras) qr(i, t, n, o);
+		s.prop === "class" && Ur(i, s, t, 1, e, r[s.refKey]), (s.prop === "class" || s.prop === "subclass") && Wr(i, s, t, 1, e), s.entry.feats?.length && await Gr(i, s, a, c, e);
+		for (let t of e.extras) Kr(i, t, n, o);
 		l.push(e);
 	}
 	return l;
 }
 // src/rules/kernel/frame/commands-options.ts
-var Yr = (e, t = []) => Object.entries(e ?? {}).flatMap(([e, n]) => n?.children ? Yr(n.children, [...t, F(String(n.label ?? e))]) : [{
+var Jr = (e, t = []) => Object.entries(e ?? {}).flatMap(([e, n]) => n?.children ? Jr(n.children, [...t, F(String(n.label ?? e))]) : [{
 	value: e,
 	label: String(n?.label ?? e),
 	path: t
-}]), Xr = {
+}]), Yr = {
 	Trait: async (e, t, n) => {
-		let { available: r } = await e.unfulfilledChoices(), i = r.filter((e) => e.type === "grant").flatMap((e) => Yr(e.choices)), a = /* @__PURE__ */ new Map();
+		let { available: r } = await e.unfulfilledChoices(), i = r.filter((e) => e.type === "grant").flatMap((e) => Jr(e.choices)), a = /* @__PURE__ */ new Map();
 		for (let e of r.filter((e) => e.type === "choice")) {
 			let t = a.get(e.choiceIdx) ?? {
 				count: 0,
-				options: Yr(e.choices)
+				options: Jr(e.choices)
 			};
 			t.count++, a.set(e.choiceIdx, t);
 		}
@@ -2889,20 +2889,20 @@ var Yr = (e, t = []) => Object.entries(e ?? {}).flatMap(([e, n]) => n?.children 
 		};
 	},
 	AbilityScoreImprovement: async (e, t) => an(e, t)
-}, Zr = /* @__PURE__ */ new Set([
+}, Xr = /* @__PURE__ */ new Set([
 	"HitPoints",
 	"ScaleValue",
 	"Size",
 	"ItemGrant",
 	"Subclass"
 ]);
-async function Qr(e, n = [], i, a) {
+async function Zr(e, n = [], i, a) {
 	let o = [];
 	for (let c of e.steps) {
 		let e = c.flow?.advancement;
 		if (!e) continue;
 		let l = e.constructor?.typeName ?? e.type, u = await c.flow.getAutomaticApplicationValue?.() !== !1, d = null, f = !1, p = n.find((t) => t.id === e.id && (t.level ?? null) === (c.flow.level ?? null))?.value;
-		Xr[l] ? d = await Xr[l](a.get(e.id) ?? e, p, i) : !u && !Zr.has(l) && (f = !0);
+		Yr[l] ? d = await Yr[l](a.get(e.id) ?? e, p, i) : !u && !Xr.has(l) && (f = !0);
 		let m = l === "Trait" ? en(e) : null, h = e._source?.name || e._source?.title, g = e.name ?? e.title, _ = m ? F(m) : h ? t(String(h), It(String(h))) : g ? F(String(g)) : null, v = l === "Trait" && e.hint ? r(String(e.hint).split("\n").map((e) => s(e, rr(e))), "\n") : void 0;
 		o.push({
 			id: e.id,
@@ -2917,14 +2917,14 @@ async function Qr(e, n = [], i, a) {
 	}
 	return o;
 }
-function $r(e) {
+function Qr(e) {
 	return { buildOptions: (t) => e([], async () => {
 		let e = [];
 		for (let n of t.items) e.push({
 			...n,
 			data: n.data ?? await P(n.prop, n.entry)
 		});
-		let n = [], r = await Ar("选项预览", e, [], t.choices ?? {}, {
+		let n = [], r = await kr("选项预览", e, [], t.choices ?? {}, {
 			strict: !1,
 			picks: t.picks,
 			blank: t.blank,
@@ -2932,13 +2932,13 @@ function $r(e) {
 			onManager: async ({ manager: e, key: t, unsupported: r, picks: i, traitPlans: a, expertise: o }) => {
 				n.push({
 					refKey: t,
-					steps: await Qr(e, i, a, o),
+					steps: await Zr(e, i, a, o),
 					unsupported: r
 				});
 			}
 		}), i = r.actor ?? r.created;
 		try {
-			let e = t.extraPools && Object.keys(t.extraPools).length ? await Jr(t.items, t.extraPools, i, t.local ?? {}) : [], a = new Map(n.map((e) => [e.refKey, e]));
+			let e = t.extraPools && Object.keys(t.extraPools).length ? await qr(t.items, t.extraPools, i, t.local ?? {}) : [], a = new Map(n.map((e) => [e.refKey, e]));
 			return {
 				items: e.length ? e.map((e) => ({
 					steps: [],
@@ -2949,7 +2949,7 @@ function $r(e) {
 				complete: !r.pending && !r.missingTraits.length,
 				abilities: {
 					initial: r.initial,
-					auto: kr(i),
+					auto: Or(i),
 					cap: globalThis.CONFIG?.DND5E?.maxAbilityScore ?? null,
 					labels: Object.fromEntries(Object.entries(qt("abilities")).map(([e, t]) => [e, F(t)]))
 				}
@@ -2960,53 +2960,53 @@ function $r(e) {
 	}) };
 }
 // src/rules/kernel/frame/registry-keys.ts
-var ei = globalThis, ti = null, ni = (e) => typeof e?.label == "string" ? e.label : typeof e?.name == "string" ? e.name : typeof e?.labels?.title == "string" ? e.labels.title : null;
-function ri(e, t = []) {
+var $r = globalThis, ei = null, ti = (e) => typeof e?.label == "string" ? e.label : typeof e?.name == "string" ? e.name : typeof e?.labels?.title == "string" ? e.labels.title : null;
+function ni(e, t = []) {
 	if (!e || typeof e != "object" || Array.isArray(e)) return t;
-	for (let [n, r] of Object.entries(e)) t.push([n, r]), r?.children && ri(r.children, t);
+	for (let [n, r] of Object.entries(e)) t.push([n, r]), r?.children && ni(r.children, t);
 	return t;
 }
-function ii() {
-	let e = (e) => typeof e == "string" ? e : ni(e);
-	ti = {
-		tables: Object.fromEntries(Object.entries(ei.CONFIG.DND5E ?? {}).map(([t, n]) => [t, Object.fromEntries(ri(n).flatMap(([t, n]) => {
+function ri() {
+	let e = (e) => typeof e == "string" ? e : ti(e);
+	ei = {
+		tables: Object.fromEntries(Object.entries($r.CONFIG.DND5E ?? {}).map(([t, n]) => [t, Object.fromEntries(ni(n).flatMap(([t, n]) => {
 			let r = e(n);
 			return r ? [[t, r]] : [];
 		}))])),
-		statuses: Object.fromEntries((ei.CONFIG.statusEffects ?? []).filter((e) => typeof e?.name == "string").map((e) => [e.id, e.name]))
+		statuses: Object.fromEntries(($r.CONFIG.statusEffects ?? []).filter((e) => typeof e?.name == "string").map((e) => [e.id, e.name]))
 	};
 }
-var ai = () => ti !== null, oi = null;
-function si(e) {
-	let t = ei.game.i18n, n = oi;
+var ii = () => ei !== null, ai = null;
+function oi(e) {
+	let t = $r.game.i18n, n = ai;
 	if (!n || n.i18n !== t) {
 		let e = /* @__PURE__ */ new Map(), r = (t, n) => {
 			for (let [i, a] of Object.entries(t ?? {})) typeof a == "string" ? e.set(a, [...e.get(a) ?? [], [...n, i].join(".")]) : a && typeof a == "object" && r(a, [...n, i]);
 		};
-		r(t.translations, []), r(t._fallback, []), n = oi = {
+		r(t.translations, []), r(t._fallback, []), n = ai = {
 			i18n: t,
 			byText: e
 		};
 	}
 	return (n.byText.get(e) ?? []).filter((e) => t.has(e));
 }
-function B(e, t) {
-	return Rt([.../* @__PURE__ */ new Set([...t && ei.game.i18n.has(t) ? [t] : [], ...si(e)])], e);
+function si(e, t) {
+	return Rt([.../* @__PURE__ */ new Set([...t && $r.game.i18n.has(t) ? [t] : [], ...oi(e)])], e);
 }
 function ci(e, t) {
 	let n = {};
-	for (let [r, i] of ri(t)) {
-		let t = ti?.tables[e]?.[r] ?? null, a = t && ei.game.i18n.has(t) ? t : null, o = typeof i == "string" ? i : ni(i);
+	for (let [r, i] of ni(t)) {
+		let t = ei?.tables[e]?.[r] ?? null, a = t && $r.game.i18n.has(t) ? t : null, o = typeof i == "string" ? i : ti(i);
 		if (!o || !a && typeof i == "string") continue;
-		let s = B(a ? ei.game.i18n.localize(a) : o, a);
+		let s = si(a ? $r.game.i18n.localize(a) : o, a);
 		s && (n[r] = s);
 	}
 	return n;
 }
 function li() {
-	return ti ? /* @__PURE__ */ new Set([...Object.values(ti.tables).flatMap((e) => Object.keys(e)), ...Object.keys(ti.statuses)]) : /* @__PURE__ */ new Set();
+	return ei ? /* @__PURE__ */ new Set([...Object.values(ei.tables).flatMap((e) => Object.keys(e)), ...Object.keys(ei.statuses)]) : /* @__PURE__ */ new Set();
 }
-var ui = (e) => ti?.statuses[e] ?? null, di = globalThis;
+var ui = (e) => ei?.statuses[e] ?? null, di = globalThis;
 function fi(e, t, n) {
 	let r = [], i = [], a = [], o = (e) => String(di.UrlUtil.encodeForHash(e)), s = n.replace(/\s*\.\.\.$/, "").trim().toLowerCase(), c = (e, n, l, u = !1) => {
 		if (Array.isArray(e)) e.forEach((e, t) => c(e, n, [...l, t], u));
@@ -3045,13 +3045,13 @@ function pi(e, n) {
 			name: d(String(e.name ?? "")),
 			author: n
 		} : {
-			name: o ? t(e.name, p(e.name, n, B(String(e.name ?? ""), null) ?? Ut(String(e.name ?? "")))) : c(e.name, n),
+			name: o ? t(e.name, p(e.name, n, si(String(e.name ?? ""), null) ?? Ut(String(e.name ?? "")))) : c(e.name, n),
 			author: n
 		};
 	}
 	if (s) return { name: d(String(e.name ?? "")) };
 	let l = typeof a?.hash == "string" ? fi(n, a.hash, String(e.name ?? "")) : null;
-	return l ? { name: t(e.name, void 0, l) } : { name: B(String(e.name ?? ""), null) ?? t(e.name, Ut(String(e.name ?? ""))) };
+	return l ? { name: t(e.name, void 0, l) } : { name: si(String(e.name ?? ""), null) ?? t(e.name, Ut(String(e.name ?? ""))) };
 }
 // src/rules/kernel/frame/action-list.ts
 var mi = globalThis, hi = [
@@ -3205,7 +3205,7 @@ function ji(e, n, r, i) {
 			let t = Lt(e);
 			if (t) return t;
 		}
-		return n.has(e) && !r.has(e) && /\p{L}/u.test(e) ? B(e, null) ?? t(e) : Ai(e, i) ?? e;
+		return n.has(e) && !r.has(e) && /\p{L}/u.test(e) ? si(e, null) ?? t(e) : Ai(e, i) ?? e;
 	}
 	return !e || typeof e != "object" || typeof e.$t == "string" ? e : Array.isArray(e) ? e.map((e) => ji(e, n, r, i)) : Object.fromEntries(Object.entries(e).map(([e, t]) => [e, e === "author" ? t : ji(t, n, r, i)]));
 }
@@ -3264,17 +3264,17 @@ function Hi(e) {
 	for (let r = Object.getPrototypeOf(e); r && !t.has(r); r = Object.getPrototypeOf(r)) for (let [e, t] of Object.entries(Object.getOwnPropertyDescriptors(r))) t.get && !n.some(([t]) => t === e) && n.push([e, t.get]);
 	return n;
 }
-function U(e, t = 0, n = /* @__PURE__ */ new WeakSet()) {
+function Ui(e, t = 0, n = /* @__PURE__ */ new WeakSet()) {
 	if (typeof e == "function") return;
 	if (typeof e != "object" || !e) return e;
 	if (t > 12 || n.has(e) || e instanceof H.foundry.abstract.Document) return;
-	if (n.add(e), e instanceof Set) return [...e].map((e) => U(e, t + 1, n));
-	if (e instanceof Map) return Object.fromEntries([...Map.prototype.entries.call(e)].map(([e, r]) => [e, U(r, t + 1, n)]));
-	if (Array.isArray(e)) return e.map((e) => U(e, t + 1, n));
+	if (n.add(e), e instanceof Set) return [...e].map((e) => Ui(e, t + 1, n));
+	if (e instanceof Map) return Object.fromEntries([...Map.prototype.entries.call(e)].map(([e, r]) => [e, Ui(r, t + 1, n)]));
+	if (Array.isArray(e)) return e.map((e) => Ui(e, t + 1, n));
 	let r = {};
 	for (let i of Object.keys(e)) {
 		if (i === "parent" || i.startsWith("_")) continue;
-		let a = U(e[i], t + 1, n);
+		let a = Ui(e[i], t + 1, n);
 		a !== void 0 && (r[i] = a);
 	}
 	for (let [i, a] of Hi(e)) {
@@ -3285,17 +3285,17 @@ function U(e, t = 0, n = /* @__PURE__ */ new WeakSet()) {
 		} catch {
 			o = void 0;
 		}
-		let s = U(o, t + 1, n);
+		let s = Ui(o, t + 1, n);
 		s !== void 0 && (r[i] = s);
 	}
 	return r;
 }
-async function Ui(e, t, n) {
+async function Wi(e, t, n) {
 	if (!e) return null;
 	let r = new e({ document: t }), i = await r._prepareContext({ parts: [] }), a = await r._preparePartContext(Object.keys(e.PARTS ?? {})[0] ?? "config", i, {});
 	return Object.fromEntries(n.filter((e) => e in a).map((e) => [e, Vi(a[e])]));
 }
-var Wi = {
+var Gi = {
 	ability: (e, t) => e.rollAbilityCheck({ ability: t }, Fi, Ii),
 	tool: (e, t) => e.rollToolCheck({ tool: t }, Fi, Ii),
 	death: (e) => e.rollDeathSave({}, Fi, Ii),
@@ -3305,7 +3305,7 @@ var Wi = {
 		return t ? (await t.evaluate({ allowInteractive: !1 }), [t]) : null;
 	}
 };
-function Gi(e, r, i) {
+function Ki(e, r, i) {
 	return {
 		sheet: (n, i = []) => e([], async () => {
 			let e = r(n), a = H.dnd5e?.applications?.actor ?? {};
@@ -3315,14 +3315,14 @@ function Gi(e, r, i) {
 				img: e.img,
 				type: e.type,
 				flags: Vi(e.flags ?? {}),
-				system: U(e.system),
+				system: Ui(e.system),
 				statuses: [...e.statuses ?? []],
 				items: [...e.items].map((e) => ({
 					..._e(e),
 					img: e.img,
 					sort: e.sort,
 					flags: Vi(e.flags ?? {}),
-					system: U(e.system),
+					system: Ui(e.system),
 					labels: Vi(e.labels ?? {})
 				})),
 				effects: [...e.allApplicableEffects()].map((e) => ({
@@ -3348,18 +3348,18 @@ function Gi(e, r, i) {
 					})),
 					effects: [...e.allApplicableEffects()].map((e) => ({
 						id: e.id,
-						name: B(String(e.name ?? ""), null) ?? t(e.name)
+						name: si(String(e.name ?? ""), null) ?? t(e.name)
 					}))
 				},
 				view: await Mi(e, i),
 				breakdown: {
-					hp: await Ui(a.HitPointsConfig, e, [
+					hp: await Wi(a.HitPointsConfig, e, [
 						"classes",
 						"ability",
 						"effects",
 						"levels"
 					]),
-					ac: await Ui(a.ArmorClassConfig, e, ["calculations", "formulaLabel"])
+					ac: await Wi(a.ArmorClassConfig, e, ["calculations", "formulaLabel"])
 				}
 			};
 		}),
@@ -3368,7 +3368,7 @@ function Gi(e, r, i) {
 			name: e.name,
 			img: e.img,
 			type: e.type,
-			system: U(e.system),
+			system: Ui(e.system),
 			items: [...e.items].filter((e) => [
 				"class",
 				"race",
@@ -3398,17 +3398,17 @@ function Gi(e, r, i) {
 			return { edits: n.length };
 		}, [t]),
 		check: (t, n, a, o = []) => e(o, async () => {
-			let e = Wi[n];
+			let e = Gi[n];
 			if (!e) throw Error(`没有这种检定：${n}`);
 			return (await e(r(t), a))?.map(i) ?? null;
 		}, [t]),
 		glossary: () => e([], async () => {
-			if (!ai()) throw Error("开机时没有记下登记表原值（registry-keys.ts）");
+			if (!ii()) throw Error("开机时没有记下登记表原值（registry-keys.ts）");
 			return {
 				tables: Object.fromEntries(Object.entries(H.CONFIG.DND5E ?? {}).map(([e, t]) => [e, ci(e, t)]).filter(([, e]) => Object.keys(e).length)),
 				statuses: (H.CONFIG.statusEffects ?? []).flatMap((e) => typeof e?.name == "string" ? [{
 					id: e.id,
-					name: B(e.name, ui(e.id)) ?? s(e.name, null),
+					name: si(e.name, ui(e.id)) ?? s(e.name, null),
 					img: e.img ?? null
 				}] : [])
 			};
@@ -3422,7 +3422,7 @@ function Gi(e, r, i) {
 			for (let e = o.length; e > 0; e--) {
 				let t = o.slice(0, e).join("."), n = (t.startsWith("system.") ? a.system?.schema?.getField(t.slice(7)) : a.schema?.getField(t))?.label;
 				if (typeof n == "string" && n) return {
-					field: Lt(n) ?? B(n, null) ?? s(n, null),
+					field: Lt(n) ?? si(n, null) ?? s(n, null),
 					...i[1] ? { item: pi(a, []).name } : {}
 				};
 			}
@@ -3435,11 +3435,11 @@ function Gi(e, r, i) {
 	};
 }
 // src/rules/kernel/frame/commands-fields.ts
-var W = globalThis;
-function G(e) {
-	return typeof e != "string" || !e.trim() ? null : Lt(e) || (B(e, null) ?? s(e, null));
+var U = globalThis;
+function W(e) {
+	return typeof e != "string" || !e.trim() ? null : Lt(e) || (si(e, null) ?? s(e, null));
 }
-var Ki = [
+var qi = [
 	{
 		path: /\.roll\.mode$/,
 		options: () => [
@@ -3450,59 +3450,59 @@ var Ki = [
 	},
 	{
 		path: /^system\.abilities\.[^.]+\.proficient$/,
-		options: () => [0, 1].map((e) => [e, W.CONFIG.DND5E.proficiencyLevels[e]])
+		options: () => [0, 1].map((e) => [e, U.CONFIG.DND5E.proficiencyLevels[e]])
 	},
 	{
 		path: /^system\.(skills|tools)\.[^.]+\.value$/,
-		options: () => Object.entries(W.CONFIG.DND5E.proficiencyLevels).map(([e, t]) => [Number(e), t])
+		options: () => Object.entries(U.CONFIG.DND5E.proficiencyLevels).map(([e, t]) => [Number(e), t])
 	},
 	{
 		path: /^system\.(skills|tools)\.[^.]+\.ability$|^system\.attributes\.spellcasting$/,
-		options: () => Object.entries(W.CONFIG.DND5E.abilities).map(([e, t]) => [e, t.label])
+		options: () => Object.entries(U.CONFIG.DND5E.abilities).map(([e, t]) => [e, t.label])
 	},
 	{
 		path: /^system\.attributes\.(init|concentration)\.ability$/,
-		options: () => [["", "DND5E.Default"], ...Object.entries(W.CONFIG.DND5E.abilities).map(([e, t]) => [e, t.label])]
+		options: () => [["", "DND5E.Default"], ...Object.entries(U.CONFIG.DND5E.abilities).map(([e, t]) => [e, t.label])]
 	},
 	{
 		path: /^system\.attributes\.ac\.calcs?$/,
-		options: () => Object.entries(W.CONFIG.DND5E.armorClasses).map(([e, t]) => [e, t.label])
+		options: () => Object.entries(U.CONFIG.DND5E.armorClasses).map(([e, t]) => [e, t.label])
 	},
 	{
 		path: /^system\.attributes\.(movement|senses)\.units$/,
-		options: () => Object.entries(W.CONFIG.DND5E.movementUnits).map(([e, t]) => [e, t.label])
+		options: () => Object.entries(U.CONFIG.DND5E.movementUnits).map(([e, t]) => [e, t.label])
 	}
-], qi = (e) => Ki.find((t) => t.path.test(e))?.options().map(([e, t]) => ({
+], Ji = (e) => qi.find((t) => t.path.test(e))?.options().map(([e, t]) => ({
 	value: String(e),
-	label: (typeof t == "string" ? G(t) : null) ?? d(String(e))
+	label: (typeof t == "string" ? W(t) : null) ?? d(String(e))
 }));
-function Ji(e) {
+function Yi(e) {
 	let t = e?.choices;
 	if (typeof t == "function" && (t = t()), t) return (Array.isArray(t) ? t.map((e) => [String(e), e]) : Object.entries(t)).map(([e, t]) => ({
 		value: e,
-		label: G(typeof t == "string" ? t : t?.label ?? t?.name ?? e) ?? d(e)
+		label: W(typeof t == "string" ? t : t?.label ?? t?.name ?? e) ?? d(e)
 	}));
 }
-function Yi(e) {
-	let t = W.foundry.data.fields, n = W.dnd5e?.dataModels?.fields ?? {};
+function Xi(e) {
+	let t = U.foundry.data.fields, n = U.dnd5e?.dataModels?.fields ?? {};
 	if (e instanceof t.BooleanField) return "boolean";
 	if (e instanceof t.NumberField) return "number";
 	if (e instanceof t.HTMLField) return "html";
 	if (e instanceof t.SetField || e instanceof t.ArrayField) {
 		let n = e.element;
-		return n instanceof t.StringField ? Ji(n) ? "multi" : "tags" : null;
+		return n instanceof t.StringField ? Yi(n) ? "multi" : "tags" : null;
 	}
-	return n.FormulaField && e instanceof n.FormulaField ? "formula" : e instanceof t.StringField ? Ji(e) ? "select" : "text" : null;
+	return n.FormulaField && e instanceof n.FormulaField ? "formula" : e instanceof t.StringField ? Yi(e) ? "select" : "text" : null;
 }
-function Xi(e, t, n, r, i) {
-	let a = W.foundry.data.fields, o = {
+function Zi(e, t, n, r, i) {
+	let a = U.foundry.data.fields, o = {
 		path: t,
-		label: G(e.label),
-		hint: G(e.hint)
+		label: W(e.label),
+		hint: W(e.hint)
 	};
 	if (e instanceof a.SchemaField && !(e instanceof a.EmbeddedDataField && !e.fields)) {
 		if (r > 4) return null;
-		let a = Object.entries(e.fields ?? {}).map(([e, a]) => Xi(a, `${t}.${e}`, n?.[e], r + 1, i)).filter((e) => !!e);
+		let a = Object.entries(e.fields ?? {}).map(([e, a]) => Zi(a, `${t}.${e}`, n?.[e], r + 1, i)).filter((e) => !!e);
 		return a.length ? {
 			...o,
 			children: a
@@ -3510,21 +3510,21 @@ function Xi(e, t, n, r, i) {
 	}
 	if (e.model instanceof a.DataField && e instanceof a.ObjectField && n && typeof n == "object") {
 		if (r > 4) return null;
-		let a = Object.keys(n).map((a) => Xi(e.model, `${t}.${a}`, n[a], r + 1, i)).filter((e) => !!e);
+		let a = Object.keys(n).map((a) => Zi(e.model, `${t}.${a}`, n[a], r + 1, i)).filter((e) => !!e);
 		return a.length ? {
 			...o,
 			children: a
 		} : null;
 	}
-	let s = qi(t), c = s && e instanceof a.SetField ? "multi" : s && (e instanceof a.StringField || e instanceof a.NumberField) ? "select" : Yi(e);
+	let s = Ji(t), c = s && e instanceof a.SetField ? "multi" : s && (e instanceof a.StringField || e instanceof a.NumberField) ? "select" : Xi(e);
 	if (!c) return null;
-	let l = e.options?.persisted === !1, u = l ? Zi(i, t) : n, d = {
+	let l = e.options?.persisted === !1, u = l ? Qi(i, t) : n, d = {
 		...o,
 		kind: c,
 		value: u instanceof Set ? [...u] : u ?? null,
 		...l ? { derived: !0 } : {}
 	};
-	return s ? (d.choices = s, e instanceof a.NumberField && (d.numeric = !0)) : c === "select" && (d.choices = Ji(e)), c === "multi" && (d.choices = Ji(e.element)), c === "number" && Object.assign(d, {
+	return s ? (d.choices = s, e instanceof a.NumberField && (d.numeric = !0)) : c === "select" && (d.choices = Yi(e)), c === "multi" && (d.choices = Yi(e.element)), c === "number" && Object.assign(d, {
 		min: e.min,
 		max: e.max,
 		step: e.step,
@@ -3532,8 +3532,8 @@ function Xi(e, t, n, r, i) {
 		nullable: !!e.nullable
 	}), d;
 }
-var Zi = (e, t) => t.split(".").reduce((e, t) => e?.[t], e);
-function Qi(e, t) {
+var Qi = (e, t) => t.split(".").reduce((e, t) => e?.[t], e);
+function $i(e, t) {
 	let n = t.split(".");
 	for (let t = n.length; t > 0; t--) {
 		let r = n.slice(0, t).join("."), i = (r.startsWith("system.") ? e.system?.schema?.getField(r.slice(7)) : e.schema?.getField(r))?.label;
@@ -3541,14 +3541,14 @@ function Qi(e, t) {
 	}
 	return null;
 }
-function $i(e, t) {
+function ea(e, t) {
 	return {
 		fieldInfo: (n, r) => e([], async () => {
 			let e = t(n), i = r.itemId ? e.items.get(r.itemId) : e;
 			if (!i) throw Error(`没有这件物品：${r.itemId}`);
 			let { path: a } = r, o = a === "system" ? i.system?.schema : a.startsWith("system.") ? i.system?.schema?.getField(a.slice(7)) : i.schema?.getField(a);
 			if (!o) throw Error(`官方没有这个字段：${a}`);
-			let s = Xi(o, a, Zi(i._source, a), 0, i), c = W.CONFIG.ActiveEffect.documentClass.CHANGE_TYPES ?? {}, l = (e) => typeof e.type == "string" ? e.type : (Object.entries(W.CONST.ACTIVE_EFFECT_MODES ?? {}).find(([, t]) => t === e.mode)?.[0] ?? "").toLowerCase(), u = (e) => G(String(c[e]?.label ?? e));
+			let s = Zi(o, a, Qi(i._source, a), 0, i), c = U.CONFIG.ActiveEffect.documentClass.CHANGE_TYPES ?? {}, l = (e) => typeof e.type == "string" ? e.type : (Object.entries(U.CONST.ACTIVE_EFFECT_MODES ?? {}).find(([, t]) => t === e.mode)?.[0] ?? "").toLowerCase(), u = (e) => W(String(c[e]?.label ?? e));
 			return {
 				tree: s,
 				effects: r.itemId ? [] : [...e.allApplicableEffects?.() ?? []].flatMap((t) => [...t.system?.changes ?? t.changes ?? []].filter((e) => e.key === a || e.key.startsWith(`${a}.`) || a.startsWith(`${e.key}.`)).map((n) => {
@@ -3556,13 +3556,13 @@ function $i(e, t) {
 					return {
 						effect: t.id,
 						itemId: t.parent && t.parent !== e ? t.parent.id : null,
-						name: G(t.name),
+						name: W(t.name),
 						origin: r,
 						active: !t.disabled && !t.isSuppressed,
 						disabled: !!t.disabled,
 						manual: !!t.flags?.["tavern-trpg"]?.manual,
 						key: n.key,
-						keyLabel: G(Qi(e, n.key)),
+						keyLabel: W($i(e, n.key)),
 						mode: i ? u(i) : null,
 						modeCode: i,
 						value: n.value
@@ -3572,31 +3572,31 @@ function $i(e, t) {
 				derived: null,
 				modes: Object.entries(c).map(([e, t]) => ({
 					value: e,
-					label: G(String(t.label ?? e)) ?? d(e)
+					label: W(String(t.label ?? e)) ?? d(e)
 				})),
-				durationUnits: [...W.CONST.ACTIVE_EFFECT_DURATION_UNITS ?? []].map((e) => ({
+				durationUnits: [...U.CONST.ACTIVE_EFFECT_DURATION_UNITS ?? []].map((e) => ({
 					value: e,
-					label: G(`EFFECT.DURATION.UNITS.${e}`) ?? d(e)
+					label: W(`EFFECT.DURATION.UNITS.${e}`) ?? d(e)
 				}))
 			};
 		}),
 		specialTraits: (n) => e([], async () => {
 			let e = t(n)._source?.flags?.dnd5e ?? {}, r = /* @__PURE__ */ new Map();
-			for (let [t, n] of Object.entries(W.CONFIG.DND5E.characterFlags ?? {})) {
-				let i = W.foundry.utils.getProperty(e, t);
+			for (let [t, n] of Object.entries(U.CONFIG.DND5E.characterFlags ?? {})) {
+				let i = U.foundry.utils.getProperty(e, t);
 				if (n.deprecated && !i) continue;
 				let a = n.type === Boolean ? "boolean" : n.type === Number ? "number" : "string", o = n.choices ? Object.entries(n.choices).map(([e, t]) => ({
 					value: e,
-					label: G(String(typeof t == "string" ? t : t?.label ?? e))
+					label: W(String(typeof t == "string" ? t : t?.label ?? e))
 				})) : null, s = String(n.section ?? "");
 				r.has(s) || r.set(s, {
-					label: G(s),
+					label: W(s),
 					fields: []
 				}), r.get(s).fields.push({
 					key: t,
 					path: `flags.dnd5e.${t}`,
-					name: G(String(n.name ?? t)),
-					hint: G(String(n.hint ?? "")),
+					name: W(String(n.name ?? t)),
+					hint: W(String(n.hint ?? "")),
 					type: a,
 					choices: o,
 					value: i ?? null
@@ -3605,7 +3605,7 @@ function $i(e, t) {
 			return { sections: [...r.values()] };
 		}),
 		traitChoices: (t) => e([], async () => {
-			let e = W.dnd5e.documents.Trait, n = [
+			let e = U.dnd5e.documents.Trait, n = [
 				"weapon",
 				"armor",
 				"tool"
@@ -3615,7 +3615,7 @@ function $i(e, t) {
 					let e = String(s.label ?? o), l = n.get(r(o));
 					i.push({
 						key: o,
-						label: l && /[A-Za-z]/.test(e) ? c(e, l, !0) : G(e),
+						label: l && /[A-Za-z]/.test(e) ? c(e, l, !0) : W(e),
 						depth: t,
 						selectable: s.selectable !== !1
 					}), s.children && a(s.children, t + 1);
@@ -3627,17 +3627,17 @@ function $i(e, t) {
 				"di",
 				"dv",
 				"dm"
-			].includes(t) ? Object.entries(W.CONFIG.DND5E.itemProperties ?? {}).filter(([, e]) => e.isPhysical).map(([e, t]) => ({
+			].includes(t) ? Object.entries(U.CONFIG.DND5E.itemProperties ?? {}).filter(([, e]) => e.isPhysical).map(([e, t]) => ({
 				key: e,
-				label: G(String(t.label ?? e))
-			})) : [], s = t === "languages" ? Object.entries(W.CONFIG.DND5E.communicationTypes ?? {}).map(([e, t]) => ({
+				label: W(String(t.label ?? e))
+			})) : [], s = t === "languages" ? Object.entries(U.CONFIG.DND5E.communicationTypes ?? {}).map(([e, t]) => ({
 				key: e,
-				label: G(String(t.label ?? e))
+				label: W(String(t.label ?? e))
 			})) : [];
 			return {
 				trait: t,
 				path: e.actorKeyPath(t),
-				label: G(e.traitLabel(t)),
+				label: W(e.traitLabel(t)),
 				rows: i,
 				bypasses: o,
 				communication: s
@@ -3646,8 +3646,8 @@ function $i(e, t) {
 	};
 }
 // src/rules/kernel/frame/author-ask-forms.ts
-var ea = globalThis;
-async function ta(e, t) {
+var ta = globalThis;
+async function na(e, t) {
 	let n = N, r = [];
 	if (e instanceof n.Charactermancer_ImmResVulnSelect) return {
 		slots: Jn(n, e) ?? [],
@@ -3662,19 +3662,19 @@ async function ta(e, t) {
 		cleanup: r
 	});
 }
-var na = (e) => ({
+var ra = (e) => ({
 	title: e.hints?.length ? I(e.hints.join(" ")) : null,
 	count: e.count,
 	options: e.options.map((t) => ({ label: t.text ?? l(t.label, e.options.map((e) => e.label), F(t.label)) }))
-}), ra = {
+}), ia = {
 	async read({ comp: e, opts: t }, n) {
 		let r = N.Charactermancer_ImmResVulnSelect && e instanceof N.Charactermancer_ImmResVulnSelect ? 1 : Math.max(1, (e._available ?? []).length), a = [];
 		for (let t = 0; t < r; t++) {
-			let { slots: n, cleanup: o } = await ta(e, t);
+			let { slots: n, cleanup: o } = await na(e, t);
 			try {
 				a.push({
 					label: r > 1 ? i("方案 {0}", d(String(t + 1))) : null,
-					groups: n.map(na)
+					groups: n.map(ra)
 				});
 			} finally {
 				for (let e of o) e();
@@ -3694,7 +3694,7 @@ var na = (e) => ({
 	},
 	async write({ comp: e }, t) {
 		if (t.default) return e.pGetFormData();
-		let { slots: n, cleanup: r } = await ta(e, t.set ?? 0);
+		let { slots: n, cleanup: r } = await na(e, t.set ?? 0);
 		try {
 			for (let [e, r] of (t.picks ?? []).entries()) {
 				let t = n[e];
@@ -3711,7 +3711,7 @@ var na = (e) => ({
 			for (let e of r) e();
 		}
 	}
-}, ia = {
+}, aa = {
 	read({ comp: e, opts: n }, r) {
 		let i = e.constructor, a = i._PROP_METAS.map((n) => {
 			let r = e._tables[n.prop];
@@ -3719,7 +3719,7 @@ var na = (e) => ({
 				title: I(i._PROP_TO_FULL?.[n.prop]),
 				count: n.count || 1,
 				custom: !0,
-				options: (r?.rows ?? []).map((e) => ({ label: t(ea.Renderer.stripTags(String(e?.[1] ?? ""))) }))
+				options: (r?.rows ?? []).map((e) => ({ label: t(ta.Renderer.stripTags(String(e?.[1] ?? ""))) }))
 			};
 		});
 		return {
@@ -3743,8 +3743,8 @@ var na = (e) => ({
 		}), e.pGetFormData();
 	}
 };
-function aa(e) {
-	let n = String(e?.entity?.name ?? e?.name ?? ""), r = ea.UrlUtil?.PAGE_TO_PROPS?.[e?.page]?.[0];
+function oa(e) {
+	let n = String(e?.entity?.name ?? e?.name ?? ""), r = ta.UrlUtil?.PAGE_TO_PROPS?.[e?.page]?.[0];
 	return r && e?.hash && e?.source ? c(n, {
 		propDroppable: r,
 		source: e.source,
@@ -3752,10 +3752,10 @@ function aa(e) {
 		page: e.page
 	}) : t(n);
 }
-var oa = (e) => F(qt("abilities")[e] ?? e), sa = {
+var sa = (e) => F(qt("abilities")[e] ?? e), ca = {
 	read({ comp: e, opts: n }, r) {
 		let { count: a, required: o } = e._getOptionsNameAndCount(), s = e._optionsSet.map((e, t) => ({
-			label: aa(e),
+			label: oa(e),
 			disabled: o.includes(t)
 		})), c = e._optionsSet[0]?.optionsMeta?.name;
 		return {
@@ -3778,7 +3778,9 @@ var oa = (e) => F(qt("abilities")[e] ?? e), sa = {
 		};
 	},
 	async write({ comp: e }, t) {
-		if (t.default) return e.pGetFormData();
+		return t.default || await ca.select(e, t), e.pGetFormData();
+	},
+	async select(e, t) {
 		let { count: n, required: r } = e._getOptionsNameAndCount(), i = N.ComponentUiUtil.getMetaWrpMultipleChoice(e, "ixsChosen", {
 			values: e._optionsSet,
 			ixsRequired: r,
@@ -3793,26 +3795,25 @@ var oa = (e) => F(qt("abilities")[e] ?? e), sa = {
 				if (!n) throw Error("选项不在作者给的范围里");
 				e._state[n.propIsActive] = !0;
 			}
-			return await e.pGetFormData();
 		} finally {
 			i.cleanup?.();
 		}
 	}
-}, ca = {
+}, la = {
 	read({ comp: e, opts: t }, n) {
 		let a = e.constructor, o = e._ability.map((t, n) => {
-			let o = Object.keys(qt("abilities")).filter((e) => t[e]).map((e) => i("{0} {1}", oa(e), d(`${t[e] > 0 ? "+" : ""}${t[e]}`))), s = [];
+			let o = Object.keys(qt("abilities")).filter((e) => t[e]).map((e) => i("{0} {1}", sa(e), d(`${t[e] > 0 ? "+" : ""}${t[e]}`))), s = [];
 			if (t.choose?.from) s.push({
 				title: i("选 {0} 项，各 +{1}", d(String(t.choose.count || 1)), d(String(t.choose.amount || 1))),
 				count: t.choose.count || 1,
-				options: t.choose.from.map((e) => ({ label: oa(e) }))
+				options: t.choose.from.map((e) => ({ label: sa(e) }))
 			});
 			else if (t.choose?.weighted) {
 				let e = a._getSortedWeightedFrom(t);
 				for (let n of a._getSortedWeights(t)) s.push({
 					title: i("+{0}", d(String(n))),
 					count: 1,
-					options: e.map((e) => ({ label: oa(e) }))
+					options: e.map((e) => ({ label: sa(e) }))
 				});
 			}
 			return {
@@ -3845,7 +3846,7 @@ var oa = (e) => F(qt("abilities")[e] ?? e), sa = {
 		} else if (r.choose?.weighted) for (let [n, r] of (t.picks ?? []).entries()) for (let t of r) e._state[e._getWeightedProps(t, n).propWeightAbility] = !0;
 		return e.pGetFormData();
 	}
-}, la = {
+}, ua = {
 	read({ comp: e }, t) {
 		let n = e._comp, r = [
 			"str",
@@ -3856,7 +3857,7 @@ var oa = (e) => F(qt("abilities")[e] ?? e), sa = {
 			"cha"
 		].map((e) => ({
 			key: e,
-			label: oa(e),
+			label: sa(e),
 			value: Number(n._state[e] ?? 0)
 		}));
 		return {
@@ -3894,20 +3895,20 @@ var oa = (e) => F(qt("abilities")[e] ?? e), sa = {
 		let i = n._getActorUpdate();
 		return i && await n._actor.update(i), n.getFeat();
 	}
-}, ua = (e) => c(String(e.name), {
+}, da = (e) => c(String(e.name), {
 	propDroppable: "spell",
 	source: e.source,
-	hash: ea.UrlUtil.URL_TO_HASH_BUILDER[ea.UrlUtil.PG_SPELLS](e)
+	hash: ta.UrlUtil.URL_TO_HASH_BUILDER[ta.UrlUtil.PG_SPELLS](e)
 }, !0);
-function da(e) {
+function fa(e) {
 	let t = [];
 	return e._spellDatas.forEach((n, r) => {
 		n.level === 0 && (e.isAvailableClassSpell_(n) || e.isAvailableSubclassSpell_(n) || e.isAvailableExpandedSpell_(n)) && (e.isAlwaysKnownSpell_?.(n) || e.getExistingSpellMeta_?.(n) || t.push(r));
 	}), t.sort((t, n) => String(e._spellDatas[t].name).localeCompare(String(e._spellDatas[n].name)));
 }
-var fa = {
+var pa = {
 	read({ comp: e, opts: t }, n) {
-		let r = da(e), i = Number(e._state.maxLearnedCantrips ?? 0) - Number(e._state.cntLearnedCantrips ?? 0);
+		let r = fa(e), i = Number(e._state.maxLearnedCantrips ?? 0) - Number(e._state.cntLearnedCantrips ?? 0);
 		return {
 			kind: n,
 			title: I(e.modalTitle),
@@ -3919,7 +3920,7 @@ var fa = {
 					groups: [{
 						title: null,
 						count: Math.max(0, i),
-						options: r.map((t) => ({ label: ua(e._spellDatas[t]) }))
+						options: r.map((t) => ({ label: da(e._spellDatas[t]) }))
 					}]
 				}],
 				set: 0
@@ -3929,7 +3930,7 @@ var fa = {
 	},
 	async write({ comp: e }, t) {
 		if (t.default) return e.pGetFormData();
-		let n = da(e), r = e._compsLevel[0], i = t.picks?.[0] ?? [];
+		let n = fa(e), r = e._compsLevel[0], i = t.picks?.[0] ?? [];
 		for (let e of i) {
 			let t = n[e];
 			if (t == null) throw Error("戏法不在作者给的候选里");
@@ -3939,7 +3940,7 @@ var fa = {
 	}
 };
 // src/rules/kernel/frame/author-ask-equipment.ts
-async function pa(e) {
+async function ma(e) {
 	let t = await kn(e);
 	return t ? "unsupported" in t ? {
 		kind: "special",
@@ -3964,12 +3965,12 @@ async function pa(e) {
 		text: d(JSON.stringify(e).slice(0, 80))
 	};
 }
-var ma = {
+var ha = {
 	async read({ comp: e }, t) {
 		let n = e._compCurrency.startingEquipment?.defaultData ?? [], r = [];
 		for (let e of n) {
 			let t = [];
-			for (let [, n] of Object.entries(e)) t.push({ entries: await Promise.all(n.map(pa)) });
+			for (let [, n] of Object.entries(e)) t.push({ entries: await Promise.all(n.map(ma)) });
 			r.push({ choices: t });
 		}
 		let i = e._compGold?.isAvailable ? e._compCurrency.rollableExpressionGold ?? null : null;
@@ -4010,11 +4011,353 @@ var ma = {
 			}
 		};
 	}
-}, ha = (e) => typeof e == "string" ? e.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() : "", ga = {
+}, G = globalThis, ga = () => N.veE(document.createElement("div"));
+function _a(e) {
+	return e.type === "choose" ? e.sets.length > 1 || e.sets.some((e) => e.groups.some((e) => e.count > 0 && e.options.length > 0)) : e.type !== "enum" || e.options.length > 1;
+}
+var va = (e) => !!e._isChooseOptionsFeatures?.() && !!e._optionsSet?.[0]?.optionsMeta, ya = /* @__PURE__ */ new WeakSet();
+async function ba(e, t = !1) {
+	(!ya.has(e) || t) && (ya.add(e), await e.pRender(ga()));
+}
+function xa(e) {
+	async function t(t) {
+		let n = [];
+		for (let r of t._subCompManagers ?? []) for (let t of r._subComps ?? []) {
+			if (!t) continue;
+			let r = t.constructor?.name ?? "?", i = await (e()[r] ?? e()["*"]).read({
+				comp: t,
+				opts: {}
+			}, r);
+			_a(i.form) && n.push({
+				sub: t,
+				kind: r,
+				part: i
+			});
+		}
+		return n;
+	}
+	let n = {
+		read: async ({ comp: e }, n) => {
+			await ba(e);
+			let r = await t(e), i = e._getSelectedLoadeds?.()?.[0] ?? e._optionsSet?.[0];
+			return {
+				kind: n,
+				title: i ? oa(i) : I(e.modalTitle),
+				note: null,
+				form: {
+					type: "parts",
+					parts: r.map((e) => e.part)
+				},
+				skippable: !1
+			};
+		},
+		write: async ({ comp: n }, r) => {
+			await ba(n);
+			let i = await t(n);
+			for (let [t, { sub: n, kind: a }] of i.entries()) await (e()[a] ?? e()["*"]).write({
+				comp: n,
+				opts: {}
+			}, r.parts?.[t] ?? { default: !0 });
+			return n.pGetFormData();
+		}
+	}, r = "Charactermancer_FeatureOptionsSelect.parts";
+	return {
+		Charactermancer_FeatureOptionsSelect: {
+			auto: async ({ comp: e }) => va(e) ? La : (await ba(e), (await t(e)).length ? La : e.pGetFormData()),
+			read: async (e, t) => va(e.comp) ? ca.read(e, t) : {
+				...await n.read(e, r),
+				kind: t
+			},
+			write: async (e, i) => {
+				let { comp: a } = e;
+				return va(a) ? i.default ? a.pGetFormData() : (await ca.select(a, i), await ba(a, !0), (await t(a)).length ? new Ia(r, {
+					comp: a,
+					opts: {}
+				}) : a.pGetFormData()) : n.write(e, i);
+			}
+		},
+		[r]: n
+	};
+}
+var Sa = (e) => G.DataUtil.proxy.unpackUid("spell", e, "spell");
+function Ca(e, t) {
+	let n = [], r = e._getFlatSpellsInRange(t).filter((e) => !e.isExpanded), a = /* @__PURE__ */ new Map();
+	for (let e of r.filter((e) => e.type !== "all" && e.filterExpression != null && !e.chooseFromGroup)) a.set(e.filterExpression, [...a.get(e.filterExpression) ?? [], e]);
+	let o = [...a].map(([t, n]) => ({
+		same: n,
+		ents: e._modalFilterSpells.getEntitiesMatchingFilterExpression({ filterExpression: t }).slice().sort((e, t) => String(e.name).localeCompare(String(t.name)))
+	})).sort((e, t) => Math.min(...e.ents.map((e) => Number(e.level))) - Math.min(...t.ents.map((e) => Number(e.level))));
+	for (let { same: e, ents: t } of o) {
+		let r = [...new Set(t.map((e) => Number(e.level)))], a = r.length === 1 ? r[0] === 0 ? i("戏法") : i("{0} 环法术", d(String(r[0]))) : i("法术");
+		n.push({
+			group: {
+				title: i("{1}任选 {0} 条", d(String(e.length)), a),
+				count: e.length,
+				options: t.map((e) => ({ label: da(e) }))
+			},
+			apply: (n, r) => r.forEach((r, i) => {
+				let a = t[r];
+				if (!a || !e[i]) throw Error("法术不在作者给的候选里");
+				n._state[e[i].key] = G.DataUtil.proxy.getUid("spell", a);
+			})
+		});
+	}
+	let s = /* @__PURE__ */ new Map();
+	for (let e of r.filter((e) => e.chooseFromGroup)) s.set(e.chooseFromGroup, [...s.get(e.chooseFromGroup) ?? [], e]);
+	for (let [e, t] of s) {
+		let r = t[0].chooseFromCount ?? 1;
+		n.push({
+			group: {
+				title: i("选 {0} 条法术", d(String(r))),
+				count: r,
+				options: t.map((e) => ({ label: da(Sa(e.uid)) }))
+			},
+			apply: (n, i) => {
+				let { propBase: a } = n._getProps_chooseFrom({ groupUid: e }), o = N.ComponentUiUtil.getMetaWrpMultipleChoice(n, a, {
+					values: t.map((e) => e.uid),
+					count: r,
+					fnDisplay: () => ""
+				});
+				for (let e of i) {
+					let t = o.rowMetas[e];
+					if (!t) throw Error("法术不在作者给的候选里");
+					n._state[t.propIsActive] = !0;
+				}
+			}
+		});
+	}
+	let c = e._additionalSpellsFlat[t]?.meta?.ability?.choose ?? [];
+	return c.length && n.push({
+		group: {
+			title: I("Spellcasting Ability"),
+			count: 1,
+			options: c.map((e) => ({ label: sa(e) }))
+		},
+		apply: (e, t) => {
+			if (t.length) {
+				let n = c[t[0]];
+				if (!n) throw Error("属性不在作者给的范围里");
+				e._state.ability = n;
+			}
+		}
+	}), n;
+}
+var wa = (e, n, r) => e > 1 ? typeof r == "string" && r ? t(r) : i("方案 {0}", d(String(n + 1))) : null, Ta = {
+	read: ({ comp: e, opts: t }, n) => {
+		let r = e._additionalSpellsFlat.map((t, n) => ({
+			label: wa(e._additionalSpellsFlat.length, n, t?.meta?.name),
+			groups: Ca(e, n).map((e) => e.group)
+		}));
+		return {
+			kind: n,
+			title: I(e.modalTitle),
+			note: null,
+			form: {
+				type: "choose",
+				sets: r,
+				set: 0
+			},
+			skippable: !t?.isUnskippable
+		};
+	},
+	write: ({ comp: e }, t) => {
+		if (t.default) return e.pGetFormData();
+		let n = t.set ?? 0;
+		if (!e._additionalSpellsFlat[n]) throw Error("方案不在作者给的范围里");
+		return e._state.ixSet = n, Ca(e, n).forEach((n, r) => n.apply(e, t.picks?.[r] ?? [])), e.pGetFormData();
+	}
+}, Ea = {
+	read: ({ comp: e, opts: t }, n) => ({
+		kind: n,
+		title: I(e.modalTitle),
+		note: null,
+		skippable: !t?.isUnskippable,
+		form: {
+			type: "enum",
+			options: e._sizes.map((e) => {
+				let t = G.Parser.sizeAbvToFull(e);
+				return { label: I(t) ?? d(t) };
+			}),
+			selected: null
+		}
+	}),
+	write: ({ comp: e }, t) => {
+		if (t.default) return e.pGetFormData();
+		let n = e._sizes[Number(t.value)];
+		if (!n) throw Error("体型不在作者给的范围里");
+		return e._state.size = n, e.pGetFormData();
+	}
+}, Da = (e) => c(String(e.name), {
+	propDroppable: "feat",
+	source: e.source,
+	hash: G.UrlUtil.URL_TO_HASH_BUILDER[G.UrlUtil.PG_FEATS](e)
+}, !0);
+function Oa(e, t) {
+	let n = e._available[t] ?? {}, r = [], a = (t, n, i, a) => {
+		let o = new Set(e._modalFilterFeats.getEntitiesMatchingFilterExpression({ filterExpression: i }).map((e) => G.UrlUtil.URL_TO_HASH_BUILDER[G.UrlUtil.PG_FEATS](e))), s = e._featDatas.map((e, t) => o.has(e._hash) ? t : -1).filter((e) => e >= 0).sort((t, n) => String(e._featDatas[t].name).localeCompare(String(e._featDatas[n].name)));
+		r.push({
+			type: t,
+			ixs: s,
+			group: {
+				title: a,
+				count: n,
+				options: s.map((t) => ({ label: Da(e._featDatas[t]) }))
+			}
+		});
+	};
+	if (n.any && a("choose", n.any, "Category=", i("任选 {0} 个专长", d(String(n.any)))), n.anyFromCategory) {
+		let e = n.anyFromCategory.count || 1;
+		a("chooseCategory", e, `Category=${n.anyFromCategory.category.join(";")}`, i("选 {0} 个专长", d(String(e))));
+	}
+	return r;
+}
+var ka = {
+	read: ({ comp: e, opts: t }, n) => {
+		let a = e._available.map((t, n) => {
+			let a = (N.StatGenUtilAdditionalFeats?.getUidsStatic?.(t) ?? []).map((e) => Da(G.DataUtil.proxy.unpackUid("feat", e, "feat")));
+			return {
+				label: a.length ? i("固定：{0}", r(a, "、")) : wa(e._available.length, n),
+				groups: Oa(e, n).map((e) => e.group)
+			};
+		});
+		return {
+			kind: n,
+			title: I(e.modalTitle),
+			note: null,
+			form: {
+				type: "choose",
+				sets: a,
+				set: 0
+			},
+			skippable: !t?.isUnskippable
+		};
+	},
+	write: ({ comp: e }, t) => {
+		if (t.default) return e.pGetFormData();
+		let n = t.set ?? 0;
+		if (!e._available[n]) throw Error("方案不在作者给的范围里");
+		return e._state.ixSet = n, Oa(e, n).forEach(({ type: n, ixs: r, group: i }, a) => {
+			let o = t.picks?.[a] ?? [];
+			if (o.length > i.count) throw Error(`最多选 ${i.count} 个`);
+			o.forEach((t, i) => {
+				let a = r[t];
+				if (a == null) throw Error("专长不在作者给的候选里");
+				e._state[e._getProps({
+					ix: i,
+					featsAdditionType: n
+				}).propIxFeat] = a;
+			});
+		}), e.pGetFormData();
+	}
+}, Aa = "Charactermancer_Background_Features.other", ja = "Charactermancer_Background_Features.manual", Ma = (e) => {
+	let t = e.constructor;
+	return [
+		N.UtilsEntityBackground?.isCustomBackground?.(e._background) ? null : t._MODE_DEFAULT,
+		t._MODE_OTHER_BACKGROUND,
+		t._MODE_MANUAL
+	].filter((e) => e != null);
+}, Na = (e) => c(String(e.name), {
+	propDroppable: "background",
+	source: e.source,
+	hash: G.UrlUtil.URL_TO_HASH_BUILDER[G.UrlUtil.PG_BACKGROUNDS](e)
+}, !0), Pa = (e) => (e._modalFilter?.allData ?? []).map((e, t) => t).filter((t) => e._modalFilter.allData[t] !== e._background && e.constructor.getFeatureEntries(e._modalFilter.allData[t]).length).sort((t, n) => String(e._modalFilter.allData[t].name).localeCompare(String(e._modalFilter.allData[n].name))), Fa = {
+	Charactermancer_Background_Features: {
+		read: ({ comp: e, opts: t }, n) => {
+			let r = Ma(e), i = r.indexOf(e._state.mode);
+			return {
+				kind: n,
+				title: I(e.modalTitle),
+				note: null,
+				skippable: !t?.isUnskippable,
+				form: {
+					type: "enum",
+					options: r.map((t) => ({ label: I(e.constructor._MODE_TO_FULL[t]) ?? d(String(t)) })),
+					selected: i >= 0 ? i : null
+				}
+			};
+		},
+		write: ({ comp: e }, t) => {
+			if (t.default) return e.getFormData();
+			let n = Ma(e)[Number(t.value)];
+			if (n == null) throw Error("选项不在作者给的范围里");
+			e._state.mode = n;
+			let r = e.constructor;
+			return n === r._MODE_OTHER_BACKGROUND ? new Ia(Aa, {
+				comp: e,
+				opts: {}
+			}) : n === r._MODE_MANUAL ? new Ia(ja, {
+				comp: e,
+				opts: {}
+			}) : e.getFormData();
+		}
+	},
+	[Aa]: {
+		read: ({ comp: e }, t) => ({
+			kind: t,
+			title: I("Choose Background"),
+			note: null,
+			skippable: !1,
+			form: {
+				type: "choose",
+				set: 0,
+				sets: [{
+					label: null,
+					groups: [{
+						title: null,
+						count: 1,
+						options: Pa(e).map((t) => ({ label: Na(e._modalFilter.allData[t]) }))
+					}]
+				}]
+			}
+		}),
+		write: ({ comp: e }, t) => {
+			let n = Pa(e)[t.picks?.[0]?.[0] ?? -1];
+			if (n == null) throw Error("背景不在作者给的候选里");
+			return e._state.ixBackgroundOther = n, e.getFormData();
+		}
+	},
+	[ja]: {
+		read: (e, t) => ({
+			kind: t,
+			title: i("自定义特性"),
+			note: null,
+			skippable: !1,
+			form: {
+				type: "texts",
+				groups: [{
+					title: i("名称"),
+					count: 1,
+					custom: !0,
+					options: []
+				}, {
+					title: i("内容"),
+					count: 1,
+					custom: !0,
+					options: []
+				}]
+			}
+		}),
+		write: ({ comp: e }, t) => {
+			let n = String(t.texts?.[0]?.[0] ?? "").trim(), r = String(t.texts?.[1]?.[0] ?? "").trim();
+			if (!r) throw Error("自定义特性要写内容");
+			let i = e._getDefaultState_manualEntryMeta();
+			return i.data = {
+				name: n,
+				entries: [r]
+			}, e._state.manualEntryMetas = [i], e.getFormData();
+		}
+	}
+}, Ia = class {
+	kind;
+	subject;
+	constructor(e, t) {
+		this.kind = e, this.subject = t;
+	}
+}, La = Symbol("ask"), Ra = (e) => typeof e == "string" ? e.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() : "", za = {
 	read: ({ comp: e, opts: t }, n) => ({
 		kind: n,
 		title: I(e?.modalTitle ?? t?.title),
-		note: I(ha(t?.htmlDescription)),
+		note: I(Ra(t?.htmlDescription)),
 		form: { type: "unknown" },
 		skippable: !t?.isUnskippable,
 		raw: e ? {
@@ -4027,40 +4370,40 @@ var ma = {
 		if (!n.default) throw Error("这种提问还没登记，只能照作者默认或跳过");
 		return e ? e.pGetFormData() : t?.default ?? null;
 	}
-}, _a = globalThis, va = (e, t, n, r, i) => ({
+}, Ba = globalThis, Va = (e, t, n, r, i) => ({
 	kind: e,
 	title: t,
-	note: I(ha(i ?? r?.htmlDescription)),
+	note: I(Ra(i ?? r?.htmlDescription)),
 	form: n,
 	skippable: !!r?.isSkippable || (r && "isUnskippable" in r ? !r.isUnskippable : !1)
 });
-function ya(e) {
+function Ha(e) {
 	let t = document.createElement("div");
 	return e.render(N.veE(t)), t;
 }
-var ba = (e) => [...e.querySelectorAll("select")], xa = {
+var Ua = (e) => [...e.querySelectorAll("select")], Wa = {
 	read: ({ comp: e, opts: t }, n) => {
-		let r = ba(ya(e))[0];
-		return r ? va(n, I(e.modalTitle), {
+		let r = Ua(Ha(e))[0];
+		return r ? Va(n, I(e.modalTitle), {
 			type: "enum",
 			options: [...r.options].map((e) => ({
 				label: I(e.text) ?? d(e.text),
 				disabled: e.disabled
 			})),
 			selected: r.selectedIndex
-		}, t) : ga.read({
+		}, t) : za.read({
 			comp: e,
 			opts: t
 		}, n);
 	},
 	write: async ({ comp: e }, t) => {
 		if (t.default) return e.pGetFormData();
-		let n = ba(ya(e))[0], r = Number(t.value);
+		let n = Ua(Ha(e))[0], r = Number(t.value);
 		if (!n || !Number.isInteger(r) || r < 0 || r >= n.options.length) throw Error("选项不在作者给的范围里");
 		return n.selectedIndex = r, n.dispatchEvent(new Event("change")), e.pGetFormData();
 	}
-}, Sa = (e) => {
-	let t = e.subclassFeature || e.__prop === "subclassFeature" || e.subclassSource ? "subclassFeature" : "classFeature", n = t === "subclassFeature" ? e.subclassFeature : e.classFeature, r = typeof n == "string" ? _a.DataUtil?.class?.[t === "subclassFeature" ? "unpackUidSubclassFeature" : "unpackUidClassFeature"]?.(n) : null, i = {
+}, Ga = (e) => {
+	let t = e.subclassFeature || e.__prop === "subclassFeature" || e.subclassSource ? "subclassFeature" : "classFeature", n = t === "subclassFeature" ? e.subclassFeature : e.classFeature, r = typeof n == "string" ? Ba.DataUtil?.class?.[t === "subclassFeature" ? "unpackUidSubclassFeature" : "unpackUidClassFeature"]?.(n) : null, i = {
 		...r ?? {},
 		...e,
 		...r ? {
@@ -4069,17 +4412,17 @@ var ba = (e) => [...e.querySelectorAll("select")], xa = {
 			level: r.level,
 			source: e.source ?? r.source
 		} : {}
-	}, a = _a.UrlUtil?.URL_TO_HASH_BUILDER?.[t]?.(i), o = String(e.tableDisplayName || e.name || "");
+	}, a = Ba.UrlUtil?.URL_TO_HASH_BUILDER?.[t]?.(i), o = String(e.tableDisplayName || e.name || "");
 	return a && i.source ? c(o, {
 		propDroppable: t,
 		source: i.source,
 		hash: a,
 		page: t
 	}, !0) : I(o) ?? d(o);
-}, Ca = {
-	"*": ga,
+}, Ka = {
+	"*": za,
 	"InputUiUtil.pGetUserBoolean": {
-		read: ({ opts: e }, t) => va(t, I(e.title), {
+		read: ({ opts: e }, t) => Va(t, I(e.title), {
 			type: "boolean",
 			yes: I(e.textYes ?? "Yes"),
 			no: I(e.textNo ?? "No")
@@ -4087,7 +4430,7 @@ var ba = (e) => [...e.querySelectorAll("select")], xa = {
 		write: (e, t) => t.default ? !0 : !!t.value
 	},
 	"InputUiUtil.pGetUserEnum": {
-		read: ({ opts: e }, t) => va(t, I(e.title), {
+		read: ({ opts: e }, t) => Va(t, I(e.title), {
 			type: "enum",
 			options: (e.values ?? []).map((t) => {
 				let n = e.fnDisplay ? e.fnDisplay(t) : t;
@@ -4102,7 +4445,7 @@ var ba = (e) => [...e.querySelectorAll("select")], xa = {
 		}
 	},
 	"InputUiUtil.pGetUserNumber": {
-		read: ({ opts: e }, t) => va(t, I(e.title), {
+		read: ({ opts: e }, t) => Va(t, I(e.title), {
 			type: "number",
 			min: e.min ?? null,
 			max: e.max ?? null,
@@ -4115,35 +4458,36 @@ var ba = (e) => [...e.querySelectorAll("select")], xa = {
 		}
 	},
 	"InputUiUtil.pGetUserString": {
-		read: ({ opts: e }, t) => va(t, I(e.title), {
+		read: ({ opts: e }, t) => Va(t, I(e.title), {
 			type: "string",
 			value: String(e.default ?? "")
 		}, e),
 		write: ({ opts: e }, t) => String(t.default ? e.default ?? "" : t.value ?? "")
 	},
-	Charactermancer_Class_HpIncreaseModeSelect: xa,
-	Charactermancer_OtherProficiencySelect: ra,
-	Charactermancer_ExpertiseSelect: ra,
-	Charactermancer_DamageResistanceSelect: ra,
-	Charactermancer_DamageImmunitySelect: ra,
-	Charactermancer_DamageVulnerabilitySelect: ra,
-	Charactermancer_ConditionImmunitySelect: ra,
-	Charactermancer_Background_Characteristics: ia,
-	Charactermancer_FeatureOptionsSelect: sa,
-	Charactermancer_AbilityScoreSelect: ca,
-	Charactermancer_Background_Features: xa,
-	EquipmentApp: ma,
-	Charactermancer_Spell_Modal: fa,
-	ActorAbilityScoreIncrease: la,
-	Charactermancer_Class_ProficiencyImportModeSelect: xa,
+	Charactermancer_Class_HpIncreaseModeSelect: Wa,
+	Charactermancer_OtherProficiencySelect: ia,
+	Charactermancer_ExpertiseSelect: ia,
+	Charactermancer_DamageResistanceSelect: ia,
+	Charactermancer_DamageImmunitySelect: ia,
+	Charactermancer_DamageVulnerabilitySelect: ia,
+	Charactermancer_ConditionImmunitySelect: ia,
+	Charactermancer_Background_Characteristics: aa,
+	Charactermancer_AdditionalSpellsSelect: Ta,
+	Charactermancer_Race_SizeSelect: Ea,
+	Charactermancer_AdditionalFeatsSelect: ka,
+	Charactermancer_AbilityScoreSelect: la,
+	EquipmentApp: ha,
+	Charactermancer_Spell_Modal: pa,
+	ActorAbilityScoreIncrease: ua,
+	Charactermancer_Class_ProficiencyImportModeSelect: Wa,
 	Charactermancer_Class_LevelSelect: {
 		read: ({ comp: e, opts: t }, n) => {
 			let a = e._maxPreviousLevel || 0, o = e._featureArr.map((t, n) => ({
 				label: i("{0} 级", d(String(n + 1))),
-				note: t.length ? r(t.map(Sa), "、") : null,
+				note: t.length ? r(t.map(Ga), "、") : null,
 				disabled: !e._isSubclass && n < a
 			}));
-			return va(n, I(e.modalTitle), {
+			return Va(n, I(e.modalTitle), {
 				type: "levels",
 				levels: o,
 				radio: e._isRadio,
@@ -4166,14 +4510,17 @@ var ba = (e) => [...e.querySelectorAll("select")], xa = {
 			};
 		}
 	}
-}, wa = () => globalThis.VeCt?.SYM_UI_SKIP, Ta = [
+};
+Object.assign(Ka, xa(() => Ka), Fa);
+// src/rules/kernel/frame/author-ask.ts
+var qa = () => globalThis.VeCt?.SYM_UI_SKIP, Ja = [
 	"pGetUserBoolean",
 	"pGetUserEnum",
 	"pGetUserNumber",
 	"pGetUserString",
 	"pGetUserGenericButton"
-], Ea = ["EquipmentApp", "ActorAbilityScoreIncrease"];
-function Da(e, t) {
+], Ya = ["EquipmentApp", "ActorAbilityScoreIncrease"];
+function Xa(e, t) {
 	let n = N;
 	if (!n?.UtilApplications || !n?.InputUiUtil) throw Error("此版本 Plutonium 缺少提问入口（UtilApplications / InputUiUtil）");
 	let r = 0, i = !1, a = null, o = [], s = null, c = (e) => {
@@ -4181,11 +4528,20 @@ function Da(e, t) {
 			let t = s;
 			s = null, t(e);
 		} else o.push(e);
-	}, l = (e, t, n) => n.skip ? e.skip ? e.skip() : wa() : e.write(t, n), u = async (t, n) => {
+	}, l = async (e, t, n) => n.skip ? e.skip ? e.skip() : qa() : e.write(t, n), u = async (e) => {
+		let t = e;
+		for (; t instanceof Ia;) t = await d(t.kind, t.subject);
+		return t;
+	}, d = async (t, n) => {
 		if (i) return null;
-		let o = Ca[t] ?? Ca["*"], s = r++;
-		if (e[s] !== void 0) return l(o, n, e[s]);
-		let u = {
+		let o = Ka[t] ?? Ka["*"];
+		if (o.auto) {
+			let e = await o.auto(n);
+			if (e !== La) return e;
+		}
+		let s = r++;
+		if (e[s] !== void 0) return u(await l(o, n, e[s]));
+		let d = {
 			index: s,
 			...await o.read(n, t)
 		};
@@ -4194,43 +4550,45 @@ function Da(e, t) {
 				adapter: o,
 				subject: n,
 				resolve: e
-			}, c({ question: u });
+			}, c({ question: d });
 		});
-	}, d = n.UtilApplications, f = n.InputUiUtil, p = d.pGetImportCompApplicationFormData, m = Object.fromEntries(Ta.map((e) => [e, f[e]]));
-	d.pGetImportCompApplicationFormData = (e) => u(e?.comp?.constructor?.name ?? "?", {
+	}, f = n.UtilApplications, p = n.InputUiUtil, m = f.pGetImportCompApplicationFormData, h = Object.fromEntries(Ja.map((e) => [e, p[e]]));
+	f.pGetImportCompApplicationFormData = (e) => d(e?.comp?.constructor?.name ?? "?", {
 		comp: e.comp,
 		opts: e
 	});
-	for (let e of Ta) f[e] = (t = {}) => u(`InputUiUtil.${e}`, { opts: t });
-	let h = Ea.map((e) => ({
+	for (let e of Ja) p[e] = (t = {}) => d(`InputUiUtil.${e}`, { opts: t });
+	let g = Ya.map((e) => ({
 		name: e,
 		proto: n[e]?.prototype
-	})).filter((e) => e.proto), g = h.map(({ proto: e }) => ({
+	})).filter((e) => e.proto), _ = g.map(({ proto: e }) => ({
 		render: Object.getOwnPropertyDescriptor(e, "render"),
 		wait: e.pWaitForUserInput
 	}));
-	for (let { name: e, proto: t } of h) t.render = async function() {
+	for (let { name: e, proto: t } of g) t.render = async function() {
 		return this;
 	}, t.pWaitForUserInput = async function() {
-		return "_cntModesAvailable" in this && !this._cntModesAvailable ? wa() : (typeof this.pInit == "function" && await this.pInit(), u(e, {
+		return "_cntModesAvailable" in this && !this._cntModesAvailable ? qa() : (typeof this.pInit == "function" && await this.pInit(), d(e, {
 			comp: this,
 			opts: {}
 		}));
 	};
-	let _ = () => {
-		d.pGetImportCompApplicationFormData = p;
-		for (let e of Ta) f[e] = m[e];
-		h.forEach(({ proto: e }, t) => {
-			g[t].render ? Object.defineProperty(e, "render", g[t].render) : delete e.render, e.pWaitForUserInput = g[t].wait;
+	let v = n.Config, y = [["isGmForceSelectAllowedSources", !0], ["isGmUseBlocklist", !1]], b = y.map(([e]) => v?.get?.("dataSources", e));
+	for (let [e, t] of y) v?.setTemp?.("dataSources", e, t, { isSkipPermissionCheck: !0 });
+	let x = () => {
+		y.forEach(([e], t) => v?.setTemp?.("dataSources", e, b[t], { isSkipPermissionCheck: !0 })), f.pGetImportCompApplicationFormData = m;
+		for (let e of Ja) p[e] = h[e];
+		g.forEach(({ proto: e }, t) => {
+			_[t].render ? Object.defineProperty(e, "render", _[t].render) : delete e.render, e.pWaitForUserInput = _[t].wait;
 		});
 	};
 	return t().then((e) => {
-		_(), c({
+		x(), c({
 			done: !0,
 			value: e
 		});
 	}, (e) => {
-		_(), c({ error: e });
+		x(), c({ error: e });
 	}), {
 		next: () => o.length ? Promise.resolve(o.shift()) : new Promise((e) => {
 			s = e;
@@ -4238,7 +4596,8 @@ function Da(e, t) {
 		async answer(e) {
 			let t = a;
 			if (!t) throw Error("作者现在没有在等回答");
-			a = null, t.resolve(await l(t.adapter, t.subject, e));
+			let n = await l(t.adapter, t.subject, e);
+			a = null, t.resolve(n instanceof Ia ? u(n) : n);
 		},
 		abort() {
 			i = !0;
@@ -4248,8 +4607,8 @@ function Da(e, t) {
 	};
 }
 // src/rules/kernel/frame/commands-import.ts
-var Oa = globalThis, ka = () => Oa.CONFIG.Actor.documentClass, K = null;
-function Aa(e, t) {
+var Za = globalThis, Qa = () => Za.CONFIG.Actor.documentClass, K = null;
+function $a(e, t) {
 	async function n(e) {
 		if ("question" in e) return {
 			kernelStatus: "pending",
@@ -4259,7 +4618,7 @@ function Aa(e, t) {
 		let { actorId: n, entry: r, before: i } = K;
 		if (K = null, "error" in e) throw e.error;
 		let a = t(n), o = e.value, s = () => a.items.filter((e) => !i.has(e.id)), c = s().flatMap((e) => {
-			let t = e.flags?.plutonium, n = t && !t.propDroppable && typeof t.page == "string" && t.page.endsWith(".html") ? Oa.UrlUtil?.PAGE_TO_PROPS?.[t.page]?.[0] : null;
+			let t = e.flags?.plutonium, n = t && !t.propDroppable && typeof t.page == "string" && t.page.endsWith(".html") ? Za.UrlUtil?.PAGE_TO_PROPS?.[t.page]?.[0] : null;
 			return n ? [{
 				_id: e.id,
 				"flags.plutonium.propDroppable": n
@@ -4271,7 +4630,7 @@ function Aa(e, t) {
 			name: e.name,
 			label: pi(e, [r]).name,
 			type: e.type,
-			typeLabel: Lt(String(Oa.CONFIG.Item.typeLabels?.[e.type] ?? "")),
+			typeLabel: Lt(String(Za.CONFIG.Item.typeLabels?.[e.type] ?? "")),
 			flags: { plutonium: e.flags?.plutonium ?? null }
 		}));
 		return {
@@ -4282,7 +4641,7 @@ function Aa(e, t) {
 	return {
 		draftStart: (t) => e([], async () => {
 			k(t.seed);
-			let e = await ka().create({
+			let e = await Qa().create({
 				...t.id ? { _id: t.id } : {},
 				name: t.name,
 				type: cn
@@ -4294,7 +4653,7 @@ function Aa(e, t) {
 		}),
 		draftLoad: (t) => e([], async () => {
 			k(t.seed);
-			let e = await ka().create(structuredClone(t.data), { keepId: !0 });
+			let e = await Qa().create(structuredClone(t.data), { keepId: !0 });
 			return {
 				id: e.id,
 				data: e.toObject()
@@ -4304,16 +4663,16 @@ function Aa(e, t) {
 			if (K) throw Error("上一次导入还没结束");
 			let e = t(r);
 			if (o) {
-				let t = await Pr(e, o);
+				let t = await Nr(e, o);
 				if (t) return {
 					kernelStatus: "pending",
 					reason: "remove-step-not-complete",
 					step: t
 				};
 			}
-			let s = Oa.game.modules.get("plutonium")?.api, c = await s?.importer?.pGetImporter({ prop: i.prop });
+			let s = Za.game.modules.get("plutonium")?.api, c = await s?.importer?.pGetImporter({ prop: i.prop });
 			if (!c) throw Error(`作者没有「${i.prop}」的导入器`);
-			let l = new Set(e.items.map((e) => e.id)), u = Da(a, () => c.pImportEntry(structuredClone(i.entry), new s.importer.ImportOpts({ actor: e })));
+			let l = new Set(e.items.map((e) => e.id)), u = Xa(a, () => c.pImportEntry(structuredClone(i.entry), new s.importer.ImportOpts({ actor: e })));
 			return K = {
 				run: u,
 				actorId: r,
@@ -4335,7 +4694,7 @@ function Aa(e, t) {
 	};
 }
 // src/rules/kernel/frame/native-builder-review.ts
-function ja(e) {
+function eo(e) {
 	let t = /* @__PURE__ */ new Map(), n = e.compClass.compsClassLevelSelect.flatMap((e) => e?.getTargetLevel() ?? []);
 	t.set("职业", n.length ? { text: n.map((e) => `${e} 级`).join(" / ") } : {
 		text: "待选职业和等级",
@@ -4391,37 +4750,37 @@ function J(e, t, n = "p6-builder-btn") {
 	return r.type = "button", r.addEventListener("click", t), r;
 }
 // src/rules/kernel/frame/native-builder-controls.ts
-var Ma = globalThis, Na = (e) => e.trim().toLowerCase(), Pa = /* @__PURE__ */ new WeakMap();
-function Fa(e, t) {
-	let n = Na(e), r = Object.hasOwn(t.terms, n) ? t.terms[n] : void 0;
+var to = globalThis, no = (e) => e.trim().toLowerCase(), ro = /* @__PURE__ */ new WeakMap();
+function io(e, t) {
+	let n = no(e), r = Object.hasOwn(t.terms, n) ? t.terms[n] : void 0;
 	if (r) return r;
 	if (!/[a-zA-Z]/.test(e)) return e;
-	let i = Pa.get(t);
-	i || (i = /* @__PURE__ */ new Map(), Pa.set(t, i));
+	let i = ro.get(t);
+	i || (i = /* @__PURE__ */ new Map(), ro.set(t, i));
 	let a = i.get(e);
 	if (a !== void 0) return a;
 	for (let { $t: t, ...n } of [It(e), F(e)]) {
-		if (t !== "system" || !("key" in n) || !Ma.game.i18n.has(n.key)) continue;
-		let r = Ma.game.i18n.localize(n.key);
+		if (t !== "system" || !("key" in n) || !to.game.i18n.has(n.key)) continue;
+		let r = to.game.i18n.localize(n.key);
 		if (r !== e) return i.set(e, r), r;
 	}
 	return i.set(e, e), e;
 }
-function Ia(e, t) {
-	let n = Fa(e.trim(), t);
+function ao(e, t) {
+	let n = io(e.trim(), t);
 	if (n !== e.trim()) return e.replace(e.trim(), n);
 	let r = /^\s*\((\w{3})\)\s*$/.exec(e);
 	if (r) {
-		let t = Ma.CONFIG.DND5E.abilities[r[1].toLowerCase()]?.label;
+		let t = to.CONFIG.DND5E.abilities[r[1].toLowerCase()]?.label;
 		if (t) return e.replace(r[1], t);
 	}
 	if (e.includes(", ")) {
-		let n = e.split(", "), r = n.map((e) => Fa(e, t));
+		let n = e.split(", "), r = n.map((e) => io(e, t));
 		if (r.some((e, t) => e !== n[t])) return r.join("，");
 	}
 	return e;
 }
-function La(e, t) {
+function oo(e, t) {
 	for (let t of e.querySelectorAll(".p6-choice-group")) {
 		let e = t.previousElementSibling;
 		e?.classList.contains("ve-mb-1") && /^Choose\b/.test(e.textContent ?? "") && e.classList.add("p6-choice-instruction");
@@ -4430,7 +4789,7 @@ function La(e, t) {
 	for (; r = n.nextNode();) {
 		let e = r;
 		if (!e.data.trim() || e.parentElement?.closest("script,style,textarea,.p6-builder-ui")) continue;
-		let n = e.parentElement?.closest("option"), i = Ia(e.data, t);
+		let n = e.parentElement?.closest("option"), i = ao(e.data, t);
 		i !== e.data && (n && !n.hasAttribute("value") && n.setAttribute("value", n.value), e.data = i);
 	}
 	for (let n of e.querySelectorAll("[title],[placeholder],[aria-label]")) for (let e of [
@@ -4440,7 +4799,7 @@ function La(e, t) {
 	]) {
 		let r = n.getAttribute(e);
 		if (!r) continue;
-		let i = Ia(r, t);
+		let i = ao(r, t);
 		i !== r && n.setAttribute(e, i);
 	}
 	for (let t of e.querySelectorAll("button[name=\"btn-learn-cantrip\"],button[name=\"btn-learn-spell\"],button[name=\"btn-prepare\"]")) {
@@ -4448,7 +4807,7 @@ function La(e, t) {
 		t.textContent !== e && (t.textContent = e), t.setAttribute("aria-pressed", String(t.classList.contains("ve-active")));
 	}
 }
-function Ra(e, t) {
+function so(e, t) {
 	let n = e.ComponentUiUtil, r = n.getMetaWrpMultipleChoice, i = e.Charactermancer_Spell_Level.prototype, a = i._getListItem;
 	return n.getMetaWrpMultipleChoice = function(e, t, n) {
 		let i = r.call(this, e, t, n);
@@ -4471,7 +4830,7 @@ function Ra(e, t) {
 			return e._removeHookBase(i.propPulse, o), s.apply(this, t);
 		}, o(), i;
 	}, i._getListItem = function(e, ...n) {
-		let r = a.call(this, e, ...n), i = Ma.UrlUtil.URL_TO_HASH_BUILDER.spell(e), o = t.labels.spell?.[i];
+		let r = a.call(this, e, ...n), i = to.UrlUtil.URL_TO_HASH_BUILDER.spell(e), o = t.labels.spell?.[i];
 		if (o && r?.ele) {
 			let e = r.ele.firstElementChild;
 			e && (e.textContent = o.name, e.classList.add("p6-spell-name")), r.values.alias = [r.values.alias, o.name].filter(Boolean).join(" "), r.ele.dataset.p6Spell = i;
@@ -4481,13 +4840,13 @@ function Ra(e, t) {
 		n.getMetaWrpMultipleChoice = r, i._getListItem = a;
 	};
 }
-function za(e, t, n) {
+function co(e, t, n) {
 	let r = e.querySelector(".ve-statgen-shared__wrp-header"), i = r?.querySelector("select"), a = t.compAbility.compStatgen, o = e.closest(".p6-builder-attributes");
 	if (o && (o.dataset.mode = a.getMode()), !r || !i || r.querySelector(".p6-ability-methods")) return;
 	let s = q("div", "p6-ability-methods p6-builder-ui");
 	s.setAttribute("role", "group"), s.setAttribute("aria-label", "怎么定属性");
 	let c = [...i.options].slice(1).map((e) => {
-		let t = Number(e.value), r = J(Fa(e.textContent ?? "", n), () => {
+		let t = Number(e.value), r = J(io(e.textContent ?? "", n), () => {
 			a.ixActiveTab = t, l();
 		});
 		return r.disabled = e.disabled, s.append(r), {
@@ -4502,13 +4861,13 @@ function za(e, t, n) {
 	}
 	i.style.setProperty("display", "none", "important"), r.replaceChildren(i, q("b", "", "怎么定属性？"), s), l();
 }
-var Ba = /* @__PURE__ */ new WeakSet();
-function Va(e) {
+var lo = /* @__PURE__ */ new WeakSet();
+function uo(e) {
 	for (let t of e.compClass.compsClassLevelSelect) {
-		if (!t?._isRadio || Ba.has(t)) continue;
+		if (!t?._isRadio || lo.has(t)) continue;
 		let e = t._list?.items ?? [], n = e[0]?.ele.closest(".ve-min-h-0");
 		if (!n || !e.length) continue;
-		Ba.add(t);
+		lo.add(t);
 		let r = q("label", "p6-level p6-builder-ui", "目标等级"), i = q("select");
 		i.setAttribute("aria-label", "目标等级");
 		for (let t of e) {
@@ -4524,13 +4883,13 @@ function Va(e) {
 	}
 }
 // src/rules/kernel/frame/native-builder-pickers.ts
-var Ha = {
+var fo = {
 	race: "种族",
 	background: "背景",
 	class: "职业",
 	subclass: "子职业"
 };
-function Ua(e, t, n) {
+function po(e, t, n) {
 	let r = e.entry(t);
 	if (!r?.name || !r.source) return;
 	let i = globalThis.UrlUtil.URL_TO_HASH_BUILDER[e.category]?.(r), a = n.labels[e.category]?.[i];
@@ -4542,17 +4901,17 @@ function Ua(e, t, n) {
 		label: a
 	} : void 0;
 }
-function Wa(e, t, n, r) {
-	let i = Ha[n.category], a = q("section", "p6-picker"), o = q("input", "p6-picker-search");
+function mo(e, t, n, r) {
+	let i = fo[n.category], a = q("section", "p6-picker"), o = q("input", "p6-picker-search");
 	o.type = "search", o.placeholder = `搜索${i}`, o.setAttribute("aria-label", o.placeholder);
 	let s = q("div", "p6-picker-list"), c = q("p", "p6-picker-status");
 	c.setAttribute("aria-live", "polite"), a.append(o, s, c);
-	let l = /* @__PURE__ */ new Map(), u, d = () => e.getSelected() == null ? void 0 : Ua(n, e.getSelected(), r), f = () => {
+	let l = /* @__PURE__ */ new Map(), u, d = () => e.getSelected() == null ? void 0 : po(n, e.getSelected(), r), f = () => {
 		let t = e.getSelected();
 		for (let [e, n] of l) n.setAttribute("aria-pressed", String(t === e)), n.dataset.preview = String(u?.value === e);
 		a.dispatchEvent(new Event("p6-picker-change", { bubbles: !0 }));
 	}, p = () => {
-		let t = o.value.trim().normalize("NFKC").toLocaleLowerCase(), i = e._rdState.getAvailableOptionMetas().flatMap(({ value: e }) => e == null ? [] : Ua(n, e, r) ?? []).filter((e) => `${e.label.name} ${e.name} ${e.source}`.normalize("NFKC").toLocaleLowerCase().includes(t));
+		let t = o.value.trim().normalize("NFKC").toLocaleLowerCase(), i = e._rdState.getAvailableOptionMetas().flatMap(({ value: e }) => e == null ? [] : po(n, e, r) ?? []).filter((e) => `${e.label.name} ${e.name} ${e.source}`.normalize("NFKC").toLocaleLowerCase().includes(t));
 		u && i.some((e) => e.value === u?.value) || (u = i.find((t) => t.value === e.getSelected()) ?? i[0]), l = new Map(i.map((e) => {
 			let t = J("", () => {
 				u = e, a.dispatchEvent(new Event("p6-picker-preview", { bubbles: !0 })), f();
@@ -4581,7 +4940,7 @@ function Wa(e, t, n, r) {
 		}
 	};
 }
-function Ga(e, t, n) {
+function ho(e, t, n) {
 	let r = e.ComponentUiUtil, i = e.Charactermancer_Util, a = r.getSelSearchable, o = i.getFilterSearchMeta, s = r._SearchableDropdownComponent.prototype, c = s.render, l;
 	return i.getFilterSearchMeta = function(e) {
 		let t = {
@@ -4616,7 +4975,7 @@ function Ga(e, t, n) {
 		let u = o;
 		s.render = function() {
 			let e = c.call(this);
-			return n(Wa(this, e.wrp, u, t)), e;
+			return n(mo(this, e.wrp, u, t)), e;
 		};
 		try {
 			return a.call(this, e, r, i);
@@ -4628,8 +4987,8 @@ function Ga(e, t, n) {
 	};
 }
 // src/rules/kernel/frame/native-equipment-picker.ts
-var Ka = globalThis, qa = (e) => e.normalize("NFKC").toLocaleLowerCase();
-function Ja(e, t) {
+var go = globalThis, _o = (e) => e.normalize("NFKC").toLocaleLowerCase();
+function vo(e, t) {
 	let n = e.prototype, r = n.pGetUserChoiceFromEquipmentTypes, i = null, a;
 	function o(e) {
 		let t = e.target instanceof Element && e.target.closest(".p6-builder-equipment button:has(.fa-magnifying-glass)");
@@ -4640,7 +4999,7 @@ function Ja(e, t) {
 	return document.addEventListener("click", o, !0), n.pGetUserChoiceFromEquipmentTypes = function(e) {
 		let n = i;
 		if (!n || (a?.(), !n.closest(".imp-cls__wrp-equi-group"))) return r.call(this, e);
-		let o = Ka.SortUtil, s = [...new Set(e.flatMap((e) => this._getSetChoices(e)))].sort(o.ascSortLower);
+		let o = go.SortUtil, s = [...new Set(e.flatMap((e) => this._getSetChoices(e)))].sort(o.ascSortLower);
 		return new Promise((e) => {
 			let r = q("div", "p6-equip-picker p6-builder-ui"), i = q("input", "p6-picker-search");
 			i.type = "search", i.placeholder = "搜索装备", i.setAttribute("aria-label", i.placeholder);
@@ -4654,13 +5013,13 @@ function Ja(e, t) {
 			}
 			a = () => c(!1);
 			let u = s.map((e) => {
-				let n = Ka.DataUtil.proxy.unpackUid("item", e, "item"), r = Ka.UrlUtil.URL_TO_HASH_BUILDER.item(n), i = t.labels.item?.[r]?.name ?? Fa(n.name, t), a = J("", () => c(!0, e), "p6-picker-row");
+				let n = go.DataUtil.proxy.unpackUid("item", e, "item"), r = go.UrlUtil.URL_TO_HASH_BUILDER.item(n), i = t.labels.item?.[r]?.name ?? io(n.name, t), a = J("", () => c(!0, e), "p6-picker-row");
 				return a.dataset.uid = e, a.append(q("span", "", i), q("small", "p6-picker-source", n.source)), {
 					row: a,
-					term: qa(`${i} ${n.name} ${n.source}`)
+					term: _o(`${i} ${n.name} ${n.source}`)
 				};
 			}), d = () => {
-				let e = qa(i.value.trim()), t = u.filter((t) => t.term.includes(e));
+				let e = _o(i.value.trim()), t = u.filter((t) => t.term.includes(e));
 				o.replaceChildren(...t.map(({ row: e }) => e)), t.length || o.append(q("p", "p6-picker-status", "没有匹配的装备"));
 			};
 			i.addEventListener("input", d), r.addEventListener("keydown", (e) => {
@@ -4672,7 +5031,7 @@ function Ja(e, t) {
 	};
 }
 // src/rules/kernel/frame/native-builder-ui.ts
-var Ya = [
+var yo = [
 	{
 		name: "Origin (Species)",
 		label: "种族",
@@ -4718,7 +5077,7 @@ var Ya = [
 		optional: "spells"
 	}
 ];
-function Xa(e) {
+function bo(e) {
 	let t = e.wrpTab;
 	t.classList.remove("ve-flex-col"), t.classList.add("p6-builder-step");
 	let n = q("aside", "p6-builder-rail");
@@ -4740,10 +5099,10 @@ function Xa(e) {
 		}
 	};
 }
-function Za(e, t) {
+function xo(e, t) {
 	let { heading: n, title: r, brief: i, form: a, source: o, action: s } = e;
 	e.focus(t);
-	let c = t?.preview(), l = t?.chosen(), u = c && l?.value === c.value, d = t && Ha[t.category];
+	let c = t?.preview(), l = t?.chosen(), u = c && l?.value === c.value, d = t && fo[t.category];
 	if (n.hidden = !t, a.hidden = !!t && !u, i.hidden = !t, r.textContent = c?.label.name ?? (t ? `选择${d}` : ""), o.textContent = c?.source ?? "", s.hidden = !c, !c || !t) {
 		delete i.dataset.entry, i.textContent = t ? "请从左栏选择一条资料。" : "";
 		return;
@@ -4762,8 +5121,8 @@ function Za(e, t) {
 		i.dataset.entry === f && (i.textContent = "资料卡读取失败，关掉重开建卡再试。");
 	}));
 }
-function Qa(e, t, n, r, i) {
-	let a = e._tabs, o = new Map(a.map((e) => [e.name, Xa(e)])), s = new Set(Ya.flatMap((e) => e.shop ? [e.name, e.shop] : [e.name])), c = [...Ya, ...a.filter((e) => !s.has(e.name)).map((e) => ({
+function So(e, t, n, r, i) {
+	let a = e._tabs, o = new Map(a.map((e) => [e.name, bo(e)])), s = new Set(yo.flatMap((e) => e.shop ? [e.name, e.shop] : [e.name])), c = [...yo, ...a.filter((e) => !s.has(e.name)).map((e) => ({
 		name: e.name,
 		label: e.btnTab.textContent?.trim() || "作者选项"
 	}))], l = a[0].btnTab.parentElement, u = t.lastElementChild;
@@ -4826,7 +5185,7 @@ function Qa(e, t, n, r, i) {
 		se();
 	}
 	function ae() {
-		let t = ja(e), r = q("dl", "p6-builder-summary"), i = q("div", "p6-builder-todo"), a = q("div", "p6-builder-todo");
+		let t = eo(e), r = q("dl", "p6-builder-summary"), i = q("div", "p6-builder-todo"), a = q("div", "p6-builder-todo");
 		for (let e of c.filter(T)) {
 			let o = t.get(E(e)), s = n.filter((t) => t.category === e.prop).flatMap((e) => e.chosen()?.label.name ?? []);
 			(s.length || o?.text) && r.append(q("dt", "", e.label), q("dd", "", [...s, o?.text].filter(Boolean).join(" · ")));
@@ -4849,7 +5208,7 @@ function Qa(e, t, n, r, i) {
 	}
 	async function k() {
 		if (b) return;
-		let t = ja(e), n = c.filter(T).find((e) => t.get(E(e))?.pending), r = t.get("装备商店");
+		let t = eo(e), n = c.filter(T).find((e) => t.get(E(e))?.pending), r = t.get("装备商店");
 		if (n || r?.pending) {
 			let e = n ?? c.find((e) => e.shop);
 			D(e), !n && r?.pending && (y = !0, O()), g.textContent = (n ? t.get(E(e))?.text : r?.text) ?? "";
@@ -4865,9 +5224,9 @@ function Qa(e, t, n, r, i) {
 		}
 	}
 	function se() {
-		Va(e);
+		uo(e);
 		for (let e = n.length - 1; e >= 0; e--) n[e].anchor.isConnected || (n[e].element.remove(), n.splice(e, 1));
-		let t = ja(e), i = 1;
+		let t = eo(e), i = 1;
 		m.textContent = t.get("法术")?.text ?? "本次可在下方选择法术";
 		for (let [e, r] of w) {
 			r.hidden = !!e && !T(e), e === v ? r.setAttribute("aria-current", "step") : r.removeAttribute("aria-current");
@@ -4883,7 +5242,7 @@ function Qa(e, t, n, r, i) {
 		let s = n.filter((e) => a.form.contains(e.anchor));
 		for (let e of s) e.element.isConnected || e.mount(a.rail), e.element.hidden = e.category !== v.prop;
 		let c = s.filter((e) => e.category === v.prop), l = te.get(v.prop ?? ""), u = l && c.includes(l) ? l : c[0];
-		a.rail.hidden = !u, a.tab.wrpTab.classList.toggle("p6-builder-split", !!u), ee !== v && (ee = v, a.tab.wrpTab.dataset.view = u?.chosen() ? "card" : "list"), a.tab.wrpTab.classList.toggle("p6-builder-spells", v.label === "法术"), a.tab.wrpTab.classList.toggle("p6-builder-attributes", v.label === "属性值"), a.tab.wrpTab.classList.toggle("p6-builder-equipment", !!v.shop && !y), Za(a, u), La(a.form, r), v.label === "属性值" && za(a.form, e, r);
+		a.rail.hidden = !u, a.tab.wrpTab.classList.toggle("p6-builder-split", !!u), ee !== v && (ee = v, a.tab.wrpTab.dataset.view = u?.chosen() ? "card" : "list"), a.tab.wrpTab.classList.toggle("p6-builder-spells", v.label === "法术"), a.tab.wrpTab.classList.toggle("p6-builder-attributes", v.label === "属性值"), a.tab.wrpTab.classList.toggle("p6-builder-equipment", !!v.shop && !y), xo(a, u), oo(a.form, r), v.label === "属性值" && co(a.form, e, r);
 	}
 	function A() {
 		x ||= requestAnimationFrame(() => {
@@ -4905,8 +5264,8 @@ function Qa(e, t, n, r, i) {
 		le.disconnect(), cancelAnimationFrame(x), t.removeEventListener("p6-picker-change", A), t.removeEventListener("p6-picker-preview", ce), t.removeEventListener("p6-choice-change", A), t.removeEventListener("change", A), t.removeEventListener("click", A);
 	};
 }
-function $a(e, t) {
-	let n = e.ActorCharactermancer.Component.prototype, r = n._pRender, i = n._pHandleSaveClick_postSave, a = !1, o, s = !1, c, l = [], u = t ? Ra(e, t) : void 0, d = t ? Ja(e.Charactermancer_AvailableEquipmentInfo, t) : void 0, f = t ? Ga(e, t, (e) => l.push(e)) : void 0;
+function Co(e, t) {
+	let n = e.ActorCharactermancer.Component.prototype, r = n._pRender, i = n._pHandleSaveClick_postSave, a = !1, o, s = !1, c, l = [], u = t ? so(e, t) : void 0, d = t ? vo(e.Charactermancer_AvailableEquipmentInfo, t) : void 0, f = t ? ho(e, t, (e) => l.push(e)) : void 0;
 	n._pHandleSaveClick_postSave = async function(...e) {
 		let t = await i.apply(this, e);
 		return a = !0, t;
@@ -4917,7 +5276,7 @@ function $a(e, t) {
 	}, t && (n._pRender = async function(e) {
 		await r.call(this, e);
 		try {
-			c?.(), c = Qa(this, e, l, t, async () => {
+			c?.(), c = So(this, e, l, t, async () => {
 				if (await this._pHandleSaveClick(), s) throw Error("作者未完成建卡，请关掉本次草稿重试。");
 			});
 		} catch (t) {
@@ -4934,8 +5293,8 @@ function $a(e, t) {
 	};
 }
 // src/rules/kernel/frame/commands-native.ts
-var Y = globalThis, eo = (e) => new Promise((t) => setTimeout(t, e));
-function to(e) {
+var Y = globalThis, wo = (e) => new Promise((t) => setTimeout(t, e));
+function To(e) {
 	return { nativeBuild: (t) => e([], async () => {
 		let e = Y.game.modules.get("plutonium")?.api;
 		if (typeof e?.charactermancer?.pOpen != "function") throw Error("这份 Plutonium 没有完整建卡器（需要本机私人完整版，放在 vendor/private/modules/plutonium/）");
@@ -4945,13 +5304,13 @@ function to(e) {
 		await Y.ExcludeUtil.pInitialise(), await Y.ExcludeUtil.pSetList([...Y.ExcludeUtil.getList(), ...structuredClone(t.excludes)]);
 		let r = new URL(".", location.href).href;
 		if (await e.config.setValue("dataSources", "localHomebrew", t.brewFiles.map((e) => r + e)) === !1) throw Error("作者不让登记本战役自制包（dataSources.localHomebrew）");
-		let i = JSON.stringify(n.toObject()), a = Re && $a(Re, t.presentation), o = /* @__PURE__ */ new Set(), s = () => void 0, c = Y.Hooks.on("renderApplicationV2", (e) => {
+		let i = JSON.stringify(n.toObject()), a = Re && Co(Re, t.presentation), o = /* @__PURE__ */ new Set(), s = () => void 0, c = Y.Hooks.on("renderApplicationV2", (e) => {
 			o.add(e);
 		}), l = Y.Hooks.on("closeApplicationV2", (e) => {
 			o.delete(e), o.size || s();
 		});
 		try {
-			for (await e.charactermancer.pOpen({ actor: n }); await eo(500), o.size;) await new Promise((e) => {
+			for (await e.charactermancer.pOpen({ actor: n }); await wo(500), o.size;) await new Promise((e) => {
 				s = e, o.size || e();
 			});
 		} finally {
@@ -4967,23 +5326,23 @@ function to(e) {
 	}, [], { ui: !0 }) };
 }
 // src/rules/kernel/frame/commands.ts
-var X = globalThis, no = class extends Error {
+var X = globalThis, Eo = class extends Error {
 	request;
 	constructor(e) {
 		super("KERNEL_NEEDS_DICE"), this.request = e;
 	}
-}, ro = class extends Error {
+}, Do = class extends Error {
 	where;
 	constructor(e) {
 		super("KERNEL_NEEDS_INPUT"), this.where = e;
 	}
 };
-function io(e, t) {
+function Oo(e, t) {
 	let n = X.CONFIG.Dice, r = n.randomUniform, i = X.foundry.dice.terms.Die.prototype, a = Object.hasOwn(i, "roll"), o = i.roll, s = 0, c = 0;
 	i.roll = function(...e) {
 		return c = this.faces, o.apply(this, e);
 	}, n.randomUniform = () => {
-		if (s >= e.length) throw new no({
+		if (s >= e.length) throw new Eo({
 			faces: c,
 			index: s
 		});
@@ -4998,18 +5357,18 @@ function io(e, t) {
 		value: e,
 		used: s
 	}), (e) => {
-		if (l(), e instanceof no) return {
+		if (l(), e instanceof Eo) return {
 			used: s,
 			needs: e.request
 		};
-		if (e instanceof ro) return {
+		if (e instanceof Do) return {
 			used: s,
 			input: e.where
 		};
 		throw e;
 	});
 }
-async function ao(e) {
+async function ko(e) {
 	let t = X.game.socket, n = t.emit, r = [];
 	t.emit = function(e, ...t) {
 		if (e === "modifyDocument" || e === "modifyDocumentBatch") {
@@ -5036,16 +5395,16 @@ async function ao(e) {
 		t.emit = n;
 	}
 }
-function oo(e) {
+function Ao(e) {
 	let t = X.foundry.applications.api.ApplicationV2.prototype, n = X.foundry.applications.sidebar?.AbstractSidebarTab, r = t.render;
 	return t.render = function() {
 		if (n && this instanceof n) return Promise.resolve(this);
-		throw new ro(this.constructor.name);
+		throw new Do(this.constructor.name);
 	}, e().finally(() => {
 		t.render = r;
 	});
 }
-function so(e) {
+function jo(e) {
 	return e ? {
 		formula: e.formula,
 		total: e.total,
@@ -5061,7 +5420,7 @@ function so(e) {
 	} : null;
 }
 var Z = (e) => X.game.actors.get(e, { strict: !0 });
-function co(e) {
+function Mo(e) {
 	let t = {};
 	for (let n of e) {
 		if (n.action !== "update" || n.type !== "Actor" || n.parentUuid) continue;
@@ -5080,7 +5439,7 @@ function co(e) {
 async function Q(e, t, n = [], { ui: r = !1 } = {}) {
 	let i, a = [];
 	try {
-		({value: i, changes: a} = await ao(() => io(e, () => r ? t() : oo(t)).then(async (e) => (await C(), e))));
+		({value: i, changes: a} = await ko(() => Oo(e, () => r ? t() : Ao(t)).then(async (e) => (await C(), e))));
 	} catch (e) {
 		return {
 			status: "error",
@@ -5093,7 +5452,7 @@ async function Q(e, t, n = [], { ui: r = !1 } = {}) {
 	return {
 		status: i.needs ? "missing" : i.input ? "pending" : s?.kernelStatus ?? (o.length ? "unsupported" : "complete"),
 		result: s ?? null,
-		sources: co(a),
+		sources: Mo(a),
 		changes: a,
 		diceUsed: i.used,
 		missing: i.needs ? { dice: i.needs } : i.missing ?? null,
@@ -5101,27 +5460,27 @@ async function Q(e, t, n = [], { ui: r = !1 } = {}) {
 		unsupported: o
 	};
 }
-var lo = be(Q, Z), uo = Ne(Q, Z), fo = At(Q), po = jr(Q, Z), mo = Fr(Q, Z), ho = Rr(Q), go = Gi(Q, Z, so), _o = $i(Q, Z), vo = $r(Q), yo = Fn(Q), bo = Aa(Q, Z), xo = to(Q), So = { configure: !1 }, Co = 15e3, wo = { create: !1 }, To = {
+var No = be(Q, Z), Po = Ne(Q, Z), Fo = At(Q), Io = Ar(Q, Z), Lo = Pr(Q, Z), Ro = Lr(Q), zo = Ki(Q, Z, jo), Bo = ea(Q, Z), Vo = Qr(Q), Ho = Fn(Q), Uo = $a(Q, Z), Wo = To(Q), Go = { configure: !1 }, Ko = 15e3, qo = { create: !1 }, Jo = {
 	warmImport: () => Cn(),
-	...bo,
-	...xo,
-	...lo,
-	...uo,
-	...fo,
-	...po,
-	...mo,
-	...ho,
-	...go,
-	..._o,
-	...vo,
-	...yo,
+	...Uo,
+	...Wo,
+	...No,
+	...Po,
+	...Fo,
+	...Io,
+	...Lo,
+	...Ro,
+	...zo,
+	...Bo,
+	...Vo,
+	...Ho,
 	roll: (e, t = {}, n = [], r = {}) => Q(n, async () => {
 		let n = {
 			basic: X.CONFIG.Dice.BasicRoll,
 			d20: X.CONFIG.Dice.D20Roll,
 			damage: X.CONFIG.Dice.DamageRoll
 		}, i = new (r.kind ? n[r.kind] : X.Roll)(e, t, r.options ? structuredClone(r.options) : void 0);
-		return await i.evaluate({ allowInteractive: !1 }), so(i);
+		return await i.evaluate({ allowInteractive: !1 }), jo(i);
 	}),
 	damage: (e, t, n = [], r = {}) => Q(n, async () => {
 		let n = Z(e);
@@ -5135,15 +5494,15 @@ var lo = be(Q, Z), uo = Ne(Q, Z), fo = At(Q), po = jr(Q, Z), mo = Fr(Q, Z), ho =
 		});
 		return n ? JSON.parse(JSON.stringify(n, (e, t) => e === "clone" ? void 0 : t)) : null;
 	}, [e]),
-	save: (e, t, n = []) => Q(n, async () => (await Z(e).rollSavingThrow({ ability: t }, So, wo))?.map(so) ?? null, [e]),
-	skill: (e, t, n = []) => Q(n, async () => (await Z(e).rollSkill({ skill: t }, So, wo))?.map(so) ?? null, [e]),
+	save: (e, t, n = []) => Q(n, async () => (await Z(e).rollSavingThrow({ ability: t }, Go, qo))?.map(jo) ?? null, [e]),
+	skill: (e, t, n = []) => Q(n, async () => (await Z(e).rollSkill({ skill: t }, Go, qo))?.map(jo) ?? null, [e]),
 	attack: (e, t, n = []) => Q(n, async () => {
 		let n = Z(e).items.get(t, { strict: !0 }).system.activities.find((e) => e.type === "attack");
 		if (!n) return null;
-		let r = await n.rollAttack({}, So, wo), i = await n.rollDamage({}, So, wo);
+		let r = await n.rollAttack({}, Go, qo), i = await n.rollDamage({}, Go, qo);
 		return {
-			attack: r?.map(so) ?? null,
-			damage: i?.map(so) ?? null
+			attack: r?.map(jo) ?? null,
+			damage: i?.map(jo) ?? null
 		};
 	}, [e]),
 	attribution: (e, t) => Object.fromEntries(t.map((t) => [t, (Z(e)._prepareActiveEffectAttributions(t) ?? []).map((e) => ({
@@ -5167,7 +5526,7 @@ var lo = be(Q, Z), uo = Ne(Q, Z), fo = At(Q), po = jr(Q, Z), mo = Fr(Q, Z), ho =
 		}, a = (e) => {
 			let t;
 			return Promise.race([e, new Promise((e, n) => {
-				t = setTimeout(() => n(Error(`PROBE_TIMEOUT ${Co}`)), Co);
+				t = setTimeout(() => n(Error(`PROBE_TIMEOUT ${Ko}`)), Ko);
 			})]).finally(() => clearTimeout(t));
 		}, o = (e) => r.MiscUtil.copyFast(e), s = [];
 		for (let c of t) {
@@ -5203,8 +5562,8 @@ var lo = be(Q, Z), uo = Ne(Q, Z), fo = At(Q), po = jr(Q, Z), mo = Fr(Q, Z), ho =
 		}
 		return s;
 	}
-}, Eo = (e) => e instanceof Error ? e.message : String(e);
-async function Do(t, n, r) {
+}, Yo = (e) => e instanceof Error ? e.message : String(e);
+async function Xo(t, n, r) {
 	let i = (e) => e.pack.docIdLocal, a = /* @__PURE__ */ new Map();
 	if (await r(t) === null) return {
 		accepted: t,
@@ -5243,7 +5602,7 @@ async function Do(t, n, r) {
 		errors: a
 	};
 }
-async function Oo(e, t) {
+async function Zo(e, t) {
 	let { BrewUtil2: n, DataUtil: r, Parser: i, Renderer: a } = globalThis;
 	await n.pGetBrew(), r.brew.pLoadSourceIndex = async () => ({}), r.prerelease.pLoadSourceIndex = async () => ({});
 	let o = a.item;
@@ -5254,7 +5613,7 @@ async function Oo(e, t) {
 		"entryMap",
 		"_additionalTypeEntriesMap",
 		"_masteryMap"
-	], l = c.map((e) => o[e]), u = new Set(Object.values(r).filter((e) => typeof e?.pMergeCopy == "function")), { accepted: d, errors: f } = await Do(e, new Set(Object.keys(i.SOURCE_JSON_TO_FULL).map((e) => e.toLowerCase())), async (e) => {
+	], l = c.map((e) => o[e]), u = new Set(Object.values(r).filter((e) => typeof e?.pMergeCopy == "function")), { accepted: d, errors: f } = await Xo(e, new Set(Object.keys(i.SOURCE_JSON_TO_FULL).map((e) => e.toLowerCase())), async (e) => {
 		let i = structuredClone(e.map((e) => e.doc)), a = "trpg-kernel-brew-check", d = [...u].map((e) => [e, e._mergeCache]), f = /* @__PURE__ */ new Set(), p = ["pLoadByMeta", "_pDoMetaMerge_handleCopyProp"].map((e) => [e, r[e]]);
 		try {
 			for (let [e] of d) e._mergeCache = {};
@@ -5289,7 +5648,7 @@ async function Oo(e, t) {
 			}
 			return null;
 		} catch (e) {
-			return Eo(e);
+			return Yo(e);
 		} finally {
 			for (; f.size;) await Promise.allSettled(f);
 			for (let [e, t] of p) r[e] = t;
@@ -5323,8 +5682,8 @@ async function Oo(e, t) {
 	};
 }
 // src/rules/kernel/frame/module-roots.ts
-var ko = globalThis;
-function Ao(e, t) {
+var Qo = globalThis;
+function $o(e, t) {
 	if (!e) return null;
 	let n = new URL(".", location.href);
 	if (t.origin !== n.origin || !t.pathname.startsWith(n.pathname)) return null;
@@ -5335,32 +5694,32 @@ function Ao(e, t) {
 	}
 	return null;
 }
-function jo(e) {
+function es(e) {
 	if (!e || !Object.keys(e).length) return;
-	let t = ko.fetch.bind(ko);
-	ko.fetch = async (n, r) => {
-		let i = typeof n == "string" ? n : n instanceof URL ? n.href : n.url, a = Ao(e, new URL(i, location.href));
+	let t = Qo.fetch.bind(Qo);
+	Qo.fetch = async (n, r) => {
+		let i = typeof n == "string" ? n : n instanceof URL ? n.href : n.url, a = $o(e, new URL(i, location.href));
 		if (!a) return t(n, r);
 		let o = await t(n instanceof Request ? new Request(a, n) : a, r);
 		return o.status === 404 ? t(n, r) : o;
 	};
 }
 // src/ui/styles/build-frame.css?inline
-var Mo = "html,body{color:var(--text);font-family:var(--font-sans);font-size:var(--fs-md);line-height:var(--lh-ui);--lightningcss-light:initial;--lightningcss-dark: ;color-scheme:light;background:var(--bg)!important}@media (prefers-color-scheme:dark){html,body{--lightningcss-light: ;--lightningcss-dark:initial;color-scheme:dark}}body,.application,.window-app{--background:var(--surface);--color-header-background:var(--head-bg);--color-border:var(--line);--color-tabs-border:var(--line);--color-fieldset-border:var(--line);--color-form-hint:var(--text3);--color-form-hint-hover:var(--text2);--color-form-label:var(--text2);--color-form-label-hover:var(--text);--color-text-emphatic:var(--text);--color-text-primary:var(--text);--color-text-secondary:var(--text2);--color-text-subtle:var(--text3);--color-text-selection:var(--text);--color-text-selection-bg:var(--primary-tint);--table-background-color:var(--surface);--table-header-bg-color:var(--bg-sunk);--table-header-border-color:var(--line);--table-header-text-color:var(--text);--table-row-color-even:var(--bg-sunk);--table-row-color-odd:transparent;--table-row-color-highlight:var(--primary-tint);--content-link-background:var(--primary-tint);--content-link-border-color:var(--primary-tint-line);--content-link-text-color:var(--primary-text);--content-link-icon-color:var(--primary-text);--color-text-dark-primary:var(--text);--hotbar-height:0px;--color-scheme:light}@media (prefers-color-scheme:dark){body,.application,.window-app{--color-scheme:dark}}.application,.window-app{overflow:hidden;color-scheme:var(--color-scheme)!important;background:var(--surface)!important;color:var(--text)!important;font-family:var(--font-sans)!important;border:var(--border) solid var(--line)!important;border-radius:var(--r-lg)!important;box-shadow:var(--shadow-3)!important}.application .window-header,.window-app .window-header{min-height:var(--hit);background:var(--head-bg)!important;color:var(--head-ink)!important;border:0!important;border-bottom:var(--border) solid var(--head-line)!important;font-family:var(--font-sans)!important;font-size:var(--fs-md)!important;padding:0 var(--sp-3)!important}.window-title{font-family:var(--font-sans)!important;font-size:var(--fs-md)!important;font-weight:var(--fw-semibold)!important;color:inherit!important}.window-header button,.window-header .header-control,.window-header a{box-shadow:none!important;color:var(--head-ink2)!important;background:0 0!important;border:0!important;min-height:0!important}.window-header button:hover,.window-header .header-control:hover,.window-header a:hover{color:var(--head-ink)!important;background:var(--head-hover)!important}.window-content{background:var(--surface)!important;color:var(--text)!important;-webkit-backdrop-filter:none!important;font-family:var(--font-sans)!important;font-size:var(--fs-md)!important}.window-resize-handle{opacity:.5;filter:none!important}.ve-app-window,.ve-window,.ve-ui-modal__overlay,.ve-hwin,.ve-ui-tab-side__wrp-tab{background:var(--surface)!important;color:var(--text)!important}.window-content a{color:var(--primary-text)!important}.window-content hr{border:0!important;border-top:var(--border) solid var(--line)!important;background:0 0!important}.window-content h1,.window-content h2,.window-content h3,.window-content h4,.window-content h5{border:0;color:var(--text)!important;font-family:var(--font-sans)!important;text-shadow:none!important}.window-content table,.window-content th,.window-content td{color:var(--text)!important;border-color:var(--line)!important}.window-content button,.window-content .ve-btn{font:inherit;min-height:30px;padding:0 var(--sp-3);cursor:pointer;font-size:var(--fs-sm)!important;border:var(--border) solid var(--line-ctrl)!important;border-radius:var(--r-sm)!important;background:var(--surface)!important;color:var(--text)!important;box-shadow:none!important;text-shadow:none!important;background-image:none!important}.window-content button:hover,.window-content .ve-btn:hover{background:var(--bg-hover)!important}.window-content .ve-btn-primary,.window-content button.ve-btn-primary{background:var(--primary)!important;border-color:var(--primary)!important;color:var(--on-primary)!important}.window-content .ve-btn-primary:hover{background:var(--primary-hover)!important}.window-content .ve-btn.active,.window-content button.active{background:var(--primary-tint)!important;border-color:var(--primary-tint-line)!important;color:var(--primary-text)!important}.window-content button:disabled,.window-content .ve-btn:disabled{opacity:.5;cursor:default}.window-content input[type=text],.window-content input[type=number],.window-content input[type=search],.window-content select,.window-content textarea{font:inherit;min-height:30px;font-size:var(--fs-sm)!important;color:var(--text)!important;background:var(--surface)!important;border:var(--border) solid var(--line-ctrl)!important;border-radius:var(--r-sm)!important;box-shadow:none!important}.window-content input[type=checkbox],.window-content input[type=radio]{accent-color:var(--primary)}.window-content button:focus-visible,.window-content input:focus-visible,.window-content select:focus-visible,.window-content textarea:focus-visible{outline-offset:1px;outline:2px solid var(--focus)!important}.window-content .ve-muted,.window-content .ve-text-muted{color:var(--text2)!important}", No = ".application.trpg-main{box-shadow:none!important;border:0!important;border-radius:0!important}.application.trpg-main>.window-header{display:none!important}.application.trpg-main>.window-content{padding:0!important}.application:not(.trpg-main)>.window-header{min-height:52px;background:var(--surface)!important;color:var(--text)!important;border-bottom:var(--border) solid var(--line)!important;padding:0 var(--sp-3) 0 var(--sp-5)!important}.application:not(.trpg-main) .window-title{font-size:var(--fs-xl)!important}.window-header [data-action=close]{border-radius:var(--r-sm);width:32px;height:32px;color:var(--text2)!important;font-size:0!important}.window-header [data-action=close]:before{content:\"✕\";font:16px/1 var(--font-sans)}.window-header [data-action=close]:hover{background:var(--bg-hover)!important;color:var(--text)!important}.ve-ui-tab__wrp-tab-heads--border{gap:var(--sp-1);counter-reset:trpg-step;flex-wrap:wrap;padding:var(--sp-3) var(--sp-4)!important;border:0!important;border-bottom:var(--border) solid var(--line)!important;background:var(--surface)!important;display:flex!important}.window-content .ve-ui-tab__btn-tab-head{counter-increment:trpg-step;align-items:center;gap:var(--sp-2);min-height:32px!important;padding:0 var(--sp-3)!important;border-radius:var(--r-pill)!important;color:var(--text2)!important;font-size:var(--fs-sm)!important;background:0 0!important;border:0!important;width:auto!important;transition:none!important;display:inline-flex!important}.window-content .ve-ui-tab__btn-tab-head:before{content:counter(trpg-step);border:var(--border) solid var(--line-ctrl);width:20px;height:20px;font-size:var(--fs-xs);border-radius:50%;place-items:center;display:inline-grid}.window-content .ve-ui-tab__btn-tab-head:hover{background:var(--bg-hover)!important}.window-content .ve-ui-tab__btn-tab-head.ve-active{font-weight:var(--fw-semibold);background:var(--primary)!important;color:var(--on-primary)!important}.window-content .ve-ui-tab__btn-tab-head.ve-active:before{border-color:currentColor}.window-content hr.ve-hr-1.ve-w-100:has(+.ve-flex-h-right){display:none}.window-content .ve-flex-h-right.ve-no-shrink:has(>.ve-btn-primary){gap:var(--sp-2);border-top:var(--border) solid var(--line-ctrl);padding:var(--sp-3) var(--sp-4)!important;background:var(--bg-side)!important}.window-content .ve-flex-h-right.ve-no-shrink:has(>.ve-btn-primary) .ve-btn{font-weight:var(--fw-semibold);min-height:var(--hit)!important;padding:0 var(--sp-5)!important;font-size:var(--fs-md)!important}.window-content .ve-flex-h-right.ve-no-shrink:has(>.ve-btn-primary) .ve-btn-group{gap:var(--sp-2)}.window-content .ve-flex-h-right.ve-no-shrink:has(>.ve-btn-primary) .ve-vr-2{display:none}.window-content .ve-flex-col:has(>hr.ve-hr-2:first-child){padding:var(--sp-3) 0;border:0;border-top:var(--border) solid var(--line);border-radius:0;margin:0;background:0 0!important}.window-content .ve-flex-col>hr.ve-hr-2:first-child{display:none}.window-content .ve-bold{font-weight:var(--fw-semibold)}.window-content .veapp__bg-foundry{background:var(--surface)!important}.window-content .stripe-even,.window-content .stripe-odd,.window-content .stripe-odd-table tr,.window-content .ve-cls-tbl__stripe-odd,.window-content .stripe-odd-table tbody tr:nth-child(odd){background:0 0!important}.window-content input[type=checkbox],.window-content input[type=radio]{accent-color:var(--primary);margin:0;appearance:auto!important;background:0 0!important;border:0!important;width:16px!important;height:16px!important}.window-content input[type=checkbox]:before,.window-content input[type=checkbox]:after,.window-content input[type=radio]:before,.window-content input[type=radio]:after{content:none!important;display:none!important}:is(.window-content label:not(.p6-choice-option):has(>label>input[type=checkbox]),.window-content label:not(.p6-choice-option):has(>label>input[type=radio])){margin:0 0 var(--sp-1);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);cursor:pointer;padding:var(--sp-1) var(--sp-2)!important;background:var(--surface)!important}.window-content label:not(.p6-choice-option):has(>label>input:checked){border-color:var(--primary);background:var(--primary-tint)!important}.window-content .veapp__list-row,.window-content .manc__list-row{border-bottom:var(--border) solid var(--line);align-items:center;min-height:36px;background:var(--surface)!important}.window-content .veapp__list-row-hoverable:hover,.window-content .manc__list-row:hover{background:var(--bg-hover)!important}.window-content .veapp__list-row:has(input:checked){box-shadow:inset 3px 0 0 var(--primary);font-weight:var(--fw-semibold);background:var(--primary-tint)!important}:is(.window-content .ve-input-group:has(>.ve-btn-5et)>.ve-btn,.window-content .sortlabel .ve-btn,.window-content .ve-btn.sort){font-weight:var(--fw-semibold);background:var(--bg-sunk)!important;border-color:var(--line)!important;color:var(--text2)!important;font-size:var(--fs-xs)!important;border-radius:0!important}.window-content .manc-sp__btn-learn-spell,.window-content .manc-sp__btn-prepare,.window-content .ve-fltr__mini-pill{border-radius:var(--r-sm)!important}.window-content .manc-sp__btn-learn-spell.ve-active,.window-content .manc-sp__btn-prepare.ve-active,.window-content .ve-btn.ve-active:not(.ve-ui-tab__btn-tab-head){background:var(--primary)!important;border-color:var(--primary)!important;color:var(--on-primary)!important}.window-content .ve-fltr__mini-pill{background:var(--primary-tint)!important;border:var(--border) solid var(--primary-tint-line)!important;color:var(--primary-text)!important}.window-content .ve-ui-sel2__ipt-display,.window-content .ve-ui-sel2__ipt-search{min-height:var(--hit)!important;padding:0 var(--sp-3)!important;background:var(--surface)!important;color:var(--text)!important;font-size:var(--fs-md)!important}.window-content .ve-ui-sel2__wrp-options{border-radius:var(--r-sm);box-shadow:var(--shadow-2);z-index:20;background:var(--surface)!important;border:var(--border) solid var(--line-ctrl)!important}.window-content .ve-ui-sel2__disp-option{border-bottom:var(--border) solid var(--line);min-height:40px;font-weight:var(--fw-semibold);padding:0 var(--sp-4)!important;background:var(--surface)!important;color:var(--text)!important}.window-content .ve-ui-sel2__disp-option:hover,.window-content .ve-ui-sel2__disp-option:focus{box-shadow:inset 3px 0 0 var(--primary);outline:0;background:var(--bg-hover)!important}.window-content .ve-rd__h,.window-content .entry-title-inner,.window-content .ve-rd__h .entry-title-inner{font-family:var(--font-sans)!important;font-variant:normal!important;font-weight:var(--fw-semibold)!important;letter-spacing:0!important;color:var(--text)!important}.window-content table th,.window-content .ve-rd__table thead th,.window-content .ve-cls-tbl th{font-weight:var(--fw-semibold);font-size:var(--fs-xs);background:var(--bg-sunk)!important;color:var(--text2)!important}.window-content table td,.window-content table th{padding:var(--sp-1) var(--sp-2);border:0!important;border-bottom:var(--border) solid var(--line)!important}.window-content table{background:var(--surface)!important;color:var(--text)!important;font-family:var(--font-sans)!important;border-color:var(--line)!important}.window-content table tr{background:0 0!important}.window-content .ve-tbl-border{background:var(--line)!important}.window-content .ve-stats__th-name{background:var(--surface)!important;border-bottom:var(--border) solid var(--line)!important}.window-content .ve-stats__h-name{font-family:var(--font-sans)!important;font-variant:normal!important;font-size:var(--fs-lg)!important;font-weight:var(--fw-semibold)!important;color:var(--text)!important}.window-content .ve-stats__wrp-h-source,.window-content .ve-stats__wrp-h-source a{font-family:var(--font-sans)!important;font-size:var(--fs-xs)!important;color:var(--text3)!important}.application.trpg-main .ve-ui-tab__wrp-tab-body{padding:var(--sp-3) var(--sp-4)!important;background:var(--surface)!important;border:0!important}.window-content input[readonly],.window-content input:disabled{background:var(--bg-sunk)!important;border-color:var(--line)!important;color:var(--text2)!important}", Po = ".p6-builder{width:100%;height:100%;min-height:0;font-family:var(--font-sans);flex-direction:column;display:flex}.p6-builder [hidden],.p6-builder .p6-builder-inactive{display:none!important}.p6-builder-nav{align-items:center;gap:var(--sp-1);padding:var(--sp-3) var(--sp-4);border-bottom:var(--border) solid var(--line);flex:none;display:flex;overflow-x:auto}.p6-builder button.p6-builder-tab,.p6-builder button.p6-builder-btn,.p6-builder button.p6-picker-row{color:var(--text);background:var(--surface);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);min-height:var(--hit);padding:0 var(--sp-3);font:inherit;cursor:pointer;transition:none}.p6-builder button.p6-builder-btn:hover,.p6-builder button.p6-builder-tab:hover,.p6-builder button.p6-picker-row:hover{background:var(--bg-hover)}.p6-builder .p6-builder-tab{align-items:center;gap:var(--sp-2);white-space:nowrap;flex:none;display:inline-flex}.p6-builder button.p6-builder-tab{min-height:32px;color:var(--text2);font-size:var(--fs-sm);border-radius:var(--r-pill)!important;background:0 0!important;border-color:#0000!important}.p6-builder button.p6-builder-tab:hover{background:var(--bg-hover)!important}.p6-builder-tab i{border:var(--border) solid var(--line-ctrl);border-radius:50%;place-items:center;width:20px;height:20px;font-style:normal;display:inline-grid}.p6-builder .p6-builder-tab[data-done=true] i{background:var(--primary);color:var(--on-primary);border-color:var(--primary)}.p6-builder .p6-builder-past{padding:0 var(--sp-3);color:var(--text2);font-size:var(--fs-sm)}.p6-builder button.p6-builder-tab[aria-current],.p6-builder button.p6-builder-primary,.p6-builder button.p6-builder-btn[aria-pressed=true]{background:var(--primary)!important;color:var(--on-primary)!important}.p6-builder button.p6-builder-tab[aria-current] i{border-color:currentColor}.p6-builder button:disabled{cursor:not-allowed}.p6-builder button.p6-builder-btn:disabled{opacity:.55}.p6-builder .p6-builder-step{flex-direction:column;flex:1;min-height:0;display:flex;overflow:hidden;padding:0!important}.p6-builder .p6-builder-split:not(.p6-builder-inactive){grid-template-columns:minmax(175px,5fr) minmax(0,7fr);display:grid!important}.p6-builder-panel{flex-direction:column;min-width:0;min-height:0;display:flex;overflow:auto}.p6-native-body{padding:var(--sp-3) var(--sp-4);min-width:0}.p6-builder-selection{align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);z-index:2;background:var(--surface);border-bottom:var(--border) solid var(--line);flex-wrap:wrap;flex:none;display:flex;position:sticky;top:0}.p6-builder-selection-title{min-width:4em;font-size:var(--fs-lg);font-weight:var(--fw-semibold);flex:1;margin:0}.p6-builder-selection .p6-builder-btn{min-height:32px!important}.p6-builder-split .p6-native-body>.ve-flex{flex-direction:column;height:auto!important}.p6-builder-split .p6-native-body>.ve-flex>.ve-flex-col{width:100%!important;overflow:visible!important}.p6-builder-split .p6-native-body>.ve-flex>.ve-vr-1{display:none!important}.p6-builder-split .p6-native-body>.ve-flex:has(>.ve-vr-1)>.ve-vr-1+.ve-flex-col{display:none!important}.p6-builder-rail{border-right:var(--border) solid var(--line);min-width:0;min-height:0}.p6-picker{flex-direction:column;height:100%;min-height:0;display:flex}.p6-picker-search{min-height:var(--hit);width:auto;margin:var(--sp-3) var(--sp-4) var(--sp-2);color:var(--text);background:var(--surface);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);flex:none}.p6-picker-list{flex-direction:column;flex:1;min-height:0;display:flex;overflow:auto}.p6-builder button.p6-picker-row{justify-content:space-between;align-items:center;gap:var(--sp-2);text-align:left;flex:none;width:100%;display:flex;border:0!important;border-bottom:var(--border) solid var(--line)!important;border-radius:0!important}.p6-builder button.p6-picker-row[data-preview=true]{background:var(--primary-tint)!important;box-shadow:inset 2px 0 var(--accent)!important}.p6-builder .p6-picker-row[aria-pressed=true] .p6-picker-source:before{content:\"✓\";margin-right:var(--sp-2);color:var(--text)}.p6-picker-source,.p6-picker-status{color:var(--text2);font-size:var(--fs-xs)}.p6-picker-status{padding:var(--sp-2) var(--sp-4);flex:none;margin:0}.p6-builder-footer{justify-content:flex-end;align-items:center;gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);background:var(--bg-side);border-top:var(--border) solid var(--line);flex-wrap:wrap;flex:none;display:flex}.p6-builder-hint{color:var(--text2);font-size:var(--fs-xs);margin-right:auto}.p6-builder-feedback{color:var(--danger-text);flex-basis:100%;margin:0}.p6-builder-feedback:empty{display:none}.p6-builder-switch{gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-bottom:var(--border) solid var(--line);display:flex}.p6-builder-review{min-height:0;padding:var(--sp-4) var(--sp-5);flex:1;overflow:auto}.p6-builder-review h2{margin:0 0 var(--sp-4);font-size:var(--fs-xl)}.p6-builder-summary{gap:var(--sp-2) var(--sp-3);grid-template-columns:minmax(64px,100px) 1fr;margin:0;display:grid}.p6-builder-summary dt{color:var(--text2)}.p6-builder-summary dd{margin:0}.p6-builder-todo{margin-top:var(--sp-4);padding:var(--sp-3);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--warn-bg)}.p6-builder-todo-row{justify-content:space-between;gap:var(--sp-2);padding-top:var(--sp-2);align-items:center;display:flex}.p6-level{justify-content:space-between;align-items:center;gap:var(--sp-2);padding:var(--sp-1) 0;display:flex}.p6-level select{width:auto;min-height:34px;padding:0 var(--sp-3)}.p6-choice-progress{color:var(--accent-text);width:100%}.p6-choice-progress[data-done=true]{color:var(--success-text)}.p6-builder button[title]:has(>.fa-magnifying-glass:only-child){width:auto!important;padding-inline:var(--sp-2)!important}.p6-builder button[title]:has(>.fa-magnifying-glass:only-child):after{content:attr(title)}.window-content button.ve-btn-xxs:has(>.fa-check:only-child){width:auto!important;padding-inline:var(--sp-2)!important}.window-content button.ve-btn-xxs:has(>.fa-check:only-child):after{content:\"选择\"}.p6-builder-spells .p6-native-body>.ve-flex{flex-direction:column;height:auto!important}.p6-builder-spells .p6-native-body>.ve-flex>.ve-flex-col{flex:none!important;height:auto!important;overflow:visible!important}.p6-builder-spells .p6-native-body>.ve-flex>.ve-vr-1,.p6-builder-spells .manc__list-row>:is(:nth-child(2),:nth-child(3),:nth-child(4),:nth-child(5),:nth-child(6)){display:none!important}.p6-builder-spells .p6-native-body .manc__list:has(.manc__list-row)~.ve-input-group{display:none!important}.p6-builder-spells .manc__list-row{gap:var(--sp-2);min-height:var(--hit);justify-content:space-between}.p6-builder-spells .manc__list-row>:first-child{flex:1;width:auto!important}.p6-builder-spells .manc__list-row>:nth-child(7){flex:0 0 4.5em;text-align:right!important;width:auto!important}.p6-builder-spells .manc__list-row>:last-child{gap:var(--sp-1);flex:none;display:flex;width:auto!important}@media (width<=520px){.p6-builder-rail{border-right:0}.p6-builder-nav,.p6-builder-footer,.p6-builder-review{padding-inline:var(--sp-3)}.p6-builder-attributes .p6-native-body{padding-inline:var(--sp-2);overflow-x:auto}.p6-builder-attributes .ve-statgen-pb__cell{min-width:0!important}.p6-builder-attributes .ve-statgen-shared__ipt:not(.ve-statgen-pb__ipt-budget){width:41px!important;padding-inline:var(--sp-1)!important}.p6-builder-attributes select.ve-statgen-shared__ipt{appearance:none;text-align:center;padding-inline:0!important}}.p6-choice-instruction{display:none!important}.p6-ability-methods{gap:var(--sp-1);flex-wrap:wrap;display:flex}.p6-builder-attributes .ve-statgen-shared__wrp-header{gap:var(--sp-3);flex-wrap:wrap}.p6-builder-attributes:not([data-mode=pointbuy]) .ve-mobile-sm__flex-col.ve-mb-2:has(.ve-statgen-pb__ipt-budget){display:none!important}.p6-builder [onmouseover*=Renderer\\.hover],.p6-builder [onclick*=Renderer\\.hover]{pointer-events:none!important;color:inherit!important;cursor:inherit!important;text-decoration:none!important}.p6-builder .veapp__btn-filter,.p6-builder .ve-fltr__mini-view{display:none!important}.p6-builder button:has(>.glyphicon-filter){display:none!important}.p6-builder button:has(>.glyphicon-resize-small){display:none!important}.p6-builder .ve-btn-group:has(>button>.glyphicon-refresh){display:none!important}:is(.p6-builder .ve-btn-group:has(.ve-ui-sel2__wrp[style*=none]),.p6-builder .ve-bold:has(+.ve-btn-group .ve-ui-sel2__wrp[style*=none])){display:none!important}.p6-builder-spells .manc__list-row>:nth-child(7),.p6-builder-spells .manc__list-row>:nth-child(7) *{font-size:var(--fs-xs);color:var(--text3)!important}.p6-builder-card{padding:var(--sp-3) var(--sp-4) var(--sp-5);border-top:var(--border) solid var(--line);color:var(--text);font-size:var(--fs-sm);line-height:1.65}.p6-builder-card>table{width:100%;border:0!important}.p6-builder-card td,.p6-builder-card th{padding:var(--sp-1) 0!important;border:0!important}.p6-builder-card-note{margin:0 0 var(--sp-2);color:var(--text2)}.p6-builder .p6-choice-group{align-items:center;gap:var(--sp-2);flex-wrap:wrap;background:0 0!important;border:0!important;height:auto!important;min-height:0!important;padding:0!important;display:flex!important;overflow:visible!important}.p6-builder .p6-choice-group>:not(.p6-choice-option){flex-basis:100%;width:100%!important}.p6-builder .p6-choice-group>hr{margin:var(--sp-1) 0}.p6-builder .p6-choice-progress{color:var(--accent-text);font-size:var(--fs-xs)}.p6-builder .p6-choice-progress[data-done=true]{color:var(--success-text)}.p6-builder .p6-choice-option{white-space:nowrap;align-items:center;gap:var(--sp-1);border-radius:var(--r-sm);min-height:36px;color:var(--text);cursor:pointer;flex:none;position:relative;width:auto!important;padding:0 var(--sp-3)!important;border:var(--border) solid var(--line-ctrl)!important;background:var(--surface)!important;justify-content:flex-start!important;margin:0!important;display:inline-flex!important}.p6-builder .p6-choice-option>label:has(>input){clip-path:inset(50%);margin:0;padding:0;overflow:hidden;width:1px!important;height:1px!important;position:absolute!important}.p6-builder .p6-choice-option>div,.p6-builder .p6-choice-option .ve-w-100{white-space:nowrap;flex:none!important;width:auto!important;max-width:none!important;padding:0!important}.p6-builder .p6-choice-option .ve-help{border-bottom:0!important;text-decoration:none!important}.p6-builder .p6-choice-option:hover{background:var(--bg-hover)!important}.p6-builder .p6-choice-option:has(input:checked){color:var(--on-primary);background:var(--primary)!important;border-color:var(--primary)!important}.p6-builder .p6-choice-option:has(input:checked):before{content:\"✓\";font-size:var(--fs-xs)}.p6-builder .p6-choice-option:has(input:checked) .ve-muted{opacity:.8;color:inherit!important}.p6-builder .p6-choice-option:has(input:disabled):not(:has(input:checked)){color:var(--disabled-text);cursor:not-allowed;background:var(--disabled-bg)!important}.p6-builder .p6-choice-option:has(input:focus-visible){outline:2px solid var(--focus);outline-offset:2px}.p6-builder .p6-choice-option .veapp__msg-warning:empty{display:none}.p6-builder .p6-choice-option .veapp__msg-warning:has(.fa-check){display:none!important}.p6-builder .p6-choice-option:has(.veapp__msg-warning .fa-check):after{content:\"已有\";margin-left:var(--sp-1);color:var(--text3);font-size:var(--fs-xs)}.p6-builder-equipment .imp-cls__wrp-equi-group{gap:var(--sp-2);padding:var(--sp-3) 0!important;border:0!important;border-top:var(--border) solid var(--line)!important;background:0 0!important;margin:0!important}.p6-builder-equipment .imp-cls__wrp-equi-group>div{min-height:var(--hit);padding:var(--sp-2) var(--sp-3) var(--sp-2) 40px;border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);position:relative;justify-content:flex-start!important}.p6-builder-equipment .imp-cls__wrp-equi-group>div:has(>.ve-active){border-color:var(--primary);background:var(--primary-tint)}.p6-builder-equipment .imp-cls__wrp-equi-group .ve-btn.imp-cls__disp-equi-choice-key,.p6-builder-equipment .imp-cls__wrp-equi-group .ve-btn.imp-cls__disp-equi-choice-key.ve-active{z-index:0;inset:0;border-radius:var(--r-sm)!important;color:#0000!important;width:auto!important;height:auto!important;box-shadow:none!important;background:0 0!important;border:0!important;margin:0!important;font-size:0!important;position:absolute!important}.p6-builder-equipment .imp-cls__disp-equi-choice-key:before{content:\"\";left:var(--sp-3);border:2px solid var(--line-ctrl);box-sizing:border-box;border-radius:50%;width:16px;height:16px;margin-top:-8px;position:absolute;top:50%}.p6-builder-equipment .imp-cls__disp-equi-choice-key.ve-active:before{border:5px solid var(--primary)}.p6-builder-equipment .imp-cls__disp-equi-choice-key:focus-visible{outline:2px solid var(--focus)!important}.p6-builder-equipment .imp-cls__wrp-equi-group>div>.ve-w-100{z-index:1;pointer-events:none;position:relative}.p6-builder-equipment .imp-cls__wrp-equi-group>div>.ve-w-100 :is(button,input,select){pointer-events:auto}.p6-builder-equipment .imp-cls__wrp-equi-group>div:has(>.imp-cls__disp-equi-choice-key:disabled){padding-left:var(--sp-3);border-color:var(--line);background:var(--bg-sunk)}.p6-builder-equipment .imp-cls__wrp-equi-group .ve-btn.imp-cls__disp-equi-choice-key:disabled{visibility:hidden!important;display:none!important}.p6-builder-equipment .imp-cls__wrp-equi-group .ve-btn.imp-cls__disp-equi-choice-key:disabled:before{content:none!important}.p6-builder-equipment button:has(>.fa-magnifying-glass){align-items:center;gap:var(--sp-1);min-height:32px;width:auto!important;padding:0 var(--sp-2)!important;border:var(--border) solid var(--line-ctrl)!important;border-radius:var(--r-sm)!important;background:var(--surface)!important;color:var(--text)!important;display:inline-flex!important}.p6-builder-equipment button:has(>.fa-magnifying-glass)>.fa-magnifying-glass{display:none}.p6-builder-equipment button:has(>.fa-magnifying-glass):after{content:attr(title) \" ▾\"!important}.p6-equip-picker{z-index:30;pointer-events:auto;background:var(--surface);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);width:min(340px,100%);box-shadow:var(--shadow-2);flex-direction:column;display:flex;position:absolute;top:calc(100% + 4px);left:0}.p6-builder-equipment .imp-cls__wrp-equi-group>div>.ve-w-100:has(.p6-equip-picker){z-index:20}.p6-equip-picker .p6-picker-search{margin:var(--sp-2)}.p6-equip-picker-list{border-top:var(--border) solid var(--line);max-height:220px;overflow:auto}.p6-builder button.p6-equip-picker-clear{min-height:32px;margin:var(--sp-1) var(--sp-2);padding:0 var(--sp-2);color:var(--primary-text);font:inherit;font-size:var(--fs-sm);cursor:pointer;background:0 0;border:0;align-self:flex-start}.p6-builder-to-list{display:none}@media (width<=520px){.p6-builder .p6-builder-split:not(.p6-builder-inactive){grid-template-rows:minmax(0,1fr)!important;grid-template-columns:1fr!important}.p6-builder-split[data-view=list]>.p6-builder-panel,.p6-builder-split[data-view=card]>.p6-builder-rail{display:none!important}.p6-builder-split .p6-builder-rail{border-bottom:0}.p6-builder button.p6-builder-to-list{color:var(--primary-text);align-items:center;display:inline-flex;padding:0 var(--sp-1)!important;background:0 0!important;border:0!important}}", Fo = globalThis;
-function Io(e = [
+var ts = "html,body{color:var(--text);font-family:var(--font-sans);font-size:var(--fs-md);line-height:var(--lh-ui);--lightningcss-light:initial;--lightningcss-dark: ;color-scheme:light;background:var(--bg)!important}@media (prefers-color-scheme:dark){html,body{--lightningcss-light: ;--lightningcss-dark:initial;color-scheme:dark}}body,.application,.window-app{--background:var(--surface);--color-header-background:var(--head-bg);--color-border:var(--line);--color-tabs-border:var(--line);--color-fieldset-border:var(--line);--color-form-hint:var(--text3);--color-form-hint-hover:var(--text2);--color-form-label:var(--text2);--color-form-label-hover:var(--text);--color-text-emphatic:var(--text);--color-text-primary:var(--text);--color-text-secondary:var(--text2);--color-text-subtle:var(--text3);--color-text-selection:var(--text);--color-text-selection-bg:var(--primary-tint);--table-background-color:var(--surface);--table-header-bg-color:var(--bg-sunk);--table-header-border-color:var(--line);--table-header-text-color:var(--text);--table-row-color-even:var(--bg-sunk);--table-row-color-odd:transparent;--table-row-color-highlight:var(--primary-tint);--content-link-background:var(--primary-tint);--content-link-border-color:var(--primary-tint-line);--content-link-text-color:var(--primary-text);--content-link-icon-color:var(--primary-text);--color-text-dark-primary:var(--text);--hotbar-height:0px;--color-scheme:light}@media (prefers-color-scheme:dark){body,.application,.window-app{--color-scheme:dark}}.application,.window-app{overflow:hidden;color-scheme:var(--color-scheme)!important;background:var(--surface)!important;color:var(--text)!important;font-family:var(--font-sans)!important;border:var(--border) solid var(--line)!important;border-radius:var(--r-lg)!important;box-shadow:var(--shadow-3)!important}.application .window-header,.window-app .window-header{min-height:var(--hit);background:var(--head-bg)!important;color:var(--head-ink)!important;border:0!important;border-bottom:var(--border) solid var(--head-line)!important;font-family:var(--font-sans)!important;font-size:var(--fs-md)!important;padding:0 var(--sp-3)!important}.window-title{font-family:var(--font-sans)!important;font-size:var(--fs-md)!important;font-weight:var(--fw-semibold)!important;color:inherit!important}.window-header button,.window-header .header-control,.window-header a{box-shadow:none!important;color:var(--head-ink2)!important;background:0 0!important;border:0!important;min-height:0!important}.window-header button:hover,.window-header .header-control:hover,.window-header a:hover{color:var(--head-ink)!important;background:var(--head-hover)!important}.window-content{background:var(--surface)!important;color:var(--text)!important;-webkit-backdrop-filter:none!important;font-family:var(--font-sans)!important;font-size:var(--fs-md)!important}.window-resize-handle{opacity:.5;filter:none!important}.ve-app-window,.ve-window,.ve-ui-modal__overlay,.ve-hwin,.ve-ui-tab-side__wrp-tab{background:var(--surface)!important;color:var(--text)!important}.window-content a{color:var(--primary-text)!important}.window-content hr{border:0!important;border-top:var(--border) solid var(--line)!important;background:0 0!important}.window-content h1,.window-content h2,.window-content h3,.window-content h4,.window-content h5{border:0;color:var(--text)!important;font-family:var(--font-sans)!important;text-shadow:none!important}.window-content table,.window-content th,.window-content td{color:var(--text)!important;border-color:var(--line)!important}.window-content button,.window-content .ve-btn{font:inherit;min-height:30px;padding:0 var(--sp-3);cursor:pointer;font-size:var(--fs-sm)!important;border:var(--border) solid var(--line-ctrl)!important;border-radius:var(--r-sm)!important;background:var(--surface)!important;color:var(--text)!important;box-shadow:none!important;text-shadow:none!important;background-image:none!important}.window-content button:hover,.window-content .ve-btn:hover{background:var(--bg-hover)!important}.window-content .ve-btn-primary,.window-content button.ve-btn-primary{background:var(--primary)!important;border-color:var(--primary)!important;color:var(--on-primary)!important}.window-content .ve-btn-primary:hover{background:var(--primary-hover)!important}.window-content .ve-btn.active,.window-content button.active{background:var(--primary-tint)!important;border-color:var(--primary-tint-line)!important;color:var(--primary-text)!important}.window-content button:disabled,.window-content .ve-btn:disabled{opacity:.5;cursor:default}.window-content input[type=text],.window-content input[type=number],.window-content input[type=search],.window-content select,.window-content textarea{font:inherit;min-height:30px;font-size:var(--fs-sm)!important;color:var(--text)!important;background:var(--surface)!important;border:var(--border) solid var(--line-ctrl)!important;border-radius:var(--r-sm)!important;box-shadow:none!important}.window-content input[type=checkbox],.window-content input[type=radio]{accent-color:var(--primary)}.window-content button:focus-visible,.window-content input:focus-visible,.window-content select:focus-visible,.window-content textarea:focus-visible{outline-offset:1px;outline:2px solid var(--focus)!important}.window-content .ve-muted,.window-content .ve-text-muted{color:var(--text2)!important}", ns = ".application.trpg-main{box-shadow:none!important;border:0!important;border-radius:0!important}.application.trpg-main>.window-header{display:none!important}.application.trpg-main>.window-content{padding:0!important}.application:not(.trpg-main)>.window-header{min-height:52px;background:var(--surface)!important;color:var(--text)!important;border-bottom:var(--border) solid var(--line)!important;padding:0 var(--sp-3) 0 var(--sp-5)!important}.application:not(.trpg-main) .window-title{font-size:var(--fs-xl)!important}.window-header [data-action=close]{border-radius:var(--r-sm);width:32px;height:32px;color:var(--text2)!important;font-size:0!important}.window-header [data-action=close]:before{content:\"✕\";font:16px/1 var(--font-sans)}.window-header [data-action=close]:hover{background:var(--bg-hover)!important;color:var(--text)!important}.ve-ui-tab__wrp-tab-heads--border{gap:var(--sp-1);counter-reset:trpg-step;flex-wrap:wrap;padding:var(--sp-3) var(--sp-4)!important;border:0!important;border-bottom:var(--border) solid var(--line)!important;background:var(--surface)!important;display:flex!important}.window-content .ve-ui-tab__btn-tab-head{counter-increment:trpg-step;align-items:center;gap:var(--sp-2);min-height:32px!important;padding:0 var(--sp-3)!important;border-radius:var(--r-pill)!important;color:var(--text2)!important;font-size:var(--fs-sm)!important;background:0 0!important;border:0!important;width:auto!important;transition:none!important;display:inline-flex!important}.window-content .ve-ui-tab__btn-tab-head:before{content:counter(trpg-step);border:var(--border) solid var(--line-ctrl);width:20px;height:20px;font-size:var(--fs-xs);border-radius:50%;place-items:center;display:inline-grid}.window-content .ve-ui-tab__btn-tab-head:hover{background:var(--bg-hover)!important}.window-content .ve-ui-tab__btn-tab-head.ve-active{font-weight:var(--fw-semibold);background:var(--primary)!important;color:var(--on-primary)!important}.window-content .ve-ui-tab__btn-tab-head.ve-active:before{border-color:currentColor}.window-content hr.ve-hr-1.ve-w-100:has(+.ve-flex-h-right){display:none}.window-content .ve-flex-h-right.ve-no-shrink:has(>.ve-btn-primary){gap:var(--sp-2);border-top:var(--border) solid var(--line-ctrl);padding:var(--sp-3) var(--sp-4)!important;background:var(--bg-side)!important}.window-content .ve-flex-h-right.ve-no-shrink:has(>.ve-btn-primary) .ve-btn{font-weight:var(--fw-semibold);min-height:var(--hit)!important;padding:0 var(--sp-5)!important;font-size:var(--fs-md)!important}.window-content .ve-flex-h-right.ve-no-shrink:has(>.ve-btn-primary) .ve-btn-group{gap:var(--sp-2)}.window-content .ve-flex-h-right.ve-no-shrink:has(>.ve-btn-primary) .ve-vr-2{display:none}.window-content .ve-flex-col:has(>hr.ve-hr-2:first-child){padding:var(--sp-3) 0;border:0;border-top:var(--border) solid var(--line);border-radius:0;margin:0;background:0 0!important}.window-content .ve-flex-col>hr.ve-hr-2:first-child{display:none}.window-content .ve-bold{font-weight:var(--fw-semibold)}.window-content .veapp__bg-foundry{background:var(--surface)!important}.window-content .stripe-even,.window-content .stripe-odd,.window-content .stripe-odd-table tr,.window-content .ve-cls-tbl__stripe-odd,.window-content .stripe-odd-table tbody tr:nth-child(odd){background:0 0!important}.window-content input[type=checkbox],.window-content input[type=radio]{accent-color:var(--primary);margin:0;appearance:auto!important;background:0 0!important;border:0!important;width:16px!important;height:16px!important}.window-content input[type=checkbox]:before,.window-content input[type=checkbox]:after,.window-content input[type=radio]:before,.window-content input[type=radio]:after{content:none!important;display:none!important}:is(.window-content label:not(.p6-choice-option):has(>label>input[type=checkbox]),.window-content label:not(.p6-choice-option):has(>label>input[type=radio])){margin:0 0 var(--sp-1);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);cursor:pointer;padding:var(--sp-1) var(--sp-2)!important;background:var(--surface)!important}.window-content label:not(.p6-choice-option):has(>label>input:checked){border-color:var(--primary);background:var(--primary-tint)!important}.window-content .veapp__list-row,.window-content .manc__list-row{border-bottom:var(--border) solid var(--line);align-items:center;min-height:36px;background:var(--surface)!important}.window-content .veapp__list-row-hoverable:hover,.window-content .manc__list-row:hover{background:var(--bg-hover)!important}.window-content .veapp__list-row:has(input:checked){box-shadow:inset 3px 0 0 var(--primary);font-weight:var(--fw-semibold);background:var(--primary-tint)!important}:is(.window-content .ve-input-group:has(>.ve-btn-5et)>.ve-btn,.window-content .sortlabel .ve-btn,.window-content .ve-btn.sort){font-weight:var(--fw-semibold);background:var(--bg-sunk)!important;border-color:var(--line)!important;color:var(--text2)!important;font-size:var(--fs-xs)!important;border-radius:0!important}.window-content .manc-sp__btn-learn-spell,.window-content .manc-sp__btn-prepare,.window-content .ve-fltr__mini-pill{border-radius:var(--r-sm)!important}.window-content .manc-sp__btn-learn-spell.ve-active,.window-content .manc-sp__btn-prepare.ve-active,.window-content .ve-btn.ve-active:not(.ve-ui-tab__btn-tab-head){background:var(--primary)!important;border-color:var(--primary)!important;color:var(--on-primary)!important}.window-content .ve-fltr__mini-pill{background:var(--primary-tint)!important;border:var(--border) solid var(--primary-tint-line)!important;color:var(--primary-text)!important}.window-content .ve-ui-sel2__ipt-display,.window-content .ve-ui-sel2__ipt-search{min-height:var(--hit)!important;padding:0 var(--sp-3)!important;background:var(--surface)!important;color:var(--text)!important;font-size:var(--fs-md)!important}.window-content .ve-ui-sel2__wrp-options{border-radius:var(--r-sm);box-shadow:var(--shadow-2);z-index:20;background:var(--surface)!important;border:var(--border) solid var(--line-ctrl)!important}.window-content .ve-ui-sel2__disp-option{border-bottom:var(--border) solid var(--line);min-height:40px;font-weight:var(--fw-semibold);padding:0 var(--sp-4)!important;background:var(--surface)!important;color:var(--text)!important}.window-content .ve-ui-sel2__disp-option:hover,.window-content .ve-ui-sel2__disp-option:focus{box-shadow:inset 3px 0 0 var(--primary);outline:0;background:var(--bg-hover)!important}.window-content .ve-rd__h,.window-content .entry-title-inner,.window-content .ve-rd__h .entry-title-inner{font-family:var(--font-sans)!important;font-variant:normal!important;font-weight:var(--fw-semibold)!important;letter-spacing:0!important;color:var(--text)!important}.window-content table th,.window-content .ve-rd__table thead th,.window-content .ve-cls-tbl th{font-weight:var(--fw-semibold);font-size:var(--fs-xs);background:var(--bg-sunk)!important;color:var(--text2)!important}.window-content table td,.window-content table th{padding:var(--sp-1) var(--sp-2);border:0!important;border-bottom:var(--border) solid var(--line)!important}.window-content table{background:var(--surface)!important;color:var(--text)!important;font-family:var(--font-sans)!important;border-color:var(--line)!important}.window-content table tr{background:0 0!important}.window-content .ve-tbl-border{background:var(--line)!important}.window-content .ve-stats__th-name{background:var(--surface)!important;border-bottom:var(--border) solid var(--line)!important}.window-content .ve-stats__h-name{font-family:var(--font-sans)!important;font-variant:normal!important;font-size:var(--fs-lg)!important;font-weight:var(--fw-semibold)!important;color:var(--text)!important}.window-content .ve-stats__wrp-h-source,.window-content .ve-stats__wrp-h-source a{font-family:var(--font-sans)!important;font-size:var(--fs-xs)!important;color:var(--text3)!important}.application.trpg-main .ve-ui-tab__wrp-tab-body{padding:var(--sp-3) var(--sp-4)!important;background:var(--surface)!important;border:0!important}.window-content input[readonly],.window-content input:disabled{background:var(--bg-sunk)!important;border-color:var(--line)!important;color:var(--text2)!important}", rs = ".p6-builder{width:100%;height:100%;min-height:0;font-family:var(--font-sans);flex-direction:column;display:flex}.p6-builder [hidden],.p6-builder .p6-builder-inactive{display:none!important}.p6-builder-nav{align-items:center;gap:var(--sp-1);padding:var(--sp-3) var(--sp-4);border-bottom:var(--border) solid var(--line);flex:none;display:flex;overflow-x:auto}.p6-builder button.p6-builder-tab,.p6-builder button.p6-builder-btn,.p6-builder button.p6-picker-row{color:var(--text);background:var(--surface);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);min-height:var(--hit);padding:0 var(--sp-3);font:inherit;cursor:pointer;transition:none}.p6-builder button.p6-builder-btn:hover,.p6-builder button.p6-builder-tab:hover,.p6-builder button.p6-picker-row:hover{background:var(--bg-hover)}.p6-builder .p6-builder-tab{align-items:center;gap:var(--sp-2);white-space:nowrap;flex:none;display:inline-flex}.p6-builder button.p6-builder-tab{min-height:32px;color:var(--text2);font-size:var(--fs-sm);border-radius:var(--r-pill)!important;background:0 0!important;border-color:#0000!important}.p6-builder button.p6-builder-tab:hover{background:var(--bg-hover)!important}.p6-builder-tab i{border:var(--border) solid var(--line-ctrl);border-radius:50%;place-items:center;width:20px;height:20px;font-style:normal;display:inline-grid}.p6-builder .p6-builder-tab[data-done=true] i{background:var(--primary);color:var(--on-primary);border-color:var(--primary)}.p6-builder .p6-builder-past{padding:0 var(--sp-3);color:var(--text2);font-size:var(--fs-sm)}.p6-builder button.p6-builder-tab[aria-current],.p6-builder button.p6-builder-primary,.p6-builder button.p6-builder-btn[aria-pressed=true]{background:var(--primary)!important;color:var(--on-primary)!important}.p6-builder button.p6-builder-tab[aria-current] i{border-color:currentColor}.p6-builder button:disabled{cursor:not-allowed}.p6-builder button.p6-builder-btn:disabled{opacity:.55}.p6-builder .p6-builder-step{flex-direction:column;flex:1;min-height:0;display:flex;overflow:hidden;padding:0!important}.p6-builder .p6-builder-split:not(.p6-builder-inactive){grid-template-columns:minmax(175px,5fr) minmax(0,7fr);display:grid!important}.p6-builder-panel{flex-direction:column;min-width:0;min-height:0;display:flex;overflow:auto}.p6-native-body{padding:var(--sp-3) var(--sp-4);min-width:0}.p6-builder-selection{align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);z-index:2;background:var(--surface);border-bottom:var(--border) solid var(--line);flex-wrap:wrap;flex:none;display:flex;position:sticky;top:0}.p6-builder-selection-title{min-width:4em;font-size:var(--fs-lg);font-weight:var(--fw-semibold);flex:1;margin:0}.p6-builder-selection .p6-builder-btn{min-height:32px!important}.p6-builder-split .p6-native-body>.ve-flex{flex-direction:column;height:auto!important}.p6-builder-split .p6-native-body>.ve-flex>.ve-flex-col{width:100%!important;overflow:visible!important}.p6-builder-split .p6-native-body>.ve-flex>.ve-vr-1{display:none!important}.p6-builder-split .p6-native-body>.ve-flex:has(>.ve-vr-1)>.ve-vr-1+.ve-flex-col{display:none!important}.p6-builder-rail{border-right:var(--border) solid var(--line);min-width:0;min-height:0}.p6-picker{flex-direction:column;height:100%;min-height:0;display:flex}.p6-picker-search{min-height:var(--hit);width:auto;margin:var(--sp-3) var(--sp-4) var(--sp-2);color:var(--text);background:var(--surface);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);flex:none}.p6-picker-list{flex-direction:column;flex:1;min-height:0;display:flex;overflow:auto}.p6-builder button.p6-picker-row{justify-content:space-between;align-items:center;gap:var(--sp-2);text-align:left;flex:none;width:100%;display:flex;border:0!important;border-bottom:var(--border) solid var(--line)!important;border-radius:0!important}.p6-builder button.p6-picker-row[data-preview=true]{background:var(--primary-tint)!important;box-shadow:inset 2px 0 var(--accent)!important}.p6-builder .p6-picker-row[aria-pressed=true] .p6-picker-source:before{content:\"✓\";margin-right:var(--sp-2);color:var(--text)}.p6-picker-source,.p6-picker-status{color:var(--text2);font-size:var(--fs-xs)}.p6-picker-status{padding:var(--sp-2) var(--sp-4);flex:none;margin:0}.p6-builder-footer{justify-content:flex-end;align-items:center;gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);background:var(--bg-side);border-top:var(--border) solid var(--line);flex-wrap:wrap;flex:none;display:flex}.p6-builder-hint{color:var(--text2);font-size:var(--fs-xs);margin-right:auto}.p6-builder-feedback{color:var(--danger-text);flex-basis:100%;margin:0}.p6-builder-feedback:empty{display:none}.p6-builder-switch{gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-bottom:var(--border) solid var(--line);display:flex}.p6-builder-review{min-height:0;padding:var(--sp-4) var(--sp-5);flex:1;overflow:auto}.p6-builder-review h2{margin:0 0 var(--sp-4);font-size:var(--fs-xl)}.p6-builder-summary{gap:var(--sp-2) var(--sp-3);grid-template-columns:minmax(64px,100px) 1fr;margin:0;display:grid}.p6-builder-summary dt{color:var(--text2)}.p6-builder-summary dd{margin:0}.p6-builder-todo{margin-top:var(--sp-4);padding:var(--sp-3);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--warn-bg)}.p6-builder-todo-row{justify-content:space-between;gap:var(--sp-2);padding-top:var(--sp-2);align-items:center;display:flex}.p6-level{justify-content:space-between;align-items:center;gap:var(--sp-2);padding:var(--sp-1) 0;display:flex}.p6-level select{width:auto;min-height:34px;padding:0 var(--sp-3)}.p6-choice-progress{color:var(--accent-text);width:100%}.p6-choice-progress[data-done=true]{color:var(--success-text)}.p6-builder button[title]:has(>.fa-magnifying-glass:only-child){width:auto!important;padding-inline:var(--sp-2)!important}.p6-builder button[title]:has(>.fa-magnifying-glass:only-child):after{content:attr(title)}.window-content button.ve-btn-xxs:has(>.fa-check:only-child){width:auto!important;padding-inline:var(--sp-2)!important}.window-content button.ve-btn-xxs:has(>.fa-check:only-child):after{content:\"选择\"}.p6-builder-spells .p6-native-body>.ve-flex{flex-direction:column;height:auto!important}.p6-builder-spells .p6-native-body>.ve-flex>.ve-flex-col{flex:none!important;height:auto!important;overflow:visible!important}.p6-builder-spells .p6-native-body>.ve-flex>.ve-vr-1,.p6-builder-spells .manc__list-row>:is(:nth-child(2),:nth-child(3),:nth-child(4),:nth-child(5),:nth-child(6)){display:none!important}.p6-builder-spells .p6-native-body .manc__list:has(.manc__list-row)~.ve-input-group{display:none!important}.p6-builder-spells .manc__list-row{gap:var(--sp-2);min-height:var(--hit);justify-content:space-between}.p6-builder-spells .manc__list-row>:first-child{flex:1;width:auto!important}.p6-builder-spells .manc__list-row>:nth-child(7){flex:0 0 4.5em;text-align:right!important;width:auto!important}.p6-builder-spells .manc__list-row>:last-child{gap:var(--sp-1);flex:none;display:flex;width:auto!important}@media (width<=520px){.p6-builder-rail{border-right:0}.p6-builder-nav,.p6-builder-footer,.p6-builder-review{padding-inline:var(--sp-3)}.p6-builder-attributes .p6-native-body{padding-inline:var(--sp-2);overflow-x:auto}.p6-builder-attributes .ve-statgen-pb__cell{min-width:0!important}.p6-builder-attributes .ve-statgen-shared__ipt:not(.ve-statgen-pb__ipt-budget){width:41px!important;padding-inline:var(--sp-1)!important}.p6-builder-attributes select.ve-statgen-shared__ipt{appearance:none;text-align:center;padding-inline:0!important}}.p6-choice-instruction{display:none!important}.p6-ability-methods{gap:var(--sp-1);flex-wrap:wrap;display:flex}.p6-builder-attributes .ve-statgen-shared__wrp-header{gap:var(--sp-3);flex-wrap:wrap}.p6-builder-attributes:not([data-mode=pointbuy]) .ve-mobile-sm__flex-col.ve-mb-2:has(.ve-statgen-pb__ipt-budget){display:none!important}.p6-builder [onmouseover*=Renderer\\.hover],.p6-builder [onclick*=Renderer\\.hover]{pointer-events:none!important;color:inherit!important;cursor:inherit!important;text-decoration:none!important}.p6-builder .veapp__btn-filter,.p6-builder .ve-fltr__mini-view{display:none!important}.p6-builder button:has(>.glyphicon-filter){display:none!important}.p6-builder button:has(>.glyphicon-resize-small){display:none!important}.p6-builder .ve-btn-group:has(>button>.glyphicon-refresh){display:none!important}:is(.p6-builder .ve-btn-group:has(.ve-ui-sel2__wrp[style*=none]),.p6-builder .ve-bold:has(+.ve-btn-group .ve-ui-sel2__wrp[style*=none])){display:none!important}.p6-builder-spells .manc__list-row>:nth-child(7),.p6-builder-spells .manc__list-row>:nth-child(7) *{font-size:var(--fs-xs);color:var(--text3)!important}.p6-builder-card{padding:var(--sp-3) var(--sp-4) var(--sp-5);border-top:var(--border) solid var(--line);color:var(--text);font-size:var(--fs-sm);line-height:1.65}.p6-builder-card>table{width:100%;border:0!important}.p6-builder-card td,.p6-builder-card th{padding:var(--sp-1) 0!important;border:0!important}.p6-builder-card-note{margin:0 0 var(--sp-2);color:var(--text2)}.p6-builder .p6-choice-group{align-items:center;gap:var(--sp-2);flex-wrap:wrap;background:0 0!important;border:0!important;height:auto!important;min-height:0!important;padding:0!important;display:flex!important;overflow:visible!important}.p6-builder .p6-choice-group>:not(.p6-choice-option){flex-basis:100%;width:100%!important}.p6-builder .p6-choice-group>hr{margin:var(--sp-1) 0}.p6-builder .p6-choice-progress{color:var(--accent-text);font-size:var(--fs-xs)}.p6-builder .p6-choice-progress[data-done=true]{color:var(--success-text)}.p6-builder .p6-choice-option{white-space:nowrap;align-items:center;gap:var(--sp-1);border-radius:var(--r-sm);min-height:36px;color:var(--text);cursor:pointer;flex:none;position:relative;width:auto!important;padding:0 var(--sp-3)!important;border:var(--border) solid var(--line-ctrl)!important;background:var(--surface)!important;justify-content:flex-start!important;margin:0!important;display:inline-flex!important}.p6-builder .p6-choice-option>label:has(>input){clip-path:inset(50%);margin:0;padding:0;overflow:hidden;width:1px!important;height:1px!important;position:absolute!important}.p6-builder .p6-choice-option>div,.p6-builder .p6-choice-option .ve-w-100{white-space:nowrap;flex:none!important;width:auto!important;max-width:none!important;padding:0!important}.p6-builder .p6-choice-option .ve-help{border-bottom:0!important;text-decoration:none!important}.p6-builder .p6-choice-option:hover{background:var(--bg-hover)!important}.p6-builder .p6-choice-option:has(input:checked){color:var(--on-primary);background:var(--primary)!important;border-color:var(--primary)!important}.p6-builder .p6-choice-option:has(input:checked):before{content:\"✓\";font-size:var(--fs-xs)}.p6-builder .p6-choice-option:has(input:checked) .ve-muted{opacity:.8;color:inherit!important}.p6-builder .p6-choice-option:has(input:disabled):not(:has(input:checked)){color:var(--disabled-text);cursor:not-allowed;background:var(--disabled-bg)!important}.p6-builder .p6-choice-option:has(input:focus-visible){outline:2px solid var(--focus);outline-offset:2px}.p6-builder .p6-choice-option .veapp__msg-warning:empty{display:none}.p6-builder .p6-choice-option .veapp__msg-warning:has(.fa-check){display:none!important}.p6-builder .p6-choice-option:has(.veapp__msg-warning .fa-check):after{content:\"已有\";margin-left:var(--sp-1);color:var(--text3);font-size:var(--fs-xs)}.p6-builder-equipment .imp-cls__wrp-equi-group{gap:var(--sp-2);padding:var(--sp-3) 0!important;border:0!important;border-top:var(--border) solid var(--line)!important;background:0 0!important;margin:0!important}.p6-builder-equipment .imp-cls__wrp-equi-group>div{min-height:var(--hit);padding:var(--sp-2) var(--sp-3) var(--sp-2) 40px;border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);position:relative;justify-content:flex-start!important}.p6-builder-equipment .imp-cls__wrp-equi-group>div:has(>.ve-active){border-color:var(--primary);background:var(--primary-tint)}.p6-builder-equipment .imp-cls__wrp-equi-group .ve-btn.imp-cls__disp-equi-choice-key,.p6-builder-equipment .imp-cls__wrp-equi-group .ve-btn.imp-cls__disp-equi-choice-key.ve-active{z-index:0;inset:0;border-radius:var(--r-sm)!important;color:#0000!important;width:auto!important;height:auto!important;box-shadow:none!important;background:0 0!important;border:0!important;margin:0!important;font-size:0!important;position:absolute!important}.p6-builder-equipment .imp-cls__disp-equi-choice-key:before{content:\"\";left:var(--sp-3);border:2px solid var(--line-ctrl);box-sizing:border-box;border-radius:50%;width:16px;height:16px;margin-top:-8px;position:absolute;top:50%}.p6-builder-equipment .imp-cls__disp-equi-choice-key.ve-active:before{border:5px solid var(--primary)}.p6-builder-equipment .imp-cls__disp-equi-choice-key:focus-visible{outline:2px solid var(--focus)!important}.p6-builder-equipment .imp-cls__wrp-equi-group>div>.ve-w-100{z-index:1;pointer-events:none;position:relative}.p6-builder-equipment .imp-cls__wrp-equi-group>div>.ve-w-100 :is(button,input,select){pointer-events:auto}.p6-builder-equipment .imp-cls__wrp-equi-group>div:has(>.imp-cls__disp-equi-choice-key:disabled){padding-left:var(--sp-3);border-color:var(--line);background:var(--bg-sunk)}.p6-builder-equipment .imp-cls__wrp-equi-group .ve-btn.imp-cls__disp-equi-choice-key:disabled{visibility:hidden!important;display:none!important}.p6-builder-equipment .imp-cls__wrp-equi-group .ve-btn.imp-cls__disp-equi-choice-key:disabled:before{content:none!important}.p6-builder-equipment button:has(>.fa-magnifying-glass){align-items:center;gap:var(--sp-1);min-height:32px;width:auto!important;padding:0 var(--sp-2)!important;border:var(--border) solid var(--line-ctrl)!important;border-radius:var(--r-sm)!important;background:var(--surface)!important;color:var(--text)!important;display:inline-flex!important}.p6-builder-equipment button:has(>.fa-magnifying-glass)>.fa-magnifying-glass{display:none}.p6-builder-equipment button:has(>.fa-magnifying-glass):after{content:attr(title) \" ▾\"!important}.p6-equip-picker{z-index:30;pointer-events:auto;background:var(--surface);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);width:min(340px,100%);box-shadow:var(--shadow-2);flex-direction:column;display:flex;position:absolute;top:calc(100% + 4px);left:0}.p6-builder-equipment .imp-cls__wrp-equi-group>div>.ve-w-100:has(.p6-equip-picker){z-index:20}.p6-equip-picker .p6-picker-search{margin:var(--sp-2)}.p6-equip-picker-list{border-top:var(--border) solid var(--line);max-height:220px;overflow:auto}.p6-builder button.p6-equip-picker-clear{min-height:32px;margin:var(--sp-1) var(--sp-2);padding:0 var(--sp-2);color:var(--primary-text);font:inherit;font-size:var(--fs-sm);cursor:pointer;background:0 0;border:0;align-self:flex-start}.p6-builder-to-list{display:none}@media (width<=520px){.p6-builder .p6-builder-split:not(.p6-builder-inactive){grid-template-rows:minmax(0,1fr)!important;grid-template-columns:1fr!important}.p6-builder-split[data-view=list]>.p6-builder-panel,.p6-builder-split[data-view=card]>.p6-builder-rail{display:none!important}.p6-builder-split .p6-builder-rail{border-bottom:0}.p6-builder button.p6-builder-to-list{color:var(--primary-text);align-items:center;display:inline-flex;padding:0 var(--sp-1)!important;background:0 0!important;border:0!important}}", is = globalThis;
+function as(e = [
 	f,
 	u,
-	Mo,
-	No,
-	Po
+	ts,
+	ns,
+	rs
 ]) {
 	return e.join("\n").replace(/:host\b/g, ":root").replace(/^\s*all:\s*initial;\s*$/m, "").replace(/^\s*pointer-events:\s*inherit;.*$/m, "");
 }
-var Lo = JSON.stringify({ colorScheme: {
+var os = JSON.stringify({ colorScheme: {
 	applications: "",
 	interface: ""
 } });
-function Ro(e) {
+function ss(e) {
 	return new Promise((t) => {
 		let n = Object.assign(document.createElement("link"), {
 			rel: "stylesheet",
@@ -5369,7 +5728,7 @@ function Ro(e) {
 		n.onload = n.onerror = () => t(), document.head.append(n);
 	});
 }
-var zo = [
+var cs = [
 	"background",
 	"background-color",
 	"color",
@@ -5380,18 +5739,18 @@ var zo = [
 	"border-left-color",
 	"box-shadow"
 ];
-function Bo(e) {
+function ls(e) {
 	for (let t of Array.from(e)) {
 		let e = t.style;
 		if (e) {
 			e.backgroundImage?.includes("url(") && (e.backgroundImage = "none");
-			for (let t of zo) e.getPropertyPriority(t) === "important" && e.setProperty(t, e.getPropertyValue(t));
+			for (let t of cs) e.getPropertyPriority(t) === "important" && e.setProperty(t, e.getPropertyValue(t));
 		}
 		let n = t.cssRules;
-		n && Bo(n);
+		n && ls(n);
 	}
 }
-function Vo(e) {
+function us(e) {
 	let t = (e) => Array.from(e).some((e) => e.selectorText === ".ve-hidden"), n = Array.from(e.cssRules).filter((e) => typeof CSSLayerBlockRule < "u" && e instanceof CSSLayerBlockRule), r = new Set(n.filter((e) => t(e.cssRules)).map((e) => e.name));
 	for (let e of r) {
 		let t = n.filter((t) => t.name === e).at(-1);
@@ -5399,48 +5758,48 @@ function Vo(e) {
 	}
 	t(e.cssRules) && e.insertRule(".ve-hidden { display: none !important; }", e.cssRules.length);
 }
-var Ho = 0, Uo = 160, Wo = () => Math.max(Uo, document.documentElement.clientHeight - Uo), Go = /* @__PURE__ */ new WeakSet();
-function Ko(e) {
+var ds = 0, fs = 160, ps = () => Math.max(fs, document.documentElement.clientHeight - fs), ms = /* @__PURE__ */ new WeakSet();
+function hs(e) {
 	e.setPosition({
-		left: Ho,
-		top: Ho,
+		left: ds,
+		top: ds,
 		width: innerWidth - 0,
 		height: innerHeight - 0
 	});
 }
-function qo() {
-	Fo.Hooks.on("renderApplicationV2", (e, t, n, r) => {
-		r?.isFirstRender && e?.options?.window?.resizable && (Math.abs(Number(e.position?.height) - Wo()) > 2 || (Go.add(e), e.element?.classList.add("trpg-main"), Ko(e)));
+function gs() {
+	is.Hooks.on("renderApplicationV2", (e, t, n, r) => {
+		r?.isFirstRender && e?.options?.window?.resizable && (Math.abs(Number(e.position?.height) - ps()) > 2 || (ms.add(e), e.element?.classList.add("trpg-main"), hs(e)));
 	});
 	let e = 0;
 	addEventListener("resize", () => {
 		clearTimeout(e), e = setTimeout(() => {
-			for (let e of Fo.foundry.applications.instances.values()) e.rendered && Go.has(e) && Ko(e);
+			for (let e of is.foundry.applications.instances.values()) e.rendered && ms.has(e) && hs(e);
 		}, 150);
 	});
 }
-async function Jo(e, t) {
-	qo();
-	let n = [Fo.game.system, ...Fo.game.modules.filter((e) => e.active)].flatMap((e) => [...e.styles ?? []].map((e) => String(e.src ?? e))), r = [...e.styles, ...n].map((e) => {
+async function _s(e, t) {
+	gs();
+	let n = [is.game.system, ...is.game.modules.filter((e) => e.active)].flatMap((e) => [...e.styles ?? []].map((e) => String(e.src ?? e))), r = [...e.styles, ...n].map((e) => {
 		let n = new URL(e, location.href);
-		return (Ao(t, n) ?? n).href;
+		return ($o(t, n) ?? n).href;
 	}), i = new Set(e.styles.map((e) => new URL(e, location.href).href)), a = r.map(async (e) => {
-		if (await Ro(e), i.has(e)) return;
+		if (await ss(e), i.has(e)) return;
 		let t = [...document.styleSheets].find((t) => t.href === e);
-		t && (Bo(t.cssRules), Vo(t));
+		t && (ls(t.cssRules), us(t));
 	}), o = document.createElement("style");
-	o.dataset.trpgTheme = "build", o.textContent = Io(), document.head.append(o), new MutationObserver(() => {
+	o.dataset.trpgTheme = "build", o.textContent = as(), document.head.append(o), new MutationObserver(() => {
 		document.head.lastElementChild !== o && document.head.append(o);
 	}).observe(document.head, { childList: !0 }), await Promise.all(a);
 }
 // src/rules/kernel/frame/main.ts
-var $ = globalThis, Yo = new URLSearchParams(location.search).get("frame") ?? "", Xo = $.__trpgFrameErrors ?? [];
-async function Zo(e) {
+var $ = globalThis, vs = new URLSearchParams(location.search).get("frame") ?? "", ys = $.__trpgFrameErrors ?? [];
+async function bs(e) {
 	let t = await fetch(new URL(e, location.href));
 	if (!t.ok) throw Error(`${t.status}: ${e}`);
 	return t.text();
 }
-async function Qo(e) {
+async function xs(e) {
 	let t = await b({
 		op: "file",
 		path: `packs/${e}.json`
@@ -5448,11 +5807,11 @@ async function Qo(e) {
 	if (typeof t != "string") throw Error(`Pack is not available: ${e}`);
 	return JSON.parse(t);
 }
-var $o;
-async function es(e) {
-	if ($o) throw Error("Kernel is already booted");
+var Ss;
+async function Cs(e) {
+	if (Ss) throw Error("Kernel is already booted");
 	let t = [], { foundry: n, Hooks: r } = $;
-	k(e.seed ?? "kernel"), jo(e.moduleRoots), $.release = new n.config.ReleaseData(e.release);
+	k(e.seed ?? "kernel"), es(e.moduleRoots), $.release = new n.config.ReleaseData(e.release);
 	let i = te(e);
 	$.packages = {
 		System: new n.utils.Collection([[i.system.id, new n.packages.System(i.system)]]),
@@ -5462,12 +5821,12 @@ async function es(e) {
 		autoConnect: !1,
 		forceNew: !0
 	});
-	$o = {
+	Ss = {
 		...re(a, {
 			userId: e.userId,
 			worldTime: e.worldTime,
-			readPack: Qo,
-			readText: Zo
+			readPack: xs,
+			readText: bs
 		}),
 		steps: t
 	};
@@ -5498,20 +5857,20 @@ async function es(e) {
 	}
 	$.game = new s("game", i, a), $.game.issues._detectUsabilityIssues = () => {
 		t.push("omit usability warnings");
-	}, $.game.nue && ($.game.nue.initialize = () => void 0), $.game.settings.storage.get("client").setItem("core.noCanvas", "true"), e.display && $.game.settings.storage.get("client").setItem("core.uiConfig", Lo), await is(`systems/${i.system.id}/dnd5e.js`);
+	}, $.game.nue && ($.game.nue.initialize = () => void 0), $.game.settings.storage.get("client").setItem("core.noCanvas", "true"), e.display && $.game.settings.storage.get("client").setItem("core.uiConfig", os), await Ds(`systems/${i.system.id}/dnd5e.js`);
 	let c = !!e.moduleRoots?.plutonium && e.language === "zh.core";
 	for (let e of i.modules) for (let t of e.esmodules ?? []) await ze(new URL(t, location.href), c);
-	r.once("init", ii), r.once("setup", () => {
+	r.once("init", ri), r.once("setup", () => {
 		$.CONFIG.DND5E?.calendar && ($.CONFIG.DND5E.calendar.application = null), me();
-	}), await $.game.initialize(), e.display && await Jo(e.display, e.moduleRoots);
+	}), await $.game.initialize(), e.display && await _s(e.display, e.moduleRoots);
 	let l = Date.now() + 3e4;
 	for (; i.modules.some((e) => e.id === "plutonium") && typeof $.game.modules.get("plutonium")?.api != "object";) {
 		if (Date.now() > l) throw Error("Plutonium API was not ready within 30 seconds");
 		await new Promise((e) => setTimeout(e, 50));
 	}
-	return ts();
+	return ws();
 }
-function ts() {
+function ws() {
 	let e = $.game;
 	return {
 		release: e.release.version,
@@ -5525,10 +5884,10 @@ function ts() {
 			availability: e.availability
 		}])),
 		plutoniumApi: typeof e.modules.get("plutonium")?.api,
-		errors: [...Xo]
+		errors: [...ys]
 	};
 }
-function ns() {
+function Ts() {
 	return $.game.actors.contents.map((e) => ({
 		source: e.toObject(),
 		system: e.system.toObject(!1),
@@ -5536,19 +5895,19 @@ function ns() {
 		validation: e.validationFailures
 	}));
 }
-var rs = {
-	...To,
-	boot: es,
-	loadBrews: Oo,
-	status: ts,
-	preparedActors: ns,
+var Es = {
+	...Jo,
+	boot: Cs,
+	loadBrews: Zo,
+	status: ws,
+	preparedActors: Ts,
 	reserveActorIds: (e) => {
-		if (!$o) throw Error("Kernel is not booted");
-		$o.reserve(e);
+		if (!Ss) throw Error("Kernel is not booted");
+		Ss.reserve(e);
 	},
-	changes: () => $o?.changes ?? [],
-	calls: () => $o?.calls ?? [],
-	steps: () => $o?.steps ?? []
+	changes: () => Ss?.changes ?? [],
+	calls: () => Ss?.calls ?? [],
+	steps: () => Ss?.steps ?? []
 };
 addEventListener("message", (e) => {
 	let t = e.data;
@@ -5556,10 +5915,10 @@ addEventListener("message", (e) => {
 	let n = (e) => parent.postMessage({
 		channel: g,
 		type: "result",
-		frame: Yo,
+		frame: vs,
 		id: t.id,
 		...e
-	}, location.origin), r = rs[t.fn];
+	}, location.origin), r = Es[t.fn];
 	if (!r) return n({
 		ok: !1,
 		error: `Unknown kernel command: ${t.fn}`
@@ -5572,13 +5931,13 @@ addEventListener("message", (e) => {
 		error: e instanceof Error ? e.stack ?? e.message : String(e)
 	}));
 });
-function is(e) {
+function Ds(e) {
 	return new Promise((t, n) => {
 		let r = document.createElement("script");
 		r.src = e, r.onload = () => t(), r.onerror = () => n(Error(`Failed to load ${e}`)), document.head.append(r);
 	});
 }
-async function as() {
+async function Os() {
 	$.SIGNED_EULA = !0, $.ROUTE_PREFIX = new URL(".", location.href).pathname.replace(/^\/+|\/+$/g, ""), $.MESSAGES = null, await import(
 		/* @vite-ignore */
 		new URL("scripts/foundry.mjs", location.href).href
@@ -5586,14 +5945,14 @@ async function as() {
 	let e = {
 		channel: g,
 		type: "ready",
-		frame: Yo,
+		frame: vs,
 		codeSet: "foundry",
 		authorVersion: $.foundry?.CONST?.vtt ?? null,
 		present: { foundry: !!$.foundry?.Game },
-		errors: [...Xo]
+		errors: [...ys]
 	};
 	parent.postMessage(e, location.origin);
 }
-document.readyState === "complete" ? as() : addEventListener("load", () => {
-	as();
+document.readyState === "complete" ? Os() : addEventListener("load", () => {
+	Os();
 }, { once: !0 });

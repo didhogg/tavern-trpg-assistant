@@ -6,6 +6,7 @@ import type { AskAnswer } from '../../../rules/kernel/author-ask-types'
 import type { ImportQuestion } from '../../../rules/kernel/import-flow'
 import Segmented from '../../kit/Segmented.vue'
 import SelectField from '../../kit/SelectField.vue'
+import { useDiceStore } from '../../../stores/dice'
 
 type Form = Extract<ImportQuestion['form'], { type: 'equipment' }>
 type Equip = Form['groups'][number]['choices'][number]['entries'][number]
@@ -17,8 +18,22 @@ const mode = ref<'std' | 'gold'>('std')
 const choice = reactive<Record<number, number>>({})
 const slots = reactive<Record<string, string>>({})
 const gold = ref<number | null>(null)
+/** 掷起始金币：作者骰子程序按作者给的骰式掷（同掷骰面板）；结果填进金币数，可以再改。 */
+const dice = useDiceStore()
+const rolling = ref(false)
+const rolled = ref('')
+async function rollGold(): Promise<void> {
+  if (!f.value.gold || rolling.value) return
+  rolling.value = true
+  try {
+    const r = await dice.rollFormula(f.value.gold)
+    if (r.status !== 'complete') { rolled.value = r.status === 'error' ? `没掷成：${r.error}` : r.status === 'unsupported' ? `没掷成：${r.reason}` : '没掷成'; return }
+    gold.value = r.total
+    rolled.value = `${f.value.gold.replace('*', '×')} → ${r.used.map((d) => d.value).join(' + ')}${/\*/.test(f.value.gold) ? ` ×${f.value.gold.split('*')[1]}` : ''} = ${r.total}`
+  } finally { rolling.value = false }
+}
 watch(() => props.question, () => {
-  mode.value = 'std'; gold.value = null
+  mode.value = 'std'; gold.value = null; rolled.value = ''
   for (const k of Object.keys(choice)) delete choice[Number(k)]
   for (const k of Object.keys(slots)) delete slots[k]
   f.value.groups.forEach((g, i) => { if (g.choices.length === 1) choice[i] = 0 })
@@ -80,7 +95,9 @@ watch(answer, (a) => emit('answer', a), { immediate: true })
     </template>
     <div v-else class="ask-gold">
       <label>起始金币<input v-model.number="gold" class="trpg-input ask-num" type="number" min="0" :disabled="busy" aria-label="起始金币数" data-testid="ask-gold"></label>
-      <small class="ask-note">按 {{ f.gold?.replace('*', '×') }} 掷骰后填结果；选了金币就不拿上面的起始装备。</small>
+      <button class="trpg-btn" type="button" :disabled="busy || rolling" data-testid="ask-gold-roll" @click="rollGold">{{ rolling ? '掷骰中…' : `掷 ${f.gold?.replace('*', '×')}` }}</button>
+      <small v-if="rolled" class="ask-note" role="status" data-testid="ask-gold-rolled">{{ rolled }}</small>
+      <small class="ask-note">选了金币就不拿上面的起始装备；掷出来的数可以再改。</small>
     </div>
   </div>
 </template>

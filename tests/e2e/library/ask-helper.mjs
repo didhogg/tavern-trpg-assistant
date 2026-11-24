@@ -30,6 +30,33 @@ export async function answerImport(page, { level, prefer = {}, onStep, firstPaus
     await onStep?.(n, title)
     if (n === 1 && firstPause) await page.waitForTimeout(firstPause)
     let did = ''
+    // 组合题：每道小题各答（是否点「是」、单选点第一个能选的、勾选题按 prefer 再从上往下勾满）
+    const partsBox = page.locator('.ask-parts')
+    if (await partsBox.count()) {
+      did = 'parts'
+      const parts = partsBox.locator('.ask-part')
+      for (let p = 0; p < await parts.count(); p++) {
+        const part = parts.nth(p)
+        const partTitle = await part.locator('.ask-part-title').innerText()
+        if (await part.getByTestId('ask-yes').count()) { await part.getByTestId('ask-yes').click(); continue }
+        const radio = part.locator('.ask-list input[type=radio]:not(:disabled)')
+        if (await radio.count() && !(await part.locator('.ask-list input[type=radio]:checked').count())) await radio.first().check()
+        const groups = part.locator('.ask-group')
+        for (let g = 0; g < await groups.count(); g++) {
+          for (const want of prefer[partTitle] ?? prefer[title] ?? []) { const c = groups.nth(g).locator('.ask-chip').filter({ hasText: want }); if (await c.count()) await c.first().locator('input').click({ force: true }) }
+          for (let i = 0; i < 40; i++) {
+            if (!/还差/.test(await groups.nth(g).locator('.ask-group-head small').innerText())) break
+            const free = groups.nth(g).locator('.ask-chip input:not(:checked):not(:disabled)')
+            if (!(await free.count())) break
+            await free.first().click({ force: true })
+          }
+        }
+      }
+      const nextP = page.getByTestId('ask-next')
+      if (!(await nextP.isEnabled())) { log.push({ n, title, did, stuck: '下一步不亮' }); break }
+      const t0 = Date.now(); await nextP.click(); await changed(title)
+      log.push({ n, title, did, ms: Date.now() - t0 }); continue
+    }
     if (await page.getByTestId('ask-yes').count()) {
       const t0 = Date.now(); await page.getByTestId('ask-yes').click(); await changed(title)
       log.push({ n, title, did: 'yes', ms: Date.now() - t0 }); continue

@@ -92,11 +92,18 @@ try {
   // ④ 升级（等级管理 → 牧师 升级…，等级题已预选 2 级）
   await page.getByTestId('ps-level').getByRole('button', { name: '等级管理' }).click(); await settle(page, 300)
   await page.getByRole('menuitem', { name: /升级/ }).first().click(); await page.getByTestId('import-ask').waitFor()
-  noteSteps('07-lv2', await answerImport(page, { onStep: (n) => shot(`07-lv2-q${n}`) })); await settle(page, 1200)
+  noteSteps('07-lv2', await answerImport(page, { firstPause: 2000, onStep: (n) => shot(`07-lv2-q${n}`) })); await settle(page, 1200)
   check('④ 升到 2 级（引导神力进特性）', (await S('s.system.details.level')) === 2 && /引导神力/.test(await S('JSON.stringify(s.shown?.items ?? [])')))
 
-  // ⑤ 加专长 / 物品（作者一题不问的直接写入）
+  // ④′ 带「附带选择」的专长（2024 魔法学徒：作者组合组件 / 额外法术——选职业法表、戏法、1 环法术、施法属性），答完法术真的进人物
   await page.getByTestId('ps-tab-feat').click(); await settle(page, 700)
+  const spellsBefore = await S(`s.items.filter((i) => i.type === 'spell').length`)
+  const miSteps = await fromLibrary(() => page.getByRole('button', { name: /从库里加专长/ }).click(), '魔法学徒', /^魔法学徒\s*XPHB/, '07b-mi')
+  check('④′ 组合题出现并答完（魔法学徒）', miSteps.some((st) => st.did === 'parts' || /法术/.test(st.title ?? '')) && miSteps.some((st) => st.done === 'confirmed'), JSON.stringify(miSteps))
+  const spellsAfter = await S(`s.items.filter((i) => i.type === 'spell').length`)
+  check('④′ 魔法学徒选的法术进了人物（至少 3 条）', spellsAfter - spellsBefore >= 3, `${spellsBefore} → ${spellsAfter}`)
+
+  // ⑤ 加专长 / 物品（作者一题不问的直接写入）
   await fromLibrary(() => page.getByRole('button', { name: /从库里加专长/ }).click(), '警觉', /^警觉/, '08-feat')
   await page.getByTestId('ps-tab-bag').click(); await settle(page, 700)
   await fromLibrary(() => page.getByRole('button', { name: /从库里加物品/ }).click(), '治疗药水', /^治疗药水/, '09-item')

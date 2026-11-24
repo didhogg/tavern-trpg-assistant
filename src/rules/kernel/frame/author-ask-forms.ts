@@ -91,12 +91,12 @@ export const characteristicsComponent = {
 }
 
 /** 作者条目（页面 + 来源 + 编号）→ 按作者编号取名。 */
-function entityName(v: any): FrameText {
+export function entityName(v: any): FrameText {
   const text = String(v?.entity?.name ?? v?.name ?? '')
   const prop = g.UrlUtil?.PAGE_TO_PROPS?.[v?.page]?.[0]
   return prop && v?.hash && v?.source ? named(text, { propDroppable: prop, source: v.source, hash: v.hash, page: v.page } as never) : fromEntry(text)
 }
-const abilityText = (ab: string): FrameText => systemText(registryLabels('abilities')[ab] ?? ab)
+export const abilityText = (ab: string): FrameText => systemText(registryLabels('abilities')[ab] ?? ab)
 
 /** 特性选项（战斗风格、祈唤、战技……）：作者自己的多选（ixsChosen，必选项 ixsRequired），回答 = 选上第几个。 */
 export const featureOptionsComponent = {
@@ -109,13 +109,17 @@ export const featureOptionsComponent = {
   },
   async write({ comp }: { comp?: any }, answer: AskAnswer): Promise<unknown> {
     if (answer.default) return comp.pGetFormData()
+    await featureOptionsComponent.select(comp, answer)
+    return comp.pGetFormData()
+  },
+  /** 只把选中的选项写进作者的多选（ixsChosen），不交表（组合组件接着按选中的长小组件）。 */
+  async select(comp: any, answer: AskAnswer): Promise<void> {
     const { count, required } = comp._getOptionsNameAndCount()
     const meta = plutoniumBuild!.ComponentUiUtil.getMetaWrpMultipleChoice(comp, 'ixsChosen', { values: comp._optionsSet, ixsRequired: required, count, fnDisplay: () => '' })
     try {
       const picks = answer.picks?.[0] ?? []
       if (picks.length > count - required.length) throw Error(`最多选 ${count - required.length} 项`)
       for (const ix of picks) { const row = meta.rowMetas[ix]; if (!row) throw Error('选项不在作者给的范围里'); comp._state[row.propIsActive] = true }
-      return await comp.pGetFormData()
     } finally { meta.cleanup?.() }
   },
 }
@@ -189,7 +193,7 @@ export const abilityIncreaseApp = {
  * 候选照作者——0 环、在这个职业 / 子职业 / 扩展列表上（isAvailableClassSpell_ 等），已有的、总是会的不算；
  * 选中照作者——0 环那一组的 ix_learned_<序号> + 父组件「已学戏法数」，再交作者自己的表单数据。名字按作者法术编号取。
  */
-const spellName = (sp: any): FrameText => named(String(sp.name), { propDroppable: 'spell', source: sp.source, hash: g.UrlUtil.URL_TO_HASH_BUILDER[g.UrlUtil.PG_SPELLS](sp) }, true)
+export const spellName = (sp: any): FrameText => named(String(sp.name), { propDroppable: 'spell', source: sp.source, hash: g.UrlUtil.URL_TO_HASH_BUILDER[g.UrlUtil.PG_SPELLS](sp) }, true)
 function cantripRows(comp: any): number[] {
   const out: number[] = []
   comp._spellDatas.forEach((sp: any, i: number) => {

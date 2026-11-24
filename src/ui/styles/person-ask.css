@@ -70,3 +70,10 @@
 .ask-added { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-2) var(--sp-4); margin: 0; }
 .ask-added dt { color: var(--text2); font-size: var(--fs-sm); white-space: nowrap; }
 .ask-added dd { margin: 0; line-height: var(--lh-normal, 1.6); }
+/* 组合题：每道小题一段，细线分开（不套卡片） */
+.ask-parts { display: grid; gap: var(--sp-4); }
+.ask-part + .ask-part { border-top: var(--border) solid var(--line); padding-top: var(--sp-3); }
+.ask-part-title { display: flex; align-items: baseline; gap: var(--sp-2); margin: 0 0 var(--sp-2); font-size: var(--fs-md); }
+.ask-part-said { color: var(--text2); font-weight: normal; }
+.ask-find { margin-bottom: var(--sp-2); max-width: 320px; }
+.ask-gold > .trpg-btn { align-self: flex-start; }

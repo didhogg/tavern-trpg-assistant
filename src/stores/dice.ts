@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref, shallowRef } from 'vue'
 import { appendToInput } from '../host/input'
 import { copyText } from '../host/clipboard'
-import { authorDice, type DiceBackend } from '../library/runtime/dice'
+import { authorDice, type DiceBackend, type DiceRollResult } from '../library/runtime/dice'
 import {
   EMPTY_BUILDER, addDie, authorFormula, builderText, canUseMode, commentFromLine, diceTotal, lineText, mergeGroups, removeDie, resultOf, stepMod,
   type Builder, type RollMode, type RollResult,
@@ -218,6 +218,11 @@ export const useDiceStore = defineStore('dice', () => {
   }
 
   /** 点「最近」里的一行：把那次的骰式与掷法载入回来，不掷骰。 */
+  /** 按一条作者骰式掷一次（例：起始金币 5d4*10），不进掷骰面板的记录；和面板用同一个作者骰子程序、同一份测试点数。 */
+  async function rollFormula(formula: string): Promise<DiceRollResult> {
+    return backend.roll(formula, points ?? undefined)
+  }
+
   function loadRecord(rec: RollRecord): void {
     text.value = rec.formula
     mode.value = rec.mode
@@ -250,6 +255,6 @@ export const useDiceStore = defineStore('dice', () => {
 
   return {
     text, mode, note, history, last, lastResult, fillState, copied, error, builder, canMode, canRoll, pending,
-    setOwner, setPoints, setBackend, addOne, removeOne, step, clear, setText, setMode, setNote, roll, loadRecord, clearHistory, fill, copy, commentOf,
+    setOwner, setPoints, setBackend, addOne, removeOne, step, clear, setText, setMode, setNote, roll, rollFormula, loadRecord, clearHistory, fill, copy, commentOf,
   }
 })

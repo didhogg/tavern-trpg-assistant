@@ -7,18 +7,27 @@ import { asData, joined, named, plugin, type FrameText } from '../shown'
 import type { AskOption } from '../author-ask-types'
 import { uiTextOf as ui } from './system-text'
 import { plutoniumBuild } from './plutonium-build'
-import { abilityIncreaseApp, abilityScoreComponent, cantripModal, characteristicsComponent, chooseComponent, featureOptionsComponent } from './author-ask-forms'
+import { abilityIncreaseApp, abilityScoreComponent, cantripModal, characteristicsComponent, chooseComponent } from './author-ask-forms'
 import { equipmentApp } from './author-ask-equipment'
+import { additionalFeats, additionalSpells, backgroundFeatureKinds, compositeKinds, raceSize } from './author-ask-composite'
 import type { AskAnswer, AskQuestion } from '../author-ask-types'
 
 export type { AskAnswer, AskQuestion } from '../author-ask-types'
 
 export interface AskKind {
+  /** 不用问就有结果（例：组合组件里其实没有要选的）：交回作者要的值；要问就交 NO_AUTO。先于读题，重跑时同样先看它。 */
+  auto?(subject: { comp?: any; opts: any }): Promise<unknown> | unknown
   read(subject: { comp?: any; opts: any }, kind: string): Promise<Omit<AskQuestion, 'index'>> | Omit<AskQuestion, 'index'>
+  /** 交回作者要的值；也可以交 FollowUp = 同一个作者提问还有下一层要问（问完那一层的结果才交给作者）。 */
   write(subject: { comp?: any; opts: any }, answer: AskAnswer): Promise<unknown> | unknown
   /** 跳过时作者要收到什么（默认 = 作者的跳过记号）。 */
   skip?(): unknown
 }
+
+/** 同一个作者提问的下一层（例：选了战斗风格之后，那条风格自己还要选技能）：按 kind 的转接件再问一题。 */
+export class FollowUp { constructor(readonly kind: string, readonly subject: { comp?: any; opts: any }) {} }
+/** auto 交这个 = 要问玩家。 */
+export const NO_AUTO = Symbol('ask')
 
 const plain = (html: unknown): string => typeof html === 'string' ? html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() : ''
 
@@ -119,10 +128,10 @@ export const ASK_KINDS: Record<string, AskKind> = {
   Charactermancer_DamageVulnerabilitySelect: chooseComponent,
   Charactermancer_ConditionImmunitySelect: chooseComponent,
   Charactermancer_Background_Characteristics: characteristicsComponent,
-  Charactermancer_FeatureOptionsSelect: featureOptionsComponent,
+  Charactermancer_AdditionalSpellsSelect: additionalSpells,
+  Charactermancer_Race_SizeSelect: raceSize,
+  Charactermancer_AdditionalFeatsSelect: additionalFeats,
   Charactermancer_AbilityScoreSelect: abilityScoreComponent,
-  /** 背景特性：作者的下拉（用这个背景的特性 / 另一个背景的 / 自定义）。 */
-  Charactermancer_Background_Features: selectComponent,
   EquipmentApp: equipmentApp,
   Charactermancer_Spell_Modal: cantripModal,
   ActorAbilityScoreIncrease: abilityIncreaseApp,
@@ -149,3 +158,5 @@ export const ASK_KINDS: Record<string, AskKind> = {
     },
   },
 }
+// 组合组件（特性附带选择）：小组件按上面登记的转接件出题
+Object.assign(ASK_KINDS, compositeKinds(() => ASK_KINDS), backgroundFeatureKinds)
