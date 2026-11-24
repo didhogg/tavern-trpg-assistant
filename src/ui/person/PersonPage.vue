@@ -15,6 +15,7 @@ import MoreMenu from '../kit/MoreMenu.vue'
 import PersonHeader from './PersonHeader.vue'
 import HistoryDrawer from './HistoryDrawer.vue'
 import SkillList from './SkillList.vue'
+import FavoritesList from './FavoritesList.vue'
 import ActionsTab from './ActionsTab.vue'
 import AttributesTab from './AttributesTab.vue'
 import BagTab from './BagTab.vue'
@@ -64,12 +65,6 @@ const openHistory = () => modal.open({ key: 'person-history', title: '改动记�
 const skillRows = computed(() => (person.sheet ? skills(person.sheet) : []))
 const sideTab = ref('skills')
 const skillNames = computed(() => Object.fromEntries(skillRows.value.map((k) => [k.key, k.label])))
-// 收藏 = 官方 system.favorites（物品按 .Item.编号 记）；名字取过了出口的物品名
-const favRows = computed(() => {
-  const names = new Map(((person.sheet?.shown?.items ?? []) as Array<{ id: string; name: string }>).map((i) => [i.id, String(i.name)]))
-  return ((person.sheet?.system.favorites ?? []) as Array<{ type: string; id: string }>).map((f) => ({ fav: f.id, id: f.id.replace(/^\.Item\./, ''), name: names.get(f.id.replace(/^\.Item\./, '')) ?? '' })).filter((f) => f.name)
-})
-const unfav = (id: string) => person.edit('取消收藏', [{ kind: 'set', path: 'system.favorites', value: ((person.sheet?.system.favorites ?? []) as Array<{ id: string }>).filter((f) => f.id !== id) }])
 const missing = computed(() => person.row?.missing ?? [])
 </script>
 
@@ -107,16 +102,10 @@ const missing = computed(() => person.row?.missing ?? [])
           <template v-if="sideTab === 'skills'">
             <div class="ps-side-head"><b>技能</b><small>加值</small><small>被动</small><button class="trpg-icon-btn" type="button" aria-label="改技能熟练" :disabled="person.readOnly" @click="openFields('技能', { path: 'system.skills' }, { names: skillNames, width: 620 })"><Icon name="pencil-simple" :size="13" /></button></div>
             <p v-if="!skillRows.length" class="ps-drawer-note">没有列出的技能。</p>
-            <SkillList v-else :rows="skillRows" testid="ps-side-skills" />
+            <SkillList v-else :rows="skillRows" kind="skills" testid="ps-side-skills" />
           </template>
           <template v-else>
-            <p v-if="!favRows.length" class="ps-drawer-note">还没有收藏。在各页行末的 ⋯ 里点「收藏到侧栏」。</p>
-            <ul v-else class="ps-favs" data-testid="ps-favs">
-              <li v-for="f in favRows" :key="f.id">
-<span class="ps-initial">{{ f.name.slice(0, 1) }}</span><span class="ps-fav-name">{{ f.name }}</span>
-                <button class="trpg-icon-btn" type="button" :aria-label="`取消收藏${f.name}`" :disabled="person.readOnly" @click="unfav(f.fav)"><Icon name="x" :size="12" /></button>
-</li>
-            </ul>
+            <FavoritesList />
           </template>
         </aside>
         <section class="ps-tab" role="tabpanel" :data-testid="`ps-panel-${tab}`">

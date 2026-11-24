@@ -101,8 +101,8 @@ export const usePersonStore = defineStore('person', () => {
   })
   /** 短休 / 长休（官方休息，不弹官方窗口；需要掷骰的部分等 P7）。 */
   const rest = (type: 'short' | 'long') => write(type === 'short' ? '短休' : '长休', (k) => backend().act(k, id.value!, 'rest', id.value!, type, [], {}))
-  /** 某个职业升 / 降一级（官方成长流程）；要玩家做选择的成长会报“没有完成”。 */
-  const level = (label: string, classId: string, delta: 1 | -1) => write(label, (k) => backend().act(k, id.value!, 'levelUpApply', id.value!, classId, delta))
+  /** 某个职业改几级（官方 forLevelChange，和官方 / Tidy5e 等级下拉同一条路）；要玩家做选择的成长会报“没有完成”。 */
+  const level = (label: string, classId: string, delta: number) => write(label, (k) => backend().act(k, id.value!, 'levelUpApply', id.value!, classId, delta))
   /** 按一份物品数据新建条目（复制 / 新建空白条目，照 Tidy5e item.clone、createItem）：小窗现成的加条目命令收数据，走官方成长；一条撤销。 */
   const create = (label: string, data: Array<Record<string, unknown>>) => write(label, (k) => backend().act(k, id.value!, 'addToActor', id.value!, data.map((d) => ({ prop: String(d.type ?? 'item'), entry: null, data: d }))))
   /** 官方物品小操作（拆分堆叠 / 法术做成卷轴 / 钱币换算）：小窗现成命令，一条撤销。 */

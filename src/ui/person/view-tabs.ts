@@ -29,3 +29,25 @@ export function conditions(s: PersonSheet): Array<{ id: string; name: string; on
 /** 人物特征（官方传记页给的那几项：阵营、瞳色、身高……）。 */
 export const characteristics = (s: PersonSheet): Array<{ path: string; label: string; value: string }> =>
   list<any>(parts(s).biography?.characteristics).map((c) => ({ path: String(c.name), label: String(c.label ?? ''), value: String(c.value ?? '') }))
+
+// ---- 构建（职业 · 子职业 · 种族 · 背景；照 dnd5e 官方 actor-classes 与 Tidy5e CharacterTraits）----
+/** 一个职业：等级、官方给的“可改到几级”（差几级）、子职业或“该选子职业了”（官方 needsSubclass）。 */
+export interface ClassBuild { id: string; name: string; levels: number; ref?: unknown; levelsMenu: Array<{ delta: number; disabled: boolean }>; subclass: { id: string; name: string; ref?: unknown } | null; needsSubclass: boolean }
+export function classBuilds(s: PersonSheet): ClassBuild[] {
+  const ic: Record<string, any> = s.view?.base?.itemContext ?? {}
+  const subsShown = list<any>(s.view?.base?.itemCategories?.subclasses)
+  const raw = (id: string): any => (s.items ?? []).find((i: any) => i.id === id)
+  return list<any>(s.view?.base?.itemCategories?.classes).map((c) => {
+    const it = raw(c.id)
+    const sub = (s.items ?? []).find((x: any) => x.type === 'subclass' && x.system?.classIdentifier === it?.system?.identifier)
+    const subShown = sub ? subsShown.find((x) => x.id === sub.id) : null
+    return {
+      id: String(c.id), name: String(c.name ?? ''), levels: Number(it?.system?.levels ?? 0), ref: c.ref,
+      levelsMenu: list<any>(ic[c.id]?.availableLevels).map((o) => ({ delta: Number(o.value ?? 0), disabled: !!o.disabled })),
+      subclass: sub ? { id: String(sub.id), name: String(subShown?.name ?? sub.name ?? ''), ref: subShown?.ref } : null,
+      needsSubclass: !!ic[c.id]?.needsSubclass || !!parts(s).features?.classes?.find?.((x: any) => x.id === c.id)?.needsSubclass,
+    }
+  }).sort((a, b) => b.levels - a.levels)
+}
+/** 种族 / 背景这件条目在人物身上的编号（换、删要用）。 */
+export const originId = (s: PersonSheet, type: 'race' | 'background'): string | null => (s.items ?? []).find((i: any) => i.type === type)?.id ?? null

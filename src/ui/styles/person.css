@@ -19,7 +19,7 @@
 .ps-side { padding: var(--sp-4); border-right: var(--border) solid var(--line); background: var(--bg-side); }
 .ps-side h3 { margin: 0 0 var(--sp-2); font-size: var(--fs-md); }
 .ps-skills { list-style: none; margin: 0; padding: 0; }
-.ps-skills li { display: grid; grid-template-columns: 18px 3.2em minmax(0, 1fr) auto 2.2em; align-items: center; gap: var(--sp-1); min-height: 30px; border-bottom: var(--border) solid var(--line); font-size: var(--fs-sm); }
+.ps-skills li { display: grid; grid-template-columns: 22px 3.2em minmax(0, 1fr) auto auto 2.2em; align-items: center; gap: var(--sp-1); min-height: 30px; border-bottom: var(--border) solid var(--line); font-size: var(--fs-sm); }
 .ps-skills small, .ps-skill-ab { color: var(--text2); text-align: right; }
 .ps-skill-ab { text-align: left; }
 .ps-prof { color: var(--text2); }
@@ -75,11 +75,13 @@
 .ps-attr-col { display: grid; gap: var(--sp-5); min-width: 0; }
 .ps-card h3 { margin: 0 0 var(--sp-2); font-size: var(--fs-md); padding-bottom: var(--sp-1); border-bottom: var(--border) solid var(--line); }
 .ps-saves { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--sp-4); }
-.ps-saves li { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: var(--sp-1); min-height: 30px; border-bottom: var(--border) solid var(--line); font-size: var(--fs-sm); }
+.ps-saves li { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto 22px; align-items: center; gap: var(--sp-1); min-height: 30px; border-bottom: var(--border) solid var(--line); font-size: var(--fs-sm); }
 .ps-saves-wide { grid-column: 1 / -1; }
 .ps-traits { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--sp-2) var(--sp-4); margin: 0; font-size: var(--fs-sm); }
 .ps-traits dt { color: var(--text2); }
-.ps-traits dd { margin: 0; }
+.ps-traits dd { margin: 0; display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-2); }
+.ps-traits dd .ps-skill-icon { flex: none; opacity: .55; }
+.ps-traits dd:hover .ps-skill-icon { opacity: 1; }
 .ps-fact-part { display: inline-block; white-space: nowrap; margin-right: var(--sp-3); }
 /* 各组的表列宽一致（上下对齐） */
 .ps-act-table { table-layout: fixed; }
@@ -122,3 +124,46 @@
 .ps-attr .ps-card { padding: var(--sp-3) var(--sp-4); }
 
 @container pstab (max-width: 420px) { .ps-bag-table thead th:nth-child(2) { width: 96px; } .ps-bag-table thead th:nth-child(3) { width: 112px; } .ps-bag-act .trpg-btn { padding: 0 var(--sp-2); } }
+/* 技能行（照 Tidy5e SkillsCard）：熟练圈可点 · 属性可换 · 悬停出现 ★ ⚙ */
+.ps-prof-btn { width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%; background: none; font: inherit; line-height: 1; cursor: pointer; }
+.ps-prof-btn:hover:not(:disabled) { background: var(--bg-hover); }
+.ps-prof-btn:disabled { cursor: default; }
+.ps-skill-ab .trpg-btn { min-height: 24px; padding: 0 2px; border-color: transparent; background: none; color: var(--text2); font-size: var(--fs-xs); gap: 0; }
+.ps-skill-ab .trpg-btn:hover { border-color: var(--line-ctrl); color: var(--text); }
+.ps-skill-ab .trpg-btn svg { width: 10px; height: 10px; opacity: .6; }
+.ps-skill-aux { display: inline-flex; gap: 0; opacity: 0; transition: opacity var(--dur-fast) var(--ease-std); }
+.ps-skills li:hover .ps-skill-aux, .ps-skill-aux:focus-within { opacity: 1; }
+.ps-skill-icon { display: inline-grid; place-items: center; width: 20px; height: 20px; padding: 0; border: 0; border-radius: var(--r-xs); background: none; color: var(--text3); cursor: pointer; }
+.ps-skill-icon:hover:not(:disabled) { color: var(--text); background: var(--surface); }
+.ps-skill-icon[data-on] { color: var(--accent); }
+.ps-skills li:has(.ps-skill-icon[data-on]) .ps-skill-aux { opacity: 1; }
+@media (hover: none) { .ps-skill-aux { opacity: 1; } }
+.ps-saves li .ps-skill-icon { opacity: 0; }
+.ps-saves li:hover .ps-skill-icon, .ps-saves li .ps-skill-icon:focus-visible { opacity: 1; }
+@media (hover: none) { .ps-saves li .ps-skill-icon { opacity: 1; } }
+.ps-conc-on { display: inline-grid; place-items: center; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%; background: var(--primary); color: var(--on-primary); cursor: pointer; }
+.ps-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); margin-bottom: var(--sp-2); border-bottom: var(--border) solid var(--line); }
+.ps-card-head h3 { margin: 0; border-bottom: 0; }
+.ps-trait-add { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-2); margin-top: var(--sp-3); }
+/* 特质卡上半：职业 · 子职业 · 种族 · 背景（照 Tidy5e CharacterTraits 的一行一项：左标签 · 内容 · ⋯） */
+.ps-build { display: grid; margin: 0 0 var(--sp-3); padding-bottom: var(--sp-2); border-bottom: var(--border) solid var(--line); }
+.ps-build-row { display: grid; grid-template-columns: 3.2em minmax(0, 1fr) 32px; align-items: center; gap: var(--sp-2); min-height: 38px; font-size: var(--fs-sm); }
+.ps-build-row + .ps-build-row:not(.ps-build-sub) { border-top: var(--border) dashed var(--line); }
+.ps-build-label { color: var(--text2); font-size: var(--fs-xs); }
+.ps-build-main { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-1) var(--sp-2); min-width: 0; }
+.ps-build-name { flex: 1 1 auto; min-width: 0; font-weight: var(--fw-semibold); }
+.ps-build-level .trpg-btn { min-height: 28px; }
+.ps-build-turn { color: var(--text3); }
+.ps-build-sub { min-height: 32px; }
+/* 侧栏收藏（照 Tidy5e favorites：每条 名字 + 小字 · 右边按种类的数 / 原地输入 / 开关 · ×） */
+.ps-favs .ps-fav { display: grid; grid-template-columns: minmax(0, 1fr) auto 24px; align-items: center; gap: var(--sp-2); min-height: 40px; padding: 2px 0; border-bottom: var(--border) solid var(--line); font-size: var(--fs-sm); }
+.ps-fav[data-off] .ps-fav-main { opacity: .6; }
+.ps-fav-main { display: flex; flex-direction: column; min-width: 0; }
+.ps-fav-main .ps-fav-name { font-weight: var(--fw-medium); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ps-fav-main > small { color: var(--text2); font-size: var(--fs-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ps-fav-val { display: inline-flex; align-items: center; gap: var(--sp-2); font-variant-numeric: tabular-nums; }
+.ps-fav-passive { margin-left: 2px; color: var(--text3); font-weight: var(--fw-regular); font-size: var(--fs-xs); }
+.ps-fav-x { opacity: .5; }
+.ps-fav:hover .ps-fav-x { opacity: 1; }
+/* 骰子悬浮球在右下角：分页内容底部留出位置，最后一行不被盖住 */
+.ps-tab { padding-bottom: 72px; }
