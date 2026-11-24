@@ -1,6 +1,6 @@
 // P6 单元 1 人物详情外壳（真实插件界面 + 真实库 + 真实结算小窗）：人物列表点一行进来 → 页头（中文名字 / 属性 / 技能）
-// → 生命原地改（−3 预览后 Enter、+2、=5、临时 4）→ 生命骰 / 力竭 / 死亡豁免抽屉 → 身份抽屉（英文名）→ 头像链接校验
-// → 撤销 → 改动记录（中文字段名）→ 下一位（怪物：挑战等级、传奇动作圆点、中文阵营）→ ⋯ 移到 NPC → ‹ 人物 回列表 → 窄屏 390。
+// → 生命原地改（−3 预览后 Enter、+2、=5、临时 4）→ 生命骰 / 力竭 / 死亡豁免抽屉 → 身份抽屉（英文名）
+// → 撤销 → 改动记录（中文字段名）→ 头像（菜单 / 上传 / 截取 / 重新截取 / 链接 / 移除）→ 下一位（怪物：挑战等级、传奇动作圆点、中文阵营）→ ⋯ 移到 NPC → ‹ 人物 回列表 → 窄屏 390。
 // 截图 work/p6-ui/shots-1-*/；界面验收只由驾驶员给。用法：ENGINE=chrome|webkit node tests/e2e/library/p6-ui-1.mjs
 import { rm, mkdir } from 'node:fs/promises'
 import { startStatic } from './static.mjs'
@@ -98,10 +98,6 @@ try {
   await page.getByTestId('ps-drawer-identity').getByLabel(/英文名/).fill('Gale'); await shot('06-drawer-identity')
   await page.getByTestId('ps-drawer-identity').getByRole('button', { name: '保存' }).click(); await settle(page, 1500)
   check('英文名显示在名字旁', /Gale/.test(await page.locator('.ps-name-line').innerText()))
-  await page.getByTestId('ps-portrait').click(); await page.getByTestId('ps-drawer-avatar').waitFor()
-  await page.getByTestId('ps-drawer-avatar').getByLabel('图片链接').fill('不是网址'); await settle(page, 300)
-  check('头像：不是网址时说明原因、[使用这张]灰掉', /http/.test(await page.getByTestId('ps-drawer-avatar').innerText()) && await page.getByRole('button', { name: '使用这张' }).isDisabled())
-  await shot('07-drawer-avatar'); await closeModal()
 
   // ---- 撤销 / 改动记录 ----
   await page.getByTestId('ps-undo').click(); await settle(page, 1500)
@@ -110,6 +106,41 @@ try {
   const hist = await page.getByTestId('ps-drawer-history').innerText()
   check('改动记录：中文字段名（当前 HP / 临时 HP 一类）', /HP|生命/.test(hist) && /撤销到这里/.test(hist) && !/system\./.test(hist), hist.replace(/\s+/g, ' ').slice(0, 300))
   await closeModal()
+
+  // ---- 头像（照 GitHub / Discord：点头像出菜单 → 选图 → 截取框 → 设为头像）----
+  // 测试图：横长 300×150 的两色图（左红右蓝），默认方框居中、往左拖后截出来左边更红
+  const png = Buffer.from(await page.evaluate(async () => {
+    const c = document.createElement('canvas'); c.width = 300; c.height = 150
+    const x = c.getContext('2d'); x.fillStyle = '#c00'; x.fillRect(0, 0, 150, 150); x.fillStyle = '#00c'; x.fillRect(150, 0, 150, 150)
+    return [...new Uint8Array(await (await new Promise((r) => c.toBlob(r, 'image/png'))).arrayBuffer())]
+  }))
+  await page.getByTestId('ps-portrait').click(); await page.getByTestId('avatar-menu').waitFor(); await shot('07a-avatar-menu')
+  check('头像菜单：上传 / 贴链接，没头像时没有移除', (await page.getByTestId('avatar-upload').count()) === 1 && (await page.getByTestId('avatar-link').count()) === 1 && (await page.getByTestId('avatar-remove').count()) === 0)
+  const chooser = page.waitForEvent('filechooser'); await page.getByTestId('avatar-upload').click()
+  await (await chooser).setFiles({ name: 'two.png', mimeType: 'image/png', buffer: png })
+  await page.getByTestId('avatar-crop').locator('.av-stage').waitFor(); await settle(page, 400)
+  const stage = await page.getByTestId('avatar-crop').locator('.av-stage').boundingBox()
+  await page.mouse.move(stage.x + stage.width / 2, stage.y + stage.height / 2); await page.mouse.down()
+  await page.mouse.move(stage.x + stage.width / 2 + 120, stage.y + stage.height / 2, { steps: 6 }); await page.mouse.up(); await shot('07b-avatar-crop')
+  const t0 = Date.now(); await page.getByTestId('avatar-apply').click()
+  await page.getByTestId('avatar-crop').waitFor({ state: 'detached' }); const applyMs = Date.now() - t0; await settle(page, 600); await shot('07c-avatar-set')
+  const red = await page.evaluate(async () => {
+    const img = document.querySelector('#trpg-assistant-root').shadowRoot.querySelector('[data-testid=ps-portrait] img')
+    if (!img || !img.src.startsWith('data:image/')) return null
+    await img.decode(); const c = document.createElement('canvas'); c.width = 8; c.height = 8; const x = c.getContext('2d'); x.drawImage(img, 0, 0, 8, 8)
+    const d = x.getImageData(0, 0, 8, 8).data; let r = 0; let b = 0; for (let i = 0; i < d.length; i += 4) { r += d[i]; b += d[i + 2] }
+    return r / (r + b)
+  })
+  check('设为头像：页头换成截好的方图，往左拖了所以偏红', red !== null && red > 0.6, String(red))
+  check('设为头像 1 秒内有结果', applyMs < 1000, `${applyMs}ms`)
+  await page.getByTestId('ps-portrait').click(); await page.getByTestId('avatar-recrop').click()
+  await page.getByTestId('avatar-crop').locator('.av-stage').waitFor(); await settle(page, 300)
+  check('重新截取：不用重新选图', await page.getByTestId('avatar-apply').isEnabled()); await closeModal()
+  await page.getByTestId('ps-portrait').click(); await page.getByTestId('avatar-link').click()
+  await page.getByTestId('avatar-url').fill('不是网址'); await page.getByTestId('avatar-read').click(); await settle(page, 300)
+  check('贴链接：不是网址时写原因、不进截取框', /http/.test(await page.getByTestId('avatar-link-page').innerText()) && (await page.getByTestId('avatar-crop').count()) === 0); await shot('07d-avatar-link'); await closeModal()
+  await page.getByTestId('ps-portrait').click(); await page.getByTestId('avatar-remove').click(); await settle(page, 1200)
+  check('移除头像：回到默认人像', (await page.getByTestId('ps-portrait').locator('img').count()) === 0)
 
   // ---- 下一位：怪物 ----
   await page.getByTestId('ps-next').click(); await page.getByTestId('ps-head').waitFor(); await settle(page, 1500); await shot('09-monster-head')

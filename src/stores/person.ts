@@ -77,8 +77,11 @@ export const usePersonStore = defineStore('person', () => {
   // 换了聊天 / 读了别的存档：这个人可能不在了，详情页关掉回列表；名字表按战役重取
   watch(() => `${campaign.owner?.ownerKey ?? ''}|${campaign.workspace?.currentSaveId ?? ''}`, (now, was) => { if (now !== was) { close(); glossary.value = null } })
 
-  /** 写一步：经存档层写；成功提示条带撤销（撤销 = 存档退一步），失败写原因、不留半截改动（后端已按存档退回）。 */
-  async function write(label: string, action: (ownerKey: string) => Promise<{ outcome?: { status: string; error?: string } } | unknown>): Promise<boolean> {
+  /**
+   * 写一步：经存档层写；成功提示条带撤销（撤销 = 存档退一步），失败写原因、不留半截改动（后端已按存档退回）。
+   * soon = 写进存档就算完成（关窗口、出提示条），人物页在后台重读——大改动（从库里加一整条）后重读整张人物要大半秒，不让玩家干等。
+   */
+  async function write(label: string, action: (ownerKey: string) => Promise<{ outcome?: { status: string; error?: string } } | unknown>, soon = false): Promise<boolean> {
     if (!ownerKey() || !id.value) return false
     if (campaign.readOnly) { toast.error('另一个窗口正在使用助手，这里只能查看'); return false }
     try {
@@ -90,7 +93,9 @@ export const usePersonStore = defineStore('person', () => {
       await reload()
       return false
     }
-    await Promise.all([reload(), roster.refresh()])
+    const refreshed = Promise.all([reload(), roster.refresh()])
+    if (!soon) await refreshed
+    else void refreshed.catch((e: unknown) => toast.error(`${label}已保存，但人物页没刷新出来：${message(e)}`))
     toast.undoable(label, () => undo())
     return true
   }
@@ -121,7 +126,7 @@ export const usePersonStore = defineStore('person', () => {
     try { return await serial(() => app.svc().backend.importFlow.step(key, who, plain(ref), plain(answers), replaceItemId)) } catch (e) { return { status: 'error', error: message(e), ms: 0 } }
   }
   /** 确认：留在小窗里的改动写进存档（一条撤销，提示条可撤）。 */
-  const importConfirm = (label: string, changes: KernelChange[]) => write(label, (k) => app.svc().backend.importFlow.confirm(k, changes))
+  const importConfirm = (label: string, changes: KernelChange[]) => write(label, (k) => app.svc().backend.importFlow.confirm(k, changes), true)
   /** 取消：这个人按存档退回（小窗里没确认的改动丢掉）。 */
   async function importCancel(): Promise<void> {
     const key = ownerKey(); const who = id.value

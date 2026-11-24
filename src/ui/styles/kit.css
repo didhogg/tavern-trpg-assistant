@@ -114,6 +114,9 @@ textarea.trpg-input { min-height: 72px; padding: var(--sp-2) var(--sp-3); resize
 .trpg-modal[data-variant='drawer'] { justify-content: flex-end; padding: 0; }
 .trpg-modal[data-variant='drawer'] .trpg-modal__card { width: min(440px, 100%); height: 100%; border-radius: var(--r-lg) 0 0 var(--r-lg); animation: trpg-slide var(--dur-slow) var(--ease-out); }
 .trpg-modal[data-variant='confirm'] .trpg-modal__card { width: min(440px, 100%); height: auto; }
+/* 打开弹窗时给了宽 / 高（modal.open 的 width / height）：按它定大小，超出主窗口就收到 100%（11-09 换设计系统时漏了这条，所有弹窗都成了 640×600） */
+.trpg-modal[data-variant='dialog'] .trpg-modal__card[data-sized] { width: min(var(--trpg-drawer-width), 100%); height: min(var(--trpg-dlg-h, 600px), 100%); }
+.trpg-modal[data-variant='drawer'] .trpg-modal__card[data-sized] { width: min(var(--trpg-drawer-width), 100%); }
 @keyframes trpg-rise { from { opacity: 0; transform: translateY(10px) scale(0.985); } }
 @keyframes trpg-slide { from { opacity: 0; transform: translateX(32px); } }
 @keyframes trpg-sheet { from { opacity: 0; transform: translateY(100%); } }

@@ -14,7 +14,7 @@ import { openEntry } from '../libview/open'
 import HpBlock from './HpBlock.vue'
 import VitalDrawers from './VitalDrawers.vue'
 import IdentityDrawer from './IdentityDrawer.vue'
-import AvatarDrawer from './AvatarDrawer.vue'
+import PortraitButton from './avatar/PortraitButton.vue'
 import { openFields, openImport, openPick } from './edit-open'
 import { classBuilds } from './view-tabs'
 import { alignment, background, classes, creatureType, crText, deathShown, exhaustionPips, isNpc, legendary, named, senses, showExperience, signed, size, species, speeds } from './view'
@@ -30,8 +30,6 @@ const npc = computed(() => isNpc(s.value))
 const ro = computed(() => person.readOnly)
 const english = computed(() => String(person.row?.adjustments.englishName ?? ''))
 const pinned = computed(() => !!person.row?.adjustments.pinned)
-const broken = ref(false)
-const avatar = computed(() => !broken.value && /^(https?:|data:|blob:)/.test(String(s.value.img ?? '')) ? String(s.value.img) : null)
 const abilityNames = computed(() => Object.fromEntries(Object.keys(g.value?.tables.abilities ?? {}).map((k) => [k, named(g.value, 'abilities', k)])))
 
 const subtitle = computed(() => {
@@ -73,7 +71,6 @@ const xp = computed(() => sys.value.details?.xp ?? null)
 const VITAL_TITLES = { hitDice: '生命骰', exhaustion: '力竭', death: '死亡豁免' } as const
 const openVital = (kind: keyof typeof VITAL_TITLES): void => modal.open({ key: `person-${kind}`, title: VITAL_TITLES[kind], component: markRaw(VitalDrawers), props: { kind }, variant: 'dialog', width: 480, height: 420 })
 const openIdentity = () => modal.open({ key: 'person-identity', title: '身份', component: markRaw(IdentityDrawer), variant: 'dialog', width: 560, height: 620 })
-const openAvatar = () => modal.open({ key: 'person-avatar', title: '人物头像', component: markRaw(AvatarDrawer), variant: 'dialog', width: 560, height: 420 })
 const toggleInspiration = () => person.edit(sys.value.attributes.inspiration ? '取消灵感' : '获得灵感', [{ kind: 'set', path: 'system.attributes.inspiration', value: !sys.value.attributes.inspiration }])
 const togglePin = () => person.row && roster.pin([person.row.id], !pinned.value)
 // 名字原地改（Tidy5e 页头名字栏）+ 复制名字（Tidy5e copyInnerText）
@@ -128,10 +125,7 @@ function onLevel(key: string): void {
 <template>
   <section class="ps-head" data-testid="ps-head">
    <div class="ps-top">
-    <button class="ps-portrait" type="button" :disabled="ro" aria-label="换头像" data-testid="ps-portrait" @click="openAvatar">
-      <img v-if="avatar" :src="avatar" alt="" @error="broken = true"><Icon v-else name="user" :size="44" />
-      <span class="ps-portrait-badge" aria-hidden="true"><Icon name="image" :size="12" /></span>
-    </button>
+    <PortraitButton />
 
     <div class="ps-ident">
       <div class="ps-name-line">

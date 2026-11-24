@@ -40,11 +40,20 @@
 .ps-pip { width: 36px; height: 36px; border-radius: 50%; border: var(--border) solid var(--line-ctrl); background: var(--surface); color: var(--text2); cursor: pointer; }
 .ps-pip[data-on] { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
 .ps-pip[data-on][data-kind='failure'] { background: var(--danger-text); border-color: var(--danger-text); }
-.ps-avatar-form { display: grid; grid-template-columns: minmax(0, 1fr) 160px; grid-template-areas: 'fields preview' 'actions actions'; }
-.ps-avatar-fields { grid-area: fields; display: flex; flex-direction: column; gap: var(--sp-2); }
-.ps-avatar-preview { grid-area: preview; width: 160px; height: 160px; border: var(--border) dashed var(--line-ctrl); border-radius: var(--r-sm); overflow: hidden; background: var(--bg-sunk); }
-.ps-avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
-.ps-avatar-form .ps-drawer-actions { grid-area: actions; }
+/* 截取头像（avatar/AvatarCrop.vue）：方框外压暗，图在方框下面拖动 */
+.av-crop { display: flex; flex-direction: column; align-items: center; gap: var(--sp-3); }
+.av-stage { position: relative; max-width: 100%; overflow: hidden; border-radius: var(--r-sm); background: var(--bg-sunk); cursor: grab; touch-action: none; user-select: none; }
+.av-stage:active { cursor: grabbing; }
+.av-stage[data-locked] { cursor: default; }
+.av-stage:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.av-stage img { position: absolute; max-width: none; pointer-events: none; }
+.av-frame { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); border: 2px solid #fff; box-shadow: 0 0 0 9999px rgb(0 0 0 / 0.5); pointer-events: none; }
+.av-zoom { align-self: stretch; display: flex; align-items: center; gap: var(--sp-2); color: var(--text2); font-size: var(--fs-sm); }
+.av-zoom input { flex: 1; accent-color: var(--accent); }
+.av-crop .ps-drawer-actions { align-self: stretch; }
+.av-big { display: grid; place-items: center; }
+.av-big img { max-width: 100%; max-height: 70vh; object-fit: contain; }
+.ps-portrait[data-over] { outline: 2px dashed var(--accent); outline-offset: 2px; }
 .ps-history-list { list-style: none; margin: 0; padding: 0; }
 .ps-history-row { padding: var(--sp-3) 0; border-bottom: var(--border) solid var(--line); }
 .ps-history-head { display: flex; align-items: center; justify-content: space-between; color: var(--text2); font-size: var(--fs-sm); }

@@ -1,5 +1,8 @@
 /* 从库里加 · 作者提问一问一答（ui/person/ask/*）：只用色板变量。整页 = 头（返回 · 条目名 · 已答几题）/ 已答一行行 / 当前题 / 底栏。 */
-.ask { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; height: 100%; min-height: 0; }
+/* 上下排：题目区占剩下的高度、自己滚动；「已答」那一行第一题时没有，不能按固定四行排（否则底栏被拉大或被挤出窗口） */
+.ask { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.ask > * { flex: none; }
+.ask > .ask-body { flex: 1 1 0; }
 .ask-head { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border-bottom: var(--border) solid var(--line); background: var(--surface); }
 .ask-what { font-family: var(--font-serif); font-size: var(--fs-lg); font-weight: var(--fw-semibold); }
 .ask-count { margin-left: auto; color: var(--text2); font-size: var(--fs-xs); }
