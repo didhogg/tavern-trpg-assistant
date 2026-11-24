@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tidy5e 角色卡对照</title>
+<style>
+  :root { color-scheme: light dark; --bar: #2b2622; --ink: #f4ecdf; }
+  html, body { margin: 0; height: 100%; background: #1d1a17; font: 14px/1.4 system-ui, sans-serif; }
+  .bar { position: fixed; inset: 0 0 auto 0; height: 44px; white-space: nowrap; overflow: hidden; display: flex; align-items: center; gap: 12px; padding: 0 16px; background: var(--bar); color: var(--ink); z-index: 2; }
+  .bar b { font-weight: 600; }
+  .bar select, .bar button { font: inherit; padding: 4px 8px; }
+  .bar small { opacity: .7; } #blank { margin-left: auto; color: #e9b46a; overflow: hidden; text-overflow: ellipsis; }
+  #stage { position: fixed; inset: 44px 0 0 0; }
+  #status { position: fixed; inset: 44px 0 0 0; display: grid; place-items: center; color: var(--ink); z-index: 1; pointer-events: none; }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <b>Tidy5e 角色卡（原样运行）</b>
+    <label>人物 <select id="who"></select></label>
+    <label>语言 <select id="lang"><option value="zh">中文</option><option value="en">English</option></select></label>
+    <label>规则 <select id="rules"><option value="legacy">2014</option><option value="modern">2024</option></select></label>
+    <small id="blank"></small><small>左上角锁头 = 解锁编辑</small>
+  </div>
+  <div id="stage"></div>
+  <p id="status">正在启动 Foundry…</p>
+  <script type="module" src="/tidy-preview.js"></script>
+</body>
+</html>
