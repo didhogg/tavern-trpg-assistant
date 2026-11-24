@@ -59,7 +59,7 @@ const breakConc = (): void => { void person.edit('打断专注', concEffects.val
       <button class="trpg-btn trpg-btn--primary trpg-btn--small" type="button" :disabled="ro" data-testid="ps-spells-add" @click="openPick('spells')"><Icon name="plus" :size="14" />从库里加法术</button>
     </TableBar>
     <p v-if="!t.groups.value.length" class="ps-drawer-note">{{ t.query.value ? '没有符合的法术。' : '还没有法术。点「从库里加法术」或页底「新建法术」。' }}</p>
-    <DocTable domain="spell" :groups="t.groups.value" :expand="t.expand.value" creatable testid="ps-spell" @create="createIn" @section="t.section">
+    <DocTable domain="spell" tab="spell" :groups="t.groups.value" :expand="t.expand.value" creatable testid="ps-spell" @create="createIn" @section="t.section">
       <template #group="{ group }">
         <span v-if="group.pips.length" class="ps-pips" role="group" :aria-label="`${group.label}法术位`">
           <button v-for="p in group.pips" :key="p.n" type="button" class="ps-pipbtn" :data-on="p.filled || undefined" :aria-label="`剩 ${p.n} 个`" :disabled="ro" @click="setSlot(group, p.n)" />

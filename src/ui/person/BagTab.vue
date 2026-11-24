@@ -47,7 +47,7 @@ const createKind = (type: string): void => t.create(type, kinds.value.find((k) =
       <button class="trpg-icon-btn" type="button" aria-label="改负重" :disabled="ro" @click="openFields('负重', { path: 'system.attributes.encumbrance' }, { hint: '负重由物品重量和力量算出；这里改额外加值和上限的倍数。' })"><Icon name="gear" :size="14" /></button>
     </div>
     <p v-if="!t.groups.value.length" class="ps-drawer-note">{{ t.query.value ? '没有符合的物品。' : '背包是空的。从库里加，或页底「新建物品」。' }}</p>
-    <DocTable domain="inventory" :groups="t.groups.value" :expand="t.expand.value" creatable testid="ps-bag-table" @create="createIn" @section="t.section" />
+    <DocTable domain="inventory" tab="bag" :groups="t.groups.value" :expand="t.expand.value" creatable testid="ps-bag-table" @create="createIn" @section="t.section" />
     <footer class="dt-foot ps-bag-foot" data-testid="ps-bag-foot">
       <span class="ps-coins" role="group" aria-label="钱币">
         <label v-for="c in coins" :key="c.key" class="ps-coin" :data-coin="c.key"><small>{{ c.label }}</small><NumIn :value="c.value" :label="c.label" :disabled="ro" @set="(v) => setCoin(c.key, c.label, v)" /></label>

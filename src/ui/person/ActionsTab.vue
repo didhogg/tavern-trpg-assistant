@@ -16,6 +16,6 @@ const groups = computed<DocGroup[]>(() => [...t.groups.value.filter((g) => g.key
   <div class="ps-actions" data-testid="ps-actions">
     <TableBar v-model:query="t.query.value" v-model:sort="t.sort.value" v-model:grouping="t.grouping.value" v-model:expand="t.expand.value" v-model:filters="t.filters.value" :controls="t.controls.value" placeholder="搜行动" testid="ps-actions" />
     <p v-if="!groups.length" class="ps-drawer-note">{{ t.query.value ? '没有符合的行动。' : '还没有行动。武器、法术、特性带来的动作会出现在这里。' }}</p>
-    <DocTable domain="action" :groups="groups" :expand="t.expand.value" testid="ps-act" @section="t.section" />
+    <DocTable domain="action" tab="action" :groups="groups" :expand="t.expand.value" testid="ps-act" @section="t.section" />
   </div>
 </template>

@@ -89,3 +89,14 @@ export function shownName(s: PersonSheet, id: string): string {
   }
   return String((s.items ?? []).find((i: any) => i.id === id)?.name ?? '')
 }
+/** 一件物品在库里的条目引用（看资料用；没有 = 不是库里的东西）。 */
+export function shownRef(s: PersonSheet, id: string): unknown {
+  for (const part of Object.values(parts(s))) {
+    for (const sec of list<any>(part?.sections)) for (const it of list<any>(sec.items)) if (it.id === id && it.ref) return it.ref
+    for (const it of list<any>(part?.containers)) if (it.id === id && it.ref) return it.ref
+  }
+  return undefined
+}
+/** 置顶（Tidy5e SheetPins）：存在人物 flags.tavern-trpg.pins.<页>，物品编号的列表。 */
+export const PINS_PATH = 'flags.tavern-trpg.pins'
+export const pinsOf = (s: PersonSheet, tab: string): string[] => list<string>(s.flags?.['tavern-trpg']?.pins?.[tab]).map(String)

@@ -109,3 +109,8 @@
 .dt-filter:hover { border-color: var(--line-ctrl); color: var(--text); }
 .dt-filter[data-state='on'] { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
 .dt-filter[data-state='off'] { border-color: var(--danger-line, var(--line-ctrl)); color: var(--danger-text); text-decoration: line-through; }
+/* 置顶条（Tidy5e SheetPins）：表格上方一排小卡 */
+.ps-pins-strip { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.ps-pin-card { display: inline-flex; align-items: center; gap: var(--sp-2); min-height: 36px; padding: 0 var(--sp-1) 0 var(--sp-3); border: var(--border) solid var(--line); border-left: 3px solid var(--accent); border-radius: var(--r-sm); background: var(--surface); font-size: var(--fs-sm); }
+.ps-pin-icon { color: var(--accent); }
+.ps-pin-name { font-weight: var(--fw-medium); white-space: nowrap; }

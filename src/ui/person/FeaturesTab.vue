@@ -21,7 +21,7 @@ const ro = computed(() => person.readOnly)
       <button class="trpg-btn trpg-btn--primary trpg-btn--small" type="button" :disabled="ro" data-testid="ps-features-add" @click="openPick('feats')"><Icon name="plus" :size="14" />从库里加专长 / 特性</button>
     </TableBar>
     <p v-if="!t.groups.value.length" class="ps-drawer-note">{{ t.query.value ? '没有符合的特性。' : '还没有特性。建卡、升级，或从库里加专长后出现在这里。' }}</p>
-    <DocTable domain="feature" :groups="t.groups.value" :expand="t.expand.value" creatable testid="ps-feat" @create="() => t.create('feat', '特性')" @section="t.section" />
+    <DocTable domain="feature" tab="feat" :groups="t.groups.value" :expand="t.expand.value" creatable testid="ps-feat" @create="() => t.create('feat', '特性')" @section="t.section" />
     <footer class="dt-foot">
       <span class="dt-bar-gap" />
       <button class="trpg-btn trpg-btn--small" type="button" :disabled="ro" data-testid="ps-features-create" @click="t.create('feat', '特性')"><Icon name="plus" :size="14" />新建特性</button>

@@ -6,7 +6,7 @@ import { usePersonStore } from '../../../stores/person'
 import { useModalStore } from '../../../stores/modal'
 import SplitPage from './SplitPage.vue'
 import { openFields } from '../edit-open'
-import { shownName, type DocRow } from './rows'
+import { PINS_PATH, pinsOf, shownName, type DocRow } from './rows'
 
 export interface MenuEntry { key: string; label: string; danger?: boolean; disabled?: boolean }
 
@@ -23,7 +23,7 @@ export function useItemMenu() {
   const set = (label: string, r: DocRow, path: string, value: unknown) => person.edit(label, [{ kind: 'item', itemId: r.id, path, value }])
 
   /** 这件物品现在有哪些菜单项（顺序 = Tidy5e：常用 → 动作 → 自定义 → 危险）。open = 看说明（展开这一行）。 */
-  function entries(r: DocRow, opts: { open?: boolean } = {}): MenuEntry[] {
+  function entries(r: DocRow, opts: { open?: boolean; tab?: string } = {}): MenuEntry[] {
     const s = r.item?.system ?? {}
     const ro = person.readOnly
     const npc = person.sheet?.view?.base?.isNPC === true
@@ -49,6 +49,7 @@ export function useItemMenu() {
     }
     if (!npc && r.type !== 'facility') out.push({ key: 'actionList', label: inActions(r) ? '从行动页拿掉' : '显示到行动页', disabled: ro })
     out.push({ key: 'section', label: '移到自定义分组…', disabled: ro })
+    if (opts.tab) out.push({ key: `pin:${opts.tab}`, label: pinsOf(person.sheet!, opts.tab).includes(r.id) ? '取消置顶' : '置顶到这一页', disabled: ro })
     out.push({ key: 'remove', label: '删除', danger: true, disabled: ro })
     return out
   }
@@ -82,6 +83,11 @@ export function useItemMenu() {
       case 'out': void set(`把${r.name}拿出容器`, r, 'system.container', null); return true
       case 'remove': void person.remove(`删除了${r.name}`, r.id); return true
       default: {
+        if (key.startsWith('pin:')) {
+          const tab = key.slice(4); const cur = pinsOf(person.sheet!, tab)
+          void person.edit(cur.includes(r.id) ? `取消置顶${r.name}` : `置顶了${r.name}`, [{ kind: 'set', path: `${PINS_PATH}.${tab}`, value: cur.includes(r.id) ? cur.filter((x) => x !== r.id) : [...cur, r.id] }])
+          return true
+        }
         if (!key.startsWith('into:')) return false
         const box = ((person.sheet?.items ?? []) as any[]).find((c) => (c.id ?? c._id) === key.slice(5))
         void set(`把${r.name}放进${box ? shownName(person.sheet!, key.slice(5)) : '容器'}`, r, 'system.container', key.slice(5)); return true

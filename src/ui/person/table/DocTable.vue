@@ -8,6 +8,7 @@ import EntryPage from '../../libview/EntryPage.vue'
 import Icon from '../../kit/Icon.vue'
 import MoreMenu from '../../kit/MoreMenu.vue'
 import Cell from './Cell.vue'
+import PinStrip from './PinStrip.vue'
 import { COLUMNS, ROW_ACTIONS, columnsFor, hiddenColumns, type ColKey, type Domain } from './spec'
 import type { DocGroup, DocRow } from './rows'
 import { useItemMenu } from './item-menu'
@@ -19,8 +20,10 @@ const props = withDefaults(defineProps<{
   expand?: boolean | null
   /** 组头「＋」新建这一类（给了才显示）。 */
   creatable?: boolean
+  /** 这一页的编号（置顶用，Tidy5e 按页置顶）。 */
+  tab?: string
   testid?: string
-}>(), { expand: null, creatable: false, testid: 'ps-table' })
+}>(), { expand: null, creatable: false, tab: undefined, testid: 'ps-table' })
 const emit = defineEmits<{ create: [group: DocGroup]; section: [row: DocRow] }>()
 const person = usePersonStore()
 const menu = useItemMenu()
@@ -76,6 +79,7 @@ const colW = (k: ColKey): string => `${COLUMNS[k].rem}rem`
 
 <template>
   <div ref="root" class="dt" :data-testid="testid">
+    <PinStrip v-if="tab" :tab="tab" />
     <section v-for="grp in groups" :key="grp.key" class="dt-grp" :data-collapsed="collapsed.has(grp.key) || undefined" :data-testid="`${testid}-${grp.key}`">
       <header class="dt-head">
         <button class="dt-fold" type="button" :aria-expanded="!collapsed.has(grp.key)" :aria-label="`${collapsed.has(grp.key) ? '展开' : '收起'}${grp.label}`" @click="collapsed = toggle(collapsed, grp.key)">
@@ -109,7 +113,7 @@ const colW = (k: ColKey): string => `${COLUMNS[k].rem}rem`
                 </template>
                 <span v-else-if="a !== 'menu'" class="dt-act-gap" aria-hidden="true" />
               </template>
-              <MoreMenu :label="r.name" :items="menu.entries(r, { open: opened.has(r.id) })" @select="onMenu(r, $event)" />
+              <MoreMenu :label="r.name" :items="menu.entries(r, { open: opened.has(r.id), tab })" @select="onMenu(r, $event)" />
             </span>
           </div>
           <div v-if="opened.has(r.id)" class="dt-detail">
