@@ -178,6 +178,11 @@ export const usePersonStore = defineStore('person', () => {
     const ids = await serial(() => backend().filterItems(key, who, [...filters].map(String)))
     return ids ? new Set(ids) : null
   }
+  /** 特殊特质页的官方各项与现值（只读）。 */
+  async function specialTraits() {
+    const key = ownerKey(); const who = id.value
+    return key && who ? serial(() => backend().specialTraits(key, who)) : null
+  }
   /** 特质勾选页的官方选项（只读）。 */
   async function traitChoices(trait: string) {
     const key = ownerKey()
@@ -192,5 +197,5 @@ export const usePersonStore = defineStore('person', () => {
     return out.result as ShownFieldInfo
   }
 
-  return { id, sheet, glossary, loading, error, prevId, nextId, row, readOnly, open, close, reload, edit, add, create, splitStack, createScroll, convertCurrency, duplicate, remove, replace, adjust, fields, traitChoices, filterIds, rest, level, levelNative, stopNative, previewHp, cancelHp, confirmHp, undo, undoTo, history }
+  return { id, sheet, glossary, loading, error, prevId, nextId, row, readOnly, open, close, reload, edit, add, create, splitStack, createScroll, convertCurrency, duplicate, remove, replace, adjust, fields, traitChoices, specialTraits, filterIds, rest, level, levelNative, stopNative, previewHp, cancelHp, confirmHp, undo, undoTo, history }
 })

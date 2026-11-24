@@ -170,6 +170,26 @@ export function createFieldCommands(operate: Operate, actor: ActorGetter) {
     }),
 
     /**
+     * 特殊特质（照官方 _prepareSpecialTraitsContext：CONFIG.DND5E.characterFlags 逐项，按 section 分组；已弃用的项只有用着才列）：
+     * 每项 名字 · 说明 · 类型（开关 / 数字 / 文字，官方 type）· 可选项（有就给）· 现值（人物 flags.dnd5e.<项>）。文字过唯一出口。
+     */
+    specialTraits: (actorId: string) => operate([], async () => {
+      const a = actor(actorId)
+      const data = a._source?.flags?.dnd5e ?? {}
+      const sections = new Map<string, { label: FrameText | null; fields: any[] }>()
+      for (const [key, cfg] of Object.entries<any>(g.CONFIG.DND5E.characterFlags ?? {})) {
+        const value = g.foundry.utils.getProperty(data, key)
+        if (cfg.deprecated && !value) continue
+        const type = cfg.type === Boolean ? 'boolean' : cfg.type === Number ? 'number' : 'string'
+        const choices = cfg.choices ? Object.entries<any>(cfg.choices).map(([v, l]) => ({ value: v, label: text(String(typeof l === 'string' ? l : l?.label ?? v)) })) : null
+        const section = String(cfg.section ?? '')
+        if (!sections.has(section)) sections.set(section, { label: text(section), fields: [] })
+        sections.get(section)!.fields.push({ key, path: `flags.dnd5e.${key}`, name: text(String(cfg.name ?? key)), hint: text(String(cfg.hint ?? '')), type, choices, value: value ?? null })
+      }
+      return { sections: [...sections.values()] }
+    }),
+
+    /**
      * 特质的可选项（照官方 TraitsConfig：dnd5e.documents.Trait.choices，带层级——类别 → 具体项、能不能选）：
      * 基础物品（具体武器 / 护甲 / 工具）按作者编号取名，其余按语言键；抗性 / 免疫 / 易伤另给“无视条件”（官方物品属性里 isPhysical 的），
      * 语言另给交流方式（官方 communicationTypes）。已选的界面从人物字段读（path = 官方 actorKeyPath）。

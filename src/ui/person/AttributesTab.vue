@@ -6,6 +6,7 @@ import { computed, markRaw } from 'vue'
 import { usePersonStore } from '../../stores/person'
 import { useModalStore } from '../../stores/modal'
 import TraitPage from './TraitPage.vue'
+import SpecialTraitsPage from './SpecialTraitsPage.vue'
 import Icon from '../kit/Icon.vue'
 import SkillList from './SkillList.vue'
 import BuildRows from './BuildRows.vue'
@@ -74,7 +75,10 @@ function editTrait(key: string, label: string): void {
       <section class="ps-card" data-testid="ps-attr-traits">
         <div class="ps-card-head">
           <h3>特质</h3>
-          <button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" :disabled="ro" data-testid="ps-special-traits" @click="openFields('全局加值', { path: 'system.bonuses' }, { hint: '对所有攻击、检定、豁免、技能、法术 DC 生效的加值（官方「特殊特质」里的全局加值）。' })"><Icon name="sparkle" :size="13" />全局加值</button>
+          <span class="ps-card-head-acts">
+            <button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" :disabled="ro" data-testid="ps-special-traits" @click="modal.open({ key: 'person-special-traits', title: '特殊特质', component: markRaw(SpecialTraitsPage), variant: 'dialog', width: 620, height: 720 })"><Icon name="sparkle" :size="13" />特殊特质</button>
+            <button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" :disabled="ro" data-testid="ps-global-bonuses" @click="openFields('全局加值', { path: 'system.bonuses' }, { hint: '对所有攻击、检定、豁免、技能、法术 DC 生效的加值（官方「特殊特质」里的全局加值）。' })">全局加值</button>
+          </span>
         </div>
         <BuildRows v-if="!isNpc(s)" />
         <dl class="ps-traits">

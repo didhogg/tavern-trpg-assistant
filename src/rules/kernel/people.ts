@@ -29,6 +29,8 @@ export const PLAY_STATE: RegExp[] = [
   /^system\.attributes\.hd\.spent$/, /^system\.resources\.[^.]+\.spent$/,
 ]
 
+/** 特殊特质页：官方 characterFlags 按分组。 */
+export interface SpecialTraits { sections: Array<{ label: string; fields: Array<{ key: string; path: string; name: string; hint: string; type: 'boolean' | 'number' | 'string'; choices: Array<{ value: string; label: string }> | null; value: unknown }> }> }
 /** 特质勾选页的选项（官方 Trait.choices 摊平，depth = 层级）。 */
 export interface TraitChoices { trait: string; path: string; label: string; rows: Array<{ key: string; label: string; depth: number; selectable: boolean }>; bypasses: Array<{ key: string; label: string }>; communication: Array<{ key: string; label: string }> }
 export interface ChangedField { path: string; kind: 'state' | 'setting' }
@@ -166,6 +168,13 @@ export class KernelPeople {
     if (out.status !== 'complete') return out
     const shown = await (await this.deps.runtime.displayFor(ownerKey, [])).show(out.result as FieldInfo)
     return { ...out, result: shown.value }
+  }
+
+  /** 特殊特质（官方 characterFlags 逐项 + 现值）：只读，文字过唯一出口。 */
+  async specialTraits(ownerKey: string, actorId: string) {
+    const out = await this.call(ownerKey, 'specialTraits', actorId)
+    if (out.status !== 'complete') return null
+    return (await (await this.deps.runtime.displayFor(ownerKey, [])).show(out.result)).value as SpecialTraits
   }
 
   /** 特质的可选项（官方 Trait.choices，带层级；勾选页用）：只读，文字过唯一出口。 */
