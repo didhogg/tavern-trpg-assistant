@@ -3,7 +3,7 @@
 //   上：头像 | 身份（名字 ★ 英文名 ✎ / 职业等级 阵营 / 事实行：种族 背景 体型 类型 速度 感官 法术 / 短休 长休）| 等级卡 ✎
 //   下：生命卡 ✎ | 战斗卡（AC 先攻 专注）✎ | 属性卡 ✎（按页面宽度：三块并排 / 属性单独一排 / 竖排）。
 // 每张卡右上角 ✎ 固定，打开这一块的来源条目抽屉（通用编辑窗口，字段按官方定义生成）；数都取读数，界面不算数。
-import { computed, markRaw, ref } from 'vue'
+import { computed, markRaw, nextTick, ref } from 'vue'
 import { usePersonStore } from '../../stores/person'
 import { useModalStore } from '../../stores/modal'
 import { useRosterStore } from '../../stores/roster'
@@ -16,7 +16,8 @@ import VitalDrawers from './VitalDrawers.vue'
 import IdentityDrawer from './IdentityDrawer.vue'
 import AvatarDrawer from './AvatarDrawer.vue'
 import { openFields, openLevel } from './edit-open'
-import { alignment, background, classes, creatureType, crText, deathShown, isNpc, legendary, named, senses, showExperience, signed, size, species, speeds } from './view'
+import { alignment, background, classes, creatureType, crText, deathShown, exhaustionPips, isNpc, legendary, named, senses, showExperience, signed, size, species, speeds } from './view'
+import NumIn from './table/NumIn.vue'
 
 const person = usePersonStore()
 const modal = useModalStore()
@@ -74,6 +75,27 @@ const openIdentity = () => modal.open({ key: 'person-identity', title: '身份',
 const openAvatar = () => modal.open({ key: 'person-avatar', title: '人物头像', component: markRaw(AvatarDrawer), variant: 'dialog', width: 560, height: 420 })
 const toggleInspiration = () => person.edit(sys.value.attributes.inspiration ? '取消灵感' : '获得灵感', [{ kind: 'set', path: 'system.attributes.inspiration', value: !sys.value.attributes.inspiration }])
 const togglePin = () => person.row && roster.pin([person.row.id], !pinned.value)
+// 名字原地改（Tidy5e 页头名字栏）+ 复制名字（Tidy5e copyInnerText）
+const naming = ref(false)
+const nameText = ref('')
+const nameInput = ref<HTMLInputElement | null>(null)
+const copied = ref(false)
+async function startName(): Promise<void> { nameText.value = String(s.value.name ?? ''); naming.value = true; await nextTick(); nameInput.value?.select() }
+async function saveName(): Promise<void> {
+  if (!naming.value) return
+  naming.value = false
+  const v = nameText.value.trim()
+  if (v && v !== s.value.name) await person.edit(`改名为「${v}」`, [{ kind: 'set', path: 'name', value: v }])
+}
+async function copyName(): Promise<void> {
+  try { await navigator.clipboard.writeText(String(s.value.name ?? '')); copied.value = true; setTimeout(() => { copied.value = false }, 1500) } catch (e) { console.warn('复制名字没成功', e) }
+}
+// 力竭（Tidy5e ActorExhaustionBar：逐级点）与死亡豁免（DeathSavesOverlay：逐格点）直接在页头改
+const exPips = computed(() => exhaustionPips(s.value))
+const exMax = computed(() => exPips.value.length || 6)
+const setExhaustion = (n: number): void => { const cur = Number(sys.value.attributes.exhaustion ?? 0); const v = cur === n ? n - 1 : n; void person.edit(`力竭设为 ${v} 级`, [{ kind: 'set', path: 'system.attributes.exhaustion', value: Math.max(0, v) }]) }
+const setDeath = (which: 'success' | 'failure', n: number): void => { const cur = Number(death.value[which] ?? 0); const v = cur === n ? n - 1 : n; void person.edit(`死亡豁免${which === 'success' ? '成功' : '失败'}设为 ${v}`, [{ kind: 'set', path: `system.attributes.death.${which}`, value: v }]) }
+const setScore = (k: string, v: number): void => { void person.edit(`${named(g.value, 'abilities', k)}设为 ${v}`, [{ kind: 'set', path: `system.abilities.${k}.value`, value: v }]) }
 
 const editHp = () => openFields('最大生命', { path: 'system.attributes.hp' }, { hint: '当前生命、临时生命在卡上点数字直接改；这里管最大生命怎么来的。', total: { label: '最大生命', value: String(sys.value.attributes.hp?.max ?? '') }, addKey: 'system.attributes.hp.bonuses.overall' })
 const editAc = () => openFields('护甲等级', { path: 'system.attributes.ac' }, { total: { label: 'AC', value: String(sys.value.attributes.ac?.value ?? '') }, addKey: 'system.attributes.ac.bonus' })
@@ -110,7 +132,9 @@ function onLevel(key: string): void {
 
     <div class="ps-ident">
       <div class="ps-name-line">
-        <h2 class="ps-name" data-testid="ps-name">{{ s.name }}</h2>
+        <input v-if="naming" ref="nameInput" v-model="nameText" class="trpg-input ps-name-input" maxlength="80" aria-label="名字" data-testid="ps-name-input" @keydown.enter.prevent="saveName" @keydown.esc.prevent="naming = false" @blur="saveName">
+        <h2 v-else class="ps-name" data-testid="ps-name"><button class="ps-name-btn" type="button" :disabled="ro" title="点了改名字" @click="startName">{{ s.name }}</button></h2>
+        <button class="ps-pin" type="button" aria-label="复制名字" title="复制名字" data-testid="ps-name-copy" @click="copyName"><Icon :name="copied ? 'check' : 'copy'" :size="14" /></button>
         <button class="ps-pin" type="button" :aria-pressed="pinned" :aria-label="pinned ? '取消置顶' : '置顶'" :disabled="ro" @click="togglePin"><Icon :name="pinned ? 'star-fill' : 'star'" :size="16" /></button>
         <small v-if="english" class="ps-english">{{ english }}</small>
         <button class="ps-pen ps-pen--inline" type="button" aria-label="改身份" :disabled="ro" data-testid="ps-ident-edit" @click="openIdentity"><Icon name="pencil-simple" :size="14" /></button>
@@ -171,10 +195,18 @@ function onLevel(key: string): void {
       <HpBlock />
       <div class="ps-vital-rows">
         <button v-if="hd && hd.max" class="ps-vital-row" type="button" data-testid="ps-hd" @click="openVital('hitDice')"><span>生命骰</span><b>{{ hd.value }}/{{ hd.max }}</b></button>
-        <button class="ps-vital-row" type="button" data-testid="ps-exh" @click="openVital('exhaustion')"><span>力竭</span><b>{{ sys.attributes.exhaustion ?? 0 }} 级</b></button>
-        <button v-if="deathShown(s)" class="ps-vital-row" :data-alert="zero || undefined" type="button" data-testid="ps-death" @click="openVital('death')">
-          <span>死亡豁免</span><b><template v-if="zero || death.success || death.failure"><span class="ps-death-count">成功 {{ death.success ?? 0 }}，失败 {{ death.failure ?? 0 }}</span></template><template v-else>—</template></b>
-        </button>
+        <div class="ps-vital-row ps-vital-row--pips" data-testid="ps-exh">
+          <button class="ps-vital-name" type="button" title="力竭每一级的效果" @click="openVital('exhaustion')">力竭</button>
+          <span class="ps-pips" role="group" aria-label="力竭等级"><button v-for="n in exMax" :key="n" type="button" class="ps-pip ps-pip--sq" :data-on="n <= Number(sys.attributes.exhaustion ?? 0) || undefined" :aria-label="`力竭 ${n} 级`" :disabled="ro" @click="setExhaustion(n)" /></span>
+          <b>{{ sys.attributes.exhaustion ?? 0 }}</b>
+        </div>
+        <div v-if="deathShown(s)" class="ps-vital-row ps-vital-row--pips" :data-alert="zero || undefined" data-testid="ps-death">
+          <button class="ps-vital-name" type="button" title="死亡豁免（重置等）" @click="openVital('death')">死亡豁免</button>
+          <span v-for="which in (['success', 'failure'] as const)" :key="which" class="ps-pips" role="group" :aria-label="which === 'success' ? '死亡豁免成功' : '死亡豁免失败'">
+            <small>{{ which === 'success' ? '成' : '败' }}</small>
+            <button v-for="n in 3" :key="n" type="button" class="ps-pip" :data-kind="which" :data-on="n <= Number(death[which] ?? 0) || undefined" :aria-label="`${which === 'success' ? '成功' : '失败'} ${n}`" :disabled="ro" @click="setDeath(which, n)" />
+          </span>
+        </div>
       </div>
     </div>
 
@@ -186,10 +218,11 @@ function onLevel(key: string): void {
       </div>
       <div class="ps-card ps-abilities" data-testid="ps-abilities">
         <button class="ps-pen" type="button" aria-label="改属性值" :disabled="ro" data-testid="ps-abilities-edit" @click="editAbilities"><Icon name="pencil-simple" :size="14" /></button>
-        <button v-for="a in abilities" :key="a.key" class="ps-ability" type="button" :data-testid="`ps-ability-${a.key}`" @click="editAbility(a.key)">
-          <small>{{ a.label }}</small><b>{{ signed(a.mod) }}</b><span>{{ a.value }}</span>
+        <div v-for="a in abilities" :key="a.key" class="ps-ability" :data-testid="`ps-ability-${a.key}`">
+          <button class="ps-ability-cfg" type="button" :title="`${a.label}设置（加值、豁免熟练）`" @click="editAbility(a.key)"><small>{{ a.label }}</small><b>{{ signed(a.mod) }}</b></button>
+          <NumIn class="ps-ability-score" :value="Number(a.value ?? 0)" :max="99" :label="`${a.label}属性值`" :disabled="ro" @set="(v) => setScore(a.key, v)" />
           <em :data-prof="a.proficient || undefined" :title="a.proficient ? '豁免熟练' : undefined">豁免 {{ signed(a.save) }}</em>
-        </button>
+        </div>
       </div>
    </div>
   </section>

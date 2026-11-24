@@ -46,7 +46,7 @@ async function recordHeal(): Promise<void> {
 // ---- 力竭：级数上限按官方给的圆点（没有就不设上限，由结算内核限制）；每级效果看库里「力竭」的作者原文 ----
 const pips = computed(() => (s.value ? exhaustionPips(s.value) : []))
 const level = computed(() => Number(s.value?.system.attributes.exhaustion ?? 0))
-const setLevel = (n: number): void => { void person.edit(`力竭设为 ${n} 级`, [{ kind: 'status', statusId: 'exhaustion', levels: n }]) }
+const setLevel = (n: number): void => { void person.edit(`力竭设为 ${n} 级`, [{ kind: 'set', path: 'system.attributes.exhaustion', value: n }]) }
 const rule = ref<{ ref: any; label: string } | null>(null)
 onMounted(async () => {
   if (props.kind !== 'exhaustion' || !campaign.owner) return

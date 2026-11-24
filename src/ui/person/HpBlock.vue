@@ -6,7 +6,9 @@ import { usePersonStore, type HpPreview } from '../../stores/person'
 
 const person = usePersonStore()
 const hp = computed(() => person.sheet?.system.attributes.hp ?? null)
-const pct = computed(() => hp.value && hp.value.max ? Math.max(0, Math.min(100, (hp.value.value / hp.value.max) * 100)) : 0)
+/** 官方算好的实际上限（上限 + 临时上限）与百分比（Tidy5e 生命条同样用它们）。 */
+const effMax = computed(() => Number(hp.value?.effectiveMax ?? hp.value?.max ?? 0))
+const pct = computed(() => Number(hp.value?.pct ?? 0))
 
 type Parsed = { kind: 'damage' | 'heal' | 'set'; n: number }
 /** 输入宽松认（Postel）：全角数字、各种减号、前后空格。 */
@@ -18,7 +20,7 @@ function parse(raw: string): Parsed | null {
   return m[1] === '-' ? { kind: 'damage', n } : m[1] === '+' ? { kind: 'heal', n } : { kind: 'set', n }
 }
 
-const editing = ref<'value' | 'temp' | null>(null)
+const editing = ref<'value' | 'temp' | 'tempmax' | null>(null)
 const text = ref('')
 const composing = ref(false)
 const preview = ref<HpPreview | null>(null)
@@ -27,10 +29,10 @@ const busy = ref(false)
 const input = ref<HTMLInputElement | null>(null)
 let timer: ReturnType<typeof setTimeout> | undefined
 
-async function start(which: 'value' | 'temp'): Promise<void> {
+async function start(which: 'value' | 'temp' | 'tempmax'): Promise<void> {
   if (person.readOnly || !hp.value) return
   editing.value = which
-  text.value = which === 'temp' ? String(hp.value.temp ?? 0) : ''
+  text.value = which === 'temp' ? String(hp.value.temp ?? 0) : which === 'tempmax' ? String(hp.value.tempmax ?? 0) : ''
   await nextTick()
   input.value?.focus()
   input.value?.select()
@@ -55,7 +57,11 @@ async function commit(): Promise<void> {
   if (composing.value || busy.value || !editing.value) return
   busy.value = true
   try {
-    if (editing.value === 'temp') {
+    if (editing.value === 'tempmax') {
+      // 临时生命上限（Tidy5e 临时生命浮层第二格）：可正可负，直接设
+      const n = Number(text.value.normalize('NFKC').replace(/[−‐-―－]/g, '-').trim())
+      if (Number.isFinite(n) && Math.trunc(n) !== Number(hp.value?.tempmax ?? 0)) await person.edit(`临时生命上限设为 ${Math.trunc(n)}`, [{ kind: 'set', path: 'system.attributes.hp.tempmax', value: Math.trunc(n) }])
+    } else if (editing.value === 'temp') {
       const p = parse(text.value)
       if (p) await person.edit(`临时生命设为 ${p.n}`, [{ kind: 'set', path: 'system.attributes.hp.temp', value: p.n }])
     } else {
@@ -88,11 +94,15 @@ const hint = computed(() => preview.value ? `生命 ${preview.value.from} → ${
 v-if="editing === 'value'" ref="input" v-model="text" class="ps-hp-input" inputmode="text" aria-label="改当前生命" data-testid="ps-hp-input"
         @input="onInput" @compositionstart="composing = true" @compositionend="composing = false; onInput()" @keydown.enter.prevent="commit" @keydown.esc.prevent="cancel" @blur="cancel">
       <button v-else class="ps-hp-now" type="button" :disabled="person.readOnly" data-testid="ps-hp-now" @click="start('value')">{{ hp.value }}</button>
-      <span class="ps-hp-max">/ {{ hp.max }}</span>
+      <span class="ps-hp-max" :title="hp.tempmax ? `上限 ${hp.max}，临时 ${hp.tempmax > 0 ? '+' : ''}${hp.tempmax}` : undefined">/ {{ effMax }}</span>
       <input
 v-if="editing === 'temp'" ref="input" v-model="text" class="ps-hp-input ps-hp-input--temp" inputmode="numeric" aria-label="改临时生命"
         @keydown.enter.prevent="commit" @keydown.esc.prevent="cancel" @blur="cancel">
       <button v-else class="ps-hp-temp" type="button" :disabled="person.readOnly" :data-empty="!hp.temp || undefined" data-testid="ps-hp-temp" @click="start('temp')">{{ hp.temp ? `+${hp.temp} 临时` : '+ 临时' }}</button>
+      <input
+v-if="editing === 'tempmax'" ref="input" v-model="text" class="ps-hp-input ps-hp-input--temp" inputmode="numeric" aria-label="改临时生命上限" data-testid="ps-hp-tempmax-input"
+        @keydown.enter.prevent="commit" @keydown.esc.prevent="cancel" @blur="cancel">
+      <button v-else class="ps-hp-temp" type="button" :disabled="person.readOnly" :data-empty="!hp.tempmax || undefined" title="临时生命上限（可正可负）" data-testid="ps-hp-tempmax" @click="start('tempmax')">{{ hp.tempmax ? `上限 ${hp.tempmax > 0 ? '+' : ''}${hp.tempmax}` : '± 上限' }}</button>
     </div>
     <div class="ps-hp-bar" aria-hidden="true"><i :style="{ width: `${pct}%` }" /></div>
     <p v-if="editing === 'value'" class="ps-hp-hint" aria-live="polite" data-testid="ps-hp-hint">{{ hint }}</p>
