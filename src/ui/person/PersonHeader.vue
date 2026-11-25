@@ -126,7 +126,7 @@ const editLevel = () => (npc.value
           <small class="ps-card-label">职业与出身</small>
           <template v-if="cls.length || sp || bg">
             <p v-if="cls.length" class="ps-unit-line" data-testid="ps-unit-classes">
-              <span v-for="c in cls" :key="c.id" class="ps-unit-item"><Term v-if="c.ref" :label="`查看${c.name}`" @open="openEntry(c.ref as never, c.name)">{{ c.name }}</Term><b v-else>{{ c.name }}</b><span class="ps-unit-num">{{ c.levels }}</span></span>
+              <span v-for="c in cls" :key="c.id" class="ps-unit-item"><Term v-if="c.ref" :label="`查看${c.name}`" @open="openEntry(c.ref as never, c.name)">{{ c.name }}</Term><b v-else>{{ c.name }}</b><span class="ps-unit-num">{{ c.levels }}</span><template v-if="c.subclass"><span class="ps-unit-quiet">（</span><Term v-if="c.subclass.ref" :label="`查看${c.subclass.name}`" @open="openEntry(c.subclass.ref as never, c.subclass.name)">{{ c.subclass.name }}</Term><span v-else>{{ c.subclass.name }}</span><span class="ps-unit-quiet">）</span></template></span>
               <span v-if="spellDc" class="ps-unit-item ps-unit-quiet">{{ spellDc }}</span>
             </p>
             <p v-if="sp || bg" class="ps-unit-line" data-testid="ps-unit-origin">
