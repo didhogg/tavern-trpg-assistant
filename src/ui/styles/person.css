@@ -91,7 +91,6 @@
 .ps-traits dd { margin: 0; display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-2); }
 .ps-traits dd .ps-skill-icon { flex: none; opacity: .55; }
 .ps-traits dd:hover .ps-skill-icon { opacity: 1; }
-.ps-fact-part { display: inline-block; white-space: nowrap; margin-right: var(--sp-3); }
 /* 各组的表列宽一致（上下对齐） */
 .ps-act-table { table-layout: fixed; }
 .ps-act-table thead th:nth-child(2) { width: 112px; }
@@ -161,7 +160,7 @@
 .ps-build-label { color: var(--text2); font-size: var(--fs-xs); }
 .ps-build-main { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-1) var(--sp-2); min-width: 0; }
 .ps-build-name { flex: 1 1 auto; min-width: 0; font-weight: var(--fw-semibold); }
-.ps-build-level .trpg-btn { min-height: 28px; }
+.ps-build-level .trpg-select-trigger { min-height: 30px; min-width: 6.5em; }
 .ps-build-turn { color: var(--text3); }
 .ps-build-sub { min-height: 32px; }
 /* 侧栏收藏（照 Tidy5e favorites：每条 名字 + 小字 · 右边按种类的数 / 原地输入 / 开关 · ×） */
@@ -178,3 +177,21 @@
 .ps-tab { padding-bottom: 72px; }
 .ps-card-head-acts { display: inline-flex; gap: var(--sp-1); }
 .ps-build-crown { margin-left: var(--sp-1); color: var(--accent); vertical-align: -2px; }
+/* 职业与出身弹窗（驾驶员 11-25）：宽屏左边这些行、右边选中那一行的资料 / 改等级流程，和统一资料库页（.tp）同一种两栏；窄屏只有左边 */
+.ps-build-row[data-picked] { background: var(--bg-hover); box-shadow: inset 3px 0 0 var(--accent); }
+.od-wrap .ps-build { margin: 0; padding: 0; border-bottom: 0; }
+.od-wrap .ps-build-row { padding: 0 var(--sp-2); cursor: pointer; }
+.od-wrap .ps-build-row:hover:not([data-picked]) { background: var(--bg-hover); }
+.od-wrap { height: 100%; min-height: 0; }
+.od-wrap[data-wide] { display: grid; grid-template-columns: minmax(280px, 5fr) 7fr; margin: calc(-1 * var(--sp-4)) calc(-1 * var(--sp-5)) calc(-1 * var(--sp-5)); }
+.od-list { min-height: 0; overflow: auto; }
+.od-wrap[data-wide] .od-list { padding: var(--sp-3) var(--sp-3) var(--sp-4) var(--sp-4); border-right: var(--border) solid var(--line); }
+.od-side { min-height: 0; display: flex; flex-direction: column; overflow: auto; padding: var(--sp-3) var(--sp-4) var(--sp-4); }
+.od-side > .od { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.od-title { margin: 0 0 var(--sp-2); font-family: var(--font-serif); font-size: var(--fs-xl); font-weight: var(--fw-semibold); }
+.od-hint, .od-empty p { margin: 0; color: var(--text2); font-size: var(--fs-sm); }
+.od-empty { display: grid; gap: var(--sp-2); justify-items: start; }
+.od-confirm { display: grid; gap: var(--sp-3); align-content: start; }
+.od-confirm h3 { margin: 0; font-size: var(--fs-lg); }
+.od-confirm p { margin: 0; color: var(--text2); }
+.od-actions { display: flex; justify-content: flex-end; gap: var(--sp-2); }

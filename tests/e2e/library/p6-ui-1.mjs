@@ -54,15 +54,15 @@ try {
   await page.getByTestId('pp-row').filter({ hasText: '盖尔' }).first().click()
   await page.getByTestId('ps-head').waitFor(); await settle(page, 800)
   await shot('01-pc-head')
-  const sub = await page.getByTestId('ps-sub').innerText()
-  check('点一行进整页详情，名字行有职业等级（中文）', (await page.getByTestId('people-view').count()) === 0 && /野蛮人/.test(sub), sub)
+  const sub = await page.getByTestId('ps-unit-classes').innerText()
+  check('点一行进整页详情，职业与出身框有职业等级（中文）', (await page.getByTestId('people-view').count()) === 0 && /野蛮人/.test(sub), sub)
   const abil = await page.getByTestId('ps-abilities').innerText()
   check('六属性中文名（力量…魅力）', ['力量', '敏捷', '体质', '智力', '感知', '魅力'].every((w) => abil.includes(w)), abil.replace(/\s+/g, ' '))
   // 侧栏默认是「收藏」（照 Tidy5e 默认 [收藏, 技能]），切到「技能」再看
   await page.getByTestId('ps-side').getByRole('group', { name: '侧栏' }).getByRole('button', { name: '技能', exact: true }).click(); await settle(page, 300)
   check('侧栏技能 18 项中文', (await page.getByTestId('ps-side').locator('li').count()) === 18 && han(await page.getByTestId('ps-side').innerText()))
-  const facts = await page.getByTestId('ps-facts').innerText()
-  check('事实表：种族、背景（中文）、体型、速度', /种族/.test(facts) && /背景/.test(facts) && /速度/.test(facts) && !/DND5E\./.test(facts), facts.replace(/\s+/g, ' '))
+  const facts = `${await page.getByTestId('ps-unit-origin').innerText()} | ${await page.getByTestId('ps-unit-traits').innerText()}`
+  check('页头单元：种族、背景（中文）在职业与出身框，体型、速度在特征框', han(facts) && /尺/.test(facts) && !/DND5E\./.test(facts) && !/[A-Za-z]{4,}/.test(facts), facts.replace(/\s+/g, ' '))
 
   // ---- 生命原地改 ----
   const hp0 = await hpNow()
@@ -94,14 +94,15 @@ try {
   check('死亡豁免成功 2', (await page.getByTestId('ps-death').locator('[data-kind=success][data-on]').count()) === 2)
 
   // ---- 身份 / 头像 ----
-  await page.getByTestId('ps-ident-edit').click(); await page.getByTestId('ps-drawer-identity').waitFor()
-  await page.getByTestId('ps-drawer-identity').getByLabel(/英文名/).fill('Gale'); await shot('06-drawer-identity')
-  await page.getByTestId('ps-drawer-identity').getByRole('button', { name: '保存' }).click(); await settle(page, 1500)
-  check('英文名显示在名字旁', /Gale/.test(await page.locator('.ps-name-line').innerText()))
+  await page.getByTestId('ps-name-edit').click(); await page.getByTestId('ps-name-dialog').waitFor()
+  check('名字弹窗只有名字和英文名', (await page.getByTestId('ps-name-dialog').locator('input').count()) === 2)
+  await page.getByTestId('ps-english-input').fill('Gale'); await settle(page, 400); await shot('06-name-dialog')
+  await page.getByTestId('ps-name-save').click(); await settle(page, 1500)
+  check('英文名显示在名字旁', /Gale/.test(await page.getByTestId('ps-unit-name').innerText()))
 
   // ---- 撤销 / 改动记录 ----
   await page.getByTestId('ps-undo').click(); await settle(page, 1500)
-  check('撤销一步：英文名回到空', !/Gale/.test(await page.locator('.ps-name-line').innerText()))
+  check('撤销一步：英文名回到空', !/Gale/.test(await page.getByTestId('ps-unit-name').innerText()))
   await page.getByTestId('ps-history').click(); await page.getByTestId('ps-drawer-history').waitFor(); await settle(page, 1200); await shot('08-history')
   const hist = await page.getByTestId('ps-drawer-history').innerText()
   check('改动记录：中文字段名（当前 HP / 临时 HP 一类）', /HP|生命/.test(hist) && /撤销到这里/.test(hist) && !/system\./.test(hist), hist.replace(/\s+/g, ' ').slice(0, 300))
@@ -157,9 +158,9 @@ try {
   // ---- 下一位：怪物 ----
   await page.getByTestId('ps-next').click(); await page.getByTestId('ps-head').waitFor(); await settle(page, 1500); await shot('09-monster-head')
   const lvl = await page.getByTestId('ps-level').innerText()
-  const msub = await page.getByTestId('ps-sub').innerText()
+  const msub = await page.getByTestId('ps-unit-traits').innerText()
   check('怪物页头：挑战等级 + 传奇动作圆点，没有灵感', /挑战等级/.test(lvl) && /传奇动作/.test(lvl) && (await page.getByTestId('ps-insp').count()) === 0, lvl.replace(/\s+/g, ' '))
-  check('怪物名字行：类型 · 体型 · 阵营都是中文', han(msub) && !/[A-Za-z]{4,}/.test(msub), msub)
+  check('怪物特征框：体型、类型、速度、阵营都是中文', han(msub) && !/[A-Za-z]{4,}/.test(msub), msub)
   await page.getByRole('button', { name: '放在哪个分类' }).click(); await page.getByRole('menuitem', { name: 'NPC' }).click(); await settle(page, 1500)
   check('分类 ▾ 移到 NPC', /NPC/.test(await page.getByRole('button', { name: '放在哪个分类' }).innerText()))
   await page.getByTestId('ps-back').click(); await page.getByTestId('people-view').waitFor(); await settle(page, 600)

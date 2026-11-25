@@ -16,8 +16,9 @@ import AskParts from './AskParts.vue'
 
 /** closeOnBack：直接打开的（升级）没有上一页，返回 = 关掉弹窗。 */
 /** level：从等级菜单「改到第几级」进来的，等级题预先选好这一级。 */
-const props = defineProps<{ entryRef: EntryRef; name: string; replace?: { id: string; name: string }; closeOnBack?: boolean; level?: number }>()
-const emit = defineEmits<{ back: [] }>()
+/** embedded：嵌在别的页里（职业与出身弹窗右边）：确认后交 done 给外面，不动弹窗；backText = 第一题时返回按钮的字。 */
+const props = defineProps<{ entryRef: EntryRef; name: string; replace?: { id: string; name: string }; closeOnBack?: boolean; level?: number; embedded?: boolean; backText?: string }>()
+const emit = defineEmits<{ back: []; done: [] }>()
 const person = usePersonStore()
 const modal = useModalStore()
 
@@ -69,7 +70,7 @@ async function confirm(): Promise<void> {
   busy.value = true
   try {
     const ok = await person.importConfirm(props.replace ? `把${props.replace.name}换成${props.name}` : `加了${props.name}`, step.value.changes)
-    if (ok) { staged = false; modal.done() }
+    if (ok) { staged = false; if (props.embedded) emit('done'); else modal.done() }
   } finally { busy.value = false }
 }
 // 关掉弹窗 / 换页：没确认的改动退回
@@ -105,7 +106,7 @@ const formKind = computed(() => { const t = question.value?.form.type; return t 
 <template>
   <div class="ask" data-testid="import-ask" :aria-busy="busy || undefined">
     <header class="ask-head">
-      <button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" :disabled="busy" data-testid="ask-back" @click="back"><Icon name="caret-left" :size="14" />{{ asked.length ? '上一步' : closeOnBack ? '关掉' : '换一个' }}</button>
+      <button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" :disabled="busy" data-testid="ask-back" @click="back"><Icon name="caret-left" :size="14" />{{ asked.length ? '上一步' : backText ?? (closeOnBack ? '关掉' : '换一个') }}</button>
       <b class="ask-what">{{ replace ? `${replace.name} → ${name}` : name }}</b>
       <small v-if="asked.length" class="ask-count">已答 {{ asked.length }} 题</small>
     </header>

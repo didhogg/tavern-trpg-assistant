@@ -93,7 +93,7 @@ try {
   await page.getByTestId('ps-bag').evaluate((e) => e.scrollIntoView({ block: 'start' })); await shot('bag')
 
   // —— 页头 ——
-  await page.getByTestId('ps-name').getByRole('button').click(); await page.getByTestId('ps-name-input').fill('艾琳·晨光'); await page.getByTestId('ps-name-input').press('Enter'); await settle(page, 2200)
+  await page.getByTestId('ps-name-edit').click(); await page.getByTestId('ps-name-input').fill('艾琳·晨光'); await page.getByTestId('ps-name-input').press('Enter'); await settle(page, 2200)
   check('页头：名字原地改', (await S('s.name')) === '艾琳·晨光')
   const str = page.getByTestId('ps-ability-str').locator('input'); await str.fill('15'); await str.press('Enter'); await settle(page, 2200)
   check('页头：属性值原地输入', (await S('s.system.abilities.str.value')) === 15)
@@ -115,13 +115,17 @@ try {
   await attr.getByTestId('ps-save-prof-str').click(); await settle(page, 2200)
   check('属性页：豁免熟练开关', (await S('s.system.abilities.str.proficient')) === 1)
   const lv = () => S(`s.items.filter((i) => i.type === 'class').map((i) => i.system.levels)[0]`)
-  await attr.getByRole('button', { name: /牧师改到几级/ }).click(); await settle(page, 300)
-  // 升级走作者「导入到人物」问答（等级题已按菜单预选，要做的选择一题一题答完再确认）
-  await page.getByRole('menuitem', { name: /改到 3 级/ }).scrollIntoViewIfNeeded(); await page.getByRole('menuitem', { name: /改到 3 级/ }).click()
-  await page.getByTestId('import-ask').waitFor(); await answerImport(page); await settle(page, 1500)
-  check('属性页：等级菜单改到 3 级（问答）', (await lv()) === 3)
-  await attr.getByTestId('ps-build-up').click(); await page.getByTestId('import-ask').waitFor(); await answerImport(page); await settle(page, 1500)
-  check('属性页：升一级只升一级（4）', (await lv()) === 4)
+  // 属性页的等级下拉 → 打开职业与出身弹窗，右边走升级问答（等级题已按下拉预选，要做的选择一题一题答完再确认）
+  const levelTo = async (n) => {
+    await attr.getByTestId('ps-build-level').first().click(); await settle(page, 300)
+    await page.getByRole('option', { name: `${n} 级`, exact: true }).scrollIntoViewIfNeeded(); await page.getByRole('option', { name: `${n} 级`, exact: true }).click()
+    await page.getByTestId('import-ask').waitFor(); await answerImport(page); await settle(page, 1500)
+    await page.locator('.trpg-modal__close').click(); await settle(page, 500)
+  }
+  await levelTo(3)
+  check('属性页：等级下拉改到 3 级（问答）', (await lv()) === 3)
+  await levelTo(4)
+  check('属性页：等级下拉再选 4 级只升一级（4）', (await lv()) === 4)
   await attr.getByTestId('ps-build-race').getByRole('button', { name: /更多操作/ }).click(); await settle(page, 300)
   await page.getByRole('menuitem', { name: /换种族/ }).click(); await page.getByTestId('item-pick').waitFor()
   await page.getByTestId('ip-search').fill('矮人'); await settle(page, 800); await page.getByTestId('ip-row').first().click(); await settle(page, 600); await page.getByTestId('ip-add').click()

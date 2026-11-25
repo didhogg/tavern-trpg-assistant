@@ -10,6 +10,7 @@ import SpecialTraitsPage from './SpecialTraitsPage.vue'
 import Icon from '../kit/Icon.vue'
 import SkillList from './SkillList.vue'
 import BuildRows from './BuildRows.vue'
+import { openOrigins } from './unit-open'
 import { openFields } from './edit-open'
 import { isNpc, named, signed, skills, tools, traits } from './view'
 
@@ -80,7 +81,7 @@ function editTrait(key: string, label: string): void {
             <button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" :disabled="ro" data-testid="ps-global-bonuses" @click="openFields('全局加值', { path: 'system.bonuses' }, { hint: '对所有攻击、检定、豁免、技能、法术 DC 生效的加值（官方「特殊特质」里的全局加值）。' })">全局加值</button>
           </span>
         </div>
-        <BuildRows v-if="!isNpc(s)" />
+        <BuildRows v-if="!isNpc(s)" @pick="(key) => openOrigins({ start: key })" @level="(c, delta) => openOrigins({ level: { classId: c.id, delta } })" />
         <dl class="ps-traits">
           <template v-for="t in traitRows" :key="t.key">
             <dt>{{ t.label }}</dt>

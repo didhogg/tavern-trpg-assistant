@@ -1,6 +1,6 @@
 // P6-R 从空白卡建一个完整人物（驾驶员 11-24：不用建卡器，空白卡里每一步都能建）——全部按用户点法：
-//   新建 → 直接新建 → 改名 → 页头填属性值 → 选种族（半精灵）→ 选背景（侍僧）→ 选职业（牧师，选戏法）→ 选子职业（生命领域）
-//   → 等级管理升到 2 级 → 加专长 / 物品 → 逐页看（没有原始键、没有漏翻英文）→ 撤销最后一步。
+//   新建 → 直接新建 → 名字框 ✎ 改名 → 页头填属性值 → 职业与出身框 ✎ → 选种族（半精灵）→ 选背景（侍僧）→ 选职业（牧师，选戏法）→ 选子职业（生命领域）
+//   → 等级下拉选 2 级（右边答升级题） → 加专长 / 物品 → 逐页看（没有原始键、没有漏翻英文）→ 撤销最后一步。
 // 每道题都走作者「导入到人物」问答（ask-helper.mjs 像用户一样答）；每步反馈要在 1 秒内（这个战役第一次启动规则引擎除外）。
 // 截图 work/p6-ui/shots-blank-<内核>/。
 import { rm, mkdir } from 'node:fs/promises'
@@ -39,6 +39,12 @@ const fromLibrary = async (open, query, row, tag, opts = {}) => {
   await settle(page, 1200)
   return steps
 }
+/** 职业与出身弹窗（页头框 ✎）：没开就先开，再点里面的按钮。 */
+const originsDlg = () => page.getByTestId('origins-dialog')
+const inOrigins = async (testid) => {
+  if (!await originsDlg().isVisible()) { await page.getByTestId('ps-origins-edit').click(); await originsDlg().waitFor() }
+  await originsDlg().getByTestId(testid).click()
+}
 try {
   await page.goto(url)
   await page.waitForFunction(`!!(${pinia})._s.get('app')?.booted`)
@@ -55,22 +61,23 @@ try {
   await page.getByRole('button', { name: '新建' }).click(); await settle(page, 250)
   await page.getByRole('menuitem', { name: '直接新建（空白人物卡）' }).click()
   await page.getByTestId('ps-head').waitFor(); await settle(page, 800); await shot('01-blank')
-  check('① 直接新建：进了空白人物卡（等级 0、有「从空白开始」）', (await S('s.system.details.level')) === 0 && await page.getByTestId('ps-blank-build').isVisible())
+  check('① 直接新建：进了空白人物卡（等级 0，职业与出身框写着还没有）', (await S('s.system.details.level')) === 0 && await page.getByTestId('ps-unit-origins-empty').isVisible())
 
   // ② 改名 + 属性值（页头原地填）
-  await page.getByTestId('ps-name').click(); await page.getByTestId('ps-name-input').fill('艾莉娅'); await page.getByTestId('ps-name-input').press('Enter'); await settle(page, 1500)
+  await page.getByTestId('ps-name-edit').click(); await page.getByTestId('ps-name-input').fill('艾莉娅'); await page.getByTestId('ps-name-input').press('Enter'); await settle(page, 1500)
   for (const [k, v] of [['str', 8], ['dex', 14], ['con', 13], ['int', 10], ['wis', 15], ['cha', 12]]) {
     const ipt = page.getByTestId(`ps-ability-${k}`).locator('input'); await ipt.click(); await ipt.fill(String(v)); await ipt.press('Enter'); await settle(page, 1200)
   }
   check('② 改名、属性值写进人物', (await S('s.name')) === '艾莉娅' && (await S('s.system.abilities.wis.value')) === 15, JSON.stringify(await S('Object.fromEntries(Object.entries(s.system.abilities).map(([k, v]) => [k, v.value]))')))
 
   // ③ 种族 / 背景 / 职业 / 子职业（作者整路：特性、熟练、装备一起来）
-  await fromLibrary(() => page.getByTestId('ps-blank-race').click(), '半精灵', /^半精灵\s*PHB/, '03-race', { prefer: { '技能熟练': ['洞悉', '察觉'] } })
-  check('③ 种族：半精灵 + 种族特性', /半精灵/.test(await page.getByTestId('ps-facts').innerText()) && (await S(`s.items.filter((i) => i.type === 'feat').length`)) >= 4)
-  await fromLibrary(() => page.getByTestId('ps-blank-bg').click(), '侍僧', /^侍僧/, '04-bg')
-  check('③ 背景：侍僧 + 信仰庇护', /侍僧/.test(await page.getByTestId('ps-facts').innerText()) && /庇护/.test(await S('JSON.stringify(s.shown?.items ?? [])')))
+  await page.getByTestId('ps-origins-edit').click(); await originsDlg().waitFor(); await settle(page, 500); await shot('02b-origins-empty')
+  await fromLibrary(() => inOrigins('ps-build-pick-race'), '半精灵', /^半精灵\s*PHB/, '03-race', { prefer: { '技能熟练': ['洞悉', '察觉'] } })
+  check('③ 种族：半精灵 + 种族特性', /半精灵/.test(await page.getByTestId('ps-unit-origin').innerText()) && (await S(`s.items.filter((i) => i.type === 'feat').length`)) >= 4)
+  await fromLibrary(() => inOrigins('ps-build-pick-background'), '侍僧', /^侍僧/, '04-bg')
+  check('③ 背景：侍僧 + 信仰庇护', /侍僧/.test(await page.getByTestId('ps-unit-origin').innerText()) && /庇护/.test(await S('JSON.stringify(s.shown?.items ?? [])')))
   // 选条目页：中英文名都能搜、按来源筛选
-  await page.getByTestId('ps-blank-class').click(); await page.getByTestId('ip-search').waitFor()
+  await inOrigins('ps-build-add-class'); await page.getByTestId('ip-search').waitFor()
   await page.getByTestId('ip-search').fill('Cleric'); await settle(page, 500)
   check('选条目：英文名 Cleric 搜得到牧师', /牧师/.test(await page.getByTestId('ip-row').first().innerText()))
   await page.getByTestId('ip-search').fill('')
@@ -80,20 +87,23 @@ try {
     check('选条目：按来源筛选只剩 PHB', srcs.length === 1 && srcs[0] === 'PHB', srcs.join('、'))
   } else check('选条目：有「按来源筛选」', false)
   await page.keyboard.press('Escape'); await settle(page, 400)
-  await fromLibrary(() => page.getByTestId('ps-blank-class').click(), '牧师', /^牧师\s*PHB/, '05-class', { prefer: { '技能熟练': ['医药', '宗教'], '选择戏法': ['圣火术', '神导术', '维生术'] } })
-  check('③ 职业：牧师 1 级、生命 > 0、AC > 10', /牧师 1/.test(await page.getByTestId('ps-sub').innerText()) && (await S('s.system.attributes.hp.max')) > 0 && (await S('s.system.attributes.ac.value')) > 10)
+  await fromLibrary(() => inOrigins('ps-build-add-class'), '牧师', /^牧师\s*PHB/, '05-class', { prefer: { '技能熟练': ['医药', '宗教'], '选择戏法': ['圣火术', '神导术', '维生术'] } })
+  check('③ 职业：牧师 1 级、生命 > 0、AC > 10', /牧师\s*1/.test(await page.getByTestId('ps-unit-classes').innerText()) && (await S('s.system.attributes.hp.max')) > 0 && (await S('s.system.attributes.ac.value')) > 10)
   const cantrips = await S(`s.items.filter((i) => i.type === 'spell' && i.system.level === 0).length`)
   check('③ 选的 3 个戏法进了人物', cantrips === 3, String(cantrips))
-  await page.getByTestId('ps-tab-attr').click(); await settle(page, 800)
-  check('③ 1 级牧师该选子职业（按作者职业数据）', await page.getByTestId('ps-build-pick-sub').isVisible())
-  await fromLibrary(() => page.getByTestId('ps-build-pick-sub').click(), '生命', /生命/, '06-sub')
-  check('③ 子职业：生命领域', (await S(`s.items.filter((i) => i.type === 'subclass').length`)) === 1 && /生命/.test(await page.getByTestId('ps-build').innerText()))
+  check('③ 1 级牧师该选子职业（按作者职业数据）', await originsDlg().getByTestId('ps-build-pick-sub').isVisible())
+  await fromLibrary(() => inOrigins('ps-build-pick-sub'), '生命', /生命/, '06-sub')
+  await settle(page, 400); await shot('06b-origins-built')
+  check('③ 子职业：生命领域', (await S(`s.items.filter((i) => i.type === 'subclass').length`)) === 1 && /生命/.test(await originsDlg().getByTestId('ps-build').innerText()))
 
-  // ④ 升级（等级管理 → 牧师 升级…，等级题已预选 2 级）
-  await page.getByTestId('ps-level').getByRole('button', { name: '等级管理' }).click(); await settle(page, 300)
-  await page.getByRole('menuitem', { name: /升级/ }).first().click(); await page.getByTestId('import-ask').waitFor()
+  // ④ 升级（职业与出身弹窗：牧师那一行的等级下拉选 2 级 → 右边答升级题，等级题已预选 2 级）
+  await originsDlg().getByTestId('ps-build-level').first().click(); await page.getByRole('option', { name: '2 级', exact: true }).click()
+  await page.getByTestId('import-ask').waitFor(); await shot('07-lv2-start')
   noteSteps('07-lv2', await answerImport(page, { firstPause: 2000, onStep: (n) => shot(`07-lv2-q${n}`) })); await settle(page, 1200)
   check('④ 升到 2 级（引导神力进特性）', (await S('s.system.details.level')) === 2 && /引导神力/.test(await S('JSON.stringify(s.shown?.items ?? [])')))
+  check('④ 升完回到牧师的资料（弹窗还在，右边是资料卡）', await originsDlg().isVisible() && (await page.getByTestId('import-ask').count()) === 0)
+  await shot('07-lv2-done')
+  await page.locator('.trpg-modal__close').click(); await settle(page, 400)
 
   // ④′ 带「附带选择」的专长（2024 魔法学徒：作者组合组件 / 额外法术——选职业法表、戏法、1 环法术、施法属性），答完法术真的进人物
   await page.getByTestId('ps-tab-feat').click(); await settle(page, 700)

@@ -19,22 +19,31 @@
 .ps-portrait img { width: 100%; height: 100%; object-fit: cover; }
 .ps-portrait-badge { position: absolute; right: 6px; bottom: 6px; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; background: var(--surface); border: var(--border) solid var(--line); }
 
-/* 身份：名字最大（衬线），★ 置顶、英文名、✎ */
+/* 页头三个单元框（驾驶员 11-25）：名字 / 职业与出身 / 特征，和生命卡、AC 卡同一种框（.ps-card + 右上 ✎ .ps-pen）。
+   整个框都能点（打开这个单元的编辑弹窗），✎ 是给键盘和看得见的入口；框里的下划线术语点了看资料（不打开编辑） */
+.ps-name-row { align-self: stretch; display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); }
+.ps-unit { padding: var(--sp-2) var(--sp-3); cursor: pointer; transition: border-color var(--dur-fast) var(--ease-std); }
+.ps-unit:hover { border-color: var(--line-ctrl); }
+.ps-unit--name { flex: 1 1 16rem; min-width: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 var(--sp-2); padding-right: var(--sp-5); }
+.ps-units { align-self: stretch; display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: var(--sp-3); }
+.ps-unit > .ps-card-label { display: block; margin-bottom: 2px; }
+.ps-unit-line { margin: 0; display: flex; flex-wrap: wrap; gap: 0 var(--sp-4); font-size: var(--fs-sm); line-height: 1.6; color: var(--text); }
+.ps-unit-item { display: inline-flex; align-items: baseline; gap: 4px; white-space: nowrap; }
+.ps-unit-num { font-variant-numeric: tabular-nums; }
+.ps-unit-quiet, .ps-unit-empty { color: var(--text2); }
+.ps-unit-empty { margin: 0; font-size: var(--fs-sm); }
 .ps-ident { grid-area: ident; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-2); }
-.ps-name-line { align-self: stretch; display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--sp-2); }
 .ps-name { margin: 0; font-family: var(--font-serif); font-size: var(--fs-3xl); font-weight: var(--fw-semibold); line-height: var(--lh-tight); color: var(--text); }
 .ps-pin { align-self: center; width: 28px; height: 28px; display: grid; place-items: center; padding: 0; border: 0; background: none; color: var(--text3); cursor: pointer; }
 .ps-pin[aria-pressed='true'] { color: var(--accent); }
 .ps-english { color: var(--text2); font-size: var(--fs-md); }
-.ps-sub { display: flex; flex-wrap: wrap; gap: 0 var(--sp-3); margin: 0; color: var(--text2); }
-.ps-sub-strong { color: var(--text); font-weight: var(--fw-semibold); }
-.ps-rests { display: inline-flex; gap: var(--sp-2); margin-left: auto; align-self: center; }
+.ps-rests { display: inline-flex; gap: var(--sp-2); margin-left: auto; }
 
 /* 等级卡 */
 .ps-level { grid-area: level; display: grid; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); }
 .ps-level-nums { display: flex; align-items: flex-end; gap: var(--sp-5); flex-wrap: wrap; }
 .ps-level-nums > div { display: flex; flex-direction: column; }
-.ps-level-nums small, .ps-box small, .ps-ability small, .ps-xp small, .ps-fact dt { color: var(--text2); font-size: var(--fs-xs); }
+.ps-level-nums small, .ps-box small, .ps-ability small, .ps-xp small { color: var(--text2); font-size: var(--fs-xs); }
 .ps-level-nums b { font-size: var(--fs-3xl); font-weight: var(--fw-semibold); line-height: 1.1; font-variant-numeric: tabular-nums; }
 .ps-level-nums b.ps-num-md { font-size: var(--fs-xl); }
 .ps-insp { margin-left: auto; align-self: center; display: inline-flex; align-items: center; gap: var(--sp-1); min-height: 32px; padding: 0 var(--sp-3); border: var(--border) solid var(--line-ctrl); border-radius: var(--r-pill); background: var(--surface); color: var(--text2); cursor: pointer; }
@@ -50,15 +59,6 @@
 .ps-dot { width: 10px; height: 10px; border-radius: 50%; border: var(--border) solid var(--primary); }
 .ps-dot[data-on] { background: var(--primary); }
 
-/* 事实行：小灰字标签 + 正文，往后排、自动换行（不再是一格一格的大框）；点值 = 打开它自己的编辑窗口 */
-.ps-facts { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-5); margin: 0; font-size: var(--fs-sm); }
-.ps-fact { display: flex; align-items: baseline; gap: var(--sp-2); min-width: 0; }
-.ps-fact dt { flex: none; color: var(--text2); font-size: var(--fs-xs); }
-.ps-fact dd { margin: 0; min-width: 0; color: var(--text); }
-/* inline-flex：基线取第一行（按钮默认按最后一行对齐，标签会掉到值的最后一行旁边） */
-.ps-fact-btn { display: inline-flex; flex-wrap: wrap; gap: 0 var(--sp-2); padding: 0; border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
-.ps-fact-btn:hover:not(:disabled) { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; }
-.ps-fact-part { white-space: nowrap; }
 
 /* 生命卡：当前生命最大（von Restorff），点它原地改；下面三行（生命骰 / 力竭 / 死亡豁免）点开抽屉 */
 .ps-vitals { grid-area: vitals; display: flex; flex-direction: column; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); }
@@ -93,10 +93,6 @@
 .ps-ability em { align-self: stretch; display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 2px; padding-top: 4px; border-top: var(--border) solid var(--line); font-style: normal; color: var(--text2); font-size: var(--fs-xs); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .ps-ability em[data-prof] { color: var(--primary); }
 .ps-ability em[data-prof]::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.ps-blank-cta { align-self: stretch; display: flex; flex-direction: column; gap: var(--sp-1); padding: var(--sp-2) var(--sp-3); border: var(--border) dashed var(--accent); border-radius: var(--r-md); background: var(--bg-sunk); color: var(--text); }
-.ps-blank-cta b { display: inline-flex; align-items: center; gap: var(--sp-1); }
-.ps-blank-cta > span { color: var(--text2); font-size: var(--fs-sm); }
-.ps-blank-steps { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-1); }
 
 /* 按页面宽度（不是窗口宽度：小窗和全屏里内容区差得多）换排法 */
 /* 中等宽度：生命卡横铺一整条（数字和生命条在左、生命骰 / 力竭 / 死亡豁免在右），下面 AC 先攻 专注 + 六属性合成一条统计条（Tidy5e） */
@@ -120,11 +116,6 @@
   .ps-abilities { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .ps-name { font-size: var(--fs-2xl); }
 }
-/* 名字原地改 + 复制（Tidy5e 页头名字栏） */
-.ps-name-btn { padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: text; border-bottom: 1px dashed transparent; }
-.ps-name-btn:hover:not(:disabled) { border-bottom-color: var(--line-ctrl); }
-.ps-name-btn:disabled { cursor: default; }
-.ps-name-input { font-family: var(--font-serif); font-size: var(--fs-2xl); font-weight: var(--fw-semibold); min-width: 10em; max-width: 100%; }
 /* 属性卡：上半点开设置，下半属性值原地输入 */
 .ps-ability { cursor: default; }
 .ps-ability-cfg { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }

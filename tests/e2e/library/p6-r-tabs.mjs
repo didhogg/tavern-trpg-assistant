@@ -49,7 +49,7 @@ try {
   await page.getByRole('button', { name: '新建' }).click(); await page.getByRole('menuitem', { name: '直接新建（空白人物卡）' }).click()
   await page.getByTestId('ps-head').waitFor(); await settle(page, 1200)
   await shot('00-blank-head')
-  check('空白人物建好并进了详情', /新人物/.test(await page.locator('.ps-name-line').innerText()))
+  check('空白人物建好并进了详情', /新人物/.test(await page.getByTestId('ps-unit-name').innerText()))
   await page.getByTestId('ps-back').click(); await settle(page, 800)
   for (const who of ['艾琳', '成年黑龙']) {
     await page.getByTestId('pp-row').filter({ hasText: who }).first().click()

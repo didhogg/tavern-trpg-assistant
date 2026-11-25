@@ -42,7 +42,7 @@ try {
   // ① 空白人物
   await page.getByRole('button', { name: '新建' }).click(); await page.getByRole('menuitem', { name: '直接新建（空白人物卡）' }).click()
   await page.getByTestId('ps-head').waitFor(); await settle(page, 1200)
-  check('① 空白人物：建好、进了详情', /新人物/.test(await page.locator('.ps-name-line').innerText()))
+  check('① 空白人物：建好、进了详情', /新人物/.test(await page.getByTestId('ps-unit-name').innerText()))
   const str0 = await str()
 
   // ② 编辑窗口改一个数（力量底值），保存：数变了，别的都在
@@ -52,7 +52,7 @@ try {
   await input.fill('15')
   await saveEditor()
   check('② 编辑窗口改力量 → 15，页头跟着变', (await str()) === '15', `${str0} → ${await str()}`)
-  check('② 改完人物还在（名字、属性、生命都在）', /新人物/.test(await page.locator('.ps-name-line').innerText()) && (await page.locator('.ps-ability').count()) === 6 && (await page.getByTestId('ps-hp').count()) === 1)
+  check('② 改完人物还在（名字、属性、生命都在）', /新人物/.test(await page.getByTestId('ps-unit-name').innerText()) && (await page.locator('.ps-ability').count()) === 6 && (await page.getByTestId('ps-hp').count()) === 1)
 
   // ③ 撤销：数回去，卡还读得出来；再撤销到加人之前，人从列表里消失（这是对的），再点回来是正常的人
   await undo()
@@ -105,7 +105,7 @@ try {
   await page.getByTestId('ps-long-rest').click(); await settle(page, 1500)
   await page.getByTestId('ps-short-rest').click(); await settle(page, 1500)
   await undo(); await undo()
-  check('⑧ 休息后连撤两步：卡照常', (await page.getByTestId('ps-head').count()) === 1 && /新人物/.test(await page.locator('.ps-name-line').innerText()))
+  check('⑧ 休息后连撤两步：卡照常', (await page.getByTestId('ps-head').count()) === 1 && /新人物/.test(await page.getByTestId('ps-unit-name').innerText()))
 
   // ⑨ 加法术（从库里选）
   await page.getByTestId('ps-tab-spell').click(); await page.getByTestId('ps-spells').waitFor()
@@ -116,30 +116,32 @@ try {
   check('⑨ 加法术：法术页出现火焰箭', /火焰箭/.test(await page.getByTestId('ps-spells').innerText()))
   await shot('06-spells')
 
-  // ⑪ 身份抽屉：空白人物选种族、背景、职业 → 等级管理升一级 → 换种族
-  const pick = async (testid, query) => {
-    await page.getByTestId('ps-ident-edit').click(); await page.getByTestId('ps-drawer-identity').waitFor(); await settle(page, 500)
-    await page.getByTestId(testid).click(); await page.getByTestId('item-pick').waitFor()
+  // ⑪ 职业与出身（页头框 ✎）：空白人物选种族、背景、职业 → 等级下拉升一级 → 换种族（种族行 ⋯ 换种族）
+  const dlg = () => page.getByTestId('origins-dialog')
+  const pick = async (go, query) => {
+    if (!await dlg().isVisible()) { await page.getByTestId('ps-origins-edit').click(); await dlg().waitFor(); await settle(page, 500) }
+    await go(); await page.getByTestId('item-pick').waitFor()
     await page.getByTestId('ip-search').fill(query); await settle(page, 800)
     await page.getByTestId('ip-row').first().click(); await settle(page, 600); await page.getByTestId('ip-add').click()
     // 作者「导入到人物」问答：要做的选择一题一题答完再确认
     await page.getByTestId('import-ask').waitFor(); const steps = await answerImport(page); await settle(page, 1500)
     if (steps.some((x) => x.error || x.stuck)) console.log('问答', query, JSON.stringify(steps))
   }
-  await pick('ps-id-race', '精灵')
+  await pick(() => dlg().getByTestId('ps-build-pick-race').click(), '精灵')
   check('⑪ 选种族：名字行 / 事实表出现「精灵」', /精灵/.test(await page.getByTestId('ps-head').innerText()))
-  await pick('ps-id-bg', '侍僧')
-  check('⑪ 选背景：出现「侍僧」', /侍僧/.test(await page.getByTestId('ps-facts').innerText()))
-  await pick('ps-id-class', '战士')
-  check('⑪ 选职业：名字行「战士 1」', /战士 1/.test(await page.getByTestId('ps-sub').innerText()), await page.getByTestId('ps-sub').innerText())
+  await pick(() => dlg().getByTestId('ps-build-pick-background').click(), '侍僧')
+  check('⑪ 选背景：出现「侍僧」', /侍僧/.test(await page.getByTestId('ps-unit-origin').innerText()))
+  await pick(() => dlg().getByTestId('ps-build-add-class').click(), '战士')
+  check('⑪ 选职业：职业与出身框「战士 1」', /战士\s*1/.test(await page.getByTestId('ps-unit-classes').innerText()), await page.getByTestId('ps-unit-classes').innerText())
   await shot('07-identity-built')
-  await page.getByTestId('ps-level').getByRole('button', { name: '等级管理' }).click(); await page.getByRole('menuitem', { name: /升级/ }).first().click()
+  await dlg().getByTestId('ps-build-level').first().click(); await page.getByRole('option', { name: '2 级', exact: true }).click()
   await page.getByTestId('import-ask').waitFor(); await answerImport(page); await settle(page, 1500)
-  check('⑪ 等级管理升一级：战士 2', /战士 2/.test(await page.getByTestId('ps-sub').innerText()), await page.getByTestId('ps-sub').innerText())
-  await pick('ps-id-race', '矮人')
-  const facts = await page.getByTestId('ps-facts').innerText()
+  check('⑪ 等级下拉升一级：战士 2', /战士\s*2/.test(await page.getByTestId('ps-unit-classes').innerText()), await page.getByTestId('ps-unit-classes').innerText())
+  await pick(async () => { await dlg().getByTestId('ps-build-race').getByRole('button', { name: /更多操作/ }).click(); await page.getByRole('menuitem', { name: /换种族/ }).click() }, '矮人')
+  const facts = await page.getByTestId('ps-unit-origin').innerText()
   check('⑪ 换种族：矮人进来、精灵没了', /矮人/.test(facts) && !/精灵/.test(facts), facts.replace(/\s+/g, ' '))
   await shot('08-race-changed')
+  await page.locator('.trpg-modal__close').click(); await settle(page, 500)
 
   // ⑩ 连续撤销到底（把加人也撤掉）：列表里没有这个人，界面不报错；不留读不出来的卡
   const steps = await page.evaluate(async (P) => (await eval(P)._s.get('app').svc().backend.kernelSave.read(eval(P)._s.get('campaign').owner.ownerKey)).undo.length, pinia)
