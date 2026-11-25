@@ -199,6 +199,7 @@ function done(): void {
         await lib.loadPairs(app.svc())
         // 回到包的列表；从我的库的草稿条直接进来的（下面没有包的弹窗）就整个关掉
         if (props.session.nested) { modal.pop(); modal.pop(); props.session.onSaved?.() } // 从主条目里点开的从属条目：回到主条目
+        else if (props.session.after) { modal.popToRoot(); props.session.after({ name: title.value }) } // 从人物「新建自制…」进来：回去接着用这一条
         else if (modal.stack[0]?.key.startsWith('edit:')) modal.close(true)
         else modal.popToRoot()
       } finally { saving.value = false }

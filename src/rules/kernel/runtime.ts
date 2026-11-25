@@ -134,6 +134,17 @@ export class KernelRuntime {
     }
   }
 
+  /**
+   * 小窗打开以后库又发布了新的一版（例如刚在【我的库】存了一条自制）：小窗里作者读到的还是旧那一版，新条目取不到。
+   * 交 true = 该重开（由调用方在没有进行中的改动时关掉重开、把人装回）。
+   */
+  async stale(ownerKey: string): Promise<boolean> {
+    const existing = this.open.get(ownerKey)
+    if (!existing) return false
+    const o = await existing
+    return (await this.deps.revisions.published()).id !== o.view.id
+  }
+
   /** 关掉本战役的小窗（切换聊天、读档前）；记住的基准一起丢掉。 */
   async close(ownerKey: string): Promise<void> {
     const opening = this.open.get(ownerKey)
@@ -355,8 +366,25 @@ export class KernelRuntime {
   }
 
   /** 唯一显示出口（display.ts）用在本战役的小窗结果上；refs = 文字出自哪些条目。entries = 交给小窗定位用的英文条目，show 按同一顺序取本战役语言版。 */
+  /**
+   * 同一个小窗里、同一份选书、同一串条目的显示出口只建一次（每次写完重读整张人物都要它；人物条目越多建得越久，曾占重读的一半以上）。
+   * 小窗重开（库发布了新版）就是新的一份；选书变了钥匙跟着变。只留最近几份。
+   */
+  private readonly displays = new WeakMap<Open, Map<string, Promise<{ entries: unknown[]; show: <T>(value: T) => Promise<DisplayResult<T>> }>>>()
   async displayFor(ownerKey: string, refs: EntryRef[]): Promise<{ entries: unknown[]; show: <T>(value: T) => Promise<DisplayResult<T>> }> {
     const [o, library] = await Promise.all([this.get(ownerKey), this.library(ownerKey)])
+    let memo = this.displays.get(o)
+    if (!memo) { memo = new Map(); this.displays.set(o, memo) }
+    const key = JSON.stringify([library, refs.map((r) => [r.set, r.prop, r.hash])])
+    const hit = memo.get(key)
+    if (hit) return hit
+    const made = this.buildDisplay(ownerKey, o, library, refs)
+    memo.set(key, made)
+    made.catch(() => memo!.delete(key))
+    while (memo.size > 6) memo.delete(memo.keys().next().value!)
+    return made
+  }
+  private async buildDisplay(ownerKey: string, o: Open, library: CampaignLibrary, refs: EntryRef[]): Promise<{ entries: unknown[]; show: <T>(value: T) => Promise<DisplayResult<T>> }> {
     const base = refs.length ? await this.entries(ownerKey, refs).then((got) => got.status === 'complete' ? got.rows : []) : []
     const groups = await legendaryGroupRefs(this.deps.service, library.codeSet, o.view, base)
     const rows = [...base, ...(groups.length ? await this.entries(ownerKey, groups).then((got) => got.status === 'complete' ? got.rows : []) : [])]

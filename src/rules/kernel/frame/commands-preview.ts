@@ -4,6 +4,7 @@
 import type { ActorGetter, Operate } from './commands-items'
 import { applyManager, Manager } from './commands-level'
 import { itemText } from './sheet-texts'
+import { revokeGrants } from './import-grants'
 
 export function createPreviewCommands(operate: Operate, actor: ActorGetter) {
   return {
@@ -11,8 +12,12 @@ export function createPreviewCommands(operate: Operate, actor: ActorGetter) {
       const a = actor(actorId)
       const before = [...a.items].map((i: any) => ({ id: i.id, type: i.type, name: itemText(i, entries).name }))
       const hp = Number(a.system.attributes?.hp?.max ?? 0), level = Number(a.system.details?.level ?? 0)
+      const cls = a.items.get(classId)
+      const identifier = String(cls?.system?.identifier ?? ''), keep = Number(cls?.system?.levels ?? 0) + delta
       const outcome = await applyManager(Manager().forLevelChange(a, classId, delta, { automaticApplication: true }), undefined)
       if (!outcome.finished) return { kernelStatus: 'pending', reason: 'advancement-manager-not-complete' }
+      // 和真降级同一步：作者导入那几级记下的也收回（import-grants.ts）
+      if (delta < 0 && identifier) await revokeGrants(a, identifier, keep)
       const left = new Set([...a.items].map((i: any) => i.id))
       return {
         removed: before.filter((i) => !left.has(i.id)),

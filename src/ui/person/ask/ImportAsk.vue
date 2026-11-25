@@ -2,7 +2,7 @@
 // 从库里加一条到这个人（空白卡建人 / 加职业 / 换种族 …）：作者「导入到人物」整路，作者要问的一题一题在这里答（同一个弹窗里换页，不叠窗口）。
 // 一问一答：作者在小窗里停在题上，答一题接着跑一段（person.importStep）；答完先列出「会加上什么」，确认才写进存档（一条撤销），取消 = 什么都不变。
 // 已答的题排在上面，点一题 = 回到那题重答（后面的答案丢掉）。题目文字已过唯一显示出口；界面只收选择。
-import type { RedoLevel } from '../../../rules/kernel/import-flow'
+import type { ImportHow, RedoLevel } from '../../../rules/kernel/import-flow'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
 import type { EntryRef } from '../../../library/scopes'
 import type { AskAnswer } from '../../../rules/kernel/author-ask-types'
@@ -10,10 +10,12 @@ import type { ImportQuestion, ImportStep } from '../../../rules/kernel/import-fl
 import { useModalStore } from '../../../stores/modal'
 import { usePersonStore } from '../../../stores/person'
 import Icon from '../../kit/Icon.vue'
+import { openEntry } from '../../libview/open'
 import AskAsi from './AskAsi.vue'
 import AskEquipment from './AskEquipment.vue'
 import AskForm from './AskForm.vue'
 import AskParts from './AskParts.vue'
+import ClassPrep, { type PrepAt, type PrepChip } from './ClassPrep.vue'
 
 /** closeOnBack：直接打开的（升级）没有上一页，返回 = 关掉弹窗。 */
 /** level：从等级菜单「改到第几级」进来的，等级题预先选好这一级。 */
@@ -30,20 +32,36 @@ const pending = shallowRef<AskAnswer | null>(null)
 const busy = ref(false)
 const slow = ref(false)
 let staged = false // 小窗里有没确认的改动（作者停在题上时已写了一部分；答完那一步是全部）
+/** 职业 / 子职业：先定目标等级、子职业（ClassPrep），定好的交给作者（作者不再问等级）；重新选某一级直接定好。null = 还在定。 */
+const how = shallowRef<ImportHow | null>(props.redoLevel ? { redo: props.redoLevel } : null)
+const prepChips = ref<PrepChip[]>([])
+const prepAt = shallowRef<PrepAt | null>(null)
+const prepBack = computed(() => prepChips.value.filter((c) => !c.fixed).at(-1) ?? null)
+function prepped(h: ImportHow, chips: PrepChip[]): void { how.value = h; prepChips.value = chips; void run() }
+/** 回到目标等级 / 子职业那一步：作者那边的全部丢掉重来。 */
+async function reprep(chip: PrepChip): Promise<void> {
+  if (busy.value) return
+  if (staged) { await person.importCancel(); staged = false }
+  asked.value = []; answers.value = []; step.value = null
+  prepAt.value = { stage: chip.stage, target: Math.max(1, ...(how.value?.levels ?? [1])) }
+  how.value = null
+}
 
 async function run(): Promise<void> {
   busy.value = true
   const timer = setTimeout(() => { slow.value = true }, 400)
   try {
-    const out = await person.importStep(props.entryRef, answers.value, props.replace?.id, props.redoLevel)
+    const out = await person.importStep(props.entryRef, answers.value, props.replace?.id, how.value ?? {})
     step.value = out ?? { status: 'error', error: '没有当前人物', ms: 0 }
     staged = out?.status === 'ready' || out?.status === 'question'
     pending.value = null
   } finally { clearTimeout(timer); busy.value = false; slow.value = false }
   // 作者一题都没问（加一瓶药水、没有选项的专长）：不多一步确认，直接写入（和把物品拖上表一样）
-  if (step.value?.status === 'ready' && !asked.value.length) await confirm()
+  // 职业 / 子职业（先定了等级或子职业）照样列出会加上什么再确认
+  if (step.value?.status === 'ready' && !asked.value.length && !prepChips.value.length) await confirm()
 }
-onMounted(run)
+// 重新选某一级一开始就定好了，直接跑；其余等 ClassPrep 交 ready（子组件先挂好、先交，这里不能再跑一遍，否则同一条写两次）
+onMounted(() => { if (props.redoLevel) void run() })
 
 const question = computed(() => (step.value?.status === 'question' ? step.value.question : null))
 function next(a: AskAnswer | null = pending.value): void {
@@ -62,6 +80,7 @@ async function redo(i: number): Promise<void> {
 }
 async function back(): Promise<void> {
   if (asked.value.length) return redo(asked.value.length - 1)
+  if (prepBack.value) return reprep(prepBack.value)
   if (staged) { await person.importCancel(); staged = false }
   if (props.closeOnBack) modal.done()
   else emit('back')
@@ -105,14 +124,16 @@ const formKind = computed(() => { const t = question.value?.form.type; return t 
 </script>
 
 <template>
-  <div class="ask" data-testid="import-ask" :aria-busy="busy || undefined">
+  <ClassPrep v-if="!how" :entry-ref="entryRef" :name="name" :level="level" :at="prepAt" :back-text="backText ?? (closeOnBack ? '关掉' : '换一个')" @ready="prepped" @back="back" />
+  <div v-else class="ask" data-testid="import-ask" :aria-busy="busy || undefined">
     <header class="ask-head">
-      <button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" :disabled="busy" data-testid="ask-back" @click="back"><Icon name="caret-left" :size="14" />{{ asked.length ? '上一步' : backText ?? (closeOnBack ? '关掉' : '换一个') }}</button>
+      <button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" :disabled="busy" data-testid="ask-back" @click="back"><Icon name="caret-left" :size="14" />{{ asked.length || prepBack ? '上一步' : backText ?? (closeOnBack ? '关掉' : '换一个') }}</button>
       <b class="ask-what">{{ replace ? `${replace.name} → ${name}` : name }}</b>
       <small v-if="asked.length" class="ask-count">已答 {{ asked.length }} 题</small>
     </header>
 
-    <ol v-if="asked.length" class="ask-done" aria-label="已答的题">
+    <ol v-if="asked.length || prepChips.length" class="ask-done" aria-label="已答的题">
+      <li v-for="chip in prepChips" :key="chip.title" data-testid="ask-prep-chip"><button type="button" :disabled="busy || chip.fixed" title="回到这一步重选" @click="reprep(chip)"><span>{{ chip.title }}</span><b>{{ chip.said }}</b></button></li>
       <li v-for="(row, i) in asked" :key="i"><button type="button" :disabled="busy" :title="`回到这一题重答`" @click="redo(i)"><span>{{ row.question.title }}</span><b>{{ said(row.question, row.answer) }}</b></button></li>
     </ol>
 
@@ -125,11 +146,12 @@ const formKind = computed(() => { const t = question.value?.form.type; return t 
       </template>
       <div v-else-if="step.status === 'ready'" class="ask-ready" data-testid="ask-ready">
         <h3 class="ask-title">{{ replace ? `换成${name}后会加上` : `加上${name}会带来` }}</h3>
-        <dl class="ask-added">
+        <dl class="ask-added" data-testid="ask-added">
+          <template v-for="f in step.facts" :key="f.title"><dt>{{ f.title }}</dt><dd>{{ f.text }}</dd></template>
           <template v-for="grp in groups" :key="grp.label"><dt>{{ grp.label }}</dt><dd>{{ grp.names.join('、') }}</dd></template>
         </dl>
       </div>
-      <p v-else class="pp-error" role="alert" data-testid="ask-error"><Icon name="warning" :size="16" />{{ step.status === 'error' ? step.error : '' }}</p>
+      <p v-else class="pp-error" role="alert" data-testid="ask-error"><Icon name="warning" :size="16" />{{ step.status === 'error' ? step.error : '' }}{{ step.status === 'error' && /作者导入失败/.test(step.error) ? '。常见原因是这一条缺作者导入要用的内容（如正文），可以到库里打开这一条补全再用。' : '' }}</p>
       <p v-if="slow" class="ask-slow" role="status">作者正在准备下一步…</p>
     </div>
 
@@ -143,7 +165,10 @@ const formKind = computed(() => { const t = question.value?.form.type; return t 
         <button class="trpg-btn" type="button" :disabled="busy" @click="back">改一改</button>
         <button class="trpg-btn trpg-btn--primary" type="button" :disabled="busy || person.readOnly" data-testid="ask-confirm" @click="confirm"><Icon name="check" :size="14" />{{ busy ? '正在写入…' : '确认加上' }}</button>
       </template>
-      <button v-else-if="step?.status === 'error'" class="trpg-btn" type="button" :disabled="busy" @click="run">重试</button>
+      <template v-else-if="step?.status === 'error'">
+        <button class="trpg-btn" type="button" data-testid="ask-open-entry" @click="openEntry(entryRef, name)">到库里打开这一条</button>
+        <button class="trpg-btn" type="button" :disabled="busy" @click="run">重试</button>
+      </template>
     </footer>
   </div>
 </template>

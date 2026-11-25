@@ -38,7 +38,10 @@ function entryOf(key: string): OriginsView | null {
   if (key.startsWith('lvl:')) {
     const [, id, lv] = key.split(':')
     const c = cls.value.find((x) => x.id === id)
-    return c ? { kind: 'levels', key, itemIds: [c.id, c.subclass?.id].filter((x): x is string => !!x), name: c.name, level: Number(lv), class: { classId: c.id, ref: (c.ref ?? null) as EntryRef | null, top: c.levels } } : null
+    // 第 1 级能不能重选：这个职业只有 1 级，而且它不是带着别的职业的原始职业（原始职业重新导入会被当成兼职，熟练给法不同）
+    const original = String(s.value.system.details?.originalClass ?? '')
+    const firstOk = !!c && c.levels === 1 && (cls.value.length === 1 || original !== c.id)
+    return c ? { kind: 'levels', key, itemIds: [c.id, c.subclass?.id].filter((x): x is string => !!x), name: c.name, level: Number(lv), class: { classId: c.id, ref: (c.ref ?? null) as EntryRef | null, top: c.levels, firstOk } } : null
   }
   return null
 }

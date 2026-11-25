@@ -6,7 +6,7 @@ import type { SheetEdit } from '../rules/kernel/frame/commands-sheet'
 import type { OffRow } from '../rules/kernel/frame/off'
 import type { KernelChange } from '../schemas/kernel'
 import type { AskAnswer } from '../rules/kernel/author-ask-types'
-import type { ImportStep, RedoLevel } from '../rules/kernel/import-flow'
+import type { ClassPlan, ImportHow, ImportStep } from '../rules/kernel/import-flow'
 import { useAppStore } from './app'
 import { useCampaignStore } from './campaign'
 import { useRosterStore } from './roster'
@@ -94,7 +94,9 @@ export const usePersonStore = defineStore('person', () => {
       await reload()
       return false
     }
-    const refreshed = Promise.all([reload(), roster.refresh()])
+    const tr = performance.now()
+    // 先重读眼前这个人（玩家等的是它），人物列表排在后面再刷（同时刷会和它抢同一个小窗，重读慢一截）
+    const refreshed = reload().then(() => { console.debug('[trpg-assistant] 写完重读用时', label, Math.round(performance.now() - tr)); void roster.refresh().catch((e: unknown) => console.warn('[trpg-assistant] 人物列表没刷新', e)) })
     if (!soon) await refreshed
     else void refreshed.catch((e: unknown) => toast.error(`${label}已保存，但人物页没刷新出来：${message(e)}`))
     toast.undoable(label, () => undo())
@@ -112,6 +114,7 @@ export const usePersonStore = defineStore('person', () => {
    */
   const setOff = (label: string, off: OffRow[]) => write(label, async (k) => {
     const r = await backend().setOff(k, id.value!, off)
+    if ('ms' in r && r.ms) console.debug('[trpg-assistant] 取下/装回用时', JSON.stringify(r.ms))
     return { outcome: r.ok ? { status: 'complete' } : { status: 'error', error: r.problems?.[0]?.reason ?? r.error } }
   })
   /** 按一份物品数据新建条目（复制 / 新建空白条目，照 Tidy5e item.clone、createItem）：小窗现成的加条目命令收数据，走官方成长；一条撤销。 */
@@ -127,12 +130,18 @@ export const usePersonStore = defineStore('person', () => {
    * 空白卡建人 / 从库里加（作者「导入到人物」+ 问答桥）：带着玩家已答的题目问一步；
    * 交回下一题（作者停在题上，已写的一部分留在小窗）或「会加上什么」（改动留在小窗等 importConfirm / importCancel）。
    */
-  async function importStep(ref: EntryRef, answers: AskAnswer[], replaceItemId?: string, redo?: RedoLevel): Promise<ImportStep | null> {
+  async function importStep(ref: EntryRef, answers: AskAnswer[], replaceItemId?: string, how?: ImportHow): Promise<ImportStep | null> {
     const key = ownerKey(); const who = id.value
     if (!key || !who) return null
     // 界面给的是响应式对象，跨窗口传不过去：回答和条目编号都是纯数据，先转成普通对象
     const plain = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T
-    try { return await serial(() => app.svc().backend.importFlow.step(key, who, plain(ref), plain(answers), replaceItemId, redo && plain(redo))) } catch (e) { return { status: 'error', error: message(e), ms: 0 } }
+    try { return await serial(() => app.svc().backend.importFlow.step(key, who, plain(ref), plain(answers), replaceItemId, how && plain(how))) } catch (e) { return { status: 'error', error: message(e), ms: 0 } }
+  }
+  /** 加 / 升职业、补选子职业之前：作者那边几级选子职业、人物现在几级（只读）；读不出 = 带原因。 */
+  async function importPlan(ref: EntryRef): Promise<ClassPlan | { error: string }> {
+    const key = ownerKey(); const who = id.value
+    if (!key || !who) return { error: '没有当前人物' }
+    try { return await serial(() => app.svc().backend.importFlow.plan(key, who, JSON.parse(JSON.stringify(ref)) as EntryRef)) } catch (e) { return { error: message(e) } }
   }
   /** 降级预览：会收回的物品（已过显示出口）、生命上限 / 总等级前后；只算不存（后端算完按存档退回），没算成 = null。 */
   async function levelPreview(classId: string, delta: number): Promise<{ removed: Array<{ id: string; type: string; name: string }>; hp: { from: number; to: number }; level: { from: number; to: number } } | null> {
@@ -230,5 +239,5 @@ export const usePersonStore = defineStore('person', () => {
     return out.result as ShownFieldInfo
   }
 
-  return { id, sheet, glossary, loading, error, prevId, nextId, row, readOnly, open, close, reload, edit, importStep, importConfirm, importCancel, create, splitStack, createScroll, convertCurrency, duplicate, remove, adjust, fields, traitChoices, specialTraits, filterIds, rest, level, levelPreview, setOff, levelNative, stopNative, previewHp, cancelHp, confirmHp, undo, undoTo, history }
+  return { id, sheet, glossary, loading, error, prevId, nextId, row, readOnly, open, close, reload, edit, importStep, importPlan, importConfirm, importCancel, create, splitStack, createScroll, convertCurrency, duplicate, remove, adjust, fields, traitChoices, specialTraits, filterIds, rest, level, levelPreview, setOff, levelNative, stopNative, previewHp, cancelHp, confirmHp, undo, undoTo, history }
 })

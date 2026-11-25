@@ -5,7 +5,7 @@ import { useAppStore } from '../../stores/app'
 import { useModalStore } from '../../stores/modal'
 import { useToastStore } from '../../stores/toast'
 import ConvertPage from './ConvertPage.vue'
-import { openEditor } from './edit-flow'
+import { openEditor, type EditSession } from './edit-flow'
 import JsonStartPage from './JsonStartPage.vue'
 import PickExistingPage from './PickExistingPage.vue'
 import TemplatePage from './TemplatePage.vue'
@@ -14,7 +14,7 @@ import TemplatePage from './TemplatePage.vue'
  * P5.5 u7-8 新建条目 ② 选起点：简易表单 / 详细表单（作者模板）/ 从已有的开始 / 文字转条目 / 粘贴 JSON。
  * 这一类有哪几种起点由后端判断（entryTypes → starts），没有的不显示。
  */
-const props = defineProps<{ codeSet: string; pack: { id: string; name: string } | null; type: EntryType }>()
+const props = defineProps<{ codeSet: string; pack: { id: string; name: string } | null; type: EntryType; after?: EditSession['after'] }>()
 const app = useAppStore()
 const modal = useModalStore()
 const toast = useToastStore()
@@ -30,7 +30,7 @@ const options = computed(() => {
 })
 const pick = ref<Start>('blank')
 const busy = ref(false)
-const base = () => ({ codeSet: props.codeSet, prop: props.type.prop, typeName: props.type.name, pack: props.pack, target: { kind: 'new' as const, pack: props.pack?.id ?? null } })
+const base = () => ({ codeSet: props.codeSet, prop: props.type.prop, typeName: props.type.name, pack: props.pack, target: { kind: 'new' as const, pack: props.pack?.id ?? null }, after: props.after })
 
 async function next(): Promise<void> {
   const k = pick.value

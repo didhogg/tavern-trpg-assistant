@@ -41,6 +41,13 @@ const EXPORTS = [
   'CompendiumCacheUtil',
   // 作者 5etools 体型代号 → dnd5e 体型键的换算表：特征单元按它把库里的体型写进人物（frame/sheet-traits.ts）
   'VET_SIZE_TO_ABV',
+  // 作者自己的升级整段（frame/class-import.ts 照搬）：读现有职业 / 子职业、把子职业并进职业、兼职的熟练给法
+  'SheetLevelUpButtonManager',
+  'DataPrimer',
+  'Charactermancer_Class_ProficiencyImportModeSelect',
+  'ConfigConsts',
+  // 作者给职业起标识的算法（frame/import-grants.ts 记「这次导入加了什么」按职业对上）
+  'UtilDocumentItem',
 ]
 
 export let plutoniumBuild: Record<string, any> | null = null

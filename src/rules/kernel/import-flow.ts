@@ -19,7 +19,7 @@ export type ImportQuestion = Displayed<AskQuestion>
 export type ImportStep =
   /** missed = 显示出口没翻到的字（检查用，界面不显示）。 */
   | { status: 'question'; question: ImportQuestion; ms: number; missed: string[]; split: { run: number; display: number } }
-  | { status: 'ready'; changes: KernelChange[]; added: Array<{ id: string; type: string; typeLabel: string; name: string }>; ms: number; split: { run: number; track: number; display: number } }
+  | { status: 'ready'; changes: KernelChange[]; added: Array<{ id: string; type: string; typeLabel: string; name: string }>; facts: Array<{ title: string; text: string }>; ms: number; split: { run: number; track: number; display: number } }
   | { status: 'error'; error: string; ms: number }
 
 /** 等界面把这一步画出来再做（没有画面的环境直接排到后面）。 */
@@ -38,6 +38,15 @@ interface Live { actorId: string; key: string; answers: AskAnswer[]; changes: Ke
  * 再加上作者每次导入特性授予都是新编号（Plutonium pAddItemGrantAdvancementLinks 每次 randomID），原记录也对不上。等驾驶员定（NEXT.md）。
  */
 export interface RedoLevel { classId: string; level: number; top: number }
+/**
+ * 职业 / 子职业这次怎么导入（驾驶员 11-25 评测：主职业、目标等级、子职业是同一次人物变更）。照作者自己的升级（frame/class-import.ts）：
+ *   levels = 导入到这个职业的哪几级（给了作者就不再问等级）；subclass = 和职业一起进的子职业（库条目）；redo = 重新选某一级。
+ */
+export interface ImportHow { levels?: number[]; subclass?: EntryRef | null; redo?: RedoLevel }
+/** 加 / 升职业、补选子职业之前作者那边的情况（frame/class-import.ts classPlan）。 */
+export type ClassPlan =
+  | { kind: 'class'; classId: string | null; classLevel: number; hasSubclass: boolean; total: number; subclassLevel: number | null; className: string; classSource: string }
+  | { kind: 'subclass'; classId: string | null; classLevel: number; total: number; className: string; classSource: string }
 /** 这一次导入的显示出口（条目对照、取名表）：同一次导入里条目不变，建一次各步共用。 */
 type Shows = Awaited<ReturnType<KernelRuntime['displayFor']>>
 type FrameResult = { status: string; result?: any; changes?: unknown[]; error?: string }
@@ -48,13 +57,16 @@ export class KernelImportFlow {
 
   /**
    * replaceItemId = 换掉的那件（换种族 / 背景）：官方先拿掉它，和导入算同一次改动。answers = 到现在为止的全部回答。
-   * redo = 重新选这个职业的某一级（见 RedoLevel）。
+   * how = 职业的等级 / 子职业 / 重新选某一级（见 ImportHow）。
    */
-  async step(ownerKey: string, actorId: string, ref: EntryRef, answers: AskAnswer[], replaceItemId?: string, redo?: RedoLevel): Promise<ImportStep> {
+  async step(ownerKey: string, actorId: string, ref: EntryRef, answers: AskAnswer[], replaceItemId?: string, how: ImportHow = {}): Promise<ImportStep> {
     const t0 = performance.now()
     const ms = () => Math.round(performance.now() - t0)
-    const key = JSON.stringify([ref, replaceItemId ?? null, redo ?? null])
-    const { session } = await this.deps.runtime.session(ownerKey)
+    const redo = how.redo
+    // 显示出口按这次涉及的条目建（子职业一起进时，子职业特性的名字也按它的编号取）
+    const shownRefs = how.subclass ? [ref, how.subclass] : [ref]
+    const key = JSON.stringify([ref, replaceItemId ?? null, how])
+    let { session } = await this.deps.runtime.session(ownerKey)
     const now = this.live.get(ownerKey)
     let out: FrameResult
     // 正好是作者停着的那题的回答：交给作者接着跑
@@ -65,29 +77,37 @@ export class KernelImportFlow {
     } else {
       // 新开一次，或回到前面某题重答：先收掉进行中的（人物按存档退回），带着前面的回答从头跑
       await this.cancel(ownerKey, actorId)
-      const rows = await this.deps.runtime.entries(ownerKey, [ref])
+      // 库发布了新版就重开小窗：后面用重开后的那一个
+      if (await this.fresh(ownerKey)) session = (await this.deps.runtime.session(ownerKey)).session
+      const rows = await this.deps.runtime.entries(ownerKey, how.subclass ? [ref, how.subclass] : [ref])
       if (rows.status !== 'complete') return { status: 'error', error: rows.error ?? `条目没读出来（${rows.status}）`, ms: ms() }
-      const row = rows.rows[0]
+      const [row, subRow] = rows.rows
       this.live.set(ownerKey, { actorId, key, answers: [...answers], changes: [] })
-      if (redo && redo.level < 2) { await this.cancel(ownerKey, actorId); return { status: 'error', error: '第 1 级是职业本身，暂时不能单独重选', ms: ms() } }
-      if (redo) {
+      // 第 1 级：只有这一级时可以重选（官方拿掉职业 + 收回作者导入记录里的，再按 1 级重新导入，class-import.ts fresh）；
+      // 更高的几级在第 1 级之上，按原选择升回要靠成长编号，而作者每次导入特性授予都换新编号，对不上，先降到 1 级再重选
+      if (redo && redo.level < 2 && redo.top > 1) { await this.cancel(ownerKey, actorId); return { status: 'error', error: '要重选第 1 级，先把这个职业降到 1 级', ms: ms() } }
+      if (redo && redo.level >= 2) {
         const kept = await session.call('captureChoices', actorId)
         if (kept.status !== 'complete') { await this.cancel(ownerKey, actorId); return { status: 'error', error: kept.error ?? `没记下原来的选择（${kept.status}）`, ms: ms() } }
         const values = Object.values((kept.result ?? {}) as Record<string, Array<{ level: number; error?: string }>>).flat().filter((v) => v.level > redo.level && !v.error)
-        const down = await session.call('levelUpApply', actorId, redo.classId, redo.level - 1 - redo.top)
+        // 降到这一级之前；作者导入记录只收回这一级的（更高的几级等会儿原样升回，它们当时加的留着）
+        const down = await session.call('levelUpApply', actorId, redo.classId, redo.level - 1 - redo.top, undefined, redo.level)
         if (!executed(down.status)) { await this.cancel(ownerKey, actorId); return { status: 'error', error: down.error ?? `先降级没完成（${down.status}）`, ms: ms() } }
         const live = this.live.get(ownerKey)!
         live.changes.push(...((down.changes ?? []) as KernelChange[]))
         if (redo.top > redo.level) live.restore = { classId: redo.classId, delta: redo.top - redo.level, values }
       }
-      out = await session.call('importBegin', actorId, { prop: row.ref.prop, entry: row.entry }, await this.withFeats(ownerKey, answers), replaceItemId)
+      // 重新选第 L 级：降到 L-1 后只导入第 L 级（作者带上现有子职业，子职业在这一级的特性一起回来）
+      const levels = redo ? [redo.level] : how.levels
+      const classHow = levels || subRow ? { levels, subclass: subRow ? { prop: subRow.ref.prop, entry: subRow.entry } : null, ...(redo?.level === 1 ? { fresh: true } : {}) } : undefined
+      out = await session.call('importBegin', actorId, { prop: row.ref.prop, entry: row.entry }, await this.withFeats(ownerKey, answers), replaceItemId, classHow)
     }
     const live = this.live.get(ownerKey)!
     live.changes.push(...((out.changes ?? []) as KernelChange[]))
     const ran = ms()
     const question = out.status === 'pending' ? out.result?.question : null
     if (question) {
-      const shown = await (await this.showsOf(ownerKey, ref)).show(question as AskQuestion)
+      const shown = await (await this.showsOf(ownerKey, shownRefs)).show(question as AskQuestion)
       const all = ms()
       // 玩家读题时在后台预读作者接下来要对照的资料（只读、不改人物；等题目画出来再开始，不抢出题的时间）。
       // 作者的合集包缓存只留 60 秒，所以每出一题都续一次：还在的只刷新时间，过期的重新读（frame/commands-equipment.ts warmItems）
@@ -113,17 +133,38 @@ export class KernelImportFlow {
     const tracked = ms()
     const rows = (out.result?.added ?? []) as AddedRow[]
     const names: FrameText[] = rows.map((row) => row.label ?? named(row.name, []))
-    const shown = await (await this.showsOf(ownerKey, ref)).show({ names, types: rows.map((row) => row.typeLabel ?? named(row.type, [])) })
+    const facts = (out.result?.facts ?? []) as Array<{ title: FrameText; text: FrameText }>
+    const shown = await (await this.showsOf(ownerKey, shownRefs)).show({ names, types: rows.map((row) => row.typeLabel ?? named(row.type, [])), facts })
     return {
       status: 'ready', changes: [...live.changes], ms: ms(), split: { run: ran, track: tracked - ran, display: ms() - tracked },
       added: rows.map((row, i) => ({ id: row._id, type: row.type, typeLabel: String(shown.value.types[i] ?? row.type), name: String(shown.value.names[i] ?? row.name) })),
+      facts: (shown.value.facts as unknown as Array<{ title: string; text: string }>).map((f) => ({ title: String(f.title), text: String(f.text) })),
     }
   }
 
-  private showsOf(ownerKey: string, ref: EntryRef): Promise<Shows> {
+  /** 加 / 升职业、补选子职业之前：问作者这个职业几级选子职业、人物现在几级（只读，不留改动）。 */
+  async plan(ownerKey: string, actorId: string, ref: EntryRef): Promise<ClassPlan | { error: string }> {
+    await this.fresh(ownerKey)
+    const rows = await this.deps.runtime.entries(ownerKey, [ref])
+    if (rows.status !== 'complete') return { error: rows.error ?? `条目没读出来（${rows.status}）` }
+    const row = rows.rows[0]
+    const { session } = await this.deps.runtime.session(ownerKey)
+    const out = await session.call('importPlan', actorId, { prop: row.ref.prop, entry: row.entry })
+    return out.status === 'complete' ? out.result as ClassPlan : { error: out.error ?? `没读出职业情况（${out.status}）` }
+  }
+
+  /** 库在小窗打开后发布了新版（刚存了自制条目、装了书）：没有进行中的导入时重开小窗、把存档里的人装回，作者才读得到新条目。 */
+  private async fresh(ownerKey: string): Promise<boolean> {
+    if (this.live.has(ownerKey) || !(await this.deps.runtime.stale(ownerKey))) return false
+    await this.deps.runtime.close(ownerKey)
+    await this.deps.people.load(ownerKey)
+    return true
+  }
+
+  private showsOf(ownerKey: string, refs: EntryRef[]): Promise<Shows> {
     const live = this.live.get(ownerKey)
-    if (!live) return this.deps.runtime.displayFor(ownerKey, [ref])
-    return (live.shows ??= this.deps.runtime.displayFor(ownerKey, [ref]))
+    if (!live) return this.deps.runtime.displayFor(ownerKey, refs)
+    return (live.shows ??= this.deps.runtime.displayFor(ownerKey, refs))
   }
 
   /** 回答里玩家从库里选的专长（属性提升改选专长）：按库编号换成作者认得的条目（和建卡、加条目同一条换法）。 */

@@ -12,8 +12,24 @@ export interface PickItem { row: ScopedRow; name: string }
 export const pickKey = (r: ScopedRow): string => `${r.ref.set}:${r.ref.prop}:${r.ref.hash}:${r.pack?.docIdLocal ?? ''}`
 
 /** propOf：按本战役的库定是哪一类（规则数据里写着）；没有就抛错说明。 */
-/** keep：只留哪些行（例：选子职业只留这个人职业的子职业），不给 = 全部。 */
-export function usePickList(propOf: (lib: CampaignLibrary) => string, scrollEl: Ref<HTMLElement | null>, what: string, keep?: (item: Record<string, unknown>) => boolean) {
+/** keep：只留哪些行（例：选子职业只留这个人职业的子职业；兼职不列已有的职业），不给 = 全部。 */
+export type PickKeep = (item: Record<string, unknown>, ref: EntryRef) => boolean
+export const sameRef = (a: EntryRef | null | undefined, b: EntryRef | null | undefined): boolean => !!a && !!b && a.set === b.set && a.prop === b.prop && a.hash === b.hash
+
+/** 本战役库里的这一条（和选条目列表同一份）：选子职业要按这个职业在库里的名字 + 来源对上子职业（同一个包里写法一致）。 */
+export async function libraryRow(ref: EntryRef): Promise<ScopedRow | null> {
+  const app = useAppStore()
+  const key = useCampaignStore().owner?.ownerKey
+  if (!key) return null
+  const library = await app.svc().backend.kernelSave.libraryOf(key)
+  return (await app.svc().backend.library.scoped.query(library, ref.prop)).find((row) => sameRef(row.ref, ref)) ?? null
+}
+
+/** 这条子职业属于这个职业吗：子职业条目记着所属职业的名字和来源（和同一个包里职业条目的写法一致）。 */
+export const subclassOf = (sub: Record<string, unknown>, cls: Record<string, unknown>): boolean =>
+  String(sub.className ?? '') === String(cls.name ?? '') && String(sub.classSource ?? '').toLowerCase() === String(cls.source ?? '').toLowerCase()
+
+export function usePickList(propOf: (lib: CampaignLibrary) => string, scrollEl: Ref<HTMLElement | null>, what: string, keep?: PickKeep) {
   const app = useAppStore()
   const campaign = useCampaignStore()
   const lib = useLibViewStore()
@@ -29,7 +45,7 @@ export function usePickList(propOf: (lib: CampaignLibrary) => string, scrollEl: 
       if (!key) throw new Error('还没有当前战役')
       const library = await app.svc().backend.kernelSave.libraryOf(key)
       const list = await app.svc().backend.library.scoped.query(library, propOf(library))
-      rows.value = list.filter((row) => !keep || keep(row.item as Record<string, unknown>)).map((row) => ({ row, name: nameOf(row.item) })).sort((a, b) => a.name.localeCompare(b.name, 'zh'))
+      rows.value = list.filter((row) => !keep || keep(row.item as Record<string, unknown>, row.ref)).map((row) => ({ row, name: nameOf(row.item) })).sort((a, b) => a.name.localeCompare(b.name, 'zh'))
     } catch (e) { console.error(`[trpg-assistant] 读取${what}失败`, e); error.value = e instanceof Error ? e.message : String(e) }
   }
   // 资料卡（库的条目页）要读「本战役选书设置」：没读过就先读

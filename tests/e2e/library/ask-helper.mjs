@@ -4,7 +4,7 @@
 //   onStep(题号, 题目, 截图前的页面) 给截图用。交回每一步：题目、做了什么、耗时毫秒。
 const root = () => document.querySelector('#trpg-assistant-root').shadowRoot
 /** firstPause：第一题出来后停多少毫秒再作答（真人要读题；后台趁这时预读资料）。 */
-export async function answerImport(page, { level, prefer = {}, onStep, firstPause = 0 } = {}) {
+export async function answerImport(page, { level, prefer = {}, onStep, onReady, firstPause = 0 } = {}) {
   const ask = page.getByTestId('import-ask')
   const log = []
   const idle = () => page.waitForFunction(() => { const a = document.querySelector('#trpg-assistant-root').shadowRoot.querySelector('[data-testid=import-ask]'); return !a || !a.getAttribute('aria-busy') }, null, { timeout: 60000 })
@@ -21,6 +21,7 @@ export async function answerImport(page, { level, prefer = {}, onStep, firstPaus
     await idle()
     if (!(await ask.count())) { log.push({ done: 'written' }); break }
     if (await page.getByTestId('ask-ready').count()) {
+      await onReady?.()
       const t0 = Date.now(); await page.getByTestId('ask-confirm').click()
       await page.waitForFunction(() => !document.querySelector('#trpg-assistant-root').shadowRoot.querySelector('[data-testid=import-ask]'), null, { timeout: 60000 })
       log.push({ done: 'confirmed', ms: Date.now() - t0 }); break

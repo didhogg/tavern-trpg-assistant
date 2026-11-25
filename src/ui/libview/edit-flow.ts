@@ -38,6 +38,8 @@ export interface EditSession {
   onSaved?: () => void
   /** 从主条目编辑器里点开的从属条目（子职、职业特性……）：存好回到主条目，不回包的列表（§16.10 2c）。 */
   nested?: boolean
+  /** 从别处（人物的「新建自制种族」……）进来的：存好回到进来的那一层，再交给它（带上刚存的名字）。 */
+  after?: (saved: { name: string }) => void
 }
 
 /** 包里 [新建条目]：选类型（弹窗里前进一页）。 */
@@ -45,8 +47,9 @@ export function openNewEntry(codeSet: string, pack: { id: string; name: string }
   useModalStore().push({ key: `new:${pack.id}`, title: '新建条目：选类型', component: markRaw(NewTypePage), variant: 'sheet', props: { codeSet, pack } })
 }
 
-export function openStart(codeSet: string, pack: { id: string; name: string } | null, type: EntryType): void {
-  useModalStore().push({ key: `start:${type.prop}`, title: `新建${type.name}：从哪开始`, component: markRaw(NewStartPage), variant: 'sheet', props: { codeSet, pack, type } })
+/** after：从别处进来的新建（人物「新建自制种族」）存好后交回去（见 EditSession.after）。 */
+export function openStart(codeSet: string, pack: { id: string; name: string } | null, type: EntryType, after?: EditSession['after']): void {
+  useModalStore().push({ key: `start:${type.prop}`, title: `新建${type.name}：从哪开始`, component: markRaw(NewStartPage), variant: 'sheet', props: { codeSet, pack, type, after } })
 }
 
 /** 进编辑器（u7-10）：带着起点给的条目，还没存。 */

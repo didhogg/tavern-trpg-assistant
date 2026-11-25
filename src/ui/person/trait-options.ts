@@ -11,7 +11,7 @@ import { useCampaignStore } from '../../stores/campaign'
 
 export interface Choice { value: string; label: string }
 /** 一条库里的感官：key = 人物上对应的感官种类（作者：5etools 感官名和 dnd5e 感官键一致），对不上 = null（写进特殊感官）。 */
-export interface SenseChoice { name: string; english: string; ref: EntryRef }
+export interface SenseChoice { name: string; english: string; ref: EntryRef; /** 来源书（同名的感官按它分开）。 */ source: string }
 export interface TraitOptions { sizes: Choice[]; types: Choice[]; speeds: Choice[]; align: Record<string, string>; senses: SenseChoice[] }
 
 type Shape = { c?: string; enum?: unknown[]; suggest?: unknown[]; labels?: Record<string, string>; of?: Shape; branches?: Array<{ shape: Shape }>; props?: Array<{ name: string; shape: Shape }>; ref?: string }
@@ -58,10 +58,10 @@ export function useTraitOptions() {
         types: choices(firstList(field('creatureTypes'))),
         speeds: choices(speedFrom),
         align: Object.fromEntries(choices(alignShape).map((c) => [c.value, c.label])),
-        senses: (senseRows as Array<{ item: unknown; ref: EntryRef }>).map((row) => {
-          const item = row.item as { name?: unknown; ENG_name?: unknown }
+        senses: (senseRows as Array<{ item: unknown; ref: EntryRef; source?: string | null }>).map((row) => {
+          const item = row.item as { name?: unknown; ENG_name?: unknown; source?: unknown }
           const name = String(item.name ?? '')
-          return { name, english: String(item.ENG_name ?? item.name ?? ''), ref: row.ref }
+          return { name, english: String(item.ENG_name ?? item.name ?? ''), ref: row.ref, source: String(row.source ?? item.source ?? '') }
         }).sort((a, b) => a.name.localeCompare(b.name, 'zh')),
       }
     } catch (e) { console.error('[trpg-assistant] 特征选项没读出来', e); error.value = e instanceof Error ? e.message : String(e) }

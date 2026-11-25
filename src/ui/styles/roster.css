@@ -63,6 +63,9 @@
 .tp-card { min-height: 0; overflow: auto; }
 .tp-row[data-picked] { background: var(--primary-tint); box-shadow: inset 3px 0 0 var(--accent); }
 .tp-bar { grid-column: 1 / -1; display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); background: var(--bg-side); border-top: var(--border) solid var(--line-ctrl); }
+.tp-title { margin: 0; padding: var(--sp-3) var(--sp-3) 0; font-weight: var(--fw-semibold); }
+.tp-go { margin-left: var(--sp-1); color: var(--text3); flex: none; }
+.tp-back { margin: var(--sp-2) var(--sp-3) 0; }
 .tp-gap { flex: 1; } .tp-lbl { color: var(--text2); font-size: var(--fs-sm); }
 .tp-added { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-sm); }
 /* P6 分步建卡：沿用 0c 的弹窗尺寸和名字页，后续步骤在建卡专用小窗中。 */

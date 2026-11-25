@@ -21,7 +21,7 @@ const page = await ctx.newPage()
 page.setDefaultTimeout(90_000)
 const errors = []
 page.on('pageerror', (e) => errors.push(String(e.message ?? e).slice(0, 300)))
-page.on('console', (m) => { if (m.type() === 'error') errors.push(`console: ${m.text().slice(0, 300)}`) })
+page.on('console', (m) => { if (m.type() === 'error') errors.push(`console: ${m.text().slice(0, 300)}`); else if (/用时/.test(m.text())) console.log(`[页面] ${m.text()}`) })
 const shot = (name) => page.screenshot({ path: `${shots}/${name}.png` })
 const pinia = `(() => { const h = document.querySelector('#trpg-assistant-root'); return [...h.shadowRoot.children].map((c) => c.__vue_app__).find(Boolean).config.globalProperties.$pinia })()`
 const S = (js) => page.evaluate(`(() => { const s = ${pinia}._s.get('person').sheet; return (${js}) })()`)
@@ -35,7 +35,7 @@ const fromLibrary = async (open, query, row, tag, opts = {}) => {
   await page.getByTestId('ip-add').click()
   await page.getByTestId('import-ask').waitFor()
   // 第一题停 2 秒：真人要读题，后台趁这时预读资料（ask-helper firstPause）
-  const steps = noteSteps(tag, await answerImport(page, { firstPause: 2000, ...opts, onStep: (n) => shot(`${tag}-q${n}`) }))
+  const steps = noteSteps(tag, await answerImport(page, { firstPause: 2000, ...opts, onStep: async (n, title) => { await opts.onQuestion?.(n, title); return shot(`${tag}-q${n}`) } }))
   await settle(page, 1200)
   return steps
 }
@@ -117,14 +117,26 @@ try {
     check('选条目：按来源筛选只剩 PHB', srcs.length === 1 && srcs[0] === 'PHB', srcs.join('、'))
   } else check('选条目：有「按来源筛选」', false)
   await page.keyboard.press('Escape'); await settle(page, 400)
-  await fromLibrary(() => inOrigins('ps-build-add-class'), '牧师', /^牧师\s*PHB/, '05-class', { prefer: { '技能熟练': ['医药', '宗教'], '选择戏法': ['圣火术', '神导术', '维生术'] } })
+  // 职业（驾驶员 11-25 评测：目标等级、子职业和职业同一次进人物）：牧师 1 级就到子职业门槛 → 同一流程里选生命领域，不再另点「选子职业」
+  await inOrigins('ps-build-add-class'); await page.getByTestId('ip-search').waitFor()
+  await page.getByTestId('ip-search').fill('牧师'); await settle(page, 500)
+  await page.getByTestId('ip-row').filter({ hasText: /^牧师\s*PHB/ }).first().click(); await settle(page, 400)
+  await page.getByTestId('ip-add').click()
+  await page.getByTestId('class-prep-level').waitFor(); await shot('05-class-level')
+  await page.getByTestId('prep-level-next').click()
+  await page.getByTestId('ip-title').waitFor(); await settle(page, 600); await shot('05-class-sub')
+  const domains = await page.getByTestId('ip-row').allInnerTexts()
+  check('③ 牧师 1 级：同一流程里接着选领域（只列牧师的）', domains.length >= 2 && domains.every((t) => /领域/.test(t)), domains.slice(0, 5).join(' | '))
+  await page.getByTestId('ip-search').fill('生命'); await settle(page, 500)
+  await page.getByTestId('ip-row').filter({ hasText: /生命/ }).first().click(); await settle(page, 400)
+  await page.getByTestId('ip-add').click(); await page.getByTestId('import-ask').waitFor()
+  noteSteps('05-class', await answerImport(page, { firstPause: 2000, prefer: { '技能熟练': ['医药', '宗教'], '选择戏法': ['圣火术', '神导术', '维生术'] }, onStep: (n) => shot(`05-class-q${n}`) }))
+  await settle(page, 1200)
   check('③ 职业：牧师 1 级、生命 > 0、AC > 10', /牧师\s*1/.test(await page.getByTestId('ps-unit-classes').innerText()) && (await S('s.system.attributes.hp.max')) > 0 && (await S('s.system.attributes.ac.value')) > 10)
   const cantrips = await S(`s.items.filter((i) => i.type === 'spell' && i.system.level === 0).length`)
   check('③ 选的 3 个戏法进了人物', cantrips === 3, String(cantrips))
-  check('③ 1 级牧师该选子职业（按作者职业数据）', await originsDlg().getByTestId('ps-build-pick-sub').isVisible())
-  await fromLibrary(() => inOrigins('ps-build-pick-sub'), '生命', /生命/, '06-sub')
+  check('③ 生命领域和牧师同一次进人物，紧贴在牧师下面', (await S(`s.items.filter((i) => i.type === 'subclass').length`)) === 1 && (await originsDlg().locator('[data-testid=ps-build-class] + [data-testid=ps-build-subclass]').count()) === 1)
   await settle(page, 400); await shot('06b-origins-built')
-  check('③ 子职业：生命领域', (await S(`s.items.filter((i) => i.type === 'subclass').length`)) === 1 && /生命/.test(await originsDlg().getByTestId('ps-build').innerText()))
 
   // ④ 升级（职业与出身弹窗：牧师那一行的等级下拉选 2 级 → 右边答升级题，等级题已预选 2 级）
   await originsDlg().getByTestId('ps-build-level').first().click(); await page.getByRole('option', { name: '2 级', exact: true }).click()
@@ -208,6 +220,7 @@ try {
   const spellsBefore = await S(`s.items.filter((i) => i.type === 'spell').length`)
   const miSteps = await fromLibrary(() => page.getByRole('button', { name: /从库里加专长/ }).click(), '魔法学徒', /^魔法学徒\s*XPHB/, '07b-mi')
   check('④′ 组合题出现并答完（魔法学徒）', miSteps.some((st) => st.did === 'parts' || /法术/.test(st.title ?? '')) && miSteps.some((st) => st.done === 'confirmed'), JSON.stringify(miSteps))
+  for (let i = 0; i < 40 && (await S(`s.items.filter((i) => i.type === 'spell').length`)) === spellsBefore; i++) await page.waitForTimeout(250)
   const spellsAfter = await S(`s.items.filter((i) => i.type === 'spell').length`)
   check('④′ 魔法学徒选的法术进了人物（至少 3 条）', spellsAfter - spellsBefore >= 3, `${spellsBefore} → ${spellsAfter}`)
 
@@ -234,7 +247,10 @@ try {
   check('⑦ 撤销两步：物品、专长都退回，职业还在', !(await S(`s.items.some((i) => i.name === 'Potion of Healing')`)) && !(await S(`s.items.some((i) => i.name === 'Alert')`)) && (await S('s.system.details.level')) === levelBeforeAdds)
   // ⑧ 特征里的效果开关：加「灵活移动」专长（作者效果：步行速度 +10），特征弹窗速度一栏列出它，关掉 → 步行 -10，再开 → 回来
   await page.getByTestId('ps-tab-feat').click(); await settle(page, 700)
+  const walkBase = await S('s.system.attributes.movement.walk')
   await fromLibrary(() => page.getByRole('button', { name: /从库里加专长/ }).click(), '灵活移动', /^灵活移动/, '11-mobile')
+  // 加完人物页在后台重读：等步行速度变了再记（不读到加之前的数）
+  for (let i = 0; i < 40 && (await S('s.system.attributes.movement.walk')) === walkBase; i++) await page.waitForTimeout(250)
   const walkOn = await S('s.system.attributes.movement.walk')
   await page.getByTestId('ps-traits-edit').click(); await page.getByTestId('traits-dialog').waitFor(); await settle(page, 800)
   const mobileRow = page.getByTestId('traits-movement').getByTestId('traits-effect').filter({ hasText: '灵活移动' })

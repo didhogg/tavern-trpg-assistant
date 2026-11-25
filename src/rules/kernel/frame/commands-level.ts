@@ -16,6 +16,7 @@ import { blankChoice, firstChoice } from './commands-choice'
 import { resolveStarting, type StartingSelection } from './commands-equipment'
 import { checkedBuildTrait, fillBuildTraits, isBuildTrait, type TraitPlans, type ExpertiseViews } from './build-traits'
 import { stripTraitOrigins } from './trait-origins'
+import { revokeGrants } from './import-grants'
 
 const g = globalThis as any
 export function Manager(): any {
@@ -273,10 +274,13 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
      * 应用升级 / 降级：自动步骤原样应用；玩家给了选择（values：成长编号 + 等级 + 选择数据，和建卡、读档同一种）就按选择走官方 restore；
      * 没给的选择步骤仍按“第一个可选项”取值；仍无值则 pending。
      */
-    levelUpApply: (actorId: string, classId: string, delta = 1, values?: any[]) => operate([], async () => {
+    /** revokeUpTo：降级时只收回作者导入记录里最高等级不超过它的（重新选中间一级用，见 import-grants.ts）。 */
+    levelUpApply: (actorId: string, classId: string, delta = 1, values?: any[], revokeUpTo?: number) => operate([], async () => {
       const a = actor(actorId)
       // 官方 forLevelChange 找不到这件职业时什么也不做、照样报完成：这里先说清楚，不让调用方以为升降过了
-      if (!a.items.get(classId)) throw new Error(`人物身上没有这件职业（${classId}）`)
+      const cls = a.items.get(classId)
+      if (!cls) throw new Error(`人物身上没有这件职业（${classId}）`)
+      const identifier = String(cls.system?.identifier ?? ''), keep = Number(cls.system?.levels ?? 0) + delta
       const manager = managerFor(a, classId, delta, { automaticApplication: true })
       const outcome = await applyManager(manager, values)
       if (!outcome.finished) {
@@ -286,6 +290,8 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
           step: outcome.step,
         }
       }
+      // 降级：官方退完成长后，作者导入那几级加的（法术、起始装备……不在成长记录里）一并收回
+      if (delta < 0 && identifier) await revokeGrants(a, identifier, keep, false, revokeUpTo ?? Infinity)
       return actorLevel(a)
     }, [actorId]),
 

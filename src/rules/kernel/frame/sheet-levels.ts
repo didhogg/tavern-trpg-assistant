@@ -24,7 +24,7 @@ export interface LevelRow {
 }
 
 /** 官方 / 作者的字：语言键或已翻好的字，都过显示出口（commands-fields text 同一个认法）。 */
-function text(v: unknown): FrameText | null {
+export function text(v: unknown): FrameText | null {
   if (typeof v !== 'string' || !v.trim()) return null
   return keyText(v) ?? nameText(v, null) ?? fromAuthor(v, null)
 }

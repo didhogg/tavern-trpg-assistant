@@ -18,7 +18,7 @@ export type OriginsView =
   | { kind: 'entry'; key: string; itemId: string | null; name: string; ref: EntryRef | null; /** 种族 / 背景：资料卡上方列出它带来的（可取下）。 */ parts?: boolean }
   /** 职业的某一级：这一级每条成长给了什么（itemIds = 职业和它的子职业）。 */
   /** 职业的某一级（class = 这个职业：可以重新选这一级，top = 它现在几级）。 */
-  | { kind: 'levels'; key: string; itemIds: string[]; name: string; level: number; class?: { classId: string; ref: EntryRef | null; top: number } }
+  | { kind: 'levels'; key: string; itemIds: string[]; name: string; level: number; class?: { classId: string; ref: EntryRef | null; top: number; /** 第 1 级能重选（OriginsDialog 定）。 */ firstOk?: boolean } }
   /** 改等级：to > from 升级（作者问答），to < from 降级（先演练再确认）；redo = 重新选第 to 级（top = 职业现在几级，更高的几级按原选择升回）。 */
   | { kind: 'level'; key: string; classId: string; name: string; ref: EntryRef | null; from: number; to: number; redo?: { top: number } }
 
@@ -58,9 +58,10 @@ async function down(): Promise<void> {
     <template v-if="v.kind === 'levels'">
       <h3 class="od-title" data-testid="origins-detail-title">
 {{ v.name }} {{ v.level }} 级
-        <button v-if="v.class" type="button" class="trpg-btn trpg-btn--small" :disabled="person.readOnly || !v.class.ref || v.level < 2" data-testid="origins-redo" @click="redo">重新选这一级</button>
+        <button v-if="v.class" type="button" class="trpg-btn trpg-btn--small" :disabled="person.readOnly || !v.class.ref || (v.level < 2 && !v.class.firstOk)" data-testid="origins-redo" @click="redo">重新选这一级</button>
       </h3>
-      <p v-if="v.class && v.level < 2" class="lp-none" data-testid="origins-redo-why">第 1 级是职业本身（起始装备、1 级戏法也在这一级），暂时不能单独重选；要换可以删掉职业再从库里加。</p>
+      <p v-if="v.class && v.level < 2 && !v.class.firstOk" class="lp-none" data-testid="origins-redo-why">{{ v.class.top > 1 ? `第 1 级在 2～${v.class.top} 级下面，要重选它先把${v.name}降到 1 级。` : '这是带着兼职的原始职业：重新导入会被当成兼职、熟练给法不同，不能单独重选第 1 级。' }}</p>
+      <p v-else-if="v.class && v.level === 1" class="od-hint">重选第 1 级会先拿掉这个职业（连同它当时加的起始装备、戏法等），再按作者问答重新加 1 级；子职业照旧带上。</p>
       <LevelParts :item-ids="v.itemIds" :level="v.level" :source="`${v.name}-${v.level} 级`" />
     </template>
     <template v-else-if="v.kind === 'level' && v.redo && v.ref">

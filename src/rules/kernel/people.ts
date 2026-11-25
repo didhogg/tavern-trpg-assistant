@@ -143,16 +143,25 @@ export class KernelPeople {
   /** 读人物页：官方数值 + 官方显示数据（过唯一出口）。 */
   async sheet(ownerKey: string, actorId: string) {
     // 显示文字过唯一出口：物品 / 特性 / 效果名换成本战役语言，带作者编号的配上库条目（ref）；怪物动作等由小窗按作者编号在条目里定位
-    const refs = ((await this.saved(ownerKey, actorId))?.refs ?? []).map((r) => ({ set: r.set, prop: r.prop, hash: r.hash }))
+    // 分段计时（写完重读整张人物是每次改动后等得最久的一段）：对照表 / 小窗读数 / 过显示出口
+    const t0 = performance.now(); const ms: Record<string, number> = {}; let t = t0
+    const lap = (name: string): void => { const now = performance.now(); ms[name] = Math.round(now - t); t = now }
+    const savedActor = await this.saved(ownerKey, actorId)
+    lap('saved')
+    const refs = (savedActor?.refs ?? []).map((r) => ({ set: r.set, prop: r.prop, hash: r.hash }))
     const shownBy = await this.deps.runtime.displayFor(ownerKey, refs)
+    lap('display')
     const out = await this.call(ownerKey, 'sheet', actorId, shownBy.entries)
+    lap('frame')
     if (out.status !== 'complete') return out
     // 物品 / 效果名和官方显示数据（view）一起过唯一显示出口
     const shown = await shownBy.show({ shown: out.result.shown, view: out.result.view, levels: out.result.levels })
+    lap('show')
+    console.debug('[trpg-assistant] 人物读数用时', JSON.stringify({ ...ms, refs: refs.length }))
     // P6-R：人物存完整数据，没有“自动基准”可比，金线不再有（changed 留空给旧调用方）
     const changed: ChangedField[] = []
     // off = 这个人现在取下了哪几项（存档里的安排；特征 / 职业与出身单元按它显示「已取下」、装回 = 去掉那一行）
-    const off = (await this.saved(ownerKey, actorId))?.off ?? []
+    const off = savedActor?.off ?? []
     return { ...out, result: { ...out.result, shown: shown.value.shown, view: shown.value.view, levels: shown.value.levels, off, changed, changedItems: {} as Record<string, ChangedField[]>, baseKnown: true, ...(shown.missed.length ? { untranslated: shown.missed } : {}) } }
   }
 
@@ -355,11 +364,16 @@ export class KernelPeople {
    * 准备不成（指向不存在 / 还不能取下的项，problems 写原因）或写存档失败（期间别处改过），小窗按存档退回，存档不变。
    */
   async setOff(ownerKey: string, actorId: string, off: KernelActor['off']) {
+    // 分段计时（驾驶员 11-25 评测：取下 / 装回超过 1 秒，要量清等在哪一段）：读存档 / 小窗重新准备 / 拆成存档格式 / 写存档
+    const t0 = performance.now(); const ms: Record<string, number> = {}; let t = t0
+    const lap = (name: string): void => { const now = performance.now(); ms[name] = Math.round(now - t); t = now }
     const saved = await this.saved(ownerKey, actorId)
     if (!saved) throw new Error(`存档里没有这个人物：${actorId}`)
     const rev = await this.rev(ownerKey)
+    lap('read')
     const back = async () => { await this.deps.runtime.restore(ownerKey, actorId, await this.saved(ownerKey, actorId)) }
     const tried = await this.deps.runtime.restore(ownerKey, actorId, { ...saved, off })
+    lap('prepare')
     if (tried?.status !== 'complete') {
       await back()
       const problems = ((tried?.detail as { result?: { problems?: unknown[] } } | undefined)?.result?.problems ?? []) as Array<{ off: KernelActor['off'][number]; reason: string }>
@@ -367,7 +381,10 @@ export class KernelPeople {
     }
     try {
       const [compact] = await this.deps.runtime.compact(ownerKey, [actorId])
-      return { ok: true as const, problems: [], kernel: (await this.deps.saves.setOff(ownerKey, compact, off, rev)).kernel }
+      lap('compact')
+      const kernel = (await this.deps.saves.setOff(ownerKey, compact, off, rev)).kernel
+      lap('save')
+      return { ok: true as const, problems: [], kernel, ms: { ...ms, total: Math.round(performance.now() - t0) } }
     } catch (error) {
       await back()
       throw error
