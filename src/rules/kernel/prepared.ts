@@ -26,6 +26,8 @@ export class PreparedActors {
   base(id: string): ActorData | null { return this.rows.get(id)?.base ?? null }
   /** 取下后的视图（差别、回到自动、金线用）。 */
   view(id: string): ActorData | null { const row = this.rows.get(id); return row ? row.view ?? row.base : null }
+  /** 这个人现在有取下安排（记账时给了取下后的视图）：存档要存完整基准 + 安排 + 相对视图的差别，不能只存现在的样子。 */
+  hasOff(id: string): boolean { return !!this.rows.get(id)?.view }
 
   /** 给人物加了条目：新条目同时进基准和视图（加条目不影响已有的取下安排）。 */
   addItems(id: string, items: Array<Record<string, unknown>>): void {

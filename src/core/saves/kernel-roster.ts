@@ -97,7 +97,8 @@ export function setOff(ctx: RosterContext, ownerKey: string, compact: KernelActo
     if (index < 0) throw new TrpgError('E_NOT_FOUND', `存档里没有这个人物：${compact.id}`)
     const old = kernel.actors[index]
     const actors = kernel.actors.map(clone)
-    actors[index] = { ...clone(old), refs: clone(compact.refs), choices: clone(compact.choices), state: clone(compact.state), off: clone(off) }
+    // 完整数据跟着一起换（有取下时它是没取下的基准，runtime.compact）；旧式只有引用的人没有它
+    actors[index] = { ...clone(old), refs: clone(compact.refs), choices: clone(compact.choices), state: clone(compact.state), ...(compact.doc ? { doc: clone(compact.doc) } : {}), off: clone(off) }
     return { actors, before: { [old.id]: clone(old) } }
   })
 }

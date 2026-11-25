@@ -9,7 +9,7 @@ import type { ScopedLibrary } from '../../library/scoped'
 import type { LibraryService } from '../../library/service'
 import type { LibraryRevisionStore, LibraryView } from '../../library/revision'
 import type { CampaignLibrary, EntryRef } from '../../library/scopes'
-import type { KernelActor, KernelDataVersion } from '../../schemas/kernel'
+import { kernelActorSchema, type KernelActor, type KernelDataVersion } from '../../schemas/kernel'
 import { refKey } from '../../core/saves/split'
 import { executed, type KernelSession } from './host'
 import { PreparedActors, type OffChoices } from './prepared'
@@ -166,12 +166,15 @@ export class KernelRuntime {
     const deleted = await o.session.call('deleteActors', [actorId])
     if (deleted.status !== 'complete') throw new Error(`小窗里删不掉人物 ${actorId}：${deleted.error ?? deleted.status}`)
     if (!actor) { o.bases.delete(actorId); o.seeds.delete(actorId); return null }
-    const base = actor.base ?? o.bases.baseFor(actorId, actor.refs) ?? null
+    // 退回成旧式只存引用的人（撤销到第一次写入之前）：账本里记的已是写入后的完整数据（compact），不能当它的重建基准，按引用重建
+    const legacy = !actor.base && o.bases.isStored(actorId)
+    const base = actor.base ?? (legacy ? null : o.bases.baseFor(actorId, actor.refs)) ?? null
     if (!base) return this.rebuild(ownerKey, actor)
     const call = await o.session.call('createActorsFromBase', [{ base, id: actorId, state: actor.state, off: actor.off }])
     const row = (call.result as Array<{ id?: string; data?: Record<string, unknown>; view?: Record<string, unknown>; offChoices?: OffChoices }> | null)?.[0]
     if (call.status !== 'complete' || !row?.id || !row.data) return { status: 'error', error: call.error ?? `退回状态：${call.status}`, detail: call }
-    o.bases.set(row.id, base, row.view, row.offChoices, o.bases.isStored(row.id) || !!actor.base)
+    // 有取下安排才记视图（没有取下时视图就是基准）：存档按它判断要不要保留完整基准（compact）
+    o.bases.set(row.id, base, actor.off?.length ? row.view : null, row.offChoices, o.bases.isStored(row.id) || !!actor.base)
     return { status: 'complete', id: row.id, data: row.data, base, view: row.view }
   }
 
@@ -330,7 +333,7 @@ export class KernelRuntime {
           const row = list[j]
           if (!row?.id || !row.data) { results[h.index] = { status: 'error', error: '批量重建没有交回人物数据' }; return }
           results[h.index] = { status: 'complete', id: row.id, data: row.data, base: row.base ?? h.base, view: row.view }
-          o.bases.set(row.id, row.base ?? h.base, row.view, row.offChoices, !!actors[h.index].base)
+          o.bases.set(row.id, row.base ?? h.base, actors[h.index].off?.length ? row.view : null, row.offChoices, !!actors[h.index].base)
         })
       }
     }
@@ -340,7 +343,7 @@ export class KernelRuntime {
       results[index] = result
       if (result.status === 'complete') {
         if (!result.id || !result.base) throw new Error(`重建 ${actor.name} 没有交回人物编号或重建基准`)
-        o.bases.set(result.id, result.base, result.view, result.offChoices)
+        o.bases.set(result.id, result.base, actor.off?.length ? result.view : null, result.offChoices)
         o.seeds.set(result.id, result.seed ?? actor.seed ?? actor.name)
         if (o.cache && version) {
           const key = await kernelBaseKey({ base: o.cacheBase, brewFingerprint: o.brewFingerprint, dataVersion: version, actor })
@@ -391,8 +394,11 @@ export class KernelRuntime {
         const key = await kernelBaseKey({ base: o.cacheBase, brewFingerprint: o.brewFingerprint, dataVersion: version, actor: compact })
         await o.cache.put(key, full, { rule: o.rule, base: o.cacheBase, official: kernelFilesVersion(version), lang: o.cacheLang })
       }
-      // P6-R：另存完整人物数据（读档 / 撤销按它建回）；小窗里也就按「完整数据建回的人」记（同读档 / 退回：people.ts withBase、restore）
-      out.push({ ...compact, doc: current })
+      // 有取下安排（P6 取下 / 装回，驾驶员 11-25 定修法 A）：完整数据存「没取下的完整基准」，差别相对取下后的视图算，
+      // 读档 = 基准 → 作者按安排取下 → 叠差别（people.ts withBase 保留 off / state）；基准不动，下次照样相对同一个视图算
+      if (stored && o.bases.hasOff(id)) { out.push({ ...compact, doc: structuredClone(full) }); continue }
+      // P6-R：没有取下 = 完整数据就是现在的样子（读档 / 撤销按它建回），差别为空；小窗里按「完整数据建回的人」记
+      out.push({ ...compact, state: kernelActorSchema.shape.state.parse(undefined), doc: current })
       o.bases.set(id, structuredClone(current), null, {}, true)
     }
     return out

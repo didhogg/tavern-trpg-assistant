@@ -9782,6 +9782,7 @@ function $ne(e, t, n, r, i) {
 			refs: fe(n.refs),
 			choices: fe(n.choices),
 			state: fe(n.state),
+			...n.doc ? { doc: fe(n.doc) } : {},
 			off: fe(r)
 		}, {
 			actors: a,
@@ -24558,6 +24559,9 @@ var ZE = class {
 		let t = this.rows.get(e);
 		return t ? t.view ?? t.base : null;
 	}
+	hasOff(e) {
+		return !!this.rows.get(e)?.view;
+	}
 	addItems(e, t) {
 		let n = this.rows.get(e);
 		if (!n) return;
@@ -25839,24 +25843,24 @@ var aO = class {
 		let i = await r, a = await i.session.call("deleteActors", [t]);
 		if (a.status !== "complete") throw Error(`小窗里删不掉人物 ${t}：${a.error ?? a.status}`);
 		if (!n) return i.bases.delete(t), i.seeds.delete(t), null;
-		let o = n.base ?? i.bases.baseFor(t, n.refs) ?? null;
-		if (!o) return this.rebuild(e, n);
-		let s = await i.session.call("createActorsFromBase", [{
-			base: o,
+		let o = !n.base && i.bases.isStored(t), s = n.base ?? (o ? null : i.bases.baseFor(t, n.refs)) ?? null;
+		if (!s) return this.rebuild(e, n);
+		let c = await i.session.call("createActorsFromBase", [{
+			base: s,
 			id: t,
 			state: n.state,
 			off: n.off
-		}]), c = s.result?.[0];
-		return s.status !== "complete" || !c?.id || !c.data ? {
+		}]), l = c.result?.[0];
+		return c.status !== "complete" || !l?.id || !l.data ? {
 			status: "error",
-			error: s.error ?? `退回状态：${s.status}`,
-			detail: s
-		} : (i.bases.set(c.id, o, c.view, c.offChoices, i.bases.isStored(c.id) || !!n.base), {
+			error: c.error ?? `退回状态：${c.status}`,
+			detail: c
+		} : (i.bases.set(l.id, s, n.off?.length ? l.view : null, l.offChoices, i.bases.isStored(l.id) || !!n.base), {
 			status: "complete",
-			id: c.id,
-			data: c.data,
-			base: o,
-			view: c.view
+			id: l.id,
+			data: l.data,
+			base: s,
+			view: l.view
 		});
 	}
 	async buildCharacter(e, t) {
@@ -26126,7 +26130,7 @@ var aO = class {
 					data: a.data,
 					base: a.base ?? e.base,
 					view: a.view
-				}, r.bases.set(a.id, a.base ?? e.base, a.view, a.offChoices, !!t[e.index].base));
+				}, r.bases.set(a.id, a.base ?? e.base, t[e.index].off?.length ? a.view : null, a.offChoices, !!t[e.index].base));
 			});
 		}
 		for (let e of c) {
@@ -26140,7 +26144,7 @@ var aO = class {
 			});
 			if (o[e] = s, s.status === "complete") {
 				if (!s.id || !s.base) throw Error(`重建 ${n.name} 没有交回人物编号或重建基准`);
-				if (r.bases.set(s.id, s.base, s.view, s.offChoices), r.seeds.set(s.id, s.seed ?? n.seed ?? n.name), r.cache && a) {
+				if (r.bases.set(s.id, s.base, n.off?.length ? s.view : null, s.offChoices), r.seeds.set(s.id, s.seed ?? n.seed ?? n.name), r.cache && a) {
 					let e = await gD({
 						base: r.cacheBase,
 						brewFingerprint: r.brewFingerprint,
@@ -26216,10 +26220,14 @@ var aO = class {
 					lang: n.cacheLang
 				});
 			}
-			i.push({
+			s && n.bases.hasOff(e) ? i.push({
 				...u,
+				doc: structuredClone(a)
+			}) : (i.push({
+				...u,
+				state: Sv.shape.state.parse(void 0),
 				doc: o
-			}), n.bases.set(e, structuredClone(o), null, {}, !0);
+			}), n.bases.set(e, structuredClone(o), null, {}, !0));
 		}
 		return i;
 	}
@@ -26236,7 +26244,10 @@ function oO(e, t, n) {
 	return Array.from({ length: t }, () => `${e} ${++o}`);
 }
 var sO = (e) => e.replace(/ \d+$/, ""), cO = (e, t) => t.split(".").reduce((e, t) => he(e) ? e[t] : void 0, e), lO = (e) => new Map((e?.items ?? []).map((e) => [String(e._id), e])), uO = (e, t) => {
-	if (t.doc) return {
+	if (t.doc) return t.off?.length ? {
+		...t,
+		base: t.doc
+	} : {
 		...t,
 		base: t.doc,
 		state: Sv.shape.state.parse(void 0),

@@ -26,7 +26,9 @@ export async function offStep2(page) {
     const elfOff = { ref: key(elf), advancement: elfAdv._id, part: 'skills:prc' }
     const sailorPrc = { ref: key(sailor), advancement: sailorAdv._id, part: 'skills:prc' }
     const sailorAth = { ref: key(sailor), advancement: sailorAdv._id, part: 'skills:ath' }
-    const choices0 = JSON.stringify((await saved(id)).choices)
+    // 原始选择（P6-R 起存完整人物：读档不再用存档里的 choices 记录，原始选择就在完整数据里每件条目的成长记录上）
+    const advValues = (doc) => JSON.stringify((doc?.items ?? []).filter((i) => i.type === 'race' || i.type === 'background').map((i) => [i._id, Object.values(i.system?.advancement ?? {}).map((a) => [a._id, a.value ?? null]).sort()]))
+    const choices0 = advValues(a0)
     out.overlap = { start: { prc: await prof(id, 'prc'), ath: await prof(id, 'ath') }, cycles: [] }
     for (let n = 0; n < 3; n++) {
       const one = await people.setOff(owner, id, [elfOff]); const elfOnly = { ok: one.ok, prc: await prof(id, 'prc') }
@@ -40,7 +42,8 @@ export async function offStep2(page) {
     const skill = (await (await session()).call('skill', id, 'ath', [10])).result?.[0]?.total
     out.part.athRoll = skill
     out.part.wisRoll = roll.outcome.result?.[0]?.total
-    out.choicesKept = JSON.stringify((await saved(id)).choices) === choices0
+    // 取下 / 装回几轮、还有一项取下着：存档里的完整数据仍是没取下的原样，成长记录（当初选的技能）一项不变
+    out.choicesKept = advValues((await saved(id)).doc) === choices0
     out.savedOff = (await saved(id)).off
 
     // —— 期间改生命：取下 / 装回不动游戏状态 ——

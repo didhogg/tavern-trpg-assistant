@@ -62,8 +62,9 @@ const itemsById = (data: Record<string, unknown> | null): Map<string, Record<str
 type Saved = KernelActor & { base?: Record<string, unknown> }
 /** 存档人物带上战役层的 B′ 完整数据（有的话）。 */
 const withBase = (kernel: { bases?: Record<string, Record<string, unknown>> }, actor: KernelActor): Saved => {
-  // P6-R：有完整数据就只按它建回（差别为空、不取下）
-  if (actor.doc) return { ...actor, base: actor.doc, state: kernelActorSchema.shape.state.parse(undefined), off: [] }
+  // P6-R：有完整数据就按它建回。有取下安排时完整数据是没取下的基准，照安排取下再叠差别（runtime.compact）；
+  // 没有取下时完整数据就是现在的样子，差别不用（P6-R 之前写进去的差别也不叠，免得叠两遍）
+  if (actor.doc) return actor.off?.length ? { ...actor, base: actor.doc } : { ...actor, base: actor.doc, state: kernelActorSchema.shape.state.parse(undefined), off: [] }
   const base = kernel.bases?.[actor.id]
   return base ? { ...actor, base } : actor
 }
