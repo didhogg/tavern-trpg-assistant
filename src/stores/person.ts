@@ -3,6 +3,7 @@ import { computed, ref, shallowRef, watch } from 'vue'
 import type { Glossary, ShownFieldInfo, SpecialTraits, TraitChoices } from '../rules/kernel/people'
 import type { EntryRef } from '../library/scopes'
 import type { SheetEdit } from '../rules/kernel/frame/commands-sheet'
+import type { OffRow } from '../rules/kernel/frame/off'
 import type { KernelChange } from '../schemas/kernel'
 import type { AskAnswer } from '../rules/kernel/author-ask-types'
 import type { ImportStep } from '../rules/kernel/import-flow'
@@ -105,6 +106,14 @@ export const usePersonStore = defineStore('person', () => {
   const rest = (type: 'short' | 'long') => write(type === 'short' ? '短休' : '长休', (k) => backend().act(k, id.value!, 'rest', id.value!, type, [], {}))
   /** 某个职业改几级（官方 forLevelChange，和官方 / Tidy5e 等级下拉同一条路）；要玩家做选择的成长会报“没有完成”。 */
   const level = (label: string, classId: string, delta: number) => write(label, (k) => backend().act(k, id.value!, 'levelUpApply', id.value!, classId, delta))
+  /**
+   * 取下 / 装回自动项目：off = 这个人新的完整取下安排（取下 = 加一行，装回 = 去掉那一行；行的写法由读数给，sheet.traits / sheet.off）。
+   * 后端先在小窗按新安排准备，成功才连人物一起写进存档（一条撤销）；不成写原因、人物按存档退回。
+   */
+  const setOff = (label: string, off: OffRow[]) => write(label, async (k) => {
+    const r = await backend().setOff(k, id.value!, off)
+    return { outcome: r.ok ? { status: 'complete' } : { status: 'error', error: r.problems?.[0]?.reason ?? r.error } }
+  })
   /** 按一份物品数据新建条目（复制 / 新建空白条目，照 Tidy5e item.clone、createItem）：小窗现成的加条目命令收数据，走官方成长；一条撤销。 */
   const create = (label: string, data: Array<Record<string, unknown>>) => write(label, (k) => backend().act(k, id.value!, 'addToActor', id.value!, data.map((d) => ({ prop: String(d.type ?? 'item'), entry: null, data: d }))))
   /** 官方物品小操作（拆分堆叠 / 法术做成卷轴 / 钱币换算）：小窗现成命令，一条撤销。 */
@@ -212,5 +221,5 @@ export const usePersonStore = defineStore('person', () => {
     return out.result as ShownFieldInfo
   }
 
-  return { id, sheet, glossary, loading, error, prevId, nextId, row, readOnly, open, close, reload, edit, importStep, importConfirm, importCancel, create, splitStack, createScroll, convertCurrency, duplicate, remove, adjust, fields, traitChoices, specialTraits, filterIds, rest, level, levelNative, stopNative, previewHp, cancelHp, confirmHp, undo, undoTo, history }
+  return { id, sheet, glossary, loading, error, prevId, nextId, row, readOnly, open, close, reload, edit, importStep, importConfirm, importCancel, create, splitStack, createScroll, convertCurrency, duplicate, remove, adjust, fields, traitChoices, specialTraits, filterIds, rest, level, setOff, levelNative, stopNative, previewHp, cancelHp, confirmHp, undo, undoTo, history }
 })

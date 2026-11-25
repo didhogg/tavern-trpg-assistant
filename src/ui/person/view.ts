@@ -31,6 +31,8 @@ export function creatureType(s: PersonSheet, g: Glossary | null): string {
   const name = named(g, 'creatureTypes', t?.value)
   return t?.subtype ? `${name}（${t.subtype}）` : name
 }
+/** 生物子类型的显示文字（官方显示数据，已过唯一出口：作者导入时写的种族英文名会是中文）。 */
+export const creatureSubtype = (s: PersonSheet): string => String(parts(s).details?.creatureType?.subtitle ?? '')
 export const alignment = (s: PersonSheet): string => String(s.view?.base?.system?.details?.alignment ?? s.system.details?.alignment ?? '')
 export const size = (s: PersonSheet, g: Glossary | null): string => named(g, 'actorSizes', s.system.traits?.size)
 

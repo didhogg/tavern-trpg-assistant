@@ -39,6 +39,8 @@ const EXPORTS = [
   'UtilsEntityBackground',
   // 作者导入时对照的附加资料合集包（按作者设置）和它的缓存读取：问答开始时用它预读（frame/commands-equipment.ts warmItems）
   'CompendiumCacheUtil',
+  // 作者 5etools 体型代号 → dnd5e 体型键的换算表：特征单元按它把库里的体型写进人物（frame/sheet-traits.ts）
+  'VET_SIZE_TO_ABV',
 ]
 
 export let plutoniumBuild: Record<string, any> | null = null

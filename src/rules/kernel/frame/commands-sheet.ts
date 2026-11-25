@@ -8,6 +8,7 @@ import { fromAuthor, fromEntry } from '../shown'
 import { itemText } from './sheet-texts'
 import { itemForStateKey } from '../../../core/saves/state'
 import { sheetView } from './sheet-view'
+import { sheetTraits } from './sheet-traits'
 import { nameText, registryCaptured, statusKey, tableNames } from './registry-keys'
 import { keyText } from './system-text'
 
@@ -142,6 +143,8 @@ export function createSheetCommands(operate: Operate, actor: ActorGetter, rollSu
         },
         // 官方角色表 / NPC 表自己的显示数据（sheet-view.ts），界面显示读这一份
         view: await sheetView(a, entries),
+        // 特征单元：体型 / 类型 / 速度 / 感官 / 阵营的现在值、来源（种族 / 手改）和种族那份的取下写法
+        traits: sheetTraits(a),
         breakdown: {
           hp: await configContext(apps.HitPointsConfig, a, ['classes', 'ability', 'effects', 'levels']),
           ac: await configContext(apps.ArmorClassConfig, a, ['calculations', 'formulaLabel']),

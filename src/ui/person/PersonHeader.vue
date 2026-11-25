@@ -15,7 +15,9 @@ import HpBlock from './HpBlock.vue'
 import VitalDrawers from './VitalDrawers.vue'
 import PortraitButton from './avatar/PortraitButton.vue'
 import { openFields } from './edit-open'
-import { openName, openOrigins } from './unit-open'
+import { openName, openOrigins, openTraits } from './unit-open'
+import { useTraitOptions } from './trait-options'
+import type { SheetTraits } from '../../rules/kernel/frame/sheet-traits'
 import { classBuilds } from './view-tabs'
 import { alignment, background, creatureType, crText, deathShown, exhaustionPips, isNpc, legendary, named, senses, showExperience, signed, size, species, speeds } from './view'
 import NumIn from './table/NumIn.vue'
@@ -40,11 +42,27 @@ const spellDc = computed(() => {
   const spell = sys.value.attributes.spell
   return sys.value.attributes.spellcasting && spell?.dc ? `${named(g.value, 'abilities', sys.value.attributes.spellcasting)} DC ${spell.dc}` : ''
 })
-/** 特征框：体型、生物类型、速度、感官、阵营（只显示；编辑在特征单元）。 */
+/** 特征框：体型、生物类型、速度、感官、阵营（编辑在特征单元）。 */
 const traitLine = computed(() => [size(s.value, g.value), creatureType(s.value, g.value)].filter(Boolean))
-const speedParts = computed(() => speeds(s.value).filter((x) => x.value).map((x) => `${x.label} ${x.value} 尺`))
-const senseParts = computed(() => senses(s.value).filter((x) => x.value !== null && x.value !== undefined && x.value !== '')
-  .map((x) => `${x.label} ${x.value}${typeof x.value === 'number' && x.key !== 'passivePerception' ? ' 尺' : ''}`))
+// 速度 / 感官：和特征单元同一份（后端特征读数的全部种类 + 库里的速度种类 / 感官条目名）；官方角色表侧栏只给最快的一种速度，不够用。
+// 库选项还没读到时先用官方显示数据（一会儿就换）
+const { options: topts } = useTraitOptions()
+const traits = computed(() => s.value.traits as SheetTraits | undefined)
+const unitOf = (u: string | undefined): string => (u && named(g.value, 'movementUnits', u)) || '尺'
+const speedParts = computed(() => {
+  const tr = traits.value; const o = topts.value
+  if (!tr || !o) return speeds(s.value).filter((x) => x.value).map((x) => `${x.label} ${x.value} 尺`)
+  return tr.movement.rows.filter((r) => r.value).flatMap((r) => { const c = o.speeds.find((x) => x.value === r.key); return c ? [`${c.label} ${r.value} ${unitOf(tr.movement.units)}`] : [] })
+})
+const senseParts = computed(() => {
+  const tr = traits.value; const o = topts.value
+  const shown = senses(s.value)
+  if (!tr || !o) return shown.filter((x) => x.value !== null && x.value !== undefined && x.value !== '').map((x) => `${x.label} ${x.value}${typeof x.value === 'number' && x.key !== 'passivePerception' ? ' 尺' : ''}`)
+  return [
+    ...tr.senses.rows.filter((r) => r.value).map((r) => `${o.senses.find((x) => x.english.toLowerCase() === r.key)?.name ?? shown.find((x) => x.key === r.key)?.label ?? r.key} ${r.value} ${unitOf(tr.senses.units)}`),
+    ...(tr.senses.special ? [tr.senses.special] : []),
+  ]
+})
 const align = computed(() => alignment(s.value))
 const abilities = computed(() => Object.keys(g.value?.tables.abilities ?? {}).filter((k) => sys.value.abilities?.[k]).map((k) => {
   const a = sys.value.abilities[k]
@@ -113,7 +131,8 @@ const editLevel = () => (npc.value
           </template>
           <p v-else class="ps-unit-empty" data-testid="ps-unit-origins-empty">还没有职业、种族、背景</p>
         </div>
-        <div class="ps-card ps-unit" data-testid="ps-unit-traits">
+        <div class="ps-card ps-unit" data-testid="ps-unit-traits" @click="!ro && openTraits()">
+          <button class="ps-pen" type="button" aria-label="改特征" :disabled="ro" data-testid="ps-traits-edit" @click.stop="openTraits()"><Icon name="pencil-simple" :size="14" /></button>
           <small class="ps-card-label">特征</small>
           <p v-if="traitLine.length" class="ps-unit-line"><span v-for="t in traitLine" :key="t" class="ps-unit-item">{{ t }}</span></p>
           <p v-if="speedParts.length" class="ps-unit-line"><span v-for="t in speedParts" :key="t" class="ps-unit-item">{{ t }}</span></p>

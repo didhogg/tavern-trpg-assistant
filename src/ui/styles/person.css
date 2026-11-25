@@ -195,3 +195,48 @@
 .od-confirm h3 { margin: 0; font-size: var(--fs-lg); }
 .od-confirm p { margin: 0; color: var(--text2); }
 .od-actions { display: flex; justify-content: flex-end; gap: var(--sp-2); }
+/* 特征单元（驾驶员 11-25）：五节一页；种族给的项左边一点古铜色记号，悬停只出一行小注释（data-src），不挡住这一项；窄屏没有悬停，来源直接写在下面 */
+.tr { display: grid; gap: var(--sp-4); align-content: start; }
+.tr-sec { display: grid; gap: var(--sp-2); padding-bottom: var(--sp-3); border-bottom: var(--border) solid var(--line); }
+.tr-sec:last-child { border-bottom: 0; }
+.tr-sec h4 { margin: 0; font-size: var(--fs-md); display: flex; align-items: baseline; gap: var(--sp-2); }
+.tr-sec h4 small { color: var(--text2); font-weight: var(--fw-regular); font-size: var(--fs-xs); }
+.tr-pills { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
+.tr-pill { min-height: 32px; padding: 0 var(--sp-3); border: var(--border) solid var(--line-ctrl); border-radius: var(--r-pill); background: var(--surface); color: var(--text); font: inherit; font-size: var(--fs-sm); cursor: pointer; }
+.tr-pill:hover:not(:disabled) { border-color: var(--accent); }
+.tr-pill[aria-checked='true'] { border-color: var(--primary); background: var(--primary); color: var(--on-primary, #fff); }
+.tr-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-2); max-width: 26rem; }
+.tr-row, .tr-line { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2); margin: 0; }
+.tr-item { position: relative; padding: 2px var(--sp-2); border-radius: var(--r-sm); }
+.tr-name { min-width: 3.5em; font-size: var(--fs-sm); }
+.tr-num { width: 5.5em; }
+.tr-sub { display: inline-flex; align-items: center; gap: var(--sp-2); color: var(--text2); font-size: var(--fs-sm); }
+.tr-sub .trpg-input { width: 10em; }
+.tr-wide .trpg-input { width: auto; flex: 1 1 14em; }
+.tr-wide { display: flex; }
+.tr-own { width: 10em; }
+.tr-check { display: inline-flex; align-items: center; gap: var(--sp-1); font-size: var(--fs-sm); }
+.tr-note { color: var(--text2); font-size: var(--fs-xs); margin: 0; }
+.tr-gone { color: var(--text2); font-size: var(--fs-sm); }
+.tr-gone small { color: var(--text3); }
+.tr-chip { position: relative; display: inline-flex; align-items: center; gap: 4px; min-height: 32px; padding: 0 4px 0 var(--sp-3); border: var(--border) solid var(--line-ctrl); border-radius: var(--r-pill); background: var(--surface); font-size: var(--fs-sm); }
+.tr-chip-num { width: 3.6em; padding: 2px 4px; border: 0; border-bottom: var(--border) solid var(--line); background: transparent; color: var(--text); font: inherit; text-align: right; }
+.tr-chip-num { appearance: textfield; -moz-appearance: textfield; }
+.tr-chip-num::-webkit-inner-spin-button, .tr-chip-num::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.tr-chip-x { display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--text2); cursor: pointer; }
+.tr-chip-x:hover:not(:disabled) { background: var(--bg-hover); color: var(--text); }
+.tr-chip--gone { border-style: dashed; color: var(--text2); background: none; padding-right: var(--sp-2); cursor: pointer; }
+.tr-chip--gone:hover:not(:disabled) { border-color: var(--accent); color: var(--text); }
+/* 种族给的：一点古铜记号（不只靠颜色：还有悬停 / 窄屏的来源字） */
+.tr-pill[data-species]::after, .tr-item[data-species]::before, .tr-chip[data-species]::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.tr-pill[data-species] { display: inline-flex; align-items: center; gap: 6px; }
+.tr-item[data-species]::before, .tr-chip[data-species]::before { flex: none; }
+/* 悬停小注释：一行小字，出在这一项上方，不挡它 */
+.tr [data-src] { position: relative; }
+.tr:not([data-narrow]) [data-src]:hover::before { content: none; }
+.tr:not([data-narrow]) [data-src]:hover::after, .tr:not([data-narrow]) [data-src]:focus-within::after {
+  content: attr(data-src); position: absolute; left: 0; bottom: calc(100% + 4px); z-index: 2; width: max-content; max-width: 18rem; height: auto;
+  padding: 2px 8px; border-radius: var(--r-sm); background: var(--text); color: var(--surface); font-size: var(--fs-xs); line-height: 1.6; pointer-events: none; white-space: nowrap;
+}
+.tr-src-inline { color: var(--text3); font-size: var(--fs-xs); }
+

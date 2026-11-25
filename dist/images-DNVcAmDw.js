@@ -154,6 +154,7 @@ var m = {
 			backgrounds: "background",
 			classes: "class",
 			subclasses: "subclass",
+			senses: "sense",
 			kernel: {
 				adapter: "foundry",
 				settings: {
@@ -193,7 +194,8 @@ var m = {
 			races: "race",
 			backgrounds: "background",
 			classes: "class",
-			subclasses: "subclass"
+			subclasses: "subclass",
+			senses: "sense"
 		}
 	}
 }, h = m.scopes, g = m.rules;
