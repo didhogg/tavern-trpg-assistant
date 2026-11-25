@@ -103,6 +103,9 @@ try {
   await page.locator('.trpg-modal__close').click(); await settle(page, 400)
   const headTraits = await page.getByTestId('ps-unit-traits').innerText()
   check('③′ 页头特征框跟着变（守序善良、飞行）', /守序善良/.test(headTraits) && /飞行/.test(headTraits), headTraits.replace(/\s+/g, ' '))
+  await page.getByTestId('ps-unit-senses').getByRole('button', { name: '查看黑暗视觉' }).click(); await settle(page, 800)
+  check('③′ 页头感官是下划线术语：点黑暗视觉打开库里的资料', await page.locator('.trpg-modal__title').filter({ hasText: '黑暗视觉' }).isVisible())
+  await page.locator('.trpg-modal__close').click(); await settle(page, 400)
   // 选条目页：中英文名都能搜、按来源筛选
   await inOrigins('ps-build-add-class'); await page.getByTestId('ip-search').waitFor()
   await page.getByTestId('ip-search').fill('Cleric'); await settle(page, 500)

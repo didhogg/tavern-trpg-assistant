@@ -70211,7 +70211,8 @@ var vEe = ["data-step"], yEe = ["disabled", "aria-label"], bEe = ["aria-label", 
 	class: "ps-unit-line"
 }, JEe = {
 	key: 2,
-	class: "ps-unit-line"
+	class: "ps-unit-line",
+	"data-testid": "ps-unit-senses"
 }, YEe = {
 	key: 3,
 	class: "ps-unit-line"
@@ -70268,7 +70269,14 @@ var vEe = ["data-step"], yEe = ["disabled", "aria-label"], bEe = ["aria-label", 
 			});
 		}), x = q(() => {
 			let e = v.value, t = _.value, n = xbe(i.value);
-			return !e || !t ? n.filter((e) => e.value !== null && e.value !== void 0 && e.value !== "").map((e) => `${e.label} ${e.value}${typeof e.value == "number" && e.key !== "passivePerception" ? " 尺" : ""}`) : [...e.senses.rows.filter((e) => e.value).map((r) => `${t.senses.find((e) => e.english.toLowerCase() === r.key)?.name ?? n.find((e) => e.key === r.key)?.label ?? r.key} ${r.value} ${y(e.senses.units)}`), ...e.senses.special ? [e.senses.special] : []];
+			return !e || !t ? n.filter((e) => e.value !== null && e.value !== void 0 && e.value !== "").map((e) => ({ text: `${e.label} ${e.value}${typeof e.value == "number" && e.key !== "passivePerception" ? " 尺" : ""}` })) : [...e.senses.rows.filter((e) => e.value).map((r) => {
+				let i = t.senses.find((e) => e.english.toLowerCase() === r.key);
+				return {
+					name: i?.name ?? n.find((e) => e.key === r.key)?.label ?? r.key,
+					ref: i?.ref,
+					text: `${r.value} ${y(e.senses.units)}`
+				};
+			}), ...e.senses.special ? [{ text: e.senses.special }] : []];
 		}), S = q(() => E8(i.value)), C = q(() => Object.keys(a.value?.tables.abilities ?? {}).filter((e) => o.value.abilities?.[e]).map((e) => {
 			let t = o.value.abilities[e];
 			return {
@@ -70475,9 +70483,16 @@ var vEe = ["data-step"], yEe = ["disabled", "aria-label"], bEe = ["aria-label", 
 					class: "ps-unit-item"
 				}, A(e), 1))), 128))])) : K("", !0),
 				x.value.length ? (B(), V("p", JEe, [(B(!0), V(z, null, R(x.value, (e) => (B(), V("span", {
-					key: e,
+					key: (e.name ?? "") + e.text,
 					class: "ps-unit-item"
-				}, A(e), 1))), 128))])) : K("", !0),
+				}, [e.ref ? (B(), H(VF, {
+					key: 0,
+					label: `查看${e.name}`,
+					onOpen: (t) => N(o8)(e.ref, e.name)
+				}, {
+					default: P(() => [G(A(e.name), 1)]),
+					_: 2
+				}, 1032, ["label", "onOpen"])) : e.name ? (B(), V(z, { key: 1 }, [G(A(e.name), 1)], 64)) : K("", !0), G(A(e.text), 1)]))), 128))])) : K("", !0),
 				S.value ? (B(), V("p", YEe, [U("span", XEe, A(S.value), 1)])) : K("", !0)
 			])])]),
 			U("div", ZEe, [

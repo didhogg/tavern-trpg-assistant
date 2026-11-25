@@ -54,13 +54,18 @@ const speedParts = computed(() => {
   if (!tr || !o) return speeds(s.value).filter((x) => x.value).map((x) => `${x.label} ${x.value} 尺`)
   return tr.movement.rows.filter((r) => r.value).flatMap((r) => { const c = o.speeds.find((x) => x.value === r.key); return c ? [`${c.label} ${r.value} ${unitOf(tr.movement.units)}`] : [] })
 })
-const senseParts = computed(() => {
+/** 感官：库里有这条感官的名字画下划线（点了看资料），后面是距离。 */
+const senseParts = computed<Array<{ text: string; name?: string; ref?: unknown }>>(() => {
   const tr = traits.value; const o = topts.value
   const shown = senses(s.value)
-  if (!tr || !o) return shown.filter((x) => x.value !== null && x.value !== undefined && x.value !== '').map((x) => `${x.label} ${x.value}${typeof x.value === 'number' && x.key !== 'passivePerception' ? ' 尺' : ''}`)
+  if (!tr || !o) return shown.filter((x) => x.value !== null && x.value !== undefined && x.value !== '').map((x) => ({ text: `${x.label} ${x.value}${typeof x.value === 'number' && x.key !== 'passivePerception' ? ' 尺' : ''}` }))
   return [
-    ...tr.senses.rows.filter((r) => r.value).map((r) => `${o.senses.find((x) => x.english.toLowerCase() === r.key)?.name ?? shown.find((x) => x.key === r.key)?.label ?? r.key} ${r.value} ${unitOf(tr.senses.units)}`),
-    ...(tr.senses.special ? [tr.senses.special] : []),
+    ...tr.senses.rows.filter((r) => r.value).map((r) => {
+      const lib = o.senses.find((x) => x.english.toLowerCase() === r.key)
+      const name = lib?.name ?? shown.find((x) => x.key === r.key)?.label ?? r.key
+      return { name, ref: lib?.ref, text: `${r.value} ${unitOf(tr.senses.units)}` }
+    }),
+    ...(tr.senses.special ? [{ text: tr.senses.special }] : []),
   ]
 })
 const align = computed(() => alignment(s.value))
@@ -136,7 +141,7 @@ const editLevel = () => (npc.value
           <small class="ps-card-label">特征</small>
           <p v-if="traitLine.length" class="ps-unit-line"><span v-for="t in traitLine" :key="t" class="ps-unit-item">{{ t }}</span></p>
           <p v-if="speedParts.length" class="ps-unit-line"><span v-for="t in speedParts" :key="t" class="ps-unit-item">{{ t }}</span></p>
-          <p v-if="senseParts.length" class="ps-unit-line"><span v-for="t in senseParts" :key="t" class="ps-unit-item">{{ t }}</span></p>
+          <p v-if="senseParts.length" class="ps-unit-line" data-testid="ps-unit-senses"><span v-for="t in senseParts" :key="(t.name ?? '') + t.text" class="ps-unit-item"><Term v-if="t.ref" :label="`查看${t.name}`" @open="openEntry(t.ref as never, t.name!)">{{ t.name }}</Term><template v-else-if="t.name">{{ t.name }}</template>{{ t.text }}</span></p>
           <p v-if="align" class="ps-unit-line"><span class="ps-unit-item">{{ align }}</span></p>
         </div>
       </div>
