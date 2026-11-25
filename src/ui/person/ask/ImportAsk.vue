@@ -61,7 +61,7 @@ async function redo(i: number): Promise<void> {
 async function back(): Promise<void> {
   if (asked.value.length) return redo(asked.value.length - 1)
   if (staged) { await person.importCancel(); staged = false }
-  if (props.closeOnBack) modal.close()
+  if (props.closeOnBack) modal.done()
   else emit('back')
 }
 async function confirm(): Promise<void> {
@@ -69,7 +69,7 @@ async function confirm(): Promise<void> {
   busy.value = true
   try {
     const ok = await person.importConfirm(props.replace ? `把${props.replace.name}换成${props.name}` : `加了${props.name}`, step.value.changes)
-    if (ok) { staged = false; modal.close() }
+    if (ok) { staged = false; modal.done() }
   } finally { busy.value = false }
 }
 // 关掉弹窗 / 换页：没确认的改动退回

@@ -50,9 +50,9 @@ async function save(): Promise<void> {
   if (!isTool.value && form.custom !== before.custom) edits.push({ kind: 'set', path: `${path}.custom`, value: form.custom })
   if (info.value.bypasses.length && !same(form.bypasses, before.bypasses)) edits.push({ kind: 'set', path: `${path}.bypasses`, value: [...form.bypasses] })
   for (const [k, v] of Object.entries(form.comm)) if ((before.comm[k] ?? 0) !== v) edits.push({ kind: 'set', path: `${path}.communication.${k}.value`, value: v || null })
-  if (!edits.length) { modal.close(); return }
+  if (!edits.length) { modal.done(); return }
   busy.value = true
-  try { if (await person.edit(`改了${info.value.label}`, edits)) modal.close() } finally { busy.value = false }
+  try { if (await person.edit(`改了${info.value.label}`, edits)) modal.done() } finally { busy.value = false }
 }
 </script>
 
@@ -85,7 +85,7 @@ async function save(): Promise<void> {
     </div>
     <div class="pf-foot">
       <span class="pf-gap" />
-      <button class="trpg-btn" type="button" @click="modal.close()">取消</button>
+      <button class="trpg-btn" type="button" @click="modal.done()">取消</button>
       <button class="trpg-btn trpg-btn--primary" type="submit" :disabled="person.readOnly || busy || !info" data-testid="trait-save">保存</button>
     </div>
   </form>

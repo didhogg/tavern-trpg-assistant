@@ -33,9 +33,9 @@ async function save(): Promise<void> {
     else if (v === '' || v === null) edits.push({ kind: 'set', path: f.path, remove: true })
     else edits.push({ kind: 'set', path: f.path, value: f.type === 'number' ? Number(v) : v })
   }
-  if (!edits.length) { modal.close(); return }
+  if (!edits.length) { modal.done(); return }
   busy.value = true
-  try { if (await person.edit('改了特殊特质', edits)) modal.close() } finally { busy.value = false }
+  try { if (await person.edit('改了特殊特质', edits)) modal.done() } finally { busy.value = false }
 }
 </script>
 
@@ -60,7 +60,7 @@ async function save(): Promise<void> {
     </div>
     <div class="pf-foot">
       <span class="pf-gap" />
-      <button class="trpg-btn" type="button" @click="modal.close()">取消</button>
+      <button class="trpg-btn" type="button" @click="modal.done()">取消</button>
       <button class="trpg-btn trpg-btn--primary" type="submit" :disabled="person.readOnly || busy || !info" data-testid="special-save">保存</button>
     </div>
   </form>

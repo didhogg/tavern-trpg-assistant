@@ -30,20 +30,22 @@ export interface ModalPage {
 /**
  * 全局弹窗宿主的状态：一个页面栈。
  * 同一时间只有一个弹窗；弹窗内的前进、确认、详情都是入栈，「‹」与 Esc 出栈，不叠加第二个弹窗（开发规范 §5.3）。
+ * 弹窗挂在页面内容区里（驾驶员 11-25：不盖侧栏），属于打开它的那一页：切到别的页先藏起来、状态原样保留，切回来再显示。
+ * 弹窗开着时再打开任何页 = 在这个弹窗里前进一页（左上返回、右上关闭）；只有整个助手共用的窗口（存档、开局向导）用 openApp 另起。
  */
 export const useModalStore = defineStore('modal', () => {
   const stack = shallowRef<ModalPage[]>([])
   const direction = shallowRef<'forward' | 'back'>('forward')
   const ui = useUiStore()
-  /** 弹窗是在哪个页面打开的；库页的 sheet 弹窗切到别的页面时只是藏起来（状态原样保留），切回来再显示。 */
+  /** 弹窗属于哪一页（切到别的页时藏起来）；null = 整个助手共用（存档、开局向导），哪一页都显示。 */
   const owner = ref<PageId | null>(null)
 
   const isOpen = computed(() => stack.value.length > 0)
   const top = computed(() => stack.value[stack.value.length - 1])
   const depth = computed(() => stack.value.length)
   const variant = computed<ModalVariant>(() => stack.value[0]?.variant ?? 'dialog')
-  /** 现在是否显示：sheet 弹窗只在它所属的页面显示，其余变体（确认、抽屉、向导）一直显示。 */
-  const visible = computed(() => stack.value.length > 0 && (variant.value !== 'sheet' || owner.value === ui.page))
+  /** 现在是否显示：只在它所属的页面显示（共用窗口哪一页都显示）。 */
+  const visible = computed(() => stack.value.length > 0 && (owner.value === null || owner.value === ui.page))
 
   function leave(page: ModalPage | undefined): void {
     page?.onLeave?.()
@@ -56,18 +58,28 @@ export const useModalStore = defineStore('modal', () => {
     for (const page of pages) leave(page)
   }
 
-  /** 打开一个新弹窗；已有弹窗时先关闭它（不叠加）。 */
+  /** 打开：当前页已有弹窗 = 在它里面前进一页；没有（或别的页藏着一个）= 换成新弹窗，属于当前页。 */
   function open(page: ModalPage): void {
+    if (visible.value) { push(page); return }
+    start(page, ui.page)
+  }
+
+  /** 整个助手共用的窗口（存档、开局向导）：总是另起，哪一页都显示。 */
+  function openApp(page: ModalPage): void {
+    start(page, null)
+  }
+
+  function start(page: ModalPage, by: PageId | null): void {
     if (stack.value.length) clear()
     direction.value = 'forward'
-    owner.value = ui.page
+    owner.value = by
     stack.value = [page]
   }
 
   /** 在当前弹窗内前进一页；没有弹窗时等同于 open。 */
   function push(page: ModalPage): void {
-    if (!stack.value.length) {
-      open(page)
+    if (!visible.value) {
+      start(page, ui.page)
       return
     }
     direction.value = 'forward'
@@ -76,7 +88,7 @@ export const useModalStore = defineStore('modal', () => {
 
   /** 把栈顶页换成另一页（语言切换用：不增加返回层数）。 */
   function replace(page: ModalPage): void {
-    if (!stack.value.length) { open(page); return }
+    if (!visible.value) { start(page, ui.page); return }
     const removed = stack.value[stack.value.length - 1]
     direction.value = 'forward'
     stack.value = [...stack.value.slice(0, -1), page]
@@ -98,6 +110,12 @@ export const useModalStore = defineStore('modal', () => {
   /** 回到栈底页（保留第一页的状态）。 */
   function popToRoot(): void {
     while (stack.value.length > 1) pop()
+  }
+
+  /** 这一页做完了（保存 / 取消 / 选好）：是翻进来的页就回上一页，已是第一页就关掉弹窗。 */
+  function done(): void {
+    if (stack.value.length > 1) pop()
+    else close()
   }
 
   /** 关闭整个弹窗。force 为 true 时不经过栈底页的 guard。 */
@@ -133,5 +151,5 @@ export const useModalStore = defineStore('modal', () => {
     stack.value = [...stack.value.slice(0, -1), { ...page, height }]
   }
 
-  return { stack, direction, isOpen, visible, top, depth, variant, open, push, replace, pop, popToRoot, close, requestClose, escape, setTitle, setTopHeight }
+  return { stack, direction, isOpen, visible, top, depth, variant, open, openApp, push, replace, pop, popToRoot, done, close, requestClose, escape, setTitle, setTopHeight }
 })

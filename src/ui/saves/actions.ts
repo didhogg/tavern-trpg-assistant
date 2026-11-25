@@ -10,13 +10,13 @@ import WizardPage from '../wizard/WizardPage.vue'
 import { resetWizard } from '../wizard/state'
 
 export function openSaveDrawer(): void {
-  useModalStore().open({ key: 'saves', title: '存档', component: markRaw(SaveDrawerPage), variant: 'drawer' })
+  useModalStore().openApp({ key: 'saves', title: '存档', component: markRaw(SaveDrawerPage), variant: 'drawer' })
 }
 
 /** 开局向导：从首页横幅与存档抽屉底部「新建战役」打开，同一个向导。✕、Esc、点遮罩直接回首页，不弹放弃确认。 */
 export function openWizard(): void {
   resetWizard()
-  useModalStore().open({ key: 'wizard', title: '开始新冒险', component: markRaw(WizardPage), variant: 'dialog' })
+  useModalStore().openApp({ key: 'wizard', title: '开始新冒险', component: markRaw(WizardPage), variant: 'dialog' })
 }
 
 /** 保存存档：成功提示「已保存存档」，没有改动提示「已是最新」。 */

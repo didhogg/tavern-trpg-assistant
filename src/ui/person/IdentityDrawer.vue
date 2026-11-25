@@ -38,7 +38,7 @@ async function save(): Promise<void> {
     if (edits.length) await person.edit('改了身份', edits)
     const en = english.value.trim()
     if (en !== String(person.row?.adjustments.englishName ?? '')) await person.adjust('改了英文名', { englishName: en || null })
-    modal.close()
+    modal.done()
   } finally { busy.value = false }
 }
 </script>
@@ -67,7 +67,7 @@ async function save(): Promise<void> {
     </div>
     <div class="pf-foot">
       <span class="pf-gap" />
-      <button class="trpg-btn" type="button" @click="modal.close()">取消</button>
+      <button class="trpg-btn" type="button" @click="modal.done()">取消</button>
       <button class="trpg-btn trpg-btn--primary" type="submit" :disabled="person.readOnly || busy">保存</button>
     </div>
   </form>

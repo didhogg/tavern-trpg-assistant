@@ -25,7 +25,7 @@ async function read(): Promise<void> {
     <p v-if="error" class="ps-drawer-note ps-drawer-note--warn" role="alert">{{ error }}</p>
     <p v-else-if="busy" class="ps-drawer-note">正在读取…</p>
     <div class="ps-drawer-actions">
-      <button class="trpg-btn" type="button" @click="modal.close()">取消</button>
+      <button class="trpg-btn" type="button" @click="modal.done()">取消</button>
       <button class="trpg-btn trpg-btn--primary" type="submit" data-testid="avatar-read" :disabled="busy || !url.trim()">读取</button>
     </div>
   </form>

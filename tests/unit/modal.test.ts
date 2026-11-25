@@ -18,14 +18,51 @@ describe('弹窗页面栈', () => {
     expect(modal.isOpen).toBe(true)
   })
 
-  it('已有弹窗时再 open：先关闭旧的，不叠加', () => {
+  it('弹窗开着时再 open = 在弹窗里前进一页（驾驶员 11-25：弹窗上再弹只在当前弹窗里换页）', () => {
     const modal = useModalStore()
+    modal.open(page('a'))
+    modal.push(page('b'))
+    modal.open(page('c'))
+    expect(modal.stack.map((p) => p.key)).toEqual(['a', 'b', 'c'])
+  })
+
+  it('openApp（存档、开局向导）总是另起，先关旧的、不叠加，哪一页都显示', async () => {
+    const modal = useModalStore()
+    const ui = (await import('../../src/stores/ui')).useUiStore()
     const left = vi.fn()
     modal.open(page('a', { onLeave: left }))
     modal.push(page('b'))
+    modal.openApp(page('saves'))
+    expect(modal.stack.map((p) => p.key)).toEqual(['saves'])
+    expect(left).toHaveBeenCalledOnce()
+    ui.page = ui.page === 'home' ? 'library' : 'home'
+    expect(modal.visible).toBe(true)
+  })
+
+  it('弹窗属于打开它的页：切到别的页藏起来、状态不变；在别的页 open 才换成新弹窗', async () => {
+    const modal = useModalStore()
+    const ui = (await import('../../src/stores/ui')).useUiStore()
+    ui.page = 'people'
+    modal.open(page('a'))
+    modal.push(page('b'))
+    ui.page = 'library'
+    expect(modal.visible).toBe(false)
+    expect(modal.depth).toBe(2)
+    ui.page = 'people'
+    expect(modal.visible).toBe(true)
+    ui.page = 'library'
     modal.open(page('c'))
     expect(modal.stack.map((p) => p.key)).toEqual(['c'])
-    expect(left).toHaveBeenCalledOnce()
+  })
+
+  it('done：翻进来的页做完回上一页，第一页做完就关掉', () => {
+    const modal = useModalStore()
+    modal.open(page('a'))
+    modal.push(page('b'))
+    modal.done()
+    expect(modal.top?.key).toBe('a')
+    modal.done()
+    expect(modal.isOpen).toBe(false)
   })
 
   it('没有弹窗时 push 等同于 open', () => {

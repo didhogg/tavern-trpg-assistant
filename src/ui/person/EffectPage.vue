@@ -59,13 +59,13 @@ async function save(): Promise<void> {
     const duration = Number.isFinite(n) && n > 0 ? { value: n, units: form.units } : { value: null, units: form.units }
     if (!props.effectId) {
       const data = { name: form.name.trim(), system: { changes }, disabled: form.disabled, ...(duration.value ? { duration } : {}), flags: { 'tavern-trpg': { manual: true } } }
-      if (await person.edit(`加了效果「${data.name}」`, [{ kind: 'effectCreate', data }])) modal.close()
+      if (await person.edit(`加了效果「${data.name}」`, [{ kind: 'effectCreate', data }])) modal.done()
       return
     }
     const at = props.itemId ? { itemId: props.itemId } : {}
     const set = (path: string, value: unknown): SheetEdit => ({ kind: 'effect', effectId: props.effectId!, ...at, path, value })
     const edits = [set('name', form.name.trim()), set('system.changes', changes), set('disabled', form.disabled), set('duration', duration)]
-    if (await person.edit(`改了效果「${form.name.trim()}」`, edits)) modal.close()
+    if (await person.edit(`改了效果「${form.name.trim()}」`, edits)) modal.done()
   } finally { busy.value = false }
 }
 </script>
@@ -95,7 +95,7 @@ async function save(): Promise<void> {
     </div>
     <div class="pf-foot">
       <span class="pf-gap" />
-      <button class="trpg-btn" type="button" @click="modal.close()">取消</button>
+      <button class="trpg-btn" type="button" @click="modal.done()">取消</button>
       <button class="trpg-btn trpg-btn--primary" type="submit" :disabled="!ok || busy || person.readOnly" data-testid="ae-save">{{ effectId ? '保存' : '加上' }}</button>
     </div>
   </form>

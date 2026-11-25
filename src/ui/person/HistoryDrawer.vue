@@ -38,7 +38,7 @@ async function undoTo(r: { revision: number; steps: number }): Promise<void> {
   const ok = await askConfirm({ title: '撤销到这里', message: `会撤销最近的 ${r.steps} 条改动（包括其他人物的），连同这一条。`, confirmLabel: `撤销 ${r.steps} 条` })
   if (!ok) return
   await person.undoTo(r.revision)
-  modal.close()
+  modal.done()
 }
 </script>
 

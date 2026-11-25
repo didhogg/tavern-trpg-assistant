@@ -100,7 +100,7 @@ const changedPaths = computed(() => [...kinds.keys()].filter((p) => JSON.stringi
 const pending = computed(() => changedPaths.value.length + Object.keys(ops).length + added.value.length + (nameChanged.value ? 1 : 0))
 async function save(): Promise<void> {
   if (busy.value) return
-  if (!pending.value) { modal.close(); return }
+  if (!pending.value) { modal.done(); return }
   busy.value = true
   try {
     const edits: SheetEdit[] = []
@@ -118,7 +118,7 @@ async function save(): Promise<void> {
     for (const a of added.value) {
       edits.push({ kind: 'effectCreate', data: { name: a.note || '手动', system: { changes: [{ key: props.addKey!, type: 'add', value: a.value }] }, flags: { 'tavern-trpg': { manual: true } } } })
     }
-    if (!edits.length || await person.edit(`改了${props.title}`, edits)) modal.close()
+    if (!edits.length || await person.edit(`改了${props.title}`, edits)) modal.done()
   } finally { busy.value = false }
 }
 </script>
@@ -175,7 +175,7 @@ async function save(): Promise<void> {
         <button v-if="removedRows.length" class="trpg-btn" type="button" :disabled="person.readOnly" @click="restoreAll">全部重新分配</button>
         <span class="pf-gap" />
         <small v-if="pending" class="pf-count">改了 {{ pending }} 处</small>
-        <button class="trpg-btn" type="button" @click="modal.close()">取消</button>
+        <button class="trpg-btn" type="button" @click="modal.done()">取消</button>
         <button class="trpg-btn trpg-btn--primary" type="submit" :disabled="person.readOnly || busy || !pending" data-testid="pf-save">{{ busy ? '正在保存…' : '保存' }}</button>
       </div>
     </template>

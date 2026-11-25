@@ -10,7 +10,7 @@ const person = usePersonStore()
 const modal = useModalStore()
 const n = ref(Math.max(1, Math.floor(props.quantity / 2)))
 async function save(): Promise<void> {
-  if (await person.splitStack(`把${props.name}拆出 ${n.value} 个`, props.itemId, n.value)) modal.close()
+  if (await person.splitStack(`把${props.name}拆出 ${n.value} 个`, props.itemId, n.value)) modal.done()
 }
 </script>
 
@@ -23,7 +23,7 @@ async function save(): Promise<void> {
     </div>
     <div class="pf-foot">
       <span class="pf-gap" />
-      <button class="trpg-btn" type="button" @click="modal.close()">取消</button>
+      <button class="trpg-btn" type="button" @click="modal.done()">取消</button>
       <button class="trpg-btn trpg-btn--primary" type="submit" data-testid="split-save">拆分</button>
     </div>
   </form>

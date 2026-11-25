@@ -108,7 +108,7 @@ async function apply(): Promise<void> {
       { kind: 'set', path: 'img', value: baked ?? source.value },
       { kind: 'set', path: PORTRAIT_FLAG, value: { src: source.value, ...r } },
     ])
-    if (ok) modal.close()
+    if (ok) modal.done()
     else error.value = '没换成，见上方提示'
   } finally { busy.value = false }
 }
@@ -139,7 +139,7 @@ async function apply(): Promise<void> {
     <p v-if="img && !img.bakeable" class="ps-drawer-note">这个网站的图不让在本机截取，会直接用这个链接、居中显示。想截取可以把图存下来再上传。</p>
     <p v-if="error" class="ps-drawer-note ps-drawer-note--warn" role="alert">{{ error }}</p>
     <div class="ps-drawer-actions">
-      <button class="trpg-btn" type="button" @click="modal.close()">取消</button>
+      <button class="trpg-btn" type="button" @click="modal.done()">取消</button>
       <button class="trpg-btn trpg-btn--primary" type="button" data-testid="avatar-apply" :disabled="!img || busy || person.readOnly" @click="apply">设为头像</button>
     </div>
   </div>

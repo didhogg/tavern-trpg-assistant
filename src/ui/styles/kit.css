@@ -157,8 +157,7 @@ textarea.trpg-input { min-height: 72px; padding: var(--sp-2) var(--sp-3); resize
 .page-stack { display: grid; gap: var(--sp-4); align-content: start; }
 .page-intro { color: var(--text2); }
 .trpg-info__line { margin: 0; }
-/* 库页弹窗 sheet：只占侧栏 / 底栏之外的空间（边距由外壳量好写进 --trpg-sheet-left / -bottom）。宽屏居中较大，窄屏底部抽屉（内容自己管滚动，页面不留内边距） */
-.trpg-modal[data-variant='sheet'] { left: var(--trpg-sheet-left, 0px); bottom: var(--trpg-sheet-bottom, 0px); }
+/* 库页弹窗 sheet：宽屏居中较大，窄屏底部抽屉（内容自己管滚动，页面不留内边距）。所有弹窗都挂在页面内容区里，不盖侧栏 / 底栏（MainWindow） */
 .trpg-modal[data-variant='sheet'] .trpg-modal__card { width: 68%; min-width: min(480px, 100%); height: 70%; min-height: min(520px, 100%); }
 /* 弹窗外的暗色遮罩不关弹窗（防误点），但可以按住拖动整个插件窗口 */
 .trpg-modal { cursor: grab; } .trpg-modal__card { cursor: auto; }

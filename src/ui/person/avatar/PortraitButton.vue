@@ -21,7 +21,8 @@ const source = computed(() => portraitSource(person.sheet?.flags))
 const picker = ref<HTMLInputElement | null>(null)
 const over = ref(false)
 
-const crop = (props: Record<string, unknown>, title = '截取头像') => modal.open({ key: 'person-avatar-crop', title, component: markRaw(AvatarCrop), props, variant: 'dialog', width: 380, height: 520 })
+const cropPage = (props: Record<string, unknown>) => ({ key: 'person-avatar-crop', title: '截取头像', component: markRaw(AvatarCrop), props, variant: 'dialog' as const, width: 380, height: 520 })
+const crop = (props: Record<string, unknown>) => modal.open(cropPage(props))
 
 const BigView = defineComponent({
   props: { src: { type: String, required: true } },
@@ -46,7 +47,7 @@ function dropped(e: DragEvent): void {
 
 function select(key: string): void {
   if (key === 'upload') picker.value?.click()
-  else if (key === 'link') modal.open({ key: 'person-avatar-link', title: '贴图片链接', component: markRaw(AvatarLink), props: { src: source.value && /^https?:/i.test(source.value.src) ? source.value.src : '', next: (src: string) => crop({ src }) }, variant: 'dialog', width: 440, height: 240 })
+  else if (key === 'link') modal.open({ key: 'person-avatar-link', title: '贴图片链接', component: markRaw(AvatarLink), props: { src: source.value && /^https?:/i.test(source.value.src) ? source.value.src : '', next: (src: string) => modal.replace(cropPage({ src })) }, variant: 'dialog', width: 440, height: 240 })
   else if (key === 'recrop' && source.value) crop({ src: source.value.src, rect: source.value })
   else if (key === 'view') viewBig()
   else if (key === 'remove') void person.edit('移除了头像', [{ kind: 'set', path: 'img', value: null }, ...(source.value ? [{ kind: 'set' as const, path: PORTRAIT_FLAG, remove: true }] : [])])

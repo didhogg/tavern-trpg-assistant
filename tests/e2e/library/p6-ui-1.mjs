@@ -138,7 +138,19 @@ try {
   check('重新截取：不用重新选图', await page.getByTestId('avatar-apply').isEnabled()); await closeModal()
   await page.getByTestId('ps-portrait').click(); await page.getByTestId('avatar-link').click()
   await page.getByTestId('avatar-url').fill('不是网址'); await page.getByTestId('avatar-read').click(); await settle(page, 300)
-  check('贴链接：不是网址时写原因、不进截取框', /http/.test(await page.getByTestId('avatar-link-page').innerText()) && (await page.getByTestId('avatar-crop').count()) === 0); await shot('07d-avatar-link'); await closeModal()
+  check('贴链接：不是网址时写原因、不进截取框', /http/.test(await page.getByTestId('avatar-link-page').innerText()) && (await page.getByTestId('avatar-crop').count()) === 0); await shot('07d-avatar-link')
+  // 弹窗外壳（驾驶员 11-25）：人物弹窗只盖详情区，不盖左侧栏；弹窗开着侧栏照常能点（切页弹窗藏起来，切回来还在）
+  const boxes = await page.evaluate(() => {
+    const r = document.querySelector('#trpg-assistant-root').shadowRoot
+    const box = (sel) => { const e = r.querySelector(sel); if (!e) return null; const b = e.getBoundingClientRect(); return { l: Math.round(b.left), r: Math.round(b.right), t: Math.round(b.top) } }
+    return { side: box('.trpg-side'), head: box('.trpg-head'), modal: box('.trpg-modal'), sideInert: !!r.querySelector('.trpg-side')?.closest('[inert]') }
+  })
+  check('人物弹窗不盖左侧栏、侧栏不被禁用', !!boxes.side && !!boxes.modal && boxes.modal.l >= boxes.side.r - 1 && !boxes.sideInert, JSON.stringify(boxes))
+  await page.locator('.trpg-side').getByRole('button', { name: '首页' }).click(); await settle(page, 400)
+  const hidden = !(await page.getByTestId('avatar-link-page').isVisible())
+  await page.locator('.trpg-side').getByRole('button', { name: '人物' }).click(); await settle(page, 400)
+  check('弹窗开着时点侧栏能切页；切回人物页弹窗原样还在', hidden && await page.getByTestId('avatar-link-page').isVisible() && (await page.getByTestId('avatar-url').inputValue()) === '不是网址', JSON.stringify({ hidden }))
+  await closeModal()
   await page.getByTestId('ps-portrait').click(); await page.getByTestId('avatar-remove').click(); await settle(page, 1200)
   check('移除头像：回到默认人像', (await page.getByTestId('ps-portrait').locator('img').count()) === 0)
 
