@@ -10,7 +10,7 @@ import Term from '../kit/Term.vue'
 import { openEntry } from '../libview/open'
 import { shownItemName, shownItemRef } from './view-tabs'
 
-export interface LevelRowShown { itemId: string; ref: string; level: number; advancement: string; type: string; title: string | null; items: Array<{ id: string; part: string }>; keys: Array<{ key: string; label: string | null }> }
+export interface LevelRowShown { itemId: string; ref: string; level: number; advancement: string; type: string; title: string | null; items: Array<{ id: string; part: string }>; keys: Array<{ key: string; label: string | null; value?: number }> }
 
 /** itemIds = 这些条目的成长；level = 只看这一级（不给 = 全部级）；source = 悬停注释里的来源（如「牧师-2 级」）。 */
 const props = defineProps<{ itemIds: string[]; level?: number; source: string }>()
@@ -23,6 +23,8 @@ const same = (a: OffRow, b: OffRow): boolean => a.ref === b.ref && (a.advancemen
 const rowOff = (r: LevelRowShown, part: string, label: string): OffRow => ({ ref: r.ref, advancement: r.advancement, level: r.level, part, label })
 const gone = (r: LevelRowShown) => off.value.filter((o) => o.ref === r.ref && o.advancement === r.advancement && o.level === r.level && o.part)
 const itemName = (id: string): string => shownItemName(s.value, id) ?? id
+/** 键药丸上的字：属性提升带上加多少（力量 +2）。 */
+const chipText = (k: { key: string; label: string | null; value?: number }): string => `${k.label ?? k.key}${k.value ? ` ${k.value > 0 ? '+' : ''}${k.value}` : ''}`
 const take = (r: LevelRowShown, part: string, label: string): void => { void person.setOff(`取下${label}`, [...off.value, rowOff(r, part, label)]) }
 const back = (o: OffRow): void => { void person.setOff(`补回${o.label ?? '这一项'}`, off.value.filter((x) => !same(x, o))) }
 </script>
@@ -38,7 +40,7 @@ const back = (o: OffRow): void => { void person.setOff(`补回${o.label ?? '这�
         </li>
       </ul>
       <div v-if="r.keys.length" class="tr-pills">
-        <span v-for="k in r.keys" :key="k.key" class="tr-chip" :data-src="`来源：${source}`">{{ k.label ?? k.key }}<button type="button" class="tr-chip-x" :aria-label="`取下${k.label ?? k.key}`" :disabled="ro" @click="take(r, k.key, k.label ?? k.key)"><Icon name="x" :size="12" /></button></span>
+        <span v-for="k in r.keys" :key="k.key" class="tr-chip" :data-src="`来源：${source}`">{{ chipText(k) }}<button type="button" class="tr-chip-x" :aria-label="`${k.value ? '不计入' : '取下'}${chipText(k)}`" :disabled="ro" @click="take(r, k.key, chipText(k))"><Icon name="x" :size="12" /></button></span>
       </div>
       <div v-if="gone(r).length" class="tr-pills">
         <button v-for="o in gone(r)" :key="o.part" type="button" class="tr-chip tr-chip--gone" :data-src="`来源：${source}，已取下，点了补回`" :disabled="ro" data-testid="level-gone" @click="back(o)">{{ o.label ?? '已取下的一项' }}<Icon name="arrow-counter-clockwise" :size="12" /></button>

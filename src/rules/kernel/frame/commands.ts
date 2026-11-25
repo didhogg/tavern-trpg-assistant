@@ -16,6 +16,7 @@ import { createBatchCommands } from './commands-batch'
 import { createOptionsCommands } from './commands-options'
 import { createEquipmentCommands } from './commands-equipment'
 import { createSheetCommands } from './commands-sheet'
+import { createPreviewCommands } from './commands-preview'
 import { createFieldCommands } from './commands-fields'
 import { createImportCommands } from './commands-import'
 import { createNativeCommands } from './commands-native'
@@ -153,6 +154,8 @@ const ADD_COMMANDS = createAddCommands(operate, actor)
 const BATCH_COMMANDS = createBatchCommands(operate)
 /** P6 人物页：读数、统一改动、检定登记表、删人。 */
 const SHEET_COMMANDS = createSheetCommands(operate, actor, rollSummary)
+/** P6-R 降级演练：只算不存，主线随后按存档退回。 */
+const PREVIEW_COMMANDS = createPreviewCommands(operate, actor)
 /** P6-R：编辑窗口字段（官方字段定义）。 */
 const FIELD_COMMANDS = createFieldCommands(operate, actor)
 /** P6 建卡选项：每件条目要玩家选的事（官方进阶算候选）。 */
@@ -179,6 +182,7 @@ export const KERNEL_COMMANDS = {
   ...ADD_COMMANDS,
   ...BATCH_COMMANDS,
   ...SHEET_COMMANDS,
+  ...PREVIEW_COMMANDS,
   ...FIELD_COMMANDS,
   ...OPTIONS_COMMANDS,
   ...EQUIPMENT_COMMANDS,

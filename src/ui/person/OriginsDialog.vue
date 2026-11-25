@@ -38,7 +38,7 @@ function entryOf(key: string): OriginsView | null {
   if (key.startsWith('lvl:')) {
     const [, id, lv] = key.split(':')
     const c = cls.value.find((x) => x.id === id)
-    return c ? { kind: 'levels', key, itemIds: [c.id, c.subclass?.id].filter((x): x is string => !!x), name: c.name, level: Number(lv) } : null
+    return c ? { kind: 'levels', key, itemIds: [c.id, c.subclass?.id].filter((x): x is string => !!x), name: c.name, level: Number(lv), ...(Number(lv) === c.levels ? { top: { classId: c.id, ref: (c.ref ?? null) as EntryRef | null } } : {}) } : null
   }
   return null
 }
@@ -49,7 +49,7 @@ const current = ref<OriginsView | null>(null)
 function show(v: OriginsView | null): void {
   if (!v) return
   if (wide.value) { current.value = v; return }
-  modal.push({ key: `origins-page:${v.key}`, title: v.kind === 'level' ? `${v.name}改到 ${v.to} 级` : v.kind === 'levels' ? `${v.name} ${v.level} 级` : v.name, component: markRaw(OriginsDetail), props: { view: v, page: true }, variant: 'dialog', width: 920, height: 720 })
+  modal.push({ key: `origins-page:${v.key}`, title: v.kind === 'level' ? (v.redo ? `${v.name} ${v.to} 级 重新选` : `${v.name}改到 ${v.to} 级`) : v.kind === 'levels' ? `${v.name} ${v.level} 级` : v.name, component: markRaw(OriginsDetail), props: { view: v, page: true }, variant: 'dialog', width: 920, height: 720 })
 }
 function pick(key: string): void { show(entryOf(key)) }
 function changeLevel(c: ClassBuild, delta: number): void { show(levelView(c, delta)) }
@@ -76,7 +76,7 @@ const selected = computed(() => (current.value?.kind === 'entry' || current.valu
   <div class="od-wrap" :data-wide="wide || undefined" data-testid="origins-dialog">
     <div class="od-list"><BuildRows :selected="selected" levels @pick="pick" @level="changeLevel" /></div>
     <div v-if="wide" class="od-side">
-      <OriginsDetail v-if="current" :key="current.key" :view="current" @back="back" />
+      <OriginsDetail v-if="current" :key="current.key" :view="current" @back="back" @go="show" />
       <p v-else class="od-hint">先在左边选职业、种族或背景。</p>
     </div>
   </div>

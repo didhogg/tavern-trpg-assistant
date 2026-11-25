@@ -38,11 +38,14 @@ export class KernelImportFlow {
   private readonly live = new Map<string, Live>()
   constructor(private readonly deps: { runtime: KernelRuntime; people: KernelPeople }) {}
 
-  /** replaceItemId = 换掉的那件（换种族 / 背景）：官方先拿掉它，和导入算同一次改动。answers = 到现在为止的全部回答。 */
-  async step(ownerKey: string, actorId: string, ref: EntryRef, answers: AskAnswer[], replaceItemId?: string): Promise<ImportStep> {
+  /**
+   * replaceItemId = 换掉的那件（换种族 / 背景）：官方先拿掉它，和导入算同一次改动。answers = 到现在为止的全部回答。
+   * before = 开头先把这个职业降几级（重新选最高一级：官方降一级，再按作者问答升回来；降级和导入算同一次改动、一条撤销）。
+   */
+  async step(ownerKey: string, actorId: string, ref: EntryRef, answers: AskAnswer[], replaceItemId?: string, before?: { classId: string; delta: number }): Promise<ImportStep> {
     const t0 = performance.now()
     const ms = () => Math.round(performance.now() - t0)
-    const key = JSON.stringify([ref, replaceItemId ?? null])
+    const key = JSON.stringify([ref, replaceItemId ?? null, before ?? null])
     const { session } = await this.deps.runtime.session(ownerKey)
     const now = this.live.get(ownerKey)
     let out: FrameResult
@@ -58,6 +61,11 @@ export class KernelImportFlow {
       if (rows.status !== 'complete') return { status: 'error', error: rows.error ?? `条目没读出来（${rows.status}）`, ms: ms() }
       const row = rows.rows[0]
       this.live.set(ownerKey, { actorId, key, answers: [...answers], changes: [] })
+      if (before) {
+        const down = await session.call('levelUpApply', actorId, before.classId, before.delta)
+        if (!executed(down.status)) { await this.cancel(ownerKey, actorId); return { status: 'error', error: down.error ?? `先降级没完成（${down.status}）`, ms: ms() } }
+        this.live.get(ownerKey)!.changes.push(...((down.changes ?? []) as KernelChange[]))
+      }
       out = await session.call('importBegin', actorId, { prop: row.ref.prop, entry: row.entry }, await this.withFeats(ownerKey, answers), replaceItemId)
     }
     const live = this.live.get(ownerKey)!

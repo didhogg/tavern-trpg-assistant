@@ -87,15 +87,20 @@ function partsOf(adv: any, level: number): string[] {
 /**
  * 这一级这条成长现在给了人物什么（逐级细节用；取下的单项写法和上面同一个认法）：
  *   items = 作者存放授予物品的地方（storagePath）：人物物品编号 → 存放的条目编号（取下单项交的是后者：官方 reverse 按 uuid 认）；
- *   keys = 作者记录模型里列表字段的项（特质、熟练这类键）。
+ *   keys = 作者记录模型里列表字段的项（特质、熟练这类键）；amounts = 记录里「键 → 数」的映射（属性提升的分配：力量 +2）。
  */
-export function appliedParts(adv: any, level: number): { items: Array<{ id: string; part: string }>; keys: string[] } {
+export function appliedParts(adv: any, level: number): { items: Array<{ id: string; part: string }>; keys: string[]; amounts: Array<{ key: string; value: number }> } {
   const path = typeof adv.storagePath === 'function' ? adv.storagePath(level) : null
   const stored = path ? plain(g.foundry.utils.getProperty(adv, path)) : null
   const model = models(adv).value
   const keys = (entries(model, plain(adv.value)) ?? []).filter(([name]) => isList(model.schema.fields[name])).map(([, x]) => x)
   const items = stored && typeof stored === 'object' ? Object.entries(stored).filter((e): e is [string, string] => typeof e[1] === 'string').map(([id, part]) => ({ id, part })) : []
-  return { items, keys: [...new Set(keys)] }
+  const amounts: Array<{ key: string; value: number }> = []
+  for (const [name, field] of Object.entries(model?.schema?.fields ?? {}) as Array<[string, any]>) {
+    const v = plain(adv.value)?.[name]
+    if (isMap(field) && v && typeof v === 'object') for (const [key, x] of Object.entries(v)) if (typeof x === 'number' && x) amounts.push({ key, value: x })
+  }
+  return { items, keys: [...new Set(keys)], amounts }
 }
 
 /** 作者声明的「指向人物身上物品」字段里，指着这件物品的路径（种族、背景…按声明找，不写死）。 */

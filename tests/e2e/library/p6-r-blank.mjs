@@ -144,6 +144,19 @@ try {
   await originsDlg().getByTestId('ps-build-race').click(); await settle(page, 600)
   check('④″ 种族页上方列出它带来的（可取下）', await originsDlg().getByTestId('level-parts').isVisible() && (await originsDlg().getByTestId('level-parts').locator('.tr-chip, li').count()) > 0)
   await shot('07e-race-parts')
+  check('④″ 种族的属性提升列成「魅力 +2」这样的药丸（× = 不计入）', /\+\d/.test(await originsDlg().getByTestId('level-adv-AbilityScoreImprovement').innerText().catch(() => '')), await originsDlg().getByTestId('level-adv-AbilityScoreImprovement').innerText().catch(() => '无'))
+  // ④‴ 降级预览：下拉选 1 级 → 右边先演练，列出会收回的（引导神力）、生命上限变小；取消后人物还是 2 级（演练按存档退回了）
+  await originsDlg().getByTestId('ps-build-level').first().click(); await page.getByRole('option', { name: '1 级', exact: true }).click()
+  await originsDlg().getByTestId('origins-level-down-list').waitFor(); await settle(page, 600); await shot('07f-level-down-preview')
+  const downList = await originsDlg().getByTestId('origins-level-down-list').innerText()
+  check('④‴ 降级预览列出会收回引导神力', /引导神力/.test(downList), downList.replace(/\s+/g, ' '))
+  await originsDlg().getByTestId('origins-level-down').getByRole('button', { name: '取消' }).click(); await settle(page, 800)
+  check('④‴ 只预览不降：取消后还是 2 级、引导神力还在', (await S('s.system.details.level')) === 2 && await cdName())
+  // ④⁗ 重新选最高一级：先降一级再按作者问答升回来（一条撤销）
+  await lv2.click(); await settle(page, 500)
+  await originsDlg().getByTestId('origins-redo').click(); await page.getByTestId('import-ask').waitFor(); await shot('07g-redo')
+  noteSteps('07g-redo', await answerImport(page, { firstPause: 2000 })); await settle(page, 1500)
+  check('④⁗ 重新选 2 级：答完还是 2 级、引导神力还在', (await S('s.system.details.level')) === 2 && await cdName() && (await page.getByTestId('import-ask').count()) === 0)
   await shot('07-lv2-done')
   await page.locator('.trpg-modal__close').click(); await settle(page, 400)
 

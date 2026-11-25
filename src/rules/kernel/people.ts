@@ -251,6 +251,18 @@ export class KernelPeople {
     return { outcome, changes, preview, actorId }
   }
   async confirm(ownerKey: string, changes: KernelChange[]) { return (await this.deps.saves.apply(ownerKey, changes, await this.rev(ownerKey))).kernel }
+  /**
+   * 降级演练（职业与出身弹窗右边的降级预览）：官方在小窗里真降一次，交回会收回的物品（已过显示出口）、生命上限 / 总等级前后；
+   * 只算不存，算完马上按存档退回。
+   */
+  async levelPreview(ownerKey: string, actorId: string, classId: string, delta: number) {
+    const refs = ((await this.saved(ownerKey, actorId))?.refs ?? []).map((r) => ({ set: r.set, prop: r.prop, hash: r.hash }))
+    const shownBy = await this.deps.runtime.displayFor(ownerKey, refs)
+    const out = await this.call(ownerKey, 'levelPreview', actorId, classId, delta, shownBy.entries)
+    await this.cancel(ownerKey, [actorId])
+    if (out.status !== 'complete') return out
+    return { ...out, result: (await shownBy.show(out.result)).value }
+  }
   /** 取消：小窗里这些人按存档退回。 */
   async cancel(ownerKey: string, ids: string[]) {
     for (const id of ids) await this.deps.runtime.restore(ownerKey, id, await this.saved(ownerKey, id))

@@ -17,7 +17,7 @@ import AskParts from './AskParts.vue'
 /** closeOnBack：直接打开的（升级）没有上一页，返回 = 关掉弹窗。 */
 /** level：从等级菜单「改到第几级」进来的，等级题预先选好这一级。 */
 /** embedded：嵌在别的页里（职业与出身弹窗右边）：确认后交 done 给外面，不动弹窗；backText = 第一题时返回按钮的字。 */
-const props = defineProps<{ entryRef: EntryRef; name: string; replace?: { id: string; name: string }; closeOnBack?: boolean; level?: number; embedded?: boolean; backText?: string }>()
+const props = defineProps<{ entryRef: EntryRef; name: string; replace?: { id: string; name: string }; closeOnBack?: boolean; level?: number; embedded?: boolean; backText?: string; before?: { classId: string; delta: number } }>()
 const emit = defineEmits<{ back: []; done: [] }>()
 const person = usePersonStore()
 const modal = useModalStore()
@@ -34,7 +34,7 @@ async function run(): Promise<void> {
   busy.value = true
   const timer = setTimeout(() => { slow.value = true }, 400)
   try {
-    const out = await person.importStep(props.entryRef, answers.value, props.replace?.id)
+    const out = await person.importStep(props.entryRef, answers.value, props.replace?.id, props.before)
     step.value = out ?? { status: 'error', error: '没有当前人物', ms: 0 }
     staged = out?.status === 'ready' || out?.status === 'question'
     pending.value = null

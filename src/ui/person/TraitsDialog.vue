@@ -3,17 +3,19 @@
 // （取下 / 装回是单独一次写入，统一保存会半写——设置窗口不混两种生效方式）。
 //   选项：全部从本战役【库】取（trait-options.ts）；来源和种族那份的取下写法：后端读数 sheet.traits / sheet.off。
 //   种族给的项：悬停小注释「来源：种族-半精灵」，× = 取下（虚线留在原位，点它补回）；手改的项：× = 去掉手改（种族的值回来）。
-import { computed, ref } from 'vue'
+import { computed, ref, shallowRef, watch } from 'vue'
+import type { FieldEffect } from '../../rules/kernel/person-views'
 import type { SheetTraits, TraitRow } from '../../rules/kernel/frame/sheet-traits'
 import type { OffRow } from '../../rules/kernel/frame/off'
 import { usePersonStore } from '../../stores/person'
 import { useUiStore } from '../../stores/ui'
 import Icon from '../kit/Icon.vue'
 import SelectField from '../kit/SelectField.vue'
+import Switch from '../kit/Switch.vue'
 import Term from '../kit/Term.vue'
 import { openEntry } from '../libview/open'
 import { useTraitOptions, type SenseChoice } from './trait-options'
-import { creatureSubtype, named, species } from './view'
+import { alignment, creatureSubtype, named, species } from './view'
 
 const person = usePersonStore()
 const ui = useUiStore()
@@ -93,16 +95,31 @@ function confirmAdd(): void {
   edit(`加了感官${a.sense?.name ?? ''}`, 'system.attributes.senses.special', special)
 }
 
+// —— 物品 / 专长效果改到速度、感官的（编辑窗口同一份读数 person.fields：名字、来源、改哪项、加多少）：开关 = 作者的「停用」——
+type Shown<T> = { [K in keyof T]: T[K] extends unknown ? (T[K] extends object | null ? string | null : T[K]) : never }
+const effects = shallowRef<Record<Group, Shown<FieldEffect>[]>>({ movement: [], senses: [] })
+async function loadEffects(): Promise<void> {
+  const [m, s] = await Promise.all([person.fields({ path: 'system.attributes.movement' }), person.fields({ path: 'system.attributes.senses' })])
+  effects.value = { movement: ((m?.effects ?? []) as never as Shown<FieldEffect>[]).filter((e) => !e.manual), senses: ((s?.effects ?? []) as never as Shown<FieldEffect>[]).filter((e) => !e.manual) }
+}
+watch(() => person.sheet, () => void loadEffects(), { immediate: true })
+function toggleEffect(e: Shown<FieldEffect>, on: boolean): void {
+  void person.edit(`${on ? '启用' : '停用'}${e.name ?? '效果'}`, [{ kind: 'effect', effectId: e.effect, ...(e.itemId ? { itemId: e.itemId } : {}), path: 'disabled', value: !on }])
+}
+const effectText = (e: Shown<FieldEffect>): string => `${e.keyLabel ?? e.key} ${e.modeCode === 'add' && /^-?\d/.test(e.value) ? (Number(e.value) >= 0 ? `+${e.value}` : e.value) : `${e.mode ?? ''} ${e.value}`}`
+
 // —— 阵营：库里的阵营代号按两条轴排成九宫格（守序 / 中立 / 混乱 × 善良 / 中立 / 邪恶），外加无阵营；也能自己写 ——
 const AXES = { law: ['L', 'NX', 'C'], good: ['G', 'NY', 'E'] } // 作者阵营代号的两条轴（NX / NY = 某一条轴上的中立）
 const word = (code: string): string => options.value?.align[code === 'NX' || code === 'NY' ? 'N' : code] ?? ''
 const cell = (l: string, m: string): string => (l === 'NX' && m === 'NY' ? word('N') : word(l) + word(m))
+/** 现在的阵营：显示出口给的文字（模板英雄存的 Chaotic Good 显示成混乱善良，九宫格跟着选中）。 */
+const alignNow = computed(() => (person.sheet ? alignment(person.sheet) : '') || t.value?.alignment || '')
 const grid = computed(() => (options.value ? AXES.law.map((l) => AXES.good.map((m) => cell(l, m))) : []))
 const extra = computed(() => (options.value?.align.U ? [options.value.align.U] : []))
 const writing = ref(false)
 const ownText = ref('')
-function pickAlign(text: string): void { edit(text === t.value?.alignment ? '清空了阵营' : `阵营改为${text}`, 'system.details.alignment', text === t.value?.alignment ? '' : text) }
-function saveOwn(): void { writing.value = false; const v = ownText.value.trim(); if (v !== t.value?.alignment) edit(v ? `阵营改为${v}` : '清空了阵营', 'system.details.alignment', v) }
+function pickAlign(text: string): void { edit(text === alignNow.value ? '清空了阵营' : `阵营改为${text}`, 'system.details.alignment', text === alignNow.value ? '' : text) }
+function saveOwn(): void { writing.value = false; const v = ownText.value.trim(); if (v !== alignNow.value) edit(v ? `阵营改为${v}` : '清空了阵营', 'system.details.alignment', v) }
 </script>
 
 <template>
@@ -141,6 +158,7 @@ function saveOwn(): void { writing.value = false; const v = ownText.value.trim()
           <s>{{ nameOf('movement', x.key) }}</s><small>{{ fromSpecies }}，已取下</small>
           <button type="button" class="trpg-btn trpg-btn--small" :disabled="ro" @click="putBack(nameOf('movement', x.key), x.row)">补回</button>
         </div>
+        <div v-for="e in effects.movement" :key="e.effect + e.key" class="tr-line tr-item tr-effect" :data-src="`来源：${e.origin ?? e.name ?? '效果'}`" data-testid="traits-effect"><span class="tr-name">{{ e.name }}</span><span class="tr-quiet">{{ effectText(e) }}</span><Switch :model-value="!e.disabled" :label="`${e.name}的效果`" :disabled="ro" @update:model-value="(on: boolean) => toggleEffect(e, on)" /></div>
         <label v-if="shownRows('movement').some((r) => r.key === 'fly')" class="tr-check"><input type="checkbox" :checked="t.movement.hover" :disabled="ro" @change="edit(($event.target as HTMLInputElement).checked ? '能悬浮' : '不能悬浮', 'system.attributes.movement.hover', ($event.target as HTMLInputElement).checked)">能悬浮</label>
         <div v-if="adding?.group === 'movement'" class="tr-line tr-adding"><span class="tr-name">{{ nameOf('movement', adding.key!) }}</span><input v-model="adding.value" class="trpg-input tr-num" type="number" min="0" step="5" placeholder="30" aria-label="多少" data-autofocus data-testid="traits-add-value" @keydown.enter.prevent="confirmAdd" @blur="confirmAdd"></div>
         <SelectField v-else-if="speedChoices.length" :model-value="undefined" :options="speedChoices" placeholder="＋ 添加一项" label="添加速度" :disabled="ro" data-testid="traits-add-speed" @update:model-value="(v) => startAdd('movement', v)" />
@@ -158,18 +176,19 @@ function saveOwn(): void { writing.value = false; const v = ownText.value.trim()
         </div>
         <div v-if="adding?.group === 'senses'" class="tr-line tr-adding"><span class="tr-name">{{ adding.sense?.name }}</span><input v-model="adding.value" class="trpg-input tr-num" type="number" min="0" step="5" placeholder="60" aria-label="距离" data-autofocus data-testid="traits-add-value" @keydown.enter.prevent="confirmAdd" @blur="confirmAdd"></div>
         <SelectField v-else-if="senseChoices.length" :model-value="undefined" :options="senseChoices" placeholder="＋ 添加" label="添加感官" :disabled="ro" data-testid="traits-add-sense" @update:model-value="(v) => startAdd('senses', v)" />
+        <div v-for="e in effects.senses" :key="e.effect + e.key" class="tr-line tr-item tr-effect" :data-src="`来源：${e.origin ?? e.name ?? '效果'}`" data-testid="traits-effect"><span class="tr-name">{{ e.name }}</span><span class="tr-quiet">{{ effectText(e) }}</span><Switch :model-value="!e.disabled" :label="`${e.name}的效果`" :disabled="ro" @update:model-value="(on: boolean) => toggleEffect(e, on)" /></div>
         <label class="tr-sub tr-wide">特殊感官 <input class="trpg-input" :value="t.senses.special" :disabled="ro" maxlength="200" data-testid="traits-special" @change="edit('改了特殊感官', 'system.attributes.senses.special', ($event.target as HTMLInputElement).value.trim())"></label>
       </section>
 
       <section class="tr-sec" data-testid="traits-alignment">
         <h4>阵营</h4>
         <div class="tr-grid" role="radiogroup" aria-label="阵营">
-          <template v-for="(line, i) in grid" :key="i"><button v-for="text in line" :key="text" type="button" class="tr-pill" role="radio" :aria-checked="text === t.alignment" :disabled="ro" @click="pickAlign(text)">{{ text }}</button></template>
+          <template v-for="(line, i) in grid" :key="i"><button v-for="text in line" :key="text" type="button" class="tr-pill" role="radio" :aria-checked="text === alignNow" :disabled="ro" @click="pickAlign(text)">{{ text }}</button></template>
         </div>
         <div class="tr-pills">
-          <button v-for="text in extra" :key="text" type="button" class="tr-pill" role="radio" :aria-checked="text === t.alignment" :disabled="ro" @click="pickAlign(text)">{{ text }}</button>
+          <button v-for="text in extra" :key="text" type="button" class="tr-pill" role="radio" :aria-checked="text === alignNow" :disabled="ro" @click="pickAlign(text)">{{ text }}</button>
           <input v-if="writing" v-model="ownText" class="trpg-input tr-own" maxlength="60" aria-label="自己写阵营" data-autofocus @keydown.enter.prevent="saveOwn" @blur="saveOwn">
-          <button v-else type="button" class="tr-pill" :aria-checked="!!t.alignment && !grid.flat().includes(t.alignment) && !extra.includes(t.alignment)" :disabled="ro" @click="ownText = t.alignment; writing = true">{{ t.alignment && !grid.flat().includes(t.alignment) && !extra.includes(t.alignment) ? t.alignment : '自己写…' }}</button>
+          <button v-else type="button" class="tr-pill" :aria-checked="!!alignNow && !grid.flat().includes(alignNow) && !extra.includes(alignNow)" :disabled="ro" @click="ownText = alignNow; writing = true">{{ alignNow && !grid.flat().includes(alignNow) && !extra.includes(alignNow) ? alignNow : '自己写…' }}</button>
         </div>
       </section>
     </template>
