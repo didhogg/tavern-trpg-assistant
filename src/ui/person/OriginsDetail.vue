@@ -17,9 +17,10 @@ import { openFields } from './edit-open'
 export type OriginsView =
   | { kind: 'entry'; key: string; itemId: string | null; name: string; ref: EntryRef | null; /** 种族 / 背景：资料卡上方列出它带来的（可取下）。 */ parts?: boolean }
   /** 职业的某一级：这一级每条成长给了什么（itemIds = 职业和它的子职业）。 */
-  | { kind: 'levels'; key: string; itemIds: string[]; name: string; level: number; /** 这是职业的最高一级：可以重新选。 */ top?: { classId: string; ref: EntryRef | null } }
-  /** 改等级：to > from 升级（作者问答），to < from 降级（先演练再确认）；redo = 重新选最高一级（先降一级再按作者问答升回来）。 */
-  | { kind: 'level'; key: string; classId: string; name: string; ref: EntryRef | null; from: number; to: number; redo?: boolean }
+  /** 职业的某一级（class = 这个职业：可以重新选这一级，top = 它现在几级）。 */
+  | { kind: 'levels'; key: string; itemIds: string[]; name: string; level: number; class?: { classId: string; ref: EntryRef | null; top: number } }
+  /** 改等级：to > from 升级（作者问答），to < from 降级（先演练再确认）；redo = 重新选第 to 级（top = 职业现在几级，更高的几级按原选择升回）。 */
+  | { kind: 'level'; key: string; classId: string; name: string; ref: EntryRef | null; from: number; to: number; redo?: { top: number } }
 
 const props = defineProps<{ view: OriginsView; page?: boolean }>()
 const emit = defineEmits<{ back: []; go: [view: OriginsView] }>()
@@ -35,7 +36,7 @@ function go(next: OriginsView): void {
   if (!props.page) { emit('go', next); return }
   modal.push({ key: `origins-page:${next.key}`, title: `${next.name} 重新选`, component: markRaw(OriginsDetailSelf), props: { view: next, page: true }, variant: 'dialog', width: 920, height: 720 })
 }
-const redo = (): void => { const x = v.value; if (x.kind === 'levels' && x.top) go({ kind: 'level', key: `redo:${x.top.classId}:${x.level}`, classId: x.top.classId, name: x.name, ref: x.top.ref, from: x.level, to: x.level, redo: true }) }
+const redo = (): void => { const x = v.value; if (x.kind === 'levels' && x.class) go({ kind: 'level', key: `redo:${x.class.classId}:${x.level}`, classId: x.class.classId, name: x.name, ref: x.class.ref, from: x.level, to: x.level, redo: { top: x.class.top } }) }
 // 降级：先在小窗里演练（官方真降一次再按存档退回），列出会收回什么
 const preview = shallowRef<Awaited<ReturnType<typeof person.levelPreview>>>(null)
 const previewing = ref(false)
@@ -55,14 +56,16 @@ async function down(): Promise<void> {
 <template>
   <div class="od" data-testid="origins-detail">
     <template v-if="v.kind === 'levels'">
-      <h3 class="od-title" data-testid="origins-detail-title">{{ v.name }} {{ v.level }} 级
-        <button v-if="v.top" type="button" class="trpg-btn trpg-btn--small" :disabled="person.readOnly || !v.top.ref" data-testid="origins-redo" @click="redo">重新选这一级</button>
+      <h3 class="od-title" data-testid="origins-detail-title">
+{{ v.name }} {{ v.level }} 级
+        <button v-if="v.class" type="button" class="trpg-btn trpg-btn--small" :disabled="person.readOnly || !v.class.ref || v.level < 2" data-testid="origins-redo" @click="redo">重新选这一级</button>
       </h3>
+      <p v-if="v.class && v.level < 2" class="lp-none" data-testid="origins-redo-why">第 1 级是职业本身（起始装备、1 级戏法也在这一级），暂时不能单独重选；要换可以删掉职业再从库里加。</p>
       <LevelParts :item-ids="v.itemIds" :level="v.level" :source="`${v.name}-${v.level} 级`" />
-      <p v-if="!v.top" class="lp-none">只能重新选最高一级：要改这一级，先把等级降到这一级再升回来。</p>
     </template>
     <template v-else-if="v.kind === 'level' && v.redo && v.ref">
-      <ImportAsk :key="v.key" :entry-ref="v.ref" :name="v.name" :level="v.to" :before="{ classId: v.classId, delta: -1 }" embedded back-text="取消重新选" @back="leave" @done="leave" />
+      <p v-if="v.redo.top > v.to" class="od-hint" data-testid="origins-redo-note">只重选第 {{ v.to }} 级；第 {{ v.to + 1 }} 到 {{ v.redo.top }} 级按原来的选择原样升回。</p>
+      <ImportAsk :key="v.key" :entry-ref="v.ref" :name="v.name" :level="v.to" :redo-level="{ classId: v.classId, level: v.to, top: v.redo.top }" embedded back-text="取消重新选" @back="leave" @done="leave" />
     </template>
     <template v-else-if="v.kind === 'entry'">
       <h3 class="od-title" data-testid="origins-detail-title">{{ v.name }}</h3>

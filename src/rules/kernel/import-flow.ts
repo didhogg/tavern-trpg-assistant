@@ -29,7 +29,15 @@ const afterPaint = (run: () => void): void => {
 }
 
 /** 正在问的一次导入（一个战役同时只有一次）：哪个人、哪条、已经交给作者几个回答、各段写入。 */
-interface Live { actorId: string; key: string; answers: AskAnswer[]; changes: KernelChange[]; shows?: Promise<Shows> }
+interface Live { actorId: string; key: string; answers: AskAnswer[]; changes: KernelChange[]; shows?: Promise<Shows>; /** 重新选某一级：问答完要按原样升回去的那几级。 */ restore?: { classId: string; delta: number; values: unknown[] } }
+/**
+ * 重新选某个职业的某一级（驾驶员 11-25：任意一级都能重选）。照 dnd5e 自己的「修改某一级的选择」（AdvancementManager.forModifyChoices）
+ * 同一个顺序：先记下人物现在每条成长的选择（captureChoices，官方 Advancement#reverse）→ 降到这一级之前 → 这一级按作者问答重选
+ * → 更高的几级按记下的选择原样升回（levelUpApply 带 values，官方 restore，按成长编号对上）。全部算同一次改动、一条撤销。
+ * 第 1 级不行：降到 0 级官方会把整件职业拿掉；作者导入的起始装备、1 级戏法不在 dnd5e 成长记录里，拿不掉，重新导入又加一份（e2e 实测 16 件重复），
+ * 再加上作者每次导入特性授予都是新编号（Plutonium pAddItemGrantAdvancementLinks 每次 randomID），原记录也对不上。等驾驶员定（NEXT.md）。
+ */
+export interface RedoLevel { classId: string; level: number; top: number }
 /** 这一次导入的显示出口（条目对照、取名表）：同一次导入里条目不变，建一次各步共用。 */
 type Shows = Awaited<ReturnType<KernelRuntime['displayFor']>>
 type FrameResult = { status: string; result?: any; changes?: unknown[]; error?: string }
@@ -40,12 +48,12 @@ export class KernelImportFlow {
 
   /**
    * replaceItemId = 换掉的那件（换种族 / 背景）：官方先拿掉它，和导入算同一次改动。answers = 到现在为止的全部回答。
-   * before = 开头先把这个职业降几级（重新选最高一级：官方降一级，再按作者问答升回来；降级和导入算同一次改动、一条撤销）。
+   * redo = 重新选这个职业的某一级（见 RedoLevel）。
    */
-  async step(ownerKey: string, actorId: string, ref: EntryRef, answers: AskAnswer[], replaceItemId?: string, before?: { classId: string; delta: number }): Promise<ImportStep> {
+  async step(ownerKey: string, actorId: string, ref: EntryRef, answers: AskAnswer[], replaceItemId?: string, redo?: RedoLevel): Promise<ImportStep> {
     const t0 = performance.now()
     const ms = () => Math.round(performance.now() - t0)
-    const key = JSON.stringify([ref, replaceItemId ?? null, before ?? null])
+    const key = JSON.stringify([ref, replaceItemId ?? null, redo ?? null])
     const { session } = await this.deps.runtime.session(ownerKey)
     const now = this.live.get(ownerKey)
     let out: FrameResult
@@ -61,10 +69,16 @@ export class KernelImportFlow {
       if (rows.status !== 'complete') return { status: 'error', error: rows.error ?? `条目没读出来（${rows.status}）`, ms: ms() }
       const row = rows.rows[0]
       this.live.set(ownerKey, { actorId, key, answers: [...answers], changes: [] })
-      if (before) {
-        const down = await session.call('levelUpApply', actorId, before.classId, before.delta)
+      if (redo && redo.level < 2) { await this.cancel(ownerKey, actorId); return { status: 'error', error: '第 1 级是职业本身，暂时不能单独重选', ms: ms() } }
+      if (redo) {
+        const kept = await session.call('captureChoices', actorId)
+        if (kept.status !== 'complete') { await this.cancel(ownerKey, actorId); return { status: 'error', error: kept.error ?? `没记下原来的选择（${kept.status}）`, ms: ms() } }
+        const values = Object.values((kept.result ?? {}) as Record<string, Array<{ level: number; error?: string }>>).flat().filter((v) => v.level > redo.level && !v.error)
+        const down = await session.call('levelUpApply', actorId, redo.classId, redo.level - 1 - redo.top)
         if (!executed(down.status)) { await this.cancel(ownerKey, actorId); return { status: 'error', error: down.error ?? `先降级没完成（${down.status}）`, ms: ms() } }
-        this.live.get(ownerKey)!.changes.push(...((down.changes ?? []) as KernelChange[]))
+        const live = this.live.get(ownerKey)!
+        live.changes.push(...((down.changes ?? []) as KernelChange[]))
+        if (redo.top > redo.level) live.restore = { classId: redo.classId, delta: redo.top - redo.level, values }
       }
       out = await session.call('importBegin', actorId, { prop: row.ref.prop, entry: row.entry }, await this.withFeats(ownerKey, answers), replaceItemId)
     }
@@ -85,6 +99,13 @@ export class KernelImportFlow {
       await this.cancel(ownerKey, actorId)
       const error = !executed(out.status) ? out.error ?? `导入没有完成（${out.status}）` : exit === 'taskExitCancelled' ? '作者导入被取消' : '作者导入失败（详见控制台）'
       return { status: 'error', error, ms: ms() }
+    }
+    // 重新选中间某一级：更高的几级按记下的选择原样升回
+    if (live.restore) {
+      const up = await session.call('levelUpApply', actorId, live.restore.classId, live.restore.delta, live.restore.values)
+      if (!executed(up.status)) { await this.cancel(ownerKey, actorId); return { status: 'error', error: up.error ?? `更高的几级没能按原样升回（${up.status}）`, ms: ms() } }
+      live.changes.push(...((up.changes ?? []) as KernelChange[]))
+      live.restore = undefined
     }
     // 跑完：改动都留在小窗，等确认 / 取消（作者那边已收尾，这里只记着要退回的是哪个人）
     live.answers = [...answers]

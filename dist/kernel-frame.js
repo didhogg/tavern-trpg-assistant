@@ -2487,7 +2487,9 @@ function Mr(e, t) {
 			};
 		}, [n]),
 		levelUpApply: (n, r, i = 1, a) => e([], async () => {
-			let e = t(n), o = Sr(e, r, i, { automaticApplication: !0 }), s = await Dr(o, a);
+			let e = t(n);
+			if (!e.items.get(r)) throw Error(`人物身上没有这件职业（${r}）`);
+			let o = Sr(e, r, i, { automaticApplication: !0 }), s = await Dr(o, a);
 			return s.finished ? R(e) : {
 				kernelStatus: "pending",
 				reason: o.step ? "awaiting-choice" : "advancement-manager-not-complete",
@@ -2870,18 +2872,23 @@ async function Yr(e, t, n, r) {
 	}
 	return l;
 }
+// src/rules/kernel/frame/advancement-title.ts
+function Xr(e) {
+	let n = (e?.constructor?.typeName ?? e?.type) === "Trait" ? tn(e) : null, r = e?._source?.name || e?._source?.title, i = e?.name ?? e?.title;
+	return n ? F(n) : r ? t(String(r), Lt(String(r))) : i ? F(String(i)) : null;
+}
 // src/rules/kernel/frame/commands-options.ts
-var Xr = (e, t = []) => Object.entries(e ?? {}).flatMap(([e, n]) => n?.children ? Xr(n.children, [...t, F(String(n.label ?? e))]) : [{
+var Zr = (e, t = []) => Object.entries(e ?? {}).flatMap(([e, n]) => n?.children ? Zr(n.children, [...t, F(String(n.label ?? e))]) : [{
 	value: e,
 	label: String(n?.label ?? e),
 	path: t
-}]), Zr = {
+}]), Qr = {
 	Trait: async (e, t, n) => {
-		let { available: r } = await e.unfulfilledChoices(), i = r.filter((e) => e.type === "grant").flatMap((e) => Xr(e.choices)), a = /* @__PURE__ */ new Map();
+		let { available: r } = await e.unfulfilledChoices(), i = r.filter((e) => e.type === "grant").flatMap((e) => Zr(e.choices)), a = /* @__PURE__ */ new Map();
 		for (let e of r.filter((e) => e.type === "choice")) {
 			let t = a.get(e.choiceIdx) ?? {
 				count: 0,
-				options: Xr(e.choices)
+				options: Zr(e.choices)
 			};
 			t.count++, a.set(e.choiceIdx, t);
 		}
@@ -2907,35 +2914,35 @@ var Xr = (e, t = []) => Object.entries(e ?? {}).flatMap(([e, n]) => n?.children 
 		};
 	},
 	AbilityScoreImprovement: async (e, t) => on(e, t)
-}, Qr = /* @__PURE__ */ new Set([
+}, $r = /* @__PURE__ */ new Set([
 	"HitPoints",
 	"ScaleValue",
 	"Size",
 	"ItemGrant",
 	"Subclass"
 ]);
-async function $r(e, n = [], i, a) {
-	let o = [];
-	for (let c of e.steps) {
-		let e = c.flow?.advancement;
+async function ei(e, t = [], n, i) {
+	let a = [];
+	for (let o of e.steps) {
+		let e = o.flow?.advancement;
 		if (!e) continue;
-		let l = e.constructor?.typeName ?? e.type, u = await c.flow.getAutomaticApplicationValue?.() !== !1, d = null, f = !1, p = n.find((t) => t.id === e.id && (t.level ?? null) === (c.flow.level ?? null))?.value;
-		Zr[l] ? d = await Zr[l](a.get(e.id) ?? e, p, i) : !u && !Qr.has(l) && (f = !0);
-		let m = l === "Trait" ? tn(e) : null, h = e._source?.name || e._source?.title, g = e.name ?? e.title, _ = m ? F(m) : h ? t(String(h), Lt(String(h))) : g ? F(String(g)) : null, v = l === "Trait" && e.hint ? r(String(e.hint).split("\n").map((e) => s(e, ir(e))), "\n") : void 0;
-		o.push({
+		let c = e.constructor?.typeName ?? e.type, l = await o.flow.getAutomaticApplicationValue?.() !== !1, u = null, d = !1, f = t.find((t) => t.id === e.id && (t.level ?? null) === (o.flow.level ?? null))?.value;
+		Qr[c] ? u = await Qr[c](i.get(e.id) ?? e, f, n) : !l && !$r.has(c) && (d = !0);
+		let p = Xr(e), m = c === "Trait" && e.hint ? r(String(e.hint).split("\n").map((e) => s(e, ir(e))), "\n") : void 0;
+		a.push({
 			id: e.id,
-			level: c.flow.level ?? null,
-			type: l,
-			title: _,
-			...v ? { hint: v } : {},
-			automatic: u,
-			options: d,
-			...f ? { unsupported: !0 } : {}
+			level: o.flow.level ?? null,
+			type: c,
+			title: p,
+			...m ? { hint: m } : {},
+			automatic: l,
+			options: u,
+			...d ? { unsupported: !0 } : {}
 		});
 	}
-	return o;
+	return a;
 }
-function ei(e) {
+function ti(e) {
 	return { buildOptions: (t) => e([], async () => {
 		let e = [];
 		for (let n of t.items) e.push({
@@ -2950,7 +2957,7 @@ function ei(e) {
 			onManager: async ({ manager: e, key: t, unsupported: r, picks: i, traitPlans: a, expertise: o }) => {
 				n.push({
 					refKey: t,
-					steps: await $r(e, i, a, o),
+					steps: await ei(e, i, a, o),
 					unsupported: r
 				});
 			}
@@ -2978,30 +2985,30 @@ function ei(e) {
 	}) };
 }
 // src/rules/kernel/frame/registry-keys.ts
-var ti = globalThis, ni = null, ri = (e) => typeof e?.label == "string" ? e.label : typeof e?.name == "string" ? e.name : typeof e?.labels?.title == "string" ? e.labels.title : null;
-function ii(e, t = []) {
+var ni = globalThis, ri = null, ii = (e) => typeof e?.label == "string" ? e.label : typeof e?.name == "string" ? e.name : typeof e?.labels?.title == "string" ? e.labels.title : null;
+function ai(e, t = []) {
 	if (!e || typeof e != "object" || Array.isArray(e)) return t;
-	for (let [n, r] of Object.entries(e)) t.push([n, r]), r?.children && ii(r.children, t);
+	for (let [n, r] of Object.entries(e)) t.push([n, r]), r?.children && ai(r.children, t);
 	return t;
 }
-function ai() {
-	let e = (e) => typeof e == "string" ? e : ri(e);
-	ni = {
-		tables: Object.fromEntries(Object.entries(ti.CONFIG.DND5E ?? {}).map(([t, n]) => [t, Object.fromEntries(ii(n).flatMap(([t, n]) => {
+function oi() {
+	let e = (e) => typeof e == "string" ? e : ii(e);
+	ri = {
+		tables: Object.fromEntries(Object.entries(ni.CONFIG.DND5E ?? {}).map(([t, n]) => [t, Object.fromEntries(ai(n).flatMap(([t, n]) => {
 			let r = e(n);
 			return r ? [[t, r]] : [];
 		}))])),
-		statuses: Object.fromEntries((ti.CONFIG.statusEffects ?? []).filter((e) => typeof e?.name == "string").map((e) => [e.id, e.name]))
+		statuses: Object.fromEntries((ni.CONFIG.statusEffects ?? []).filter((e) => typeof e?.name == "string").map((e) => [e.id, e.name]))
 	};
 }
-var oi = () => ni !== null, si = null;
-function ci(e) {
-	let t = ti.game.i18n, n = si;
+var si = () => ri !== null, ci = null;
+function li(e) {
+	let t = ni.game.i18n, n = ci;
 	if (!n || n.i18n !== t) {
 		let e = /* @__PURE__ */ new Map(), r = (t, n) => {
 			for (let [i, a] of Object.entries(t ?? {})) typeof a == "string" ? e.set(a, [...e.get(a) ?? [], [...n, i].join(".")]) : a && typeof a == "object" && r(a, [...n, i]);
 		};
-		r(t.translations, []), r(t._fallback, []), n = si = {
+		r(t.translations, []), r(t._fallback, []), n = ci = {
 			i18n: t,
 			byText: e
 		};
@@ -3009,32 +3016,32 @@ function ci(e) {
 	return (n.byText.get(e) ?? []).filter((e) => t.has(e));
 }
 function B(e, t) {
-	return zt([.../* @__PURE__ */ new Set([...t && ti.game.i18n.has(t) ? [t] : [], ...ci(e)])], e);
+	return zt([.../* @__PURE__ */ new Set([...t && ni.game.i18n.has(t) ? [t] : [], ...li(e)])], e);
 }
-function li(e, t) {
+function ui(e, t) {
 	let n = {};
-	for (let [r, i] of ii(t)) {
-		let t = ni?.tables[e]?.[r] ?? null, a = t && ti.game.i18n.has(t) ? t : null, o = typeof i == "string" ? i : ri(i);
+	for (let [r, i] of ai(t)) {
+		let t = ri?.tables[e]?.[r] ?? null, a = t && ni.game.i18n.has(t) ? t : null, o = typeof i == "string" ? i : ii(i);
 		if (!o || !a && typeof i == "string") continue;
-		let s = B(a ? ti.game.i18n.localize(a) : o, a);
+		let s = B(a ? ni.game.i18n.localize(a) : o, a);
 		s && (n[r] = s);
 	}
 	return n;
 }
-function ui() {
-	return ni ? /* @__PURE__ */ new Set([...Object.values(ni.tables).flatMap((e) => Object.keys(e)), ...Object.keys(ni.statuses)]) : /* @__PURE__ */ new Set();
+function di() {
+	return ri ? /* @__PURE__ */ new Set([...Object.values(ri.tables).flatMap((e) => Object.keys(e)), ...Object.keys(ri.statuses)]) : /* @__PURE__ */ new Set();
 }
-var di = (e) => ni?.statuses[e] ?? null, fi = globalThis;
-function pi(e, t, n) {
-	let r = [], i = [], a = [], o = (e) => String(fi.UrlUtil.encodeForHash(e)), s = n.replace(/\s*\.\.\.$/, "").trim().toLowerCase(), c = (e, n, l, u = !1) => {
+var fi = (e) => ri?.statuses[e] ?? null, pi = globalThis;
+function mi(e, t, n) {
+	let r = [], i = [], a = [], o = (e) => String(pi.UrlUtil.encodeForHash(e)), s = n.replace(/\s*\.\.\.$/, "").trim().toLowerCase(), c = (e, n, l, u = !1) => {
 		if (Array.isArray(e)) e.forEach((e, t) => c(e, n, [...l, t], u));
-		else if (typeof e == "string") u && s.length >= 8 && String(fi.Renderer.stripTags(e)).trim().toLowerCase().startsWith(s) && a.push({
+		else if (typeof e == "string") u && s.length >= 8 && String(pi.Renderer.stripTags(e)).trim().toLowerCase().startsWith(s) && a.push({
 			entry: n,
 			path: l
 		});
 		else if (e && typeof e == "object") {
 			if (l.length && typeof e.name == "string") {
-				let a = String(fi.Renderer.stripTags(e.name)), s = a.replace(/\s*\([^()]*\)\s*$/, "").replace(/\s*[.?!]$/, ""), c = M?.UtilEntityBackgroundFeature?._getEntityAliases_name_noFeature?.({ name: a }) ?? null;
+				let a = String(pi.Renderer.stripTags(e.name)), s = a.replace(/\s*\([^()]*\)\s*$/, "").replace(/\s*[.?!]$/, ""), c = M?.UtilEntityBackgroundFeature?._getEntityAliases_name_noFeature?.({ name: a }) ?? null;
 				t.startsWith(`${o(a)}_`) ? r.push({
 					entry: n,
 					path: [...l, "name"]
@@ -3048,8 +3055,8 @@ function pi(e, t, n) {
 	};
 	return e.forEach((e, t) => c(e, t, [])), r.length ? r.length === 1 ? r[0] : null : i.length ? i.length === 1 ? i[0] : null : a.length === 1 ? a[0] : null;
 }
-function mi(e, n) {
-	let r = e.flags?.plutonium, i = r && !r.propDroppable && typeof r.page == "string" && r.page.endsWith(".html") ? fi.UrlUtil?.PAGE_TO_PROPS?.[r.page]?.[0] : null, a = i ? {
+function hi(e, n) {
+	let r = e.flags?.plutonium, i = r && !r.propDroppable && typeof r.page == "string" && r.page.endsWith(".html") ? pi.UrlUtil?.PAGE_TO_PROPS?.[r.page]?.[0] : null, a = i ? {
 		...r,
 		propDroppable: i
 	} : r, o = !!a?.propDroppable && typeof a.page == "string" && a.page.endsWith(".html") && !a.isDirectImport, s = e.flags?.["tavern-trpg"]?.named === !0;
@@ -3068,11 +3075,11 @@ function mi(e, n) {
 		};
 	}
 	if (s) return { name: d(String(e.name ?? "")) };
-	let l = typeof a?.hash == "string" ? pi(n, a.hash, String(e.name ?? "")) : null;
+	let l = typeof a?.hash == "string" ? mi(n, a.hash, String(e.name ?? "")) : null;
 	return l ? { name: t(e.name, void 0, l) } : { name: B(String(e.name ?? ""), null) ?? t(e.name, Wt(String(e.name ?? ""))) };
 }
 // src/rules/kernel/frame/action-list.ts
-var hi = globalThis, gi = [
+var gi = globalThis, _i = [
 	"action",
 	"bonus",
 	"reaction",
@@ -3081,48 +3088,48 @@ var hi = globalThis, gi = [
 	"lair",
 	"crew",
 	"special"
-], _i = (e) => e.system.activities?.contents?.[0]?.activation?.type, vi = (e) => !!e && ![
+], vi = (e) => e.system.activities?.contents?.[0]?.activation?.type, yi = (e) => !!e && ![
 	"minute",
 	"hour",
 	"day",
 	"none"
-].includes(e), yi = (e) => !!(e.system.hasLimitedUses && e.system.uses?.recovery?.length), bi = (e) => String(e.system.method ?? e.system.preparation?.mode ?? ""), xi = () => hi.CONFIG.DND5E.spellPreparationStates ?? {};
-function Si(e) {
+].includes(e), bi = (e) => !!(e.system.hasLimitedUses && e.system.uses?.recovery?.length), xi = (e) => String(e.system.method ?? e.system.preparation?.mode ?? ""), Si = () => gi.CONFIG.DND5E.spellPreparationStates ?? {};
+function Ci(e) {
 	if (!(e.system.level > 0)) return !1;
 	let t = e.system.prepared;
-	return e.system.canPrepare && t === xi().prepared?.value || e.system.canPrepare && t === xi().always?.value || bi(e) === "atwill" && !yi(e) || bi(e) === "innate" && !yi(e) || yi(e) && e.system.uses?.value > 0 || !!e.system.linkedActivity?.item;
+	return e.system.canPrepare && t === Si().prepared?.value || e.system.canPrepare && t === Si().always?.value || xi(e) === "atwill" && !bi(e) || xi(e) === "innate" && !bi(e) || bi(e) && e.system.uses?.value > 0 || !!e.system.linkedActivity?.item;
 }
-function Ci(e) {
+function wi(e) {
 	let t = e.system.activities;
 	return !!(t?.getByType?.("attack")?.[0] ?? t?.getByType?.("damage")?.[0] ?? t?.getByType?.("save")?.[0])?.damage?.parts?.length;
 }
-function wi(e) {
+function Ti(e) {
 	let t = e.flags?.["tavern-trpg"]?.actionList;
 	if (t === !0 || t === !1) return t;
 	switch (e.type) {
 		case "weapon": return !!e.system.equipped;
-		case "equipment": return !!e.system.equipped && vi(_i(e));
-		case "consumable": return vi(_i(e));
+		case "equipment": return !!e.system.equipped && yi(vi(e));
+		case "consumable": return yi(vi(e));
 		case "spell": {
 			let t = e.system.linkedActivity?.item, n = !!t && (t.system.attunement !== "required" || t.system.attuned), r = e.system.level === 0;
-			if (!r && !(Si(e) || n) || t && r && !n) return !1;
-			let i = _i(e), a = e.system.duration ?? {};
-			return i === "reaction" || i === "bonus" || Ci(e) || a.units === "minute" && Number(a.value) === 1 || a.units === "round" && Number(a.value) === 1 || !!e.effects?.size;
+			if (!r && !(Ci(e) || n) || t && r && !n) return !1;
+			let i = vi(e), a = e.system.duration ?? {};
+			return i === "reaction" || i === "bonus" || wi(e) || a.units === "minute" && Number(a.value) === 1 || a.units === "round" && Number(a.value) === 1 || !!e.effects?.size;
 		}
-		case "feat": return !!_i(e);
+		case "feat": return !!vi(e);
 		default: return !1;
 	}
 }
-function Ti(e) {
-	let t = new Map(gi.map((e) => [e, []]));
+function Ei(e) {
+	let t = new Map(_i.map((e) => [e, []]));
 	for (let n of e.items) {
-		if (!wi(n)) continue;
-		let e = _i(n), r = e && gi.includes(e) ? e : "other";
+		if (!Ti(n)) continue;
+		let e = vi(n), r = e && _i.includes(e) ? e : "other";
 		t.set(r, [...t.get(r) ?? [], n]);
 	}
 	let n = (e) => {
-		let t = hi.CONFIG.DND5E.activityActivationTypes?.[e]?.label;
-		return F(t ? hi.game.i18n.localize(t) : e === "other" ? "Other" : e);
+		let t = gi.CONFIG.DND5E.activityActivationTypes?.[e]?.label;
+		return F(t ? gi.game.i18n.localize(t) : e === "other" ? "Other" : e);
 	};
 	return [...t.entries()].filter(([, e]) => e.length).map(([e, t]) => ({
 		id: e,
@@ -3131,19 +3138,19 @@ function Ti(e) {
 	}));
 }
 // src/rules/kernel/frame/sheet-view.ts
-var V = globalThis, Ei = (e) => !!e && e.constructor === V.foundry.data.fields.StringField;
-function Di(e, t, n) {
+var V = globalThis, Di = (e) => !!e && e.constructor === V.foundry.data.fields.StringField;
+function Oi(e, t, n) {
 	if (e == null || !t) return n;
-	if (typeof e == "string") return Ei(t) && e.trim() && n.add(e), n;
+	if (typeof e == "string") return Di(t) && e.trim() && n.add(e), n;
 	if (typeof e != "object") return n;
 	let r = t.element ?? (t.model instanceof V.foundry.data.fields.DataField ? t.model : null), i = t.fields;
 	for (let [t, a] of Object.entries(e)) {
 		let e = i ? i[t] : r;
-		e && Di(a, e, n);
+		e && Oi(a, e, n);
 	}
 	return n;
 }
-function Oi(e, t, n, r = /* @__PURE__ */ new Set(), i = 0) {
+function ki(e, t, n, r = /* @__PURE__ */ new Set(), i = 0) {
 	if (typeof e == "function") return;
 	if (typeof e != "object" || !e) return e;
 	if (i > 10 || r.has(e) || e === V.CONFIG || e === V.CONFIG?.DND5E || e === V.game || n.has(e)) return;
@@ -3153,24 +3160,24 @@ function Oi(e, t, n, r = /* @__PURE__ */ new Set(), i = 0) {
 			documentName: e.documentName,
 			id: e.id ?? null
 		};
-		let a = e.labels ? Oi(e.labels, t, n, r, i + 1) : void 0;
+		let a = e.labels ? ki(e.labels, t, n, r, i + 1) : void 0;
 		return {
 			documentName: "Item",
 			id: e.id,
-			...mi(e, t),
+			...hi(e, t),
 			...a ? { labels: a } : {}
 		};
 	}
 	if (!(e instanceof a.data.fields.DataField || e instanceof a.applications.api.ApplicationV2)) {
 		r.add(e);
 		try {
-			if (e instanceof Set) return [...e].map((e) => Oi(e, t, n, r, i + 1));
-			if (e instanceof Map) return Object.fromEntries([...Map.prototype.entries.call(e)].map(([e, a]) => [e, Oi(a, t, n, r, i + 1)]));
-			if (Array.isArray(e)) return e.map((e) => Oi(e, t, n, r, i + 1));
+			if (e instanceof Set) return [...e].map((e) => ki(e, t, n, r, i + 1));
+			if (e instanceof Map) return Object.fromEntries([...Map.prototype.entries.call(e)].map(([e, a]) => [e, ki(a, t, n, r, i + 1)]));
+			if (Array.isArray(e)) return e.map((e) => ki(e, t, n, r, i + 1));
 			let a = {};
 			for (let o of Object.keys(e)) {
 				if (o.startsWith("_")) continue;
-				let s = Oi(e[o], t, n, r, i + 1);
+				let s = ki(e[o], t, n, r, i + 1);
 				s !== void 0 && (a[o] = s);
 			}
 			return a;
@@ -3179,14 +3186,14 @@ function Oi(e, t, n, r = /* @__PURE__ */ new Set(), i = 0) {
 		}
 	}
 }
-function ki(e, t) {
+function Ai(e, t) {
 	let n = /* @__PURE__ */ new Set();
 	return [...e.items].map((e) => String(e.name ?? "")).filter((e) => e.length >= 3 && /[A-Za-z]/.test(e) && !n.has(e) && n.add(e)).sort((e, t) => t.length - e.length).map((n) => ({
 		re: RegExp(`(?<![A-Za-z])${n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![A-Za-z])`),
-		text: mi([...e.items].find((e) => e.name === n), t).name
+		text: hi([...e.items].find((e) => e.name === n), t).name
 	}));
 }
-async function Ai(e) {
+async function ji(e) {
 	let t = V.CONFIG.DND5E, n = V.dnd5e.documents.Trait, r = /* @__PURE__ */ new Set([
 		...[...e.system.traits?.weaponProf?.value ?? []].filter((e) => t.weaponIds?.[e]),
 		...[...e.system.traits?.armorProf?.value ?? []].filter((e) => t.armorIds?.[e] || t.shieldIds?.[e]),
@@ -3203,12 +3210,12 @@ async function Ai(e) {
 	}
 	return a;
 }
-function ji(e, t) {
+function Mi(e, t) {
 	if (!/[A-Za-z]/.test(e)) return null;
 	for (let { re: n, text: i } of t) {
 		let a = n.exec(e);
 		if (!a) continue;
-		let o = e.slice(0, a.index), s = e.slice(a.index + a[0].length), c = (e) => e ? [ji(e, t) ?? d(e)] : [];
+		let o = e.slice(0, a.index), s = e.slice(a.index + a[0].length), c = (e) => e ? [Mi(e, t) ?? d(e)] : [];
 		return r([
 			...c(o),
 			i,
@@ -3217,37 +3224,37 @@ function ji(e, t) {
 	}
 	return null;
 }
-function Mi(e, n, r, i) {
+function Ni(e, n, r, i) {
 	if (typeof e == "string") {
 		if (e.includes(".") && !/\s/.test(e) || /^[A-Z][A-Za-z]{2,}$/.test(e)) {
 			let t = Rt(e);
 			if (t) return t;
 		}
-		return n.has(e) && !r.has(e) && /\p{L}/u.test(e) ? B(e, null) ?? t(e) : ji(e, i) ?? e;
+		return n.has(e) && !r.has(e) && /\p{L}/u.test(e) ? B(e, null) ?? t(e) : Mi(e, i) ?? e;
 	}
-	return !e || typeof e != "object" || typeof e.$t == "string" ? e : Array.isArray(e) ? e.map((e) => Mi(e, n, r, i)) : Object.fromEntries(Object.entries(e).map(([e, t]) => [e, e === "author" ? t : Mi(t, n, r, i)]));
+	return !e || typeof e != "object" || typeof e.$t == "string" ? e : Array.isArray(e) ? e.map((e) => Ni(e, n, r, i)) : Object.fromEntries(Object.entries(e).map(([e, t]) => [e, e === "author" ? t : Ni(t, n, r, i)]));
 }
-async function Ni(e, t) {
+async function Pi(e, t) {
 	let n = e.sheet, r = (e) => JSON.parse(JSON.stringify(e)), i = Object.keys(n.constructor.PARTS ?? {}), a = await n._prepareContext(r({ parts: i })), o = {};
 	for (let e of i) {
 		let t = await n._preparePartContext(e, Object.assign({}, a), r({}));
 		o[e] = Object.fromEntries(Object.entries(t).filter(([e]) => !(e in a)));
 	}
-	let s = Di(e.toObject().system, e.system.schema, /* @__PURE__ */ new Set());
-	for (let t of e.items) Di(t.toObject().system, t.system.schema, s);
-	let c = ui(), l = new Set([e._source].filter(Boolean));
-	o.actions = await Pi(e, n, o), await Fi(e, a.itemContext);
-	let u = [...ki(e, t), ...await Ai(e)];
+	let s = Oi(e.toObject().system, e.system.schema, /* @__PURE__ */ new Set());
+	for (let t of e.items) Oi(t.toObject().system, t.system.schema, s);
+	let c = di(), l = new Set([e._source].filter(Boolean));
+	o.actions = await Fi(e, n, o), await Ii(e, a.itemContext);
+	let u = [...Ai(e, t), ...await ji(e)];
 	return {
 		sheet: n.constructor.name,
-		base: Mi(Oi(a, t, l), s, c, u),
-		parts: Mi(Oi(o, t, l), s, c, u)
+		base: Ni(ki(a, t, l), s, c, u),
+		parts: Ni(ki(o, t, l), s, c, u)
 	};
 }
-async function Pi(e, t, n) {
-	return t instanceof V.dnd5e.applications.actor.NPCActorSheet ? { sections: n.features?.sections ?? [] } : { sections: Ti(e) };
+async function Fi(e, t, n) {
+	return t instanceof V.dnd5e.applications.actor.NPCActorSheet ? { sections: n.features?.sections ?? [] } : { sections: Ei(e) };
 }
-async function Fi(e, t) {
+async function Ii(e, t) {
 	if (!t) return;
 	let n = new Set([...e.items].filter((e) => e.type === "subclass").map((e) => e.system?.classIdentifier));
 	for (let r of [...e.items].filter((e) => e.type === "class")) {
@@ -3258,14 +3265,14 @@ async function Fi(e, t) {
 	}
 }
 // src/rules/kernel/frame/sheet-traits.ts
-var Ii = (e) => typeof e == "number" && Number.isFinite(e) ? e : Number(e) || 0, Li = (e) => e.constructor?.typeName ?? e.type;
-function Ri(e) {
-	let t = e.system, n = e._source?.system ?? {}, r = e.type === "character" && t.details?.race && typeof t.details.race == "object" ? t.details.race : null, i = r ? it(r) : null, a = r ? Object.values(r.advancement?.byId ?? {}).find((e) => Li(e) === "Size") : null, o = (e, t, n, r) => Object.keys(e ?? {}).map((a) => {
-		let o = Ii(n?.[a]);
+var Li = (e) => typeof e == "number" && Number.isFinite(e) ? e : Number(e) || 0, Ri = (e) => e.constructor?.typeName ?? e.type;
+function zi(e) {
+	let t = e.system, n = e._source?.system ?? {}, r = e.type === "character" && t.details?.race && typeof t.details.race == "object" ? t.details.race : null, i = r ? it(r) : null, a = r ? Object.values(r.advancement?.byId ?? {}).find((e) => Ri(e) === "Size") : null, o = (e, t, n, r) => Object.keys(e ?? {}).map((a) => {
+		let o = Li(n?.[a]);
 		return {
 			key: a,
-			value: Ii(e?.[a]),
-			own: Ii(t?.[a]),
+			value: Li(e?.[a]),
+			own: Li(t?.[a]),
 			species: o,
 			off: i && o ? {
 				ref: i,
@@ -3312,38 +3319,43 @@ function Ri(e) {
 	};
 }
 // src/rules/kernel/frame/sheet-levels.ts
-var zi = globalThis;
-function Bi(e) {
+var Bi = globalThis;
+function Vi(e) {
 	return typeof e != "string" || !e.trim() ? null : Rt(e) ?? B(e, null) ?? s(e, null);
 }
-function Vi(e) {
-	return typeof e != "string" || !e.trim() ? null : Rt(e) ?? B(e, null) ?? t(e, s(e, null));
-}
 function Hi(e) {
-	let t = zi.dnd5e?.documents?.Trait, n = typeof t?.keyLabel == "function" ? t.keyLabel(e) : null;
-	return Bi(n && n !== e ? n : zi.CONFIG?.DND5E?.abilities?.[e]?.label ?? e);
+	let t = Bi.dnd5e?.documents?.Trait, n = typeof t?.keyLabel == "function" ? t.keyLabel(e) : null;
+	return n && n !== e ? n : Bi.CONFIG?.DND5E?.abilities?.[e]?.label ?? e;
 }
-function Ui(e) {
-	return ot(e).map((t) => {
-		let { items: n, keys: r, amounts: i } = ht(t.adv, t.level);
-		return {
-			itemId: t.item.id,
-			ref: t.key,
-			level: t.level,
-			advancement: t.adv.id,
-			type: t.type,
-			title: Vi(t.adv.title),
-			items: n.filter((t) => e.items.has(t.id)),
-			keys: [...r.map((e) => ({
-				key: e,
-				label: Hi(e)
-			})), ...i.map((e) => ({
-				key: e.key,
-				label: Hi(e.key),
-				value: e.value
-			}))]
+async function Ui(e) {
+	let t = ot(e).map((e) => ({
+		r: e,
+		parts: ht(e.adv, e.level)
+	})), n = await Bn(t.flatMap((e) => e.parts.keys)), r = (e) => {
+		let t = Hi(e), r = n[e] ?? [];
+		return r.length ? {
+			key: e,
+			label: c(t, r, !0),
+			...r.length === 1 ? { author: r[0] } : {}
+		} : {
+			key: e,
+			label: Vi(t)
 		};
-	});
+	};
+	return t.map(({ r: t, parts: { items: n, keys: i, amounts: a } }) => ({
+		itemId: t.item.id,
+		ref: t.key,
+		level: t.level,
+		advancement: t.adv.id,
+		type: t.type,
+		title: Xr(t.adv),
+		items: n.filter((t) => e.items.has(t.id)),
+		keys: [...i.map(r), ...a.map((e) => ({
+			key: e.key,
+			label: Vi(Hi(e.key)),
+			value: e.value
+		}))]
+	}));
 }
 // src/rules/kernel/frame/commands-sheet.ts
 var H = globalThis, Wi = { configure: !1 }, Gi = { create: !1 }, Ki = [
@@ -3450,16 +3462,16 @@ function ta(e, r, i) {
 				shown: {
 					items: [...e.items].map((e) => ({
 						id: e.id,
-						...mi(e, i)
+						...hi(e, i)
 					})),
 					effects: [...e.allApplicableEffects()].map((e) => ({
 						id: e.id,
 						name: B(String(e.name ?? ""), null) ?? t(e.name)
 					}))
 				},
-				view: await Ni(e, i),
-				traits: Ri(e),
-				levels: Ui(e),
+				view: await Pi(e, i),
+				traits: zi(e),
+				levels: await Ui(e),
 				breakdown: {
 					hp: await $i(a.HitPointsConfig, e, [
 						"classes",
@@ -3511,12 +3523,12 @@ function ta(e, r, i) {
 			return (await e(r(t), a))?.map(i) ?? null;
 		}, [t]),
 		glossary: () => e([], async () => {
-			if (!oi()) throw Error("开机时没有记下登记表原值（registry-keys.ts）");
+			if (!si()) throw Error("开机时没有记下登记表原值（registry-keys.ts）");
 			return {
-				tables: Object.fromEntries(Object.entries(H.CONFIG.DND5E ?? {}).map(([e, t]) => [e, li(e, t)]).filter(([, e]) => Object.keys(e).length)),
+				tables: Object.fromEntries(Object.entries(H.CONFIG.DND5E ?? {}).map(([e, t]) => [e, ui(e, t)]).filter(([, e]) => Object.keys(e).length)),
 				statuses: (H.CONFIG.statusEffects ?? []).flatMap((e) => typeof e?.name == "string" ? [{
 					id: e.id,
-					name: B(e.name, di(e.id)) ?? s(e.name, null),
+					name: B(e.name, fi(e.id)) ?? s(e.name, null),
 					img: e.img ?? null
 				}] : [])
 			};
@@ -3531,7 +3543,7 @@ function ta(e, r, i) {
 				let t = o.slice(0, e).join("."), n = (t.startsWith("system.") ? a.system?.schema?.getField(t.slice(7)) : a.schema?.getField(t))?.label;
 				if (typeof n == "string" && n) return {
 					field: Rt(n) ?? B(n, null) ?? s(n, null),
-					...i[1] ? { item: mi(a, []).name } : {}
+					...i[1] ? { item: hi(a, []).name } : {}
 				};
 			}
 			return null;
@@ -3548,7 +3560,7 @@ function na(e, t) {
 		let e = t(n), o = [...e.items].map((e) => ({
 			id: e.id,
 			type: e.type,
-			name: mi(e, a).name
+			name: hi(e, a).name
 		})), s = Number(e.system.attributes?.hp?.max ?? 0), c = Number(e.system.details?.level ?? 0);
 		if (!(await Dr(xr().forLevelChange(e, r, i, { automaticApplication: !0 }), void 0)).finished) return {
 			kernelStatus: "pending",
@@ -3686,7 +3698,7 @@ function ua(e, t) {
 			return {
 				tree: s,
 				effects: r.itemId ? [] : [...e.allApplicableEffects?.() ?? []].flatMap((t) => [...t.system?.changes ?? t.changes ?? []].filter((e) => e.key === a || e.key.startsWith(`${a}.`) || a.startsWith(`${e.key}.`)).map((n) => {
-					let r = t.parent && t.parent !== e ? mi(t.parent, []).name : null, i = l(n);
+					let r = t.parent && t.parent !== e ? hi(t.parent, []).name : null, i = l(n);
 					return {
 						effect: t.id,
 						itemId: t.parent && t.parent !== e ? t.parent.id : null,
@@ -4762,7 +4774,7 @@ function lo(e, t) {
 		let l = s().map((e) => ({
 			_id: e.id,
 			name: e.name,
-			label: mi(e, [r]).name,
+			label: hi(e, [r]).name,
 			type: e.type,
 			typeLabel: Rt(String(so.CONFIG.Item.typeLabels?.[e.type] ?? "")),
 			flags: { plutonium: e.flags?.plutonium ?? null }
@@ -5594,7 +5606,7 @@ async function Q(e, t, n = [], { ui: r = !1 } = {}) {
 		unsupported: o
 	};
 }
-var Uo = xe(Q, Z), Wo = Pe(Q, Z), Go = jt(Q), Ko = Mr(Q, Z), qo = Ir(Q, Z), Jo = zr(Q), Yo = ta(Q, Z, Vo), Xo = na(Q, Z), Zo = ua(Q, Z), Qo = ei(Q), $o = In(Q), es = lo(Q, Z), ts = Fo(Q), ns = { configure: !1 }, rs = 15e3, is = { create: !1 }, as = {
+var Uo = xe(Q, Z), Wo = Pe(Q, Z), Go = jt(Q), Ko = Mr(Q, Z), qo = Ir(Q, Z), Jo = zr(Q), Yo = ta(Q, Z, Vo), Xo = na(Q, Z), Zo = ua(Q, Z), Qo = ti(Q), $o = In(Q), es = lo(Q, Z), ts = Fo(Q), ns = { configure: !1 }, rs = 15e3, is = { create: !1 }, as = {
 	warmImport: () => wn(),
 	...es,
 	...ts,
@@ -5995,7 +6007,7 @@ async function Ps(e) {
 	}, $.game.nue && ($.game.nue.initialize = () => void 0), $.game.settings.storage.get("client").setItem("core.noCanvas", "true"), e.display && $.game.settings.storage.get("client").setItem("core.uiConfig", _s), await Rs(`systems/${i.system.id}/dnd5e.js`);
 	let c = !!e.moduleRoots?.plutonium && e.language === "zh.core";
 	for (let e of i.modules) for (let t of e.esmodules ?? []) await Be(new URL(t, location.href), c);
-	r.once("init", ai), r.once("setup", () => {
+	r.once("init", oi), r.once("setup", () => {
 		$.CONFIG.DND5E?.calendar && ($.CONFIG.DND5E.calendar.application = null), he();
 	}), await $.game.initialize(), e.display && await Os(e.display, e.moduleRoots);
 	let l = Date.now() + 3e4;

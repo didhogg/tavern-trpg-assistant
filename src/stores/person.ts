@@ -6,7 +6,7 @@ import type { SheetEdit } from '../rules/kernel/frame/commands-sheet'
 import type { OffRow } from '../rules/kernel/frame/off'
 import type { KernelChange } from '../schemas/kernel'
 import type { AskAnswer } from '../rules/kernel/author-ask-types'
-import type { ImportStep } from '../rules/kernel/import-flow'
+import type { ImportStep, RedoLevel } from '../rules/kernel/import-flow'
 import { useAppStore } from './app'
 import { useCampaignStore } from './campaign'
 import { useRosterStore } from './roster'
@@ -127,12 +127,12 @@ export const usePersonStore = defineStore('person', () => {
    * 空白卡建人 / 从库里加（作者「导入到人物」+ 问答桥）：带着玩家已答的题目问一步；
    * 交回下一题（作者停在题上，已写的一部分留在小窗）或「会加上什么」（改动留在小窗等 importConfirm / importCancel）。
    */
-  async function importStep(ref: EntryRef, answers: AskAnswer[], replaceItemId?: string, before?: { classId: string; delta: number }): Promise<ImportStep | null> {
+  async function importStep(ref: EntryRef, answers: AskAnswer[], replaceItemId?: string, redo?: RedoLevel): Promise<ImportStep | null> {
     const key = ownerKey(); const who = id.value
     if (!key || !who) return null
     // 界面给的是响应式对象，跨窗口传不过去：回答和条目编号都是纯数据，先转成普通对象
     const plain = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T
-    try { return await serial(() => app.svc().backend.importFlow.step(key, who, plain(ref), plain(answers), replaceItemId, before && plain(before))) } catch (e) { return { status: 'error', error: message(e), ms: 0 } }
+    try { return await serial(() => app.svc().backend.importFlow.step(key, who, plain(ref), plain(answers), replaceItemId, redo && plain(redo))) } catch (e) { return { status: 'error', error: message(e), ms: 0 } }
   }
   /** 降级预览：会收回的物品（已过显示出口）、生命上限 / 总等级前后；只算不存（后端算完按存档退回），没算成 = null。 */
   async function levelPreview(classId: string, delta: number): Promise<{ removed: Array<{ id: string; type: string; name: string }>; hp: { from: number; to: number }; level: { from: number; to: number } } | null> {

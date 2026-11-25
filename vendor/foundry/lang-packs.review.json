@@ -1784,7 +1784,7 @@
   {
    "package": "module:plutonium",
    "total": 1099,
-   "translated": 575,
+   "translated": 590,
    "fromCommunity": 0,
    "conflicts": 0,
    "groupsWithCategory": 2,
@@ -3711,7 +3711,7 @@
    "origins": [
     "dnd5e.races.json:A69KxdH1renVPrQV.system.advancement.9SgUOZ9mjqyA8Q2d.title"
    ],
-   "translation": null
+   "translation": "授予物品"
   },
   {
    "key": "TRPGAssistant.UpstreamText.139e9185a5b70b951d3811e0",
@@ -3805,7 +3805,7 @@
    "origins": [
     "dnd5e.classes.json:tlwBnN8GmqJcTgub.system.advancement.10.title"
    ],
-   "translation": null
+   "translation": "摧毁不死生物挑战等级"
   },
   {
    "key": "TRPGAssistant.UpstreamText.1619a362f1fd7e929688906f",
@@ -4721,7 +4721,7 @@
    "origins": [
     "dnd5e.classes.json:ILvRZGEx3aXqSVUt.system.advancement.19.title"
    ],
-   "translation": null
+   "translation": "休憩曲骰面"
   },
   {
    "key": "TRPGAssistant.UpstreamText.315bec1aabe12cda6555a34f",
@@ -5164,7 +5164,7 @@
     "dnd5e.classes.json:ABEBgWyRhVlDUIfq.system.advancement.13.title",
     "dnd5e.classes24.json:phbftrActionSurg.system.advancement.x1gr4ONIHZo6bjX8.name"
    ],
-   "translation": null
+   "translation": "动作如潮使用次数"
   },
   {
    "key": "TRPGAssistant.UpstreamText.3ba64c934246493d72d59506",
@@ -5709,7 +5709,7 @@
    "origins": [
     "dnd5e.classes.json:7WJp9vhi6F6SlAFa.system.advancement.15.title"
    ],
-   "translation": null
+   "translation": "玄奥秘法（9 环）"
   },
   {
    "key": "TRPGAssistant.UpstreamText.49b5e826f80ceb45fab1f35d",
@@ -5751,7 +5751,7 @@
    "origins": [
     "dnd5e.classes.json:pvEzGSv71zBhaolc.system.advancement.18.title"
    ],
-   "translation": null
+   "translation": "凶蛮重击骰数"
   },
   {
    "key": "TRPGAssistant.UpstreamText.4b88ae8cd8ade4a24b75dbbb",
@@ -6503,7 +6503,7 @@
    "origins": [
     "dnd5e.subclasses.json:H3RYLGqCiqm8BP3q.system.advancement.6.title"
    ],
-   "translation": null
+   "translation": "神圣打击伤害"
   },
   {
    "key": "TRPGAssistant.UpstreamText.60c66478a692fad639eb4a9f",
@@ -6519,7 +6519,7 @@
    "origins": [
     "dnd5e.classes.json:7WJp9vhi6F6SlAFa.system.advancement.14.title"
    ],
-   "translation": null
+   "translation": "玄奥秘法（8 环）"
   },
   {
    "key": "TRPGAssistant.UpstreamText.61444ef791e845a8702db58f",
@@ -6958,7 +6958,7 @@
    "origins": [
     "dnd5e.classes.json:gZiUvbXWLs0pOp0c.system.advancement.21.title"
    ],
-   "translation": null
+   "translation": "灵光半径"
   },
   {
    "key": "TRPGAssistant.UpstreamText.6cd473a4269659d445087cc4",
@@ -9211,7 +9211,7 @@
    "origins": [
     "dnd5e.classes.json:7WJp9vhi6F6SlAFa.system.advancement.12.title"
    ],
-   "translation": null
+   "translation": "玄奥秘法（6 环）"
   },
   {
    "key": "TRPGAssistant.UpstreamText.ad9243fa6fb22714f45277ba",
@@ -9738,7 +9738,7 @@
     "dnd5e.classes.json:ygVYgPbJkaH0tH1N.system.advancement.10.title",
     "dnd5e.classes24.json:phbdrdWildShape0.system.advancement.pIfdGSkqdp00omkE.name"
    ],
-   "translation": null
+   "translation": "荒野形态挑战等级"
   },
   {
    "key": "TRPGAssistant.UpstreamText.bbb0430b682aff92d094f84a",
@@ -10484,7 +10484,7 @@
    "origins": [
     "dnd5e.classes.json:ygVYgPbJkaH0tH1N.system.advancement.18.title"
    ],
-   "translation": null
+   "translation": "荒野形态使用次数"
   },
   {
    "key": "TRPGAssistant.UpstreamText.cffc221ab81d14da0482ddf8",
@@ -11120,7 +11120,7 @@
     "dnd5e.classes.json:ABEBgWyRhVlDUIfq.system.advancement.12.title",
     "dnd5e.classes24.json:phbftrIndomitabl.system.advancement.iJ9JidHgTldknGgK.name"
    ],
-   "translation": null
+   "translation": "不屈使用次数"
   },
   {
    "key": "TRPGAssistant.UpstreamText.e364728739c2481714908284",
@@ -11168,7 +11168,7 @@
    "origins": [
     "dnd5e.classes.json:7WJp9vhi6F6SlAFa.system.advancement.13.title"
    ],
-   "translation": null
+   "translation": "玄奥秘法（7 环）"
   },
   {
    "key": "TRPGAssistant.UpstreamText.e608731c3eaf03e047200099",
@@ -11946,7 +11946,7 @@
    "origins": [
     "dnd5e.classes.json:tlwBnN8GmqJcTgub.system.advancement.9.title"
    ],
-   "translation": null
+   "translation": "引导神力使用次数"
   },
   {
    "key": "TRPGAssistant.UpstreamText.fe4c61d0a611e0021e35a186",
@@ -12041,6 +12041,54 @@
   {
    "lang": "zh",
    "package": "plutonium",
+   "text": "Grant Items",
+   "translation": "授予物品",
+   "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）",
+   "key": "TRPGAssistant.UpstreamText.1368768776a780f570326e99"
+  },
+  {
+   "lang": "zh",
+   "package": "plutonium",
+   "text": "Destroy Undead CR",
+   "translation": "摧毁不死生物挑战等级",
+   "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）",
+   "key": "TRPGAssistant.UpstreamText.15e946f7c3c087565c8840d0"
+  },
+  {
+   "lang": "zh",
+   "package": "plutonium",
+   "text": "Song of Rest Die",
+   "translation": "休憩曲骰面",
+   "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）",
+   "key": "TRPGAssistant.UpstreamText.314f0085c5cfeb11525b7204"
+  },
+  {
+   "lang": "zh",
+   "package": "plutonium",
+   "text": "Action Surge Uses",
+   "translation": "动作如潮使用次数",
+   "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）",
+   "key": "TRPGAssistant.UpstreamText.3b4eb2d6ce1337689bfcab42"
+  },
+  {
+   "lang": "zh",
+   "package": "plutonium",
+   "text": "Mystic Arcanum (9th level)",
+   "translation": "玄奥秘法（9 环）",
+   "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）",
+   "key": "TRPGAssistant.UpstreamText.497ee280940181557e03e9c6"
+  },
+  {
+   "lang": "zh",
+   "package": "plutonium",
+   "text": "Brutal Critical Dice",
+   "translation": "凶蛮重击骰数",
+   "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）",
+   "key": "TRPGAssistant.UpstreamText.4b3e4f0d3ece6feca445d3c8"
+  },
+  {
+   "lang": "zh",
+   "package": "plutonium",
    "text": "Max Prepared Spells",
    "translation": "法术准备上限",
    "approval": "驾驶员 2026-11-18 明确指定；仅此一项手写例外",
@@ -12049,10 +12097,82 @@
   {
    "lang": "zh",
    "package": "plutonium",
+   "text": "Divine Strike Damage",
+   "translation": "神圣打击伤害",
+   "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）",
+   "key": "TRPGAssistant.UpstreamText.60ac15c1324d5542fe360cd9"
+  },
+  {
+   "lang": "zh",
+   "package": "plutonium",
+   "text": "Mystic Arcanum (8th level)",
+   "translation": "玄奥秘法（8 环）",
+   "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）",
+   "key": "TRPGAssistant.UpstreamText.60f8a10c1d440083ac194bd1"
+  },
+  {
+   "lang": "zh",
+   "package": "plutonium",
+   "text": "Aura Radius",
+   "translation": "灵光半径",
+   "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）",
+   "key": "TRPGAssistant.UpstreamText.6cbbae9fed2292b8c1f364db"
+  },
+  {
+   "lang": "zh",
+   "package": "plutonium",
+   "text": "Mystic Arcanum (6th level)",
+   "translation": "玄奥秘法（6 环）",
+   "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）",
+   "key": "TRPGAssistant.UpstreamText.ad555c80e3376b8b85082279"
+  },
+  {
+   "lang": "zh",
+   "package": "plutonium",
+   "text": "Wild Shape CR",
+   "translation": "荒野形态挑战等级",
+   "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）",
+   "key": "TRPGAssistant.UpstreamText.bafb07d7807e22a8e312c44e"
+  },
+  {
+   "lang": "zh",
+   "package": "plutonium",
+   "text": "Wild Shape Uses",
+   "translation": "荒野形态使用次数",
+   "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）",
+   "key": "TRPGAssistant.UpstreamText.cff2825da97b07fc0897a979"
+  },
+  {
+   "lang": "zh",
+   "package": "plutonium",
+   "text": "Indomitable Uses",
+   "translation": "不屈使用次数",
+   "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）",
+   "key": "TRPGAssistant.UpstreamText.e32aa4f69dd63224959764b0"
+  },
+  {
+   "lang": "zh",
+   "package": "plutonium",
+   "text": "Mystic Arcanum (7th level)",
+   "translation": "玄奥秘法（7 环）",
+   "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）",
+   "key": "TRPGAssistant.UpstreamText.e5fa069ac4a20a7eb8a46432"
+  },
+  {
+   "lang": "zh",
+   "package": "plutonium",
    "text": "Category",
    "translation": "类别",
    "approval": "驾驶员 2026-11-21 批复核清单：照推荐",
    "key": "TRPGAssistant.UpstreamText.edb2cd3b74c999af70f0b705"
+  },
+  {
+   "lang": "zh",
+   "package": "plutonium",
+   "text": "Channel Divinity Uses",
+   "translation": "引导神力使用次数",
+   "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）",
+   "key": "TRPGAssistant.UpstreamText.fdff6b5ee11dbadab3048941"
   }
  ],
  "pluginUi": {

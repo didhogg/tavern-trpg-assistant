@@ -147,7 +147,7 @@ export function createSheetCommands(operate: Operate, actor: ActorGetter, rollSu
         // 特征单元：体型 / 类型 / 速度 / 感官 / 阵营的现在值、来源（种族 / 手改）和种族那份的取下写法
         traits: sheetTraits(a),
         // 职业与出身单元：每条成长按级给了什么（逐级细节、按级取下 / 补回）；标题和键名标好来路，主线过显示出口
-        levels: sheetLevels(a),
+        levels: await sheetLevels(a),
         breakdown: {
           hp: await configContext(apps.HitPointsConfig, a, ['classes', 'ability', 'effects', 'levels']),
           ac: await configContext(apps.ArmorClassConfig, a, ['calculations', 'formulaLabel']),

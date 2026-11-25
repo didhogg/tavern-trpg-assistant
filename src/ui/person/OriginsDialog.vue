@@ -38,7 +38,7 @@ function entryOf(key: string): OriginsView | null {
   if (key.startsWith('lvl:')) {
     const [, id, lv] = key.split(':')
     const c = cls.value.find((x) => x.id === id)
-    return c ? { kind: 'levels', key, itemIds: [c.id, c.subclass?.id].filter((x): x is string => !!x), name: c.name, level: Number(lv), ...(Number(lv) === c.levels ? { top: { classId: c.id, ref: (c.ref ?? null) as EntryRef | null } } : {}) } : null
+    return c ? { kind: 'levels', key, itemIds: [c.id, c.subclass?.id].filter((x): x is string => !!x), name: c.name, level: Number(lv), class: { classId: c.id, ref: (c.ref ?? null) as EntryRef | null, top: c.levels } } : null
   }
   return null
 }

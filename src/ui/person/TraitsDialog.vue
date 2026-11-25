@@ -104,9 +104,22 @@ async function loadEffects(): Promise<void> {
 }
 watch(() => person.sheet, () => void loadEffects(), { immediate: true })
 function toggleEffect(e: Shown<FieldEffect>, on: boolean): void {
+  pendingOn.value = { ...pendingOn.value, [e.effect]: on }
   void person.edit(`${on ? '启用' : '停用'}${e.name ?? '效果'}`, [{ kind: 'effect', effectId: e.effect, ...(e.itemId ? { itemId: e.itemId } : {}), path: 'disabled', value: !on }])
 }
-const effectText = (e: Shown<FieldEffect>): string => `${e.keyLabel ?? e.key} ${e.modeCode === 'add' && /^-?\d/.test(e.value) ? (Number(e.value) >= 0 ? `+${e.value}` : e.value) : `${e.mode ?? ''} ${e.value}`}`
+/** 效果改的是哪一项（速度 / 感官种类按库里的名字）、怎么改（加法写成 +10，其余照官方改法名 + 值）。 */
+const effectText = (group: Group, e: Shown<FieldEffect>): string => {
+  const what = nameOf(group, e.key.split('.').at(-1) ?? e.key)
+  const plain = e.value.replace(/\s+/g, '')
+  return `${what} ${e.modeCode === 'add' && /^[+-]?\d+(\.\d+)?$/.test(plain) ? (Number(plain) >= 0 ? `+${Number(plain)}` : String(Number(plain))) : `${e.mode ?? ''} ${e.value}`}`
+}
+/** 开关的状态读人物读数里的同一条效果（和改动一起更新）；效果清单晚一拍重读，不拿它判断开没开。 */
+/** 刚点过、还在写的开关先按点的样子显示（写完人物读数一更新就清掉），点下去马上有反馈。 */
+const pendingOn = ref<Record<string, boolean>>({})
+watch(() => person.sheet, () => { pendingOn.value = {} })
+const effectOn = (e: Shown<FieldEffect>): boolean => pendingOn.value[e.effect] ?? !((person.sheet?.effects as Array<{ id: string; disabled: boolean }> | undefined)?.find((x) => x.id === e.effect)?.disabled ?? e.disabled)
+/** 效果这一行叫什么：来自哪件物品 / 专长（已过显示出口），人物自己身上的效果用效果名。 */
+const effectName = (e: Shown<FieldEffect>): string => e.origin ?? e.name ?? '效果'
 
 // —— 阵营：库里的阵营代号按两条轴排成九宫格（守序 / 中立 / 混乱 × 善良 / 中立 / 邪恶），外加无阵营；也能自己写 ——
 const AXES = { law: ['L', 'NX', 'C'], good: ['G', 'NY', 'E'] } // 作者阵营代号的两条轴（NX / NY = 某一条轴上的中立）
@@ -158,7 +171,7 @@ function saveOwn(): void { writing.value = false; const v = ownText.value.trim()
           <s>{{ nameOf('movement', x.key) }}</s><small>{{ fromSpecies }}，已取下</small>
           <button type="button" class="trpg-btn trpg-btn--small" :disabled="ro" @click="putBack(nameOf('movement', x.key), x.row)">补回</button>
         </div>
-        <div v-for="e in effects.movement" :key="e.effect + e.key" class="tr-line tr-item tr-effect" :data-src="`来源：${e.origin ?? e.name ?? '效果'}`" data-testid="traits-effect"><span class="tr-name">{{ e.name }}</span><span class="tr-quiet">{{ effectText(e) }}</span><Switch :model-value="!e.disabled" :label="`${e.name}的效果`" :disabled="ro" @update:model-value="(on: boolean) => toggleEffect(e, on)" /></div>
+        <div v-for="e in effects.movement" :key="e.effect + e.key" class="tr-line tr-item tr-effect" :data-src="`来源：${effectName(e)}`" data-testid="traits-effect"><span class="tr-name">{{ effectName(e) }}</span><span class="tr-quiet">{{ effectText('movement', e) }}</span><Switch :model-value="effectOn(e)" :label="`${effectName(e)}的效果`" :disabled="ro" @update:model-value="(on: boolean) => toggleEffect(e, on)" /></div>
         <label v-if="shownRows('movement').some((r) => r.key === 'fly')" class="tr-check"><input type="checkbox" :checked="t.movement.hover" :disabled="ro" @change="edit(($event.target as HTMLInputElement).checked ? '能悬浮' : '不能悬浮', 'system.attributes.movement.hover', ($event.target as HTMLInputElement).checked)">能悬浮</label>
         <div v-if="adding?.group === 'movement'" class="tr-line tr-adding"><span class="tr-name">{{ nameOf('movement', adding.key!) }}</span><input v-model="adding.value" class="trpg-input tr-num" type="number" min="0" step="5" placeholder="30" aria-label="多少" data-autofocus data-testid="traits-add-value" @keydown.enter.prevent="confirmAdd" @blur="confirmAdd"></div>
         <SelectField v-else-if="speedChoices.length" :model-value="undefined" :options="speedChoices" placeholder="＋ 添加一项" label="添加速度" :disabled="ro" data-testid="traits-add-speed" @update:model-value="(v) => startAdd('movement', v)" />
@@ -176,7 +189,7 @@ function saveOwn(): void { writing.value = false; const v = ownText.value.trim()
         </div>
         <div v-if="adding?.group === 'senses'" class="tr-line tr-adding"><span class="tr-name">{{ adding.sense?.name }}</span><input v-model="adding.value" class="trpg-input tr-num" type="number" min="0" step="5" placeholder="60" aria-label="距离" data-autofocus data-testid="traits-add-value" @keydown.enter.prevent="confirmAdd" @blur="confirmAdd"></div>
         <SelectField v-else-if="senseChoices.length" :model-value="undefined" :options="senseChoices" placeholder="＋ 添加" label="添加感官" :disabled="ro" data-testid="traits-add-sense" @update:model-value="(v) => startAdd('senses', v)" />
-        <div v-for="e in effects.senses" :key="e.effect + e.key" class="tr-line tr-item tr-effect" :data-src="`来源：${e.origin ?? e.name ?? '效果'}`" data-testid="traits-effect"><span class="tr-name">{{ e.name }}</span><span class="tr-quiet">{{ effectText(e) }}</span><Switch :model-value="!e.disabled" :label="`${e.name}的效果`" :disabled="ro" @update:model-value="(on: boolean) => toggleEffect(e, on)" /></div>
+        <div v-for="e in effects.senses" :key="e.effect + e.key" class="tr-line tr-item tr-effect" :data-src="`来源：${effectName(e)}`" data-testid="traits-effect"><span class="tr-name">{{ effectName(e) }}</span><span class="tr-quiet">{{ effectText('senses', e) }}</span><Switch :model-value="effectOn(e)" :label="`${effectName(e)}的效果`" :disabled="ro" @update:model-value="(on: boolean) => toggleEffect(e, on)" /></div>
         <label class="tr-sub tr-wide">特殊感官 <input class="trpg-input" :value="t.senses.special" :disabled="ro" maxlength="200" data-testid="traits-special" @change="edit('改了特殊感官', 'system.attributes.senses.special', ($event.target as HTMLInputElement).value.trim())"></label>
       </section>
 

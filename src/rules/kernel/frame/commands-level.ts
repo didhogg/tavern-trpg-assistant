@@ -275,6 +275,8 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
      */
     levelUpApply: (actorId: string, classId: string, delta = 1, values?: any[]) => operate([], async () => {
       const a = actor(actorId)
+      // 官方 forLevelChange 找不到这件职业时什么也不做、照样报完成：这里先说清楚，不让调用方以为升降过了
+      if (!a.items.get(classId)) throw new Error(`人物身上没有这件职业（${classId}）`)
       const manager = managerFor(a, classId, delta, { automaticApplication: true })
       const outcome = await applyManager(manager, values)
       if (!outcome.finished) {

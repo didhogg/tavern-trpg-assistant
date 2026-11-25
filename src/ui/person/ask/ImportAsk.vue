@@ -2,6 +2,7 @@
 // 从库里加一条到这个人（空白卡建人 / 加职业 / 换种族 …）：作者「导入到人物」整路，作者要问的一题一题在这里答（同一个弹窗里换页，不叠窗口）。
 // 一问一答：作者在小窗里停在题上，答一题接着跑一段（person.importStep）；答完先列出「会加上什么」，确认才写进存档（一条撤销），取消 = 什么都不变。
 // 已答的题排在上面，点一题 = 回到那题重答（后面的答案丢掉）。题目文字已过唯一显示出口；界面只收选择。
+import type { RedoLevel } from '../../../rules/kernel/import-flow'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
 import type { EntryRef } from '../../../library/scopes'
 import type { AskAnswer } from '../../../rules/kernel/author-ask-types'
@@ -17,7 +18,7 @@ import AskParts from './AskParts.vue'
 /** closeOnBack：直接打开的（升级）没有上一页，返回 = 关掉弹窗。 */
 /** level：从等级菜单「改到第几级」进来的，等级题预先选好这一级。 */
 /** embedded：嵌在别的页里（职业与出身弹窗右边）：确认后交 done 给外面，不动弹窗；backText = 第一题时返回按钮的字。 */
-const props = defineProps<{ entryRef: EntryRef; name: string; replace?: { id: string; name: string }; closeOnBack?: boolean; level?: number; embedded?: boolean; backText?: string; before?: { classId: string; delta: number } }>()
+const props = defineProps<{ entryRef: EntryRef; name: string; replace?: { id: string; name: string }; closeOnBack?: boolean; level?: number; embedded?: boolean; backText?: string; redoLevel?: RedoLevel }>()
 const emit = defineEmits<{ back: []; done: [] }>()
 const person = usePersonStore()
 const modal = useModalStore()
@@ -34,7 +35,7 @@ async function run(): Promise<void> {
   busy.value = true
   const timer = setTimeout(() => { slow.value = true }, 400)
   try {
-    const out = await person.importStep(props.entryRef, answers.value, props.replace?.id, props.before)
+    const out = await person.importStep(props.entryRef, answers.value, props.replace?.id, props.redoLevel)
     step.value = out ?? { status: 'error', error: '没有当前人物', ms: 0 }
     staged = out?.status === 'ready' || out?.status === 'question'
     pending.value = null

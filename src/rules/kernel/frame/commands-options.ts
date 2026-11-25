@@ -2,21 +2,21 @@
 // 不写新规则：候选都来自 dnd5e 官方进阶的接口（Trait.unfulfilledChoices、进阶 configuration）；写法登记表——加一种进阶 = 加一行；
 // 要玩家选、又没登记的进阶标 unsupported，绝不漏掉还说「选完了」（整体设计 §3.4 / §3.5）。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档对象没有类型声明。 */
-import { systemText, generatedText } from './system-text'
+import { systemText } from './system-text'
 import type { ExtraPools } from '../build-options'
 import { describeBuildExtras } from './build-extras'
 import type { Operate } from './commands-items'
 import { abilityValues, buildActor, type BuildPlan } from './commands-level'
 import { importEntry } from './importer'
 import { authorIdsOf } from './author-ids'
-import { traitTitle } from './trait-title'
+import { advancementTitle } from './advancement-title'
 import { asiView, type AsiChoice } from './asi'
 import { registryLabels } from './trait-title'
 import { authorTextPath } from './author-text'
 import type { BuildPick } from './commands-level'
 import type { ExpertiseViews, TraitPlans } from './build-traits'
 import type { KernelRefFlags } from '../../../core/saves/split'
-import { fromAuthor, fromEntry, joined, named, type FrameText } from '../shown'
+import { fromAuthor, joined, named, type FrameText } from '../shown'
 
 /** 一个候选：显示名是 dnd5e 语言包的字；带作者编号的，主线按编号取本战役库里的名字（author 留着给主线补 ref）。 */
 export type Option = { value: string; label: FrameText; path: FrameText[]; author?: KernelRefFlags }
@@ -71,12 +71,7 @@ async function describeSteps(manager: any, picks: BuildPick[] = [], plans: Trait
     const pick = picks.find((p) => p.id === advancement.id && (p.level ?? null) === (step.flow.level ?? null))?.value
     if (DESCRIBERS[type]) options = await DESCRIBERS[type](expertise.get(advancement.id) ?? advancement, pick, plans)
     else if (!automatic && !NO_CHOICE.has(type)) unsupported = true
-    // 标题：Trait 按类别编号取 dnd5e 语言包的名字；数据里写了名字的是条目原文（主线按同编号条目同位置换）；
-    // 没写的由 dnd5e 用语言包里的默认标题补上（Advancement.prepareData：name ||= _defaultTitle），已是本战役语言
-    const own = type === 'Trait' ? traitTitle(advancement) : null
-    const written = advancement._source?.name || advancement._source?.title
-    const shownName = advancement.name ?? advancement.title
-    const title = own ? systemText(own) : written ? fromEntry(String(written), generatedText(String(written))) : shownName ? systemText(String(shownName)) : null
+    const title = advancementTitle(advancement)
     // 说明：Plutonium 用作者代码里写死的句子拼的，每句按作者代码同位置取
     const hint = type === 'Trait' && advancement.hint ? joined(String(advancement.hint).split('\n').map((text) => fromAuthor(text, authorTextPath(text))), '\n') : undefined
     out.push({ id: advancement.id, level: step.flow.level ?? null, type, title, ...(hint ? { hint } : {}), automatic, options, ...(unsupported ? { unsupported: true as const } : {}) })

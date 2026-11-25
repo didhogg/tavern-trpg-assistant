@@ -194,5 +194,110 @@
     "text": "Ability Score Increase.",
     "translation": "属性值加成",
     "approval": "驾驶员 2026-11-21 批：与不带句号的同名键统一为现有“属性值加成”"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Grant Items",
+    "translation": "授予物品",
+    "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Destroy Undead CR",
+    "translation": "摧毁不死生物挑战等级",
+    "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Song of Rest Die",
+    "translation": "休憩曲骰面",
+    "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Action Surge Uses",
+    "translation": "动作如潮使用次数",
+    "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Mystic Arcanum (6th level)",
+    "translation": "玄奥秘法（6 环）",
+    "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Mystic Arcanum (7th level)",
+    "translation": "玄奥秘法（7 环）",
+    "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Mystic Arcanum (8th level)",
+    "translation": "玄奥秘法（8 环）",
+    "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Mystic Arcanum (9th level)",
+    "translation": "玄奥秘法（9 环）",
+    "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Brutal Critical Dice",
+    "translation": "凶蛮重击骰数",
+    "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Divine Strike Damage",
+    "translation": "神圣打击伤害",
+    "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Aura Radius",
+    "translation": "灵光半径",
+    "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Wild Shape CR",
+    "translation": "荒野形态挑战等级",
+    "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Wild Shape Uses",
+    "translation": "荒野形态使用次数",
+    "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Indomitable Uses",
+    "translation": "不屈使用次数",
+    "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Channel Divinity Uses",
+    "translation": "引导神力使用次数",
+    "approval": "驾驶员 2026-11-25 批零星成长标题：功能名取大译名表，后缀取 dnd5e 中文包（使用次数 / 挑战等级 / 骰数 / 骰面 / 伤害 / 半径 / 授予物品）"
   }
 ]
