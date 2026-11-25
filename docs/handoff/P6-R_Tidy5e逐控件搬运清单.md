@@ -1,5 +1,7 @@
 # P6-R · Tidy5e 角色表逐控件搬运清单（2026-11-24，驾驶员令：每一项照 Tidy5e 搬，变成我们的风格，全部做完、做到位再交付）
 
+> **2026-11-25 起状态以 `docs/units/P6_人物.md` §4 为准。** 本文件下面的 [x] 只代表假页面（模拟酒馆 e2e）测过，不代表真机点通；本文件只用来查每个控件对应 Tidy5e 哪个源文件。
+
 - 全量控件来源：脚本从 Tidy5e 角色表入口 + 它登记分页 / 侧栏 / 表格列 / 行按钮 / 右键菜单的文件沿组件引用全量抽取（`work/p6-ui/tidy5e-controls.md`，脚本 `$CLAUDE_JOB_DIR/tmp/tidy-controls.mjs`）。参考源码根：`foundry-vtt-tidy-5e-sheets-main/src/`（只读）。
 - 排除：堡垒以外的队伍 / 载具 / 遭遇表专用控件（不属于角色表）。掷骰类点击 = P7（驾驶员 11-23：除点了掷骰外全部要有），本清单记为「掷 → P7」。
 - 写入一律走现有人物 store 动作 / 小窗现有命令（`edit` 的 set·item·itemDelete·effect·effectCreate·effectDelete·status；`act` 调 equip·attune·recover·useItem·levelUpApply·addToActor(带数据)·removeItem·rest·concentration·condition）。界面只读官方显示数据、不算数。缺现成后端的记入 §11，不擅自改。
