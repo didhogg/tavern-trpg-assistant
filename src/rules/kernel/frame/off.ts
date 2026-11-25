@@ -18,7 +18,7 @@ const g = globalThis as any
  *   + 成长编号 / 等级（可选 part = 记录里的一项），或 part = 条目自身数据的字段路径（system.…），或效果编号。
  * 只写来源 = 整件取下。
  */
-export interface OffRow { ref: string; advancement?: string; level?: number; part?: string; effect?: string }
+export interface OffRow { ref: string; advancement?: string; level?: number; part?: string; effect?: string; label?: string }
 
 /** 整件取下时挡住条目使用的作者「隐藏」：控制效果用固定编号，读档、撤销重算时是同一个，不会多出一份。 */
 export const OFF_CONTROLLER_ID = 'trpgOffHidden000'
@@ -84,6 +84,20 @@ function partsOf(adv: any, level: number): string[] {
   const stored = added && typeof added === 'object' ? Object.values(added).filter((v): v is string => typeof v === 'string') : []
   return [...new Set([...own, ...stored])]
 }
+/**
+ * 这一级这条成长现在给了人物什么（逐级细节用；取下的单项写法和上面同一个认法）：
+ *   items = 作者存放授予物品的地方（storagePath）：人物物品编号 → 存放的条目编号（取下单项交的是后者：官方 reverse 按 uuid 认）；
+ *   keys = 作者记录模型里列表字段的项（特质、熟练这类键）。
+ */
+export function appliedParts(adv: any, level: number): { items: Array<{ id: string; part: string }>; keys: string[] } {
+  const path = typeof adv.storagePath === 'function' ? adv.storagePath(level) : null
+  const stored = path ? plain(g.foundry.utils.getProperty(adv, path)) : null
+  const model = models(adv).value
+  const keys = (entries(model, plain(adv.value)) ?? []).filter(([name]) => isList(model.schema.fields[name])).map(([, x]) => x)
+  const items = stored && typeof stored === 'object' ? Object.entries(stored).filter((e): e is [string, string] => typeof e[1] === 'string').map(([id, part]) => ({ id, part })) : []
+  return { items, keys: [...new Set(keys)] }
+}
+
 /** 作者声明的「指向人物身上物品」字段里，指着这件物品的路径（种族、背景…按声明找，不写死）。 */
 function pointersTo(actor: any, itemId: string): string[] {
   const out: string[] = []

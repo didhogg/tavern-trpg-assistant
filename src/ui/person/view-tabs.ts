@@ -34,8 +34,9 @@ export const characteristics = (s: PersonSheet): Array<{ path: string; label: st
 // ---- 构建（职业 · 子职业 · 种族 · 背景；照 dnd5e 官方 actor-classes 与 Tidy5e CharacterTraits）----
 /** 一个职业：等级、官方给的“可改到几级”（差几级）、子职业或“该选子职业了”（官方 needsSubclass）。 */
 export interface ClassBuild { id: string; name: string; source: string; levels: number; ref?: unknown; levelsMenu: Array<{ delta: number; disabled: boolean }>; subclass: { id: string; name: string; ref?: unknown } | null; needsSubclass: boolean }
-const shownItemName = (s: PersonSheet, id: string): string | undefined => (s as any).shown?.items?.find?.((x: any) => x.id === id)?.name
-const shownItemRef = (s: PersonSheet, id: string): unknown => (s as any).shown?.items?.find?.((x: any) => x.id === id)?.ref
+/** 人物身上一件物品已过显示出口的名字 / 库条目（人物页统一取好的）。 */
+export const shownItemName = (s: PersonSheet, id: string): string | undefined => (s as any).shown?.items?.find?.((x: any) => x.id === id)?.name
+export const shownItemRef = (s: PersonSheet, id: string): unknown => (s as any).shown?.items?.find?.((x: any) => x.id === id)?.ref
 export function classBuilds(s: PersonSheet): ClassBuild[] {
   const ic: Record<string, any> = s.view?.base?.itemContext ?? {}
   const subsShown = list<any>(s.view?.base?.itemCategories?.subclasses)

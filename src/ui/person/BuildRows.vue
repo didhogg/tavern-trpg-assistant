@@ -13,10 +13,11 @@ import Term from '../kit/Term.vue'
 import { openEntry } from '../libview/open'
 import { openFields, openPick } from './edit-open'
 import { background, species } from './view'
-import { classBuilds, originId, type ClassBuild } from './view-tabs'
+import { classBuilds, originId, shownItemName, type ClassBuild } from './view-tabs'
+import type { LevelRowShown } from './LevelParts.vue'
 
-/** 选中的那一行（职业与出身弹窗里高亮）：class:编号 / sub:编号 / race / background。 */
-defineProps<{ selected?: string | null }>()
+/** 选中的那一行（职业与出身弹窗里高亮）：class:编号 / sub:编号 / lvl:职业编号:等级 / race / background；levels = 每个职业下面列出各级（弹窗里用）。 */
+const props = defineProps<{ selected?: string | null; levels?: boolean }>()
 const emit = defineEmits<{ pick: [key: string]; level: [c: ClassBuild, delta: number] }>()
 const person = usePersonStore()
 const s = computed(() => person.sheet!)
@@ -28,15 +29,26 @@ const origins = computed(() => [
 ])
 const view = (ref: unknown, name: string): void => { if (ref) openEntry(ref as never, name) }
 const edit = (id: string, name: string): void => openFields(name, { itemId: id, path: 'system' }, { width: 680, itemName: name })
+/** 每个职业（连子职业）各级得到了什么：一级一行，写授予的东西的名字（没有就写成长的标题）（后端读数 sheet.levels，已过显示出口）。 */
+function levelLines(c: ClassBuild): Array<{ level: number; text: string }> {
+  if (!props.levels) return []
+  const ids = [c.id, c.subclass?.id].filter(Boolean)
+  const rows = ((s.value.levels ?? []) as LevelRowShown[]).filter((r) => ids.includes(r.itemId) && r.level > 0)
+  return [...new Set(rows.map((r) => r.level))].sort((a, b) => a - b).map((level) => ({
+    level,
+    text: rows.filter((r) => r.level === level).flatMap((r) => (r.items.length ? r.items.map((x) => shownItemName(s.value, x.id) ?? '') : [r.title ?? ''])).filter(Boolean).join('　'),
+  }))
+}
 /** 原始职业（官方 system.details.originalClass，Tidy5e 标♛）。 */
 const original = computed(() => String(s.value.system.details?.originalClass ?? ''))
 /** 新建自定义职业 / 种族 / 背景（Tidy5e AddCustomNamed = 官方 createItem({ type })）。 */
 const createCustom = (type: string, label: string): void => { void person.create(`新建了自定义${label}`, [{ name: `新${label}`, type, flags: { 'tavern-trpg': { named: true } } }]) }
 
 /** 等级下拉：现在这一级 + 官方给的每一档（差几级）换成「几级」；超过总等级上限的官方标了不可选，这里不列。 */
+// 值就用「第几级」（升完级当前值跟着变，下拉显示的字才会更新）
 const levelOptions = (c: ClassBuild) => [0, ...c.levelsMenu.filter((o) => !o.disabled && o.delta).map((o) => o.delta)]
-  .sort((a, b) => a - b).map((d) => ({ value: String(d), label: `${c.levels + d} 级` }))
-function pickLevel(c: ClassBuild, v: string | undefined): void { const d = Number(v); if (d) emit('level', c, d) }
+  .sort((a, b) => a - b).map((d) => ({ value: String(c.levels + d), label: `${c.levels + d} 级` }))
+function pickLevel(c: ClassBuild, v: string | undefined): void { const d = Number(v) - c.levels; if (d) emit('level', c, d) }
 /** 选子职业：从库里只列这个职业的子职业（子职业条目记着所属职业的名字和来源，和库里职业条目同一套）。 */
 function pickSubclass(c: ClassBuild): void {
   openPick('subclasses', undefined, (item) => String(item.className ?? '') === c.name && (!c.source || String(item.classSource ?? '').toLowerCase() === c.source.toLowerCase()))
@@ -90,7 +102,7 @@ function onOrigin(o: Origin, key: string): void {
         <span class="ps-build-label">{{ i ? '' : '职业' }}</span>
         <span class="ps-build-main">
           <span class="ps-build-name"><Term v-if="c.ref" :label="`查看${c.name}`" @open="view(c.ref, c.name)">{{ c.name }}</Term><b v-else>{{ c.name }}</b><Icon v-if="original === c.id" name="crown" :size="13" class="ps-build-crown" title="原始职业" /></span>
-          <span class="ps-build-level" @click.stop><SelectField :model-value="'0'" :options="levelOptions(c)" :label="`${c.name}改到几级`" :disabled="ro" data-testid="ps-build-level" @update:model-value="(v) => pickLevel(c, v)" /></span>
+          <span class="ps-build-level" @click.stop><SelectField :key="c.levels" :model-value="String(c.levels)" :options="levelOptions(c)" :label="`${c.name}改到几级`" :disabled="ro" data-testid="ps-build-level" @update:model-value="(v) => pickLevel(c, v)" /></span>
         </span>
         <span @click.stop><MoreMenu :label="c.name" :items="classMenu(c)" @select="onClass(c, $event)" /></span>
       </div>
@@ -101,7 +113,12 @@ function onOrigin(o: Origin, key: string): void {
         </span>
         <span @click.stop><MoreMenu :label="c.subclass.name" :items="[{ key: 'view', label: '看资料', disabled: !c.subclass.ref }, { key: 'edit', label: '编辑', disabled: ro }, { key: 'change', label: '换子职业…', disabled: ro }, { key: 'remove', label: '删除子职业', danger: true, disabled: ro }]" @select="onSub(c, $event)" /></span>
       </div>
-      <div v-else-if="c.needsSubclass" class="ps-build-row ps-build-sub" data-testid="ps-build-needs-sub">
+      <div v-for="l in levelLines(c)" :key="l.level" class="ps-build-row ps-build-sub ps-build-lvl" data-testid="ps-build-lvl" :data-level="l.level" :data-picked="selected === `lvl:${c.id}:${l.level}` || undefined" @click="emit('pick', `lvl:${c.id}:${l.level}`)">
+        <span class="ps-build-label" />
+        <span class="ps-build-main"><b class="ps-build-lvl-n">{{ l.level }} 级</b><span class="ps-build-lvl-text">{{ l.text }}</span></span>
+        <span />
+      </div>
+      <div v-if="!c.subclass && c.needsSubclass" class="ps-build-row ps-build-sub" data-testid="ps-build-needs-sub">
         <span class="ps-build-label" />
         <span class="ps-build-main"><Icon name="arrow-elbow-down-right" :size="13" class="ps-build-turn" />
           <button class="trpg-btn trpg-btn--primary trpg-btn--small" type="button" :disabled="ro" data-testid="ps-build-pick-sub" @click.stop="pickSubclass(c)">选子职业</button>

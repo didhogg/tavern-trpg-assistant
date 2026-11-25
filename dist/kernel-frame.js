@@ -571,12 +571,12 @@ function we() {
 		}, n.ConfigConsts.prePreInit({ implRegistryImportList: n.ImplementationRegistryImportList.get() }), n.Config._CONFIG = n.Config.api_getDefaults(), n.Config._CONFIG_PLAYER = n.Config._getDefaultPlayerConfig(), n.Vetools.prePreInit_preConfig(), n.VetoolsLinks.prePreInit_postConfig(), n.Vetools.prePreInit_postConfig(), n.UtilDamageTypes.init(), n.Dnd5eUtil.init(), n.Vetools.init(), n.SideDataInterfaces.init(), n;
 	})();
 }
-var M = globalThis, Te;
-function Ee() {
-	return Te ??= (async () => {
-		let e = (await M.game.modules.get("plutonium")?.api?.importer?.pGetImporter?.({ prop: "item" }))?.constructor?._DataConverter;
+var Te = globalThis, Ee;
+function De() {
+	return Ee ??= (async () => {
+		let e = (await Te.game.modules.get("plutonium")?.api?.importer?.pGetImporter?.({ prop: "item" }))?.constructor?._DataConverter;
 		if (!e?._getWeaponIdKey) throw Error("作者物品转换类不可用（Plutonium 物品导入器）");
-		let t = M.Parser, n = (M.game?.settings?.get?.("dnd5e", "rulesVersion") === "modern" ? [
+		let t = Te.Parser, n = (Te.game?.settings?.get?.("dnd5e", "rulesVersion") === "modern" ? [
 			t.SRC_XPHB,
 			t.SRC_XDMG,
 			t.SRC_PHB,
@@ -586,12 +586,12 @@ function Ee() {
 			t.SRC_DMG,
 			t.SRC_XPHB,
 			t.SRC_XDMG
-		]).map((e) => String(e).toLowerCase()), r = M.Renderer.get().baseUrl, [i, a] = await Promise.all([M.DataUtil.loadJSON(`${r}data/items-base.json`), M.DataUtil.loadJSON(`${r}data/items.json`)]), o = [...i?.baseitem ?? [], ...a?.item ?? []].filter((e) => n.includes(String(e.source).toLowerCase())).sort((e, t) => n.indexOf(String(e.source).toLowerCase()) - n.indexOf(String(t.source).toLowerCase())), s = /* @__PURE__ */ new Map();
+		]).map((e) => String(e).toLowerCase()), r = Te.Renderer.get().baseUrl, [i, a] = await Promise.all([Te.DataUtil.loadJSON(`${r}data/items-base.json`), Te.DataUtil.loadJSON(`${r}data/items.json`)]), o = [...i?.baseitem ?? [], ...a?.item ?? []].filter((e) => n.includes(String(e.source).toLowerCase())).sort((e, t) => n.indexOf(String(e.source).toLowerCase()) - n.indexOf(String(t.source).toLowerCase())), s = /* @__PURE__ */ new Map();
 		for (let t of o) {
 			let n = String(t.name).toLowerCase(), r = {
 				propDroppable: "item",
 				source: String(t.source),
-				hash: M.UrlUtil.URL_TO_HASH_BUILDER[M.UrlUtil.PG_ITEMS](t)
+				hash: Te.UrlUtil.URL_TO_HASH_BUILDER[Te.UrlUtil.PG_ITEMS](t)
 			};
 			for (let t of /* @__PURE__ */ new Set([
 				e._getWeaponIdKey({ nameLower: n }),
@@ -603,8 +603,8 @@ function Ee() {
 	})();
 }
 // src/rules/kernel/frame/commands-combat.ts
-var De = globalThis;
-function Oe(e) {
+var Oe = globalThis;
+function ke(e) {
 	let t = e.system.spells;
 	return t ? Object.fromEntries(Object.entries(t).map(([e, t]) => [e, {
 		value: t.value ?? null,
@@ -613,7 +613,7 @@ function Oe(e) {
 		type: t.type ?? null
 	}])) : null;
 }
-function ke(e) {
+function Ae(e) {
 	let t = e.concentration?.effects;
 	return {
 		effects: t ? [...t].map((e) => ({
@@ -624,7 +624,7 @@ function ke(e) {
 		limit: e.system.attributes?.concentration?.limit ?? null
 	};
 }
-function Ae(e) {
+function je(e) {
 	return {
 		statuses: e.statuses ? [...e.statuses] : [],
 		effects: e.effects.contents.map((e) => ({
@@ -635,7 +635,7 @@ function Ae(e) {
 		}))
 	};
 }
-function je(e) {
+function Me(e) {
 	return {
 		id: e.id,
 		name: e.name,
@@ -653,7 +653,7 @@ function je(e) {
 		}))
 	};
 }
-function Me(e) {
+function Ne(e) {
 	return {
 		formula: e.formula ?? null,
 		total: e.total ?? null,
@@ -665,28 +665,28 @@ function Me(e) {
 		})) ?? []
 	};
 }
-function Ne(e, t) {
-	let n = null, r = () => n ?? De.game.combat, i = () => {
+function Pe(e, t) {
+	let n = null, r = () => n ?? Oe.game.combat, i = () => {
 		let e = r();
 		if (!e) throw Error("No active combat");
 		return e;
 	};
 	return {
 		combatStart: (t, r = []) => e(r, async () => {
-			let e = await De.CONFIG.Combat.documentClass.create({
+			let e = await Oe.CONFIG.Combat.documentClass.create({
 				name: "Kernel encounter",
 				combatants: t.map((e) => ({ actorId: e }))
 			});
-			return await e.rollInitiative(e.combatants.map((e) => e.id), { dialog: !1 }), await e.startCombat(), n = e, je(e);
+			return await e.rollInitiative(e.combatants.map((e) => e.id), { dialog: !1 }), await e.startCombat(), n = e, Me(e);
 		}, t),
 		combatNext: (t = []) => e(t, async () => {
 			let e = i();
-			return await e.nextTurn(), je(e);
+			return await e.nextTurn(), Me(e);
 		}),
 		combatEnd: () => e([], async () => {
 			let e = i();
 			await e.endCombat();
-			let t = je(e);
+			let t = Me(e);
 			return n = null, t;
 		}),
 		cast: (n, r, i, a = [], o = {}) => e(a, async () => {
@@ -700,8 +700,8 @@ function Ne(e, t) {
 					name: s.name,
 					type: s.type
 				},
-				slots: Oe(e),
-				concentration: ke(e),
+				slots: ke(e),
+				concentration: Ae(e),
 				effects: (c?.effects ?? []).map((e) => ({
 					id: e.id,
 					name: e.name,
@@ -716,28 +716,28 @@ function Ne(e, t) {
 		}, [n]),
 		condition: (n, r, i = !0) => e([], async () => {
 			let e = t(n);
-			return await e.toggleStatusEffect(r, { active: i }), Ae(e);
+			return await e.toggleStatusEffect(r, { active: i }), je(e);
 		}, [n]),
 		concentrationCheck: (n, r, i = []) => e(i, async () => {
 			let e = t(n);
 			if (!e.concentration?.effects?.size) return {
 				dc: null,
 				skipped: "not concentrating",
-				concentration: ke(e)
+				concentration: Ae(e)
 			};
 			let i = e.getConcentrationDC(r), a = await e.rollConcentration({ target: i }, { configure: !1 }, { create: !1 }), o = a?.[0] ?? null, s = o ? o.total >= i : null;
 			return s === !1 && await e.endConcentration(), {
 				dc: i,
 				success: s,
-				rolls: (a ?? []).map(Me),
-				concentration: ke(e)
+				rolls: (a ?? []).map(Ne),
+				concentration: Ae(e)
 			};
 		}, [n]),
-		concentration: (n) => e([], async () => ke(t(n)), [n])
+		concentration: (n) => e([], async () => Ae(t(n)), [n])
 	};
 }
 // src/rules/kernel/frame/plutonium-zh.ts
-async function Pe(e, t, n = fetch) {
+async function Fe(e, t, n = fetch) {
 	try {
 		let r = await n(new URL("fingerprints.json", t), { cache: "no-store" });
 		if (r.status === 404) return null;
@@ -754,8 +754,8 @@ async function Pe(e, t, n = fetch) {
 	}
 }
 // src/rules/kernel/frame/plutonium-build.ts
-var Fe = "13b1a03b99eab99f4b078e11075c7092c175a365d076d5319914f376c583e245", Ie = "608e0a5497354d1937c3d3e780f85a103c4ddffb846d4bb1cdcfb00bdffb0bf2", Le = /* @__PURE__ */ "Charactermancer_FeatureOptionsSelect.Charactermancer_AdditionalFeatsSelect.StatGenUtilAdditionalFeats.DataPrimerFauxFeatureClassSubclassFeat.DataPrimerFauxFeatureClassSubclassOptionalfeature.UtilDataConverter.Config.Charactermancer_AvailableProficiencyManager.CharactermancerFeatureSubCompManagerProficiencyOtherBase.Charactermancer_ItemMasteries_Util.Charactermancer_Class_Util.Charactermancer_OtherProficiencySelect.Charactermancer_ExpertiseSelect.Charactermancer_ImmResVulnSelect.UtilAdvancementsEntry.UtilAdvancements.ComponentUiUtil.veE.EQUIPMENT_TYPE_EXPANDERS.UtilEntityItem.UtilApplications.InputUiUtil.EquipmentApp.ActorAbilityScoreIncrease.UtilEntityBackgroundFeature.UtilsEntityBackground.CompendiumCacheUtil.VET_SIZE_TO_ABV".split("."), N = null, Re;
-async function ze(e, t = !1) {
+var Ie = "13b1a03b99eab99f4b078e11075c7092c175a365d076d5319914f376c583e245", Le = "608e0a5497354d1937c3d3e780f85a103c4ddffb846d4bb1cdcfb00bdffb0bf2", Re = /* @__PURE__ */ "Charactermancer_FeatureOptionsSelect.Charactermancer_AdditionalFeatsSelect.StatGenUtilAdditionalFeats.DataPrimerFauxFeatureClassSubclassFeat.DataPrimerFauxFeatureClassSubclassOptionalfeature.UtilDataConverter.Config.Charactermancer_AvailableProficiencyManager.CharactermancerFeatureSubCompManagerProficiencyOtherBase.Charactermancer_ItemMasteries_Util.Charactermancer_Class_Util.Charactermancer_OtherProficiencySelect.Charactermancer_ExpertiseSelect.Charactermancer_ImmResVulnSelect.UtilAdvancementsEntry.UtilAdvancements.ComponentUiUtil.veE.EQUIPMENT_TYPE_EXPANDERS.UtilEntityItem.UtilApplications.InputUiUtil.EquipmentApp.ActorAbilityScoreIncrease.UtilEntityBackgroundFeature.UtilsEntityBackground.CompendiumCacheUtil.VET_SIZE_TO_ABV".split("."), M = null, ze;
+async function Be(e, t = !1) {
 	if (!e.pathname.endsWith("/modules/plutonium/js/Bundle.js")) {
 		await import(
 			/* @vite-ignore */
@@ -766,18 +766,18 @@ async function ze(e, t = !1) {
 	let n = await fetch(e);
 	if (!n.ok) throw Error(`读取 Plutonium 失败：${n.status}`);
 	let r = await n.text(), i = new URL(n.url || e.href), a = h(r);
-	if (a !== Fe) {
-		let e = new URL("../private/modules/plutonium/js/Bundle.js", location.href), n = t && i.href === e.href ? await Pe(r, new URL("../private/lang/zh/modules/plutonium/js/", location.href)) : null;
-		if (i.href === e.href && a === Ie) {
-			let { nativeBuilder: e } = await Be(n ?? r, i, "\nexport const nativeBuilder = { ActorCharactermancer, ComponentUiUtil, Charactermancer_Util, Charactermancer_Spell_Level, Charactermancer_AvailableEquipmentInfo };\n");
-			Re = e;
+	if (a !== Ie) {
+		let e = new URL("../private/modules/plutonium/js/Bundle.js", location.href), n = t && i.href === e.href ? await Fe(r, new URL("../private/lang/zh/modules/plutonium/js/", location.href)) : null;
+		if (i.href === e.href && a === Le) {
+			let { nativeBuilder: e } = await Ve(n ?? r, i, "\nexport const nativeBuilder = { ActorCharactermancer, ComponentUiUtil, Charactermancer_Util, Charactermancer_Spell_Level, Charactermancer_AvailableEquipmentInfo };\n");
+			ze = e;
 		} else n === null ? await import(
 			/* @vite-ignore */
 			i.href
-) : await Be(n, i);
-	} else N = (await Be(r, e, `\nexport const buildAdapter = { ${Le.join(", ")} };\n`)).buildAdapter;
+) : await Ve(n, i);
+	} else M = (await Ve(r, e, `\nexport const buildAdapter = { ${Re.join(", ")} };\n`)).buildAdapter;
 }
-async function Be(e, t, n = "") {
+async function Ve(e, t, n = "") {
 	let r = e.replace("import('../lib/ace.js')", `import(${JSON.stringify(new URL("../lib/ace.js", t).href)})`), i = URL.createObjectURL(new Blob([
 		r,
 		n,
@@ -793,27 +793,27 @@ async function Be(e, t, n = "") {
 	}
 }
 // src/rules/kernel/frame/trait-origins.ts
-var Ve = "tavern-trpg-assistant", He = "automaticTraitOrigins";
-function Ue(e) {
-	return e.flags?.[Ve]?.[He] ?? {};
-}
+var He = "tavern-trpg-assistant", Ue = "automaticTraitOrigins";
 function We(e) {
-	let t = e.flags?.[Ve];
-	t && He in t && (delete t[He], Object.keys(t).length || delete e.flags[Ve]);
+	return e.flags?.[He]?.[Ue] ?? {};
 }
-var Ge = (e = []) => [...e].sort(), Ke = (e) => m({
+function Ge(e) {
+	let t = e.flags?.[He];
+	t && Ue in t && (delete t[Ue], Object.keys(t).length || delete e.flags[He]);
+}
+var Ke = (e = []) => [...e].sort(), qe = (e) => m({
 	type: e.type,
 	level: e.level ?? 0,
 	restriction: e.classRestriction || null,
 	name: e.name ?? "",
 	hint: e.hint ?? "",
 	mode: e.configuration?.mode ?? "default",
-	grants: Ge(e.configuration?.grants),
+	grants: Ke(e.configuration?.grants),
 	allowReplacements: !!e.configuration?.allowReplacements,
-	choices: (e.configuration?.choices ?? []).map((e) => [e.count ?? 1, Ge(e.pool)])
+	choices: (e.configuration?.choices ?? []).map((e) => [e.count ?? 1, Ke(e.pool)])
 });
-async function qe(e) {
-	let t = N;
+async function Je(e) {
+	let t = M;
 	if (!t) return e();
 	let n = t.UtilAdvancementsEntry, r = t.UtilAdvancements, i = n.getGenericAdvancements, a = r.getAdvancementsObject, o = /* @__PURE__ */ new WeakMap(), s = /* @__PURE__ */ new Map();
 	n.getGenericAdvancements = function(e, ...t) {
@@ -841,7 +841,7 @@ async function qe(e) {
 			let t = o.get(n);
 			t ? s.set(e, {
 				origin: t,
-				signature: Ke(n)
+				signature: qe(n)
 			}) : s.delete(e);
 		}
 		return t;
@@ -849,23 +849,23 @@ async function qe(e) {
 	try {
 		let t = await e(), n = Object.fromEntries(Object.entries(t.system?.advancement ?? {}).flatMap(([e, t]) => {
 			let n = s.get(e);
-			return n && n.signature === Ke(t) ? [[e, n.origin]] : [];
+			return n && n.signature === qe(t) ? [[e, n.origin]] : [];
 		}));
-		return We(t), Object.keys(n).length && (t.flags ??= {}, t.flags[Ve] ??= {}, t.flags[Ve][He] = n), t;
+		return Ge(t), Object.keys(n).length && (t.flags ??= {}, t.flags[He] ??= {}, t.flags[He][Ue] = n), t;
 	} finally {
 		n.getGenericAdvancements = i, r.getAdvancementsObject = a;
 	}
 }
 // src/rules/kernel/frame/importer.ts
-var Je = globalThis, Ye = {
+var Ye = globalThis, Xe = {
 	skillsChosenFvtt: [],
 	languagesChosenFvtt: [],
 	armorProficienciesChosenFvtt: [],
 	weaponProficienciesChosenFvtt: [],
 	toolProficienciesChosenFvtt: []
 };
-function Xe() {
-	let e = Je.foundry?.documents?.collections?.CompendiumCollection;
+function Ze() {
+	let e = Ye.foundry?.documents?.collections?.CompendiumCollection;
 	if (e?.prototype && !e.prototype.getDocuments.__seeded) for (let t of ["getDocuments", "getDocument"]) {
 		let n = e.prototype[t], r = function(...e) {
 			return ie(`pack:${this.collection}:${t}:${JSON.stringify(e)}`, () => n.apply(this, e));
@@ -873,29 +873,29 @@ function Xe() {
 		r.__seeded = !0, e.prototype[t] = r;
 	}
 }
-var Ze = Promise.resolve();
-function P(e, t) {
-	let n = Ze.then(() => Qe(e, t));
-	return Ze = n.then(() => void 0, () => void 0), n;
+var Qe = Promise.resolve();
+function N(e, t) {
+	let n = Qe.then(() => $e(e, t));
+	return Qe = n.then(() => void 0, () => void 0), n;
 }
-async function Qe(e, t) {
-	Xe();
-	let n = Je.game.modules.get("plutonium")?.api;
+async function $e(e, t) {
+	Ze();
+	let n = Ye.game.modules.get("plutonium")?.api;
 	if (!n?.importer) throw Error("Plutonium importer is not available");
 	let r = await n.importer.pGetImporter({ prop: e });
 	if (!r) throw Error(`No Plutonium importer for ${e}`);
 	let i = async () => {
-		let i = structuredClone(t), a = new n.importer.ImportOpts({ isTemp: !0 }), o = (e === "class" && r.pImportEntryClass ? await r.pImportEntryClass(i, a) : await r.pImportEntry(i, a, structuredClone(Ye)))?.imported?.[0]?.document ?? null;
+		let i = structuredClone(t), a = new n.importer.ImportOpts({ isTemp: !0 }), o = (e === "class" && r.pImportEntryClass ? await r.pImportEntryClass(i, a) : await r.pImportEntry(i, a, structuredClone(Xe)))?.imported?.[0]?.document ?? null;
 		if (!o) throw Error(`Plutonium import failed for ${t?.name ?? e}`);
 		return o.toObject ? o.toObject() : o;
 	};
-	return k(se(e, t)), await i(), k(se(e, t)), qe(i);
-}
-async function $e(e) {
-	return (await et(e)).map((e) => e.prop);
+	return k(se(e, t)), await i(), k(se(e, t)), Je(i);
 }
 async function et(e) {
-	let t = Je.game.modules.get("plutonium")?.api;
+	return (await tt(e)).map((e) => e.prop);
+}
+async function tt(e) {
+	let t = Ye.game.modules.get("plutonium")?.api;
 	if (!t?.importer) throw Error("Plutonium importer is not available");
 	let n = [];
 	for (let r of e) try {
@@ -908,25 +908,25 @@ async function et(e) {
 	return n;
 }
 // src/rules/kernel/frame/off.ts
-var tt = globalThis, nt = "trpgOffHidden000", rt = (e) => {
+var nt = globalThis, rt = "trpgOffHidden000", it = (e) => {
 	let t = e?.flags?.plutonium;
 	return t?.propDroppable && t.source && t.hash ? `${t.propDroppable}|${t.source}|${t.hash}` : null;
-}, it = (e) => e.constructor?.typeName ?? e.type, at = (e) => JSON.parse(JSON.stringify(e ?? null, (e, t) => t instanceof Set ? [...t] : t));
+}, at = (e) => e.constructor?.typeName ?? e.type, P = (e) => JSON.parse(JSON.stringify(e ?? null, (e, t) => t instanceof Set ? [...t] : t));
 function ot(e) {
 	let t = e.system.details?.level ?? 1, n = [];
 	for (let r of e.items) {
-		let e = rt(r);
+		let e = it(r);
 		if (e) for (let i of Object.values(r.advancement?.byId ?? {})) for (let a of i.levels ?? []) (a <= t || a === 0) && n.push({
 			item: r,
 			key: e,
 			adv: i,
-			type: it(i),
+			type: at(i),
 			level: a
 		});
 	}
 	return n;
 }
-var st = () => tt.foundry.data.fields, ct = (e) => e instanceof st().ArrayField, lt = (e) => e instanceof st().TypedObjectField;
+var st = () => nt.foundry.data.fields, ct = (e) => e instanceof st().ArrayField, lt = (e) => e instanceof st().TypedObjectField;
 function ut(e, t) {
 	let n = e?.schema?.fields;
 	if (!n || !t || typeof t != "object") return null;
@@ -954,23 +954,33 @@ var ft = (e) => ({
 	return !!n?.schema?.fields && !!t && typeof t == "object" && Object.keys(t).every((e) => e in n.schema.fields);
 };
 function mt(e, t) {
-	let n = ft(e), r = [...ut(n.value, at(e.value)) ?? [], ...ut(n.configuration, at(e.configuration)) ?? []].map(([, e]) => e), i = typeof e.storagePath == "function" ? e.storagePath(t) : null, a = i ? at(tt.foundry.utils.getProperty(e, i)) : null, o = a && typeof a == "object" ? Object.values(a).filter((e) => typeof e == "string") : [];
+	let n = ft(e), r = [...ut(n.value, P(e.value)) ?? [], ...ut(n.configuration, P(e.configuration)) ?? []].map(([, e]) => e), i = typeof e.storagePath == "function" ? e.storagePath(t) : null, a = i ? P(nt.foundry.utils.getProperty(e, i)) : null, o = a && typeof a == "object" ? Object.values(a).filter((e) => typeof e == "string") : [];
 	return [.../* @__PURE__ */ new Set([...r, ...o])];
 }
 function ht(e, t) {
+	let n = typeof e.storagePath == "function" ? e.storagePath(t) : null, r = n ? P(nt.foundry.utils.getProperty(e, n)) : null, i = ft(e).value, a = (ut(i, P(e.value)) ?? []).filter(([e]) => ct(i.schema.fields[e])).map(([, e]) => e);
+	return {
+		items: r && typeof r == "object" ? Object.entries(r).filter((e) => typeof e[1] == "string").map(([e, t]) => ({
+			id: e,
+			part: t
+		})) : [],
+		keys: [...new Set(a)]
+	};
+}
+function gt(e, t) {
 	let n = [], r = (i, a) => {
 		for (let [o, s] of Object.entries(i ?? {})) {
 			let i = a ? `${a}.${o}` : o;
-			s instanceof st().DocumentIdField && s.model?.documentName === "Item" && tt.foundry.utils.getProperty(e._source.system, i) === t ? n.push(`system.${i}`) : s.fields && r(s.fields, i);
+			s instanceof st().DocumentIdField && s.model?.documentName === "Item" && nt.foundry.utils.getProperty(e._source.system, i) === t ? n.push(`system.${i}`) : s.fields && r(s.fields, i);
 		}
 	};
 	return r(e.system.schema?.fields, ""), n;
 }
-var gt = (e, t) => t.ref === e.key && t.advancement === e.adv.id && (t.level === void 0 || t.level === e.level), _t = (e) => e.advancement === void 0 && e.effect === void 0 && e.part !== void 0, vt = (e) => e.advancement === void 0 && e.effect === void 0 && e.part === void 0;
-function yt(e, t, n) {
+var _t = (e, t) => t.ref === e.key && t.advancement === e.adv.id && (t.level === void 0 || t.level === e.level), vt = (e) => e.advancement === void 0 && e.effect === void 0 && e.part !== void 0, yt = (e) => e.advancement === void 0 && e.effect === void 0 && e.part === void 0;
+function bt(e, t, n) {
 	let r = [];
 	for (let i of n) {
-		let n = [...e.items].find((e) => rt(e) === i.ref);
+		let n = [...e.items].find((e) => it(e) === i.ref);
 		if (!n) {
 			r.push({
 				off: i,
@@ -985,7 +995,7 @@ function yt(e, t, n) {
 			});
 			continue;
 		}
-		if (_t(i)) {
+		if (vt(i)) {
 			i.part.startsWith("system.") && n.system.schema?.getField?.(i.part.slice(7)) || r.push({
 				off: i,
 				reason: "这件条目的数据里没有这一项"
@@ -993,7 +1003,7 @@ function yt(e, t, n) {
 			continue;
 		}
 		if (i.advancement === void 0) continue;
-		let a = t.filter((e) => gt(e, i));
+		let a = t.filter((e) => _t(e, i));
 		a.length ? i.part !== void 0 && !a.some((e) => mt(e.adv, e.level).includes(i.part)) && r.push({
 			off: i,
 			reason: "这条成长的记录里没有这一项"
@@ -1004,22 +1014,22 @@ function yt(e, t, n) {
 	}
 	return r;
 }
-async function bt(e, t) {
+async function xt(e, t) {
 	if (!t?.length) return {
 		applied: !1,
 		choices: {},
 		problems: []
 	};
-	let n = ot(e), r = yt(e, n, t);
+	let n = ot(e), r = bt(e, n, t);
 	if (r.length) return {
 		applied: !1,
 		choices: {},
 		problems: r
 	};
-	let i = new Set(t.filter(vt).map((e) => e.ref)), a = (e) => i.has(e.key) ? [{ ref: e.key }] : t.filter((t) => gt(e, t)), o = (e) => new Set(a(e).flatMap((e) => e.part === void 0 ? [] : [e.part])), s = (e) => a(e).some((e) => e.part === void 0), c = new Set(n.filter((e) => a(e).length).map((e) => e.adv.constructor)), l = n.filter((e) => c.has(e.adv.constructor)), u = [];
+	let i = new Set(t.filter(yt).map((e) => e.ref)), a = (e) => i.has(e.key) ? [{ ref: e.key }] : t.filter((t) => _t(e, t)), o = (e) => new Set(a(e).flatMap((e) => e.part === void 0 ? [] : [e.part])), s = (e) => a(e).some((e) => e.part === void 0), c = new Set(n.filter((e) => a(e).length).map((e) => e.adv.constructor)), l = n.filter((e) => c.has(e.adv.constructor)), u = [];
 	for (let e of [...l].reverse()) u.unshift({
 		...e,
-		data: at(await e.adv.reverse(e.level))
+		data: P(await e.adv.reverse(e.level))
 	});
 	let d = {};
 	for (let e of u) {
@@ -1039,21 +1049,21 @@ async function bt(e, t) {
 		if (s(e)) continue;
 		let t = ft(e.adv).value, n = await e.adv.automaticApplicationValue(e.level, { initial: !0 });
 		if (!t?.schema?.fields || !n || typeof n != "object") continue;
-		let r = new Set((ut(t, at(e.adv.value)) ?? []).map(([, e]) => e)), i = o(e), a = (ut(t, at(n)) ?? []).filter(([, e]) => !r.has(e) && !i.has(e));
+		let r = new Set((ut(t, P(e.adv.value)) ?? []).map(([, e]) => e)), i = o(e), a = (ut(t, P(n)) ?? []).filter(([, e]) => !r.has(e) && !i.has(e));
 		if (!a.length) continue;
 		let c = {};
 		for (let [e, t] of a) (c[e] ??= []).push(t);
 		await e.adv.apply(e.level, c);
 	}
-	for (let n of t.filter(_t)) [...e.items].find((e) => rt(e) === n.ref)?.updateSource({ [n.part]: null });
-	for (let n of t) n.effect !== void 0 && [...e.items].find((e) => rt(e) === n.ref)?.effects.get(n.effect)?.updateSource({ disabled: !0 });
-	let f = [...e.items].filter((e) => i.has(rt(e) ?? ""));
+	for (let n of t.filter(vt)) [...e.items].find((e) => it(e) === n.ref)?.updateSource({ [n.part]: null });
+	for (let n of t) n.effect !== void 0 && [...e.items].find((e) => it(e) === n.ref)?.effects.get(n.effect)?.updateSource({ disabled: !0 });
+	let f = [...e.items].filter((e) => i.has(it(e) ?? ""));
 	for (let t of f) {
-		for (let n of ht(e, t.id)) e.updateSource({ [n]: null });
+		for (let n of gt(e, t.id)) e.updateSource({ [n]: null });
 		for (let e of t.effects) e.updateSource({ disabled: !0 });
 	}
 	return f.length && await e.createEmbeddedDocuments("ActiveEffect", [{
-		_id: nt,
+		_id: rt,
 		name: "TRPG 已取下",
 		type: "base",
 		transfer: !1,
@@ -1071,21 +1081,21 @@ async function bt(e, t) {
 	};
 }
 // src/rules/kernel/frame/actor-state.ts
-async function xt(e, t, n) {
-	let r = await bt(e, t);
+async function St(e, t, n) {
+	let r = await xt(e, t);
 	if (r.problems.length) return {
 		view: null,
 		choices: {},
 		problems: r.problems
 	};
 	let i = e.toObject();
-	return await St(e, n), {
+	return await Ct(e, n), {
 		view: i,
 		choices: r.choices,
 		problems: []
 	};
 }
-async function St(e, t) {
+async function Ct(e, t) {
 	if (t) {
 		t.actor && Object.keys(t.actor).length && await e.update(t.actor);
 		for (let [r, i] of Object.entries(t.items ?? {})) {
@@ -1108,8 +1118,8 @@ async function St(e, t) {
 	}
 }
 // src/rules/kernel/frame/commands-monsters.ts
-var Ct = globalThis;
-function wt(e) {
+var wt = globalThis;
+function Tt(e) {
 	return Object.fromEntries(Object.entries(e.abilities ?? {}).map(([e, t]) => [e, {
 		value: t.value ?? null,
 		mod: t.mod ?? null,
@@ -1117,22 +1127,22 @@ function wt(e) {
 		proficient: t.proficient ?? null
 	}]));
 }
-function Tt(e) {
+function Et(e) {
 	return Object.fromEntries(Object.entries(e.skills ?? {}).map(([e, t]) => [e, {
 		total: t.total ?? null,
 		passive: t.passive ?? null,
 		proficient: t.proficient ?? null
 	}]));
 }
-function Et(e) {
+function Dt(e) {
 	return e ? Array.isArray(e) ? e : typeof e[Symbol.iterator] == "function" ? [...e] : Object.values(e) : [];
 }
-function Dt(e) {
+function Ot(e) {
 	return {
 		id: e.id ?? e._id ?? null,
 		name: e.name,
 		type: e.type,
-		activities: Et(e.system?.activities).map((e) => ({
+		activities: Dt(e.system?.activities).map((e) => ({
 			id: e.id ?? e._id,
 			type: e.type,
 			name: e.name
@@ -1143,7 +1153,7 @@ function Dt(e) {
 		} : null
 	};
 }
-function Ot(e) {
+function kt(e) {
 	let t = e.toObject ? e.toObject() : e, n = e.system ?? t.system ?? {}, r = e.items?.contents ?? e.items ?? t.items ?? [];
 	return {
 		name: e.name ?? t.name,
@@ -1153,8 +1163,8 @@ function Ot(e) {
 			value: n.attributes.hp.value ?? null,
 			max: n.attributes.hp.max ?? null
 		} : null,
-		abilities: wt(n),
-		skills: Tt(n),
+		abilities: Tt(n),
+		skills: Et(n),
 		cr: n.details?.cr ?? null,
 		legendary: {
 			actions: n.resources?.legact ? {
@@ -1166,28 +1176,28 @@ function Ot(e) {
 				max: n.resources.legres.max ?? null
 			} : null
 		},
-		items: [...r].map(Dt),
+		items: [...r].map(Ot),
 		validation: e.validationFailures ?? []
 	};
 }
-async function kt(e) {
-	let t = await P("monster", e);
+async function At(e) {
+	let t = await N("monster", e);
 	return {
 		status: "complete",
 		entity: {
 			name: e.name,
 			source: e.source
 		},
-		...Ot(t)
+		...kt(t)
 	};
 }
-function At(e) {
+function jt(e) {
 	return {
-		importMonster: (t) => e([], async () => kt(t)),
+		importMonster: (t) => e([], async () => At(t)),
 		importMonsters: (t) => e([], async () => {
 			let e = [];
 			for (let n of t) try {
-				e.push(await kt(n));
+				e.push(await At(n));
 			} catch (t) {
 				e.push({
 					status: "error",
@@ -1202,10 +1212,10 @@ function At(e) {
 		}),
 		rebuildMonster: (t) => e([], async () => {
 			let e;
-			e = t.data ? structuredClone(t.data) : await P("monster", t.entry), delete e._id;
+			e = t.data ? structuredClone(t.data) : await N("monster", t.entry), delete e._id;
 			for (let t of e.items ?? []) delete t._id;
 			for (let t of e.effects ?? []) delete t._id;
-			let n = Ct.CONFIG.Actor.documentClass, r = t.id ? await n.create({
+			let n = wt.CONFIG.Actor.documentClass, r = t.id ? await n.create({
 				...e,
 				_id: t.id,
 				name: t.name
@@ -1213,64 +1223,64 @@ function At(e) {
 				...e,
 				name: t.name
 			}), i = r.toObject();
-			return await St(r, t.state), {
+			return await Ct(r, t.state), {
 				status: "complete",
 				id: r.id,
-				...Ot(r),
+				...kt(r),
 				data: r.toObject(),
 				base: i
 			};
 		}),
 		importMonsterData: (t) => e([], async () => ({
 			status: "complete",
-			data: await P("monster", t)
+			data: await N("monster", t)
 		})),
 		createActorFromData: (t) => e([], async () => {
 			let e = structuredClone(t);
 			delete e._id;
 			for (let t of e.items ?? []) delete t._id;
 			for (let t of e.effects ?? []) delete t._id;
-			let n = await Ct.CONFIG.Actor.documentClass.create(e);
+			let n = await wt.CONFIG.Actor.documentClass.create(e);
 			return {
 				status: "complete",
 				id: n.id,
-				...Ot(n)
+				...kt(n)
 			};
 		}),
 		importMonsterActor: (t) => e([], async () => {
-			let e = await P("monster", t);
+			let e = await N("monster", t);
 			delete e._id;
 			for (let t of e.items ?? []) delete t._id;
 			for (let t of e.effects ?? []) delete t._id;
-			let n = await Ct.CONFIG.Actor.documentClass.create(e);
+			let n = await wt.CONFIG.Actor.documentClass.create(e);
 			return {
 				status: "complete",
 				id: n.id,
-				...Ot(n)
+				...kt(n)
 			};
 		})
 	};
 }
 // src/rules/kernel/frame/system-text.ts
-var jt = globalThis, Mt = null, Nt = /* @__PURE__ */ new Map(), Pt = (e) => e.trim().toLowerCase();
-function Ft() {
-	let e = jt.game.i18n;
-	if (Mt === e) return;
-	Mt = e, Nt.clear();
+var Mt = globalThis, Nt = null, Pt = /* @__PURE__ */ new Map(), Ft = (e) => e.trim().toLowerCase();
+function It() {
+	let e = Mt.game.i18n;
+	if (Nt === e) return;
+	Nt = e, Pt.clear();
 	let t = (e, n = []) => {
 		for (let [r, i] of Object.entries(e ?? {})) {
 			let e = [...n, r];
 			if (typeof i == "string") {
-				let t = Pt(i);
-				Nt.set(t, [...Nt.get(t) ?? [], e.join(".")]);
+				let t = Ft(i);
+				Pt.set(t, [...Pt.get(t) ?? [], e.join(".")]);
 			} else i && typeof i == "object" && t(i, e);
 		}
 	};
 	t(e.translations), t(e._fallback);
 }
 function F(e, t) {
-	Ft();
-	let n = jt.game.i18n, i = (t ? [t] : [...new Set(Nt.get(Pt(e)) ?? [])]).filter((e) => n.has(e)), a = new Set(i.map((e) => n.localize(e)));
+	It();
+	let n = Mt.game.i18n, i = (t ? [t] : [...new Set(Pt.get(Ft(e)) ?? [])]).filter((e) => n.has(e)), a = new Set(i.map((e) => n.localize(e)));
 	if (i.length && a.size === 1) return {
 		$t: "system",
 		key: i[0],
@@ -1279,22 +1289,22 @@ function F(e, t) {
 	let o = e.split("、");
 	return o.length > 1 ? r(o.map((e) => F(e)), "、") : s(e, null);
 }
-function It(e) {
+function Lt(e) {
 	return {
 		$t: "system",
-		key: `TRPGAssistant.UpstreamText.${h(Pt(e)).slice(0, 24)}`,
+		key: `TRPGAssistant.UpstreamText.${h(Ft(e)).slice(0, 24)}`,
 		text: e
 	};
 }
-function Lt(e) {
-	let t = jt.game.i18n;
+function Rt(e) {
+	let t = Mt.game.i18n;
 	return t.has(e) ? {
 		$t: "system",
 		key: e,
 		text: t.localize(e)
 	} : null;
 }
-function Rt(e, t) {
+function zt(e, t) {
 	return e.reduceRight((e, n) => ({
 		$t: "system",
 		key: n,
@@ -1302,23 +1312,23 @@ function Rt(e, t) {
 		...e ? { fallback: e } : {}
 	}), null);
 }
-var zt = "TRPGAssistant.UpstreamSource.", Bt = null, Vt = [];
-function Ht() {
-	let e = jt.game.i18n;
-	if (Bt === e) return Vt;
-	Bt = e;
-	let t = jt.foundry?.utils?.flattenObject?.(e.translations ?? {}) ?? {};
-	return Vt = Object.entries(t).filter(([e, t]) => e.startsWith(zt) && typeof t == "string" && t.includes("{}")).map(([e, t]) => ({
+var Bt = "TRPGAssistant.UpstreamSource.", Vt = null, Ht = [];
+function Ut() {
+	let e = Mt.game.i18n;
+	if (Vt === e) return Ht;
+	Vt = e;
+	let t = Mt.foundry?.utils?.flattenObject?.(e.translations ?? {}) ?? {};
+	return Ht = Object.entries(t).filter(([e, t]) => e.startsWith(Bt) && typeof t == "string" && t.includes("{}")).map(([e, t]) => ({
 		key: `TRPGAssistant.UpstreamText.${e.slice(29)}`,
 		pattern: RegExp(`^${String(t).trim().split("{}").map((e) => e.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("(.+?)")}$`, "i")
-	})), Vt;
+	})), Ht;
 }
-function Ut(e) {
-	let t = e.trim(), n = It(t);
-	if (jt.game.i18n.has(n.key)) return n;
-	for (let e of Ht()) {
+function Wt(e) {
+	let t = e.trim(), n = Lt(t);
+	if (Mt.game.i18n.has(n.key)) return n;
+	for (let e of Ut()) {
 		let n = e.pattern.exec(t);
-		if (n && jt.game.i18n.has(e.key)) return {
+		if (n && Mt.game.i18n.has(e.key)) return {
 			$t: "system",
 			key: e.key,
 			text: t,
@@ -1327,46 +1337,46 @@ function Ut(e) {
 	}
 	return F(t);
 }
-var I = (e) => typeof e == "string" && e.trim() ? Ut(e) : null, Wt = globalThis, Gt = (e) => e ? Wt.game.i18n.localize(e) : null, Kt = (e) => {
+var I = (e) => typeof e == "string" && e.trim() ? Wt(e) : null, Gt = globalThis, Kt = (e) => e ? Gt.game.i18n.localize(e) : null, qt = (e) => {
 	let t = [...new Set(e.filter((e) => !!e))];
 	return t.length ? t.join("、") : null;
 };
-function qt(e) {
-	let t = Wt.CONFIG?.DND5E?.[e] ?? {}, n = (e) => Gt(typeof e == "string" ? e : e?.label) ?? "";
+function Jt(e) {
+	let t = Gt.CONFIG?.DND5E?.[e] ?? {}, n = (e) => Kt(typeof e == "string" ? e : e?.label) ?? "";
 	return Object.fromEntries(Object.entries(t).map(([e, t]) => [e, n(t) || e]));
 }
-function Jt(e) {
-	return Gt(e ? Wt.CONFIG?.DND5E?.traits?.[e]?.labels?.title : void 0);
-}
 function Yt(e) {
-	return e && e !== "default" ? Gt(Wt.CONFIG?.DND5E?.traitModes?.[e]?.label) : null;
+	return Kt(e ? Gt.CONFIG?.DND5E?.traits?.[e]?.labels?.title : void 0);
 }
 function Xt(e) {
-	let t = Wt.dnd5e?.documents?.Trait;
-	if (!e?.length || !t) return null;
-	let n = e.join(".");
-	return Object.keys(Wt.CONFIG?.DND5E?.traits ?? {}).find((e) => t.actorKeyPath(e) === n) ?? null;
+	return e && e !== "default" ? Kt(Gt.CONFIG?.DND5E?.traitModes?.[e]?.label) : null;
 }
 function Zt(e) {
-	let t = Xt(e);
-	if (t) return Jt(t);
-	let n = e?.at(-1), r = Xt(e?.slice(0, -1));
-	return r && n && Wt.CONFIG.DND5E.traits[r][n] === !0 ? Yt(n) : null;
+	let t = Gt.dnd5e?.documents?.Trait;
+	if (!e?.length || !t) return null;
+	let n = e.join(".");
+	return Object.keys(Gt.CONFIG?.DND5E?.traits ?? {}).find((e) => t.actorKeyPath(e) === n) ?? null;
 }
 function Qt(e) {
-	return Kt([...new Set([...e].map((e) => String(e).split(":")[0]).filter(Boolean))].map(Jt));
+	let t = Zt(e);
+	if (t) return Yt(t);
+	let n = e?.at(-1), r = Zt(e?.slice(0, -1));
+	return r && n && Gt.CONFIG.DND5E.traits[r][n] === !0 ? Xt(n) : null;
 }
-function $t(e, t = [], n = []) {
+function $t(e) {
+	return qt([...new Set([...e].map((e) => String(e).split(":")[0]).filter(Boolean))].map(Yt));
+}
+function en(e, t = [], n = []) {
 	let r = e._subComps?.[0]?._getAllPossibleProps?.() ?? [];
-	return Zt(e._propPathActorExistingProficiencies) || Yt(e._prop) || Kt(r.map((n) => Zt(t.find((t) => t !== e && t._prop === n)?._propPathActorExistingProficiencies))) || Qt(n);
+	return Qt(e._propPathActorExistingProficiencies) || Xt(e._prop) || qt(r.map((n) => Qt(t.find((t) => t !== e && t._prop === n)?._propPathActorExistingProficiencies))) || $t(n);
 }
-function en(e) {
+function tn(e) {
 	let t = e.configuration ?? {};
-	return Yt(t.mode) || (t.type ? Jt(t.type) : Qt([...t.grants ?? [], ...[...t.choices ?? []].flatMap((e) => [...e?.pool ?? []])]));
+	return Xt(t.mode) || (t.type ? Yt(t.type) : $t([...t.grants ?? [], ...[...t.choices ?? []].flatMap((e) => [...e?.pool ?? []])]));
 }
 // src/rules/kernel/frame/asi.ts
-var tn = globalThis;
-function nn(e) {
+var nn = globalThis;
+function rn(e) {
 	let t = e.configuration ?? {}, n = Number(t.points) || 0;
 	return {
 		points: n,
@@ -1375,18 +1385,18 @@ function nn(e) {
 		locked: /* @__PURE__ */ new Set([...t.locked ?? []])
 	};
 }
-function rn(e, t) {
-	let n = nn(e), r = {}, i = 0;
+function an(e, t) {
+	let n = rn(e), r = {}, i = 0;
 	for (let [e, a] of Object.entries(t ?? {})) if (a) {
-		if (!Number.isInteger(a) || a < 0 || a > n.cap || n.locked.has(e) || !(e in (tn.CONFIG?.DND5E?.abilities ?? {}))) return null;
+		if (!Number.isInteger(a) || a < 0 || a > n.cap || n.locked.has(e) || !(e in (nn.CONFIG?.DND5E?.abilities ?? {}))) return null;
 		r[e] = a, i += a;
 	}
 	return i <= n.points ? r : null;
 }
-function an(e, t) {
-	let n = nn(e);
+function on(e, t) {
+	let n = rn(e);
 	if (!n.points) return null;
-	let r = rn(e, t?.chosen) ?? {}, i = n.points - Object.values(r).reduce((e, t) => e + t, 0), a = qt("abilities");
+	let r = an(e, t?.chosen) ?? {}, i = n.points - Object.values(r).reduce((e, t) => e + t, 0), a = Jt("abilities");
 	return {
 		kind: "asi",
 		points: n.points,
@@ -1405,14 +1415,14 @@ function an(e, t) {
 		})
 	};
 }
-function on(e, t) {
+function sn(e, t) {
 	if (t.assignments && !t.chosen) return {
 		type: "asi",
 		assignments: t.assignments
 	};
-	let n = rn(e, t.chosen);
+	let n = an(e, t.chosen);
 	if (!n) return null;
-	let r = { ...nn(e).fixed };
+	let r = { ...rn(e).fixed };
 	for (let [e, t] of Object.entries(n)) r[e] = (r[e] ?? 0) + t;
 	return {
 		type: "asi",
@@ -1420,14 +1430,14 @@ function on(e, t) {
 	};
 }
 // src/rules/kernel/frame/actor-types.ts
-var sn = globalThis, cn = "character";
-async function ln(e, t) {
-	let n = Object.keys(sn.game.system?.documentTypes?.Actor ?? {}), r = (e) => {
-		let t = sn.CONFIG?.Actor?.typeLabels?.[e] ?? `TYPES.Actor.${e}`;
-		return sn.game.i18n?.localize?.(t) ?? e;
-	}, i = await et([e]), a = /* @__PURE__ */ new Set();
+var cn = globalThis, ln = "character";
+async function un(e, t) {
+	let n = Object.keys(cn.game.system?.documentTypes?.Actor ?? {}), r = (e) => {
+		let t = cn.CONFIG?.Actor?.typeLabels?.[e] ?? `TYPES.Actor.${e}`;
+		return cn.game.i18n?.localize?.(t) ?? e;
+	}, i = await tt([e]), a = /* @__PURE__ */ new Set();
 	if (i.some((e) => e.folderType === "Actor")) for (let n of t) {
-		let t = await P(e, n);
+		let t = await N(e, n);
 		typeof t?.type == "string" && a.add(t.type);
 	}
 	return {
@@ -1436,11 +1446,11 @@ async function ln(e, t) {
 			label: r(e)
 		})),
 		fromStore: [...a],
-		build: cn
+		build: ln
 	};
 }
 // src/rules/kernel/frame/commands-restore.ts
-async function un(e, t, n = []) {
+async function dn(e, t, n = []) {
 	for (let r of e.items) {
 		let e = r.flags?.plutonium;
 		if (!e?.propDroppable || !e.source || !e.hash) continue;
@@ -1454,8 +1464,8 @@ async function un(e, t, n = []) {
 	}
 }
 // src/rules/kernel/frame/commands-choice.ts
-var dn = globalThis;
-async function fn(e) {
+var fn = globalThis;
+async function pn(e) {
 	let t = e.advancement, n = t.constructor?.typeName ?? t.type;
 	if (n === "Trait") {
 		let n = await t.automaticApplicationValue?.(e.level);
@@ -1472,7 +1482,7 @@ async function fn(e) {
 	}
 	if (n === "ItemChoice") return { selected: [] };
 }
-async function pn(e) {
+async function mn(e) {
 	let t = e.advancement, n = t.constructor?.typeName ?? t.type;
 	if (n === "HitPoints") return { [e.level]: "avg" };
 	if (n === "ItemGrant") {
@@ -1489,7 +1499,7 @@ async function pn(e) {
 		return { selected: (t.configuration?.pool ?? []).map((e) => e.uuid).slice(0, n) };
 	}
 	if (n === "Subclass") {
-		let e = dn.game.packs.get("dnd5e.subclasses");
+		let e = fn.game.packs.get("dnd5e.subclasses");
 		if (!e) return;
 		let n = (await e.getIndex({ fields: ["system.classIdentifier", "type"] })).contents?.find((e) => e.type === "subclass" && e.system?.classIdentifier === t.item?.system?.identifier);
 		return n ? `Compendium.${e.metadata.id}.Item.${n._id}` : void 0;
@@ -1511,7 +1521,7 @@ async function pn(e) {
 			assignments: Object.fromEntries(n)
 		};
 		let r = t.configuration?.points ?? 0, i = t.configuration?.cap || r, a = {}, o = r;
-		for (let n of Object.keys(e.actor?.system?.abilities ?? t.actor?.system?.abilities ?? dn.CONFIG?.DND5E?.abilities ?? {})) {
+		for (let n of Object.keys(e.actor?.system?.abilities ?? t.actor?.system?.abilities ?? fn.CONFIG?.DND5E?.abilities ?? {})) {
 			if (o <= 0) break;
 			if (t.canImprove?.(n) === !1) continue;
 			let e = Math.min(i, o);
@@ -1526,37 +1536,37 @@ async function pn(e) {
 	if (n === "ScaleValue") return {};
 }
 // src/rules/kernel/frame/commands-equipment.ts
-var L = globalThis, mn = (e) => L.DataUtil.proxy.getUid("item", e), hn = (e, t, n) => c(e, {
+var L = globalThis, hn = (e) => L.DataUtil.proxy.getUid("item", e), gn = (e, t, n) => c(e, {
 	propDroppable: "item",
 	source: t,
 	hash: n
-}), gn = (e) => {
+}), _n = (e) => {
 	let [t, n] = e.split("|");
 	return L.UrlUtil.URL_TO_HASH_BUILDER[L.UrlUtil.PG_ITEMS]({
 		name: t,
 		source: n
 	});
-}, _n = (e) => {
+}, vn = (e) => {
 	let t = L.UrlUtil.URL_TO_HASH_BUILDER[L.UrlUtil.PG_ITEMS](e);
 	return {
-		uid: mn(e),
-		name: hn(e.name, e.source, t),
+		uid: hn(e),
+		name: gn(e.name, e.source, t),
 		source: e.source,
 		hash: t
 	};
-}, vn = (e) => L.Renderer.stripTags(e).toTitleCase(), yn = [
+}, yn = (e) => L.Renderer.stripTags(e).toTitleCase(), bn = [
 	"pCacheAndGetAllSite",
 	"pCacheAndGetAllPrerelease",
 	"pCacheAndGetAllBrew"
-], bn = null;
-function xn() {
-	if (bn) return bn;
-	let e = Promise.all(yn.map(async (e) => await L.DataLoader[e]("item") ?? [])).then((e) => e.flat());
-	return bn = e, e.catch(() => {
-		bn === e && (bn = null);
+], xn = null;
+function Sn() {
+	if (xn) return xn;
+	let e = Promise.all(bn.map(async (e) => await L.DataLoader[e]("item") ?? [])).then((e) => e.flat());
+	return xn = e, e.catch(() => {
+		xn === e && (xn = null);
 	}), e;
 }
-var Sn = [
+var Cn = [
 	"class",
 	"subclass",
 	"classFeature",
@@ -1569,43 +1579,43 @@ var Sn = [
 	"optionalfeature",
 	"item",
 	"spell"
-], Cn = async () => {
-	let e = await xn(), t = N?.CompendiumCacheUtil, n = /* @__PURE__ */ new Map();
-	for (let e of Sn) for (let r of t?.getAdditionalDataCompendiums?.({ entityType: e }) ?? []) n.set(r.collection, r);
+], wn = async () => {
+	let e = await Sn(), t = M?.CompendiumCacheUtil, n = /* @__PURE__ */ new Map();
+	for (let e of Cn) for (let r of t?.getAdditionalDataCompendiums?.({ entityType: e }) ?? []) n.set(r.collection, r);
 	for (let e of n.values()) await new Promise((e) => setTimeout(e, 0)), await t.pGetCompendiumData(e, { isContent: !0 });
 	return e.length;
-}, wn = (e) => {
-	let t = N?.EQUIPMENT_TYPE_EXPANDERS;
+}, Tn = (e) => {
+	let t = M?.EQUIPMENT_TYPE_EXPANDERS;
 	return t && Object.hasOwn(t, e) ? t[e] : null;
 };
-function Tn(e) {
+function En(e) {
 	let t = `TRPGAssistant.EquipmentType.${e}`, n = L.game.i18n.localize(t);
-	return n === t ? s(String(wn(e)?.name ?? e), null) : F(n);
+	return n === t ? s(String(Tn(e)?.name ?? e), null) : F(n);
 }
-async function En(e) {
-	let t = wn(e);
+async function Dn(e) {
+	let t = Tn(e);
 	if (!t) return [];
-	let n = (await xn()).filter((e) => N.UtilEntityItem.isStartingEquipmentItem(e));
-	return t._getAvailableItems({ itemDatas: n }).sort((e, t) => String(e.name).localeCompare(String(t.name))).map(_n);
+	let n = (await Sn()).filter((e) => M.UtilEntityItem.isStartingEquipmentItem(e));
+	return t._getAvailableItems({ itemDatas: n }).sort((e, t) => String(e.name).localeCompare(String(t.name))).map(vn);
 }
-var Dn = (e) => {
+var On = (e) => {
 	let t = e?.startingEquipment;
 	return Array.isArray(t) ? t : Array.isArray(t?.defaultData) ? t.defaultData : [];
 };
-function On(e) {
+function kn(e) {
 	let t = e?.startingEquipment?.goldAlternative;
 	if (!t) return null;
 	let n = /{@dice ([^|]+)/.exec(t);
 	return n ? n[1].replace(/×/g, "*") : Number.isNaN(Number(`${t}`.trim())) ? null : `${t}`.trim();
 }
-async function kn(e) {
+async function An(e) {
 	let n = async (e) => {
-		let [t, n] = e.split("|"), r = await L.DataLoader.pCacheAndGetHash(L.UrlUtil.PG_ITEMS, gn(e));
+		let [t, n] = e.split("|"), r = await L.DataLoader.pCacheAndGetHash(L.UrlUtil.PG_ITEMS, _n(e));
 		return {
 			uid: e,
-			name: hn(r?.name ?? t, r?.source ?? n, gn(e)),
+			name: gn(r?.name ?? t, r?.source ?? n, _n(e)),
 			source: r?.source ?? n,
-			hash: gn(e),
+			hash: _n(e),
 			found: !!r
 		};
 	};
@@ -1620,19 +1630,19 @@ async function kn(e) {
 		kind: "item",
 		quantity: e.quantity || 1,
 		...await n(e.item),
-		...e.displayName ? { displayName: t(vn(e.displayName)) } : {},
+		...e.displayName ? { displayName: t(yn(e.displayName)) } : {},
 		...e.containsValue ? { cp: e.containsValue } : {}
 	};
 	let r = e.equipmentTypes ?? (e.equipmentType ? [e.equipmentType] : []);
 	if (r.length) {
-		if (!r.every(wn)) return { unsupported: r.filter((e) => !wn(e)).join("、") };
-		let t = /* @__PURE__ */ new Set(), n = (await Promise.all(r.map(En))).flat().filter((e) => !t.has(e.uid) && !!t.add(e.uid));
+		if (!r.every(Tn)) return { unsupported: r.filter((e) => !Tn(e)).join("、") };
+		let t = /* @__PURE__ */ new Set(), n = (await Promise.all(r.map(Dn))).flat().filter((e) => !t.has(e.uid) && !!t.add(e.uid));
 		return n.length ? {
 			raw: e,
 			kind: "category",
 			quantity: e.quantity || 1,
 			types: r,
-			typeNames: r.map(Tn),
+			typeNames: r.map(En),
 			candidates: n
 		} : null;
 	}
@@ -1640,7 +1650,7 @@ async function kn(e) {
 		raw: e,
 		kind: "special",
 		quantity: e.quantity || 1,
-		text: t(vn(e.special)),
+		text: t(yn(e.special)),
 		...e.containsValue ? { cp: e.containsValue } : {}
 	} : e.value ? {
 		raw: e,
@@ -1649,12 +1659,12 @@ async function kn(e) {
 		cp: e.value
 	} : { unsupported: JSON.stringify(e).slice(0, 120) };
 }
-async function An(e) {
-	let n = [], r = [], a = Dn(e.entry);
+async function jn(e) {
+	let n = [], r = [], a = On(e.entry);
 	for (let o = 0; o < a.length; o++) {
 		let s = [];
 		for (let [n, c] of Object.entries(a[o])) {
-			let a = await Promise.all(c.map(kn));
+			let a = await Promise.all(c.map(An));
 			for (let n of a) n && "unsupported" in n && r.push(i("{0}：{1}", t(String(e.entry.name)), d(n.unsupported)));
 			let o = a.flatMap((e, t) => e && !("unsupported" in e) ? [{
 				...e,
@@ -1670,7 +1680,7 @@ async function An(e) {
 			choices: s
 		});
 	}
-	let o = On(e.entry);
+	let o = kn(e.entry);
 	return {
 		refKey: e.refKey,
 		prop: e.prop,
@@ -1682,7 +1692,7 @@ async function An(e) {
 		goldCoin: o ? "gp" : null
 	};
 }
-function jn(e, t, n = /* @__PURE__ */ new Set()) {
+function Mn(e, t, n = /* @__PURE__ */ new Set()) {
 	let r = [], i = 0;
 	if (t?.gold != null) return {
 		granted: r,
@@ -1702,17 +1712,17 @@ function jn(e, t, n = /* @__PURE__ */ new Set()) {
 			...o ? { displayName: o } : {}
 		});
 	};
-	return Dn(e.entry).forEach((e, r) => {
+	return On(e.entry).forEach((e, r) => {
 		let o = Object.keys(e), s = t?.choice?.[String(r)] ?? (o.length === 1 ? o[0] : void 0);
 		s !== void 0 && Array.isArray(e[s]) && e[s].forEach((e, o) => {
 			if (typeof e == "string") return a(e, void 0, 1);
-			if (e.item) return e.containsValue && !n.has(e.item) && (i += e.containsValue), a(e.item, void 0, e.quantity || 1, e.displayName ? vn(e.displayName) : void 0);
+			if (e.item) return e.containsValue && !n.has(e.item) && (i += e.containsValue), a(e.item, void 0, e.quantity || 1, e.displayName ? yn(e.displayName) : void 0);
 			if (e.equipmentType || e.equipmentTypes) for (let n = 0; n < (e.quantity || 1); n++) {
 				let e = t?.pick?.[`${r}.${s}.${o}.${n}`];
 				e && a(e, void 0, 1);
 			}
 			else {
-				if (e.special) return e.containsValue && (i += e.containsValue), a(void 0, vn(e.special), e.quantity || 1);
+				if (e.special) return e.containsValue && (i += e.containsValue), a(void 0, yn(e.special), e.quantity || 1);
 				e.value && (i += e.value);
 			}
 		});
@@ -1721,17 +1731,17 @@ function jn(e, t, n = /* @__PURE__ */ new Set()) {
 		cp: i
 	};
 }
-function Mn(e) {
+function Nn(e) {
 	let t = L.CONFIG.DND5E.currencies, n = t.cp?.conversion ?? 100, r = Object.entries(t).filter(([, e]) => e.conversion != null && e.conversion > 0).map(([e, t]) => ({
 		coin: e,
 		mult: t.conversion / n
 	})).sort((e, t) => t.mult - e.mult), i = L.CurrencyUtil.doSimplifyCoins({ cp: e }, { currencyConversionTable: r });
 	return Object.fromEntries(Object.keys(t).map((e) => [e, i[e] || 0]));
 }
-async function Nn(e, t, n = {}) {
+async function Pn(e, t, n = {}) {
 	let r = [], i = [], a = [], o = 0;
 	for (let s of e) {
-		let { granted: e, cp: c } = jn(s, t[s.refKey], new Set(n[s.refKey] ?? []));
+		let { granted: e, cp: c } = Mn(s, t[s.refKey], new Set(n[s.refKey] ?? []));
 		o += c;
 		for (let t of e) {
 			let e;
@@ -1742,11 +1752,11 @@ async function Nn(e, t, n = {}) {
 				type: L.Parser.ITM_TYP__OTHER,
 				rarity: "unknown"
 			};
-			else if (e = await L.DataLoader.pCacheAndGetHash(L.UrlUtil.PG_ITEMS, gn(t.uid)), !e) {
+			else if (e = await L.DataLoader.pCacheAndGetHash(L.UrlUtil.PG_ITEMS, _n(t.uid)), !e) {
 				a.push(t.uid);
 				continue;
 			}
-			let n = await P("item", e);
+			let n = await N("item", e);
 			n.system = {
 				...n.system,
 				quantity: t.quantity
@@ -1756,14 +1766,14 @@ async function Nn(e, t, n = {}) {
 	return {
 		equipment: r,
 		specials: i,
-		currency: o > 0 ? Mn(o) : null,
+		currency: o > 0 ? Nn(o) : null,
 		skipped: a
 	};
 }
-async function Pn(e, n, r = {}) {
+async function Fn(e, n, r = {}) {
 	let i = [], a = 0;
 	for (let o of e) {
-		let { granted: e, cp: s } = jn(o, n[o.refKey], new Set(r[o.refKey] ?? []));
+		let { granted: e, cp: s } = Mn(o, n[o.refKey], new Set(r[o.refKey] ?? []));
 		a += s;
 		let c = [];
 		for (let n of e) {
@@ -1775,10 +1785,10 @@ async function Pn(e, n, r = {}) {
 				});
 				continue;
 			}
-			let e = await L.DataLoader.pCacheAndGetHash(L.UrlUtil.PG_ITEMS, gn(n.uid)), r = e ? L.UrlUtil.URL_TO_HASH_BUILDER[L.UrlUtil.PG_ITEMS](e) : void 0;
+			let e = await L.DataLoader.pCacheAndGetHash(L.UrlUtil.PG_ITEMS, _n(n.uid)), r = e ? L.UrlUtil.URL_TO_HASH_BUILDER[L.UrlUtil.PG_ITEMS](e) : void 0;
 			c.push(e ? {
 				uid: n.uid,
-				name: hn(e.name, e.source, r),
+				name: gn(e.name, e.source, r),
 				source: e.source,
 				hash: r,
 				quantity: n.quantity,
@@ -1797,25 +1807,25 @@ async function Pn(e, n, r = {}) {
 	}
 	return {
 		sections: i,
-		currency: a > 0 ? Mn(a) : null
+		currency: a > 0 ? Nn(a) : null
 	};
 }
-function Fn(e) {
+function In(e) {
 	return {
 		startingEquipment: (t) => e([], async () => ({
-			sections: await Promise.all(t.map(An)),
+			sections: await Promise.all(t.map(jn)),
 			coins: [...L.Parser?.COIN_ABVS ?? []]
 		})),
-		startingPreview: (t, n, r) => e([], async () => Pn(t, n, r))
+		startingPreview: (t, n, r) => e([], async () => Fn(t, n, r))
 	};
 }
 // src/rules/kernel/frame/author-ids.ts
-var In = globalThis, Ln = /* @__PURE__ */ new Set([
+var Ln = globalThis, Rn = /* @__PURE__ */ new Set([
 	"skills",
 	"tool",
 	"saves"
 ]);
-function Rn(e, t) {
+function zn(e, t) {
 	let n = document.createElement("div");
 	n.innerHTML = e;
 	let r = [...n.querySelectorAll("[data-vet-page][data-vet-hash]")];
@@ -1828,24 +1838,24 @@ function Rn(e, t) {
 		propDroppable: s
 	} : null;
 }
-async function zn(e) {
-	let t = N, n = In.dnd5e?.documents?.Trait;
+async function Bn(e) {
+	let t = M, n = Ln.dnd5e?.documents?.Trait;
 	if (!t || !n) return {};
-	let r = t.Charactermancer_OtherProficiencySelect, i = await t.Charactermancer_AvailableProficiencyManager.pGetInstance(), a = new In.CONFIG.Actor.documentClass({
+	let r = t.Charactermancer_OtherProficiencySelect, i = await t.Charactermancer_AvailableProficiencyManager.pGetInstance(), a = new Ln.CONFIG.Actor.documentClass({
 		name: "Author ids",
-		type: cn
+		type: ln
 	}), o = {};
 	for (let t of new Set(e)) try {
 		let e = t.split(":")[0], s = n.changeKeyPath(t);
 		if (!s) continue;
-		let c = t.split(":").pop(), l = a.clone(In.foundry.utils.expandObject({ [s]: Ln.has(e) ? 1 : [c] })), u = r.getExisting(r.getExistingFvttFromActor(l), { availableProficiencyManager: i }), d = Object.entries(u ?? {}).flatMap(([e, t]) => Object.entries(t ?? {}).filter(([e, t]) => e !== "other" && t).map(([t]) => ({
+		let c = t.split(":").pop(), l = a.clone(Ln.foundry.utils.expandObject({ [s]: Rn.has(e) ? 1 : [c] })), u = r.getExisting(r.getExistingFvttFromActor(l), { availableProficiencyManager: i }), d = Object.entries(u ?? {}).flatMap(([e, t]) => Object.entries(t ?? {}).filter(([e, t]) => e !== "other" && t).map(([t]) => ({
 			prop: e,
 			name: t
 		}))).flatMap((e) => {
 			let t = r._getRenderedStatic({
 				...e,
 				availableProficiencyManager: i
-			}), n = typeof t == "string" ? Rn(t, In.UrlUtil.PAGE_TO_PROPS ?? {}) : null;
+			}), n = typeof t == "string" ? zn(t, Ln.UrlUtil.PAGE_TO_PROPS ?? {}) : null;
 			return n ? [n] : [];
 		});
 		d.length && (o[t] = d);
@@ -1855,28 +1865,28 @@ async function zn(e) {
 	return o;
 }
 // src/rules/kernel/frame/proficiency-text.ts
-var Bn = globalThis;
-function Vn(e, t, n) {
-	if (Bn.Renderer.generic.getMappedAnyProficiency({
+var Vn = globalThis;
+function Hn(e, t, n) {
+	if (Vn.Renderer.generic.getMappedAnyProficiency({
 		keyAny: n.name,
 		countRaw: 1
 	})) return a(n.name, 1);
 	let r = e.Charactermancer_OtherProficiencySelect._getRenderedStatic({
 		...n,
 		availableProficiencyManager: t
-	}), i = typeof r == "string" ? Rn(r, Bn.UrlUtil.PAGE_TO_PROPS) : null;
+	}), i = typeof r == "string" ? zn(r, Vn.UrlUtil.PAGE_TO_PROPS) : null;
 	return i ? c(n.name, i, !0) : l(n.name, [n.name], F(n.name));
 }
-function Hn(e, t, n) {
-	let r = n.map((n) => Vn(e, t, n));
+function Un(e, t, n) {
+	let r = n.map((n) => Hn(e, t, n));
 	return r.map((e, t) => e.$t === "value" ? {
 		...e,
 		group: n.filter((e, i) => e.prop === n[t].prop && r[i].$t === "value").map((e) => e.name)
 	} : e);
 }
 // src/rules/kernel/frame/trait-plans.ts
-var Un = globalThis;
-function Wn(e, t, n, r, i) {
+var Wn = globalThis;
+function Gn(e, t, n, r, i) {
 	let a = e._state[t];
 	return {
 		label: r,
@@ -1889,12 +1899,12 @@ function Wn(e, t, n, r, i) {
 		}
 	};
 }
-var Gn = (e) => ({
+var Kn = (e) => ({
 	propDroppable: "item",
 	source: e.source,
-	hash: Un.UrlUtil.URL_TO_HASH_BUILDER[Un.UrlUtil.PG_ITEMS](e)
+	hash: Wn.UrlUtil.URL_TO_HASH_BUILDER[Wn.UrlUtil.PG_ITEMS](e)
 });
-function Kn(e, t, n, r, i) {
+function qn(e, t, n, r, i) {
 	return (n.choose ?? []).map((n, a) => {
 		if (n.fromFilter) {
 			let { propState: e } = t._getPropsChooseFromFilter({
@@ -1903,10 +1913,10 @@ function Kn(e, t, n, r, i) {
 			}), r = t._modalFilterItemsFvtt.getEntitiesMatchingFilterExpression({ filterExpression: n.fromFilter });
 			return {
 				count: n.count,
-				options: r.filter((e) => !i || i.has(`${e.name}|${e.source}`.toLowerCase())).map((r) => Wn(t, e, {
+				options: r.filter((e) => !i || i.has(`${e.name}|${e.source}`.toLowerCase())).map((r) => Gn(t, e, {
 					prop: n.prop,
-					name: Un.DataUtil.generic.getUid(r)
-				}, r.name, c(r.name, Gn(r), !0)))
+					name: Wn.DataUtil.generic.getUid(r)
+				}, r.name, c(r.name, Kn(r), !0)))
 			};
 		}
 		let { propState: o } = t._getPropsChooseFrom({ ixChoose: a }), s = t._getChooseFromGroupMeta(n), l = e.ComponentUiUtil.getMetaWrpMultipleChoice(t, o, {
@@ -1915,26 +1925,26 @@ function Kn(e, t, n, r, i) {
 			fnDisplay: () => ""
 		});
 		r.push(l.cleanup);
-		let u = s?.valueGroupsFlat ?? n.from, d = Hn(e, t._availableProficiencyManager, u);
+		let u = s?.valueGroupsFlat ?? n.from, d = Un(e, t._availableProficiencyManager, u);
 		return {
 			count: n.count,
 			hints: s?.valueGroups?.map((e) => e.text).filter(Boolean),
-			options: l.rowMetas.map((e, n) => Wn(t, e.propIsActive, !0, u[n]?.name ?? String(n + 1), d[n]))
+			options: l.rowMetas.map((e, n) => Gn(t, e.propIsActive, !0, u[n]?.name ?? String(n + 1), d[n]))
 		};
 	});
 }
-function qn(e, t, n, r) {
+function Jn(e, t, n, r) {
 	t._stgGroup = e.veE(document.createElement("div"));
 	let i = [];
 	return t._render_renderPtChooseAnyProficient = ({ profSet: e, propProfSet: n, propIxProps: r, fnGetValues: a }) => {
-		let o = t._getProps(n, 0)[r], s = a().map((e) => Wn(t, o, e, e));
+		let o = t._getProps(n, 0)[r], s = a().map((e) => Gn(t, o, e, e));
 		i.push({
 			count: Number(e[n] || 1),
 			options: s
 		});
 	}, t._hk_ixSet_renderPts(n), r.push(() => t._lastMeta.cleanup()), i;
 }
-function Jn(e, t) {
+function Yn(e, t) {
 	t.render(e.veE(document.createElement("div")));
 	let n = t._lastChoiceMeta.children.filter((e) => e.children);
 	if (n.some((e) => !e.children.every((e) => e.isChoosable))) return null;
@@ -1954,12 +1964,12 @@ function Jn(e, t) {
 		}))
 	}));
 }
-async function Yn(e, t, n, r) {
+async function Xn(e, t, n, r) {
 	let i = {}, a = await n._subComps[0].pGetFormData();
 	await e.Charactermancer_FeatureOptionsSelect.pDoApplyProficiencyFormDataToActorUpdate(t, i, { data: { [n._propFormDatas]: [a] } });
-	let o = Un.dnd5e.documents.Trait, s = Object.keys(Un.CONFIG.DND5E.traits).filter((e) => Un.foundry.utils.hasProperty(i, o.actorKeyPath(e))), c = t.clone(i), l = /* @__PURE__ */ new Set(), u = [];
+	let o = Wn.dnd5e.documents.Trait, s = Object.keys(Wn.CONFIG.DND5E.traits).filter((e) => Wn.foundry.utils.hasProperty(i, o.actorKeyPath(e))), c = t.clone(i), l = /* @__PURE__ */ new Set(), u = [];
 	for (let e of s) {
-		let n = o.actorKeyPath(e), a = Un.foundry.utils.getProperty(i, n)?.custom;
+		let n = o.actorKeyPath(e), a = Wn.foundry.utils.getProperty(i, n)?.custom;
 		a && u.push({
 			label: String(a),
 			text: F(String(a))
@@ -1972,15 +1982,15 @@ async function Yn(e, t, n, r) {
 		notes: u
 	};
 }
-async function Xn(e, t, n, r, i, a, o) {
-	let s = o ? 2 : 1, u = await Yn(e, t, n, s), d = [], f = [...u.notes], p = /* @__PURE__ */ new Map();
+async function Zn(e, t, n, r, i, a, o) {
+	let s = o ? 2 : 1, u = await Xn(e, t, n, s), d = [], f = [...u.notes], p = /* @__PURE__ */ new Map();
 	for (let i of r) {
 		let r = /* @__PURE__ */ new Set();
 		for (let a of i.options) {
 			let o = a.text ?? l(a.label, i.options.map((e) => e.label), F(a.label));
 			a.select();
 			try {
-				let i = [...(await Yn(e, t, n, s)).keys].filter((e) => !u.keys.has(e));
+				let i = [...(await Xn(e, t, n, s)).keys].filter((e) => !u.keys.has(e));
 				if (i.length === 1) {
 					let e = i[0];
 					r.add(e);
@@ -2013,11 +2023,11 @@ async function Xn(e, t, n, r, i, a, o) {
 		withheld: f
 	};
 }
-async function Zn(e, t, n, r, i) {
+async function Qn(e, t, n, r, i) {
 	let a = n._subComps[0];
 	if (a instanceof e.Charactermancer_ImmResVulnSelect) {
-		let r = Jn(e, a);
-		return r ? [await Xn(e, t, n, r, 0, !1, !1)] : [];
+		let r = Yn(e, a);
+		return r ? [await Zn(e, t, n, r, 0, !1, !1)] : [];
 	}
 	let o = a instanceof e.Charactermancer_ExpertiseSelect;
 	if (!o && !(a instanceof e.Charactermancer_OtherProficiencySelect)) return [];
@@ -2028,8 +2038,8 @@ async function Zn(e, t, n, r, i) {
 		a._state.ixSet = t, !o && (r.all?.length || r.choose?.some((e) => e.fromFilter)) && await a.pNotRender();
 		let l = [];
 		try {
-			let d = o ? qn(e, a, r, l) : Kn(e, a, r, l, i);
-			c.push(await Xn(e, s, n, d, t, u, o));
+			let d = o ? Jn(e, a, r, l) : qn(e, a, r, l, i);
+			c.push(await Zn(e, s, n, d, t, u, o));
 		} finally {
 			for (let e of l) e();
 		}
@@ -2037,32 +2047,32 @@ async function Zn(e, t, n, r, i) {
 	return c;
 }
 // src/rules/kernel/frame/author-text.ts
-var Qn = globalThis, $n = ["Renderer"], er = 8, tr = null;
-function nr() {
+var $n = globalThis, er = ["Renderer"], tr = 8, nr = null;
+function rr() {
 	let e = /* @__PURE__ */ new Map(), t = /* @__PURE__ */ new WeakSet(), n = (r, i) => {
 		if (typeof r == "string") {
 			let t = e.get(r) ?? [];
 			t.push(i), e.set(r, t);
-		} else if (!(!r || typeof r != "object" && typeof r != "function" || t.has(r) || i.length > er)) {
+		} else if (!(!r || typeof r != "object" && typeof r != "function" || t.has(r) || i.length > tr)) {
 			t.add(r);
 			for (let [e, t] of Object.entries(Object.getOwnPropertyDescriptors(r))) "value" in t && e !== "prototype" && n(t.value, [...i, e]);
 		}
 	};
-	for (let e of $n) n(Qn[e], [e]);
+	for (let e of er) n($n[e], [e]);
 	return e;
 }
-function rr(e) {
+function ir(e) {
 	if (!e) return null;
-	tr ??= nr();
-	let t = tr.get(e);
+	nr ??= rr();
+	let t = nr.get(e);
 	return t?.length === 1 ? t[0] : null;
 }
 // src/rules/kernel/frame/build-traits.ts
-var ir = globalThis, ar = "P6Tr", or = (e) => typeof e == "string" && /^P6Tr[0-9a-f]{12}$/.test(e), sr = (...e) => ar + m(e).slice(0, 12);
-function cr(e, t) {
-	return ie(`build-traits:check:${e?._id}`, () => lr(e, t));
+var ar = globalThis, or = "P6Tr", sr = (e) => typeof e == "string" && /^P6Tr[0-9a-f]{12}$/.test(e), cr = (...e) => or + m(e).slice(0, 12);
+function lr(e, t) {
+	return ie(`build-traits:check:${e?._id}`, () => ur(e, t));
 }
-async function lr(e, t) {
+async function ur(e, t) {
 	let { available: n } = await e.unfulfilledChoices(), r = new Set(n.filter((e) => e.type === "grant").flatMap((e) => [...e.choices.asSet()])), i = /* @__PURE__ */ new Set([...r, ...e.configuration.grants ?? []]), a = n.filter((e) => e.type === "choice").map((e) => e.choices.asSet()), o = t?.chosen ?? [];
 	if (!Array.isArray(o)) return null;
 	let s = /* @__PURE__ */ new Map(), c = (e, t) => a.some((n, r) => {
@@ -2073,9 +2083,9 @@ async function lr(e, t) {
 	}), l = o.filter((e) => !i.has(e));
 	return l.length !== new Set(l).size || !l.every((e) => c(e, /* @__PURE__ */ new Set())) ? null : { chosen: [...r, ...l.sort()] };
 }
-var ur = (e) => e.type === "Trait" && !e.configuration?.grants?.length && !e.configuration?.grants?.size && !e.configuration?.choices?.length;
-async function dr(e, t, n) {
-	let r = ir.dnd5e.documents.Trait, i = Object.values(e.system?.advancement ?? {}).filter((e) => e.type === "Trait" && !ur(e) && (e.level ?? 0) === t && (!e.classRestriction || e.classRestriction === (n ? "secondary" : "primary")));
+var dr = (e) => e.type === "Trait" && !e.configuration?.grants?.length && !e.configuration?.grants?.size && !e.configuration?.choices?.length;
+async function fr(e, t, n) {
+	let r = ar.dnd5e.documents.Trait, i = Object.values(e.system?.advancement ?? {}).filter((e) => e.type === "Trait" && !dr(e) && (e.level ?? 0) === t && (!e.classRestriction || e.classRestriction === (n ? "secondary" : "primary")));
 	return Promise.all(i.map(async (e) => ({
 		id: e._id,
 		mode: e.configuration?.mode ?? "default",
@@ -2089,7 +2099,7 @@ async function dr(e, t, n) {
 		}))
 	})));
 }
-function fr(e, t) {
+function pr(e, t) {
 	let n = [...t], r = [];
 	for (let i of e) {
 		let e = n.findIndex((e) => e.count === i.count && e.pool.size === i.pool.length && i.pool.every((t) => e.pool.has(t)));
@@ -2101,8 +2111,8 @@ function fr(e, t) {
 	}
 	return r;
 }
-async function pr(e, t, n, r, i) {
-	let a = e.clone(), o = new ir.CONFIG.Item.documentClass({
+async function mr(e, t, n, r, i) {
+	let a = e.clone(), o = new ar.CONFIG.Item.documentClass({
 		...t,
 		system: {
 			...t.system,
@@ -2111,64 +2121,64 @@ async function pr(e, t, n, r, i) {
 	}, { parent: a });
 	for (let e of o.advancement.byType.Trait ?? []) {
 		if (e.configuration.mode !== "default" || e.level !== i) continue;
-		let t = r.previous?.find((t) => t.id === e.id)?.data, n = r.picks?.find((t) => t.id === e.id)?.value, a = await lr(e, t ?? n);
+		let t = r.previous?.find((t) => t.id === e.id)?.data, n = r.picks?.find((t) => t.id === e.id)?.value, a = await ur(e, t ?? n);
 		a?.chosen.length && await e.apply(i, a);
 	}
 	return a;
 }
-var mr = (e) => s(e, rr(e)), hr = (e, t, n = []) => {
-	let r = $t(e, t, n);
-	return r ? F(r) : mr(String(e._title || e._subComps[0]?.modalTitle || e._prop));
-}, gr = (e) => [...new Map(e.map((e) => [JSON.stringify(e), e])).values()];
-function _r(e, t, n, r, i = {}) {
-	return ie(`build-traits:fill:${n}:${r}`, () => vr(e, t, n, r, i));
+var hr = (e) => s(e, ir(e)), gr = (e, t, n = []) => {
+	let r = en(e, t, n);
+	return r ? F(r) : hr(String(e._title || e._subComps[0]?.modalTitle || e._prop));
+}, _r = (e) => [...new Map(e.map((e) => [JSON.stringify(e), e])).values()];
+function vr(e, t, n, r, i = {}) {
+	return ie(`build-traits:fill:${n}:${r}`, () => yr(e, t, n, r, i));
 }
-async function vr(e, t, n, a, o) {
+async function yr(e, t, n, a, o) {
 	let { replay: s, picks: c, plans: l, actor: u, scope: d, expertise: f } = o;
 	if (!t.entry) return [];
-	let p = N;
+	let p = M;
 	if (!p) return [i("当前 Plutonium 版本缺少已验证的建卡接线")];
 	let h = +(t.prop === "class"), g = t.prop === "class" ? p.Charactermancer_Class_Util.getStandardProficiencies(a ? t.entry.multiclassing?.proficienciesGained ?? {} : {
 		proficiency: t.entry.proficiency,
 		...t.entry.startingProficiencies
-	}) : structuredClone(t.entry), _ = new ir.CONFIG.Actor.documentClass({
+	}) : structuredClone(t.entry), _ = new ar.CONFIG.Actor.documentClass({
 		name: "Trait preview",
-		type: cn
+		type: ln
 	}), v = [{ entity: g }], y = await p.Charactermancer_AvailableProficiencyManager.pGetInstance(), b = new p.Charactermancer_FeatureOptionsSelect({
 		actor: _,
 		optionsSet: v,
 		level: h,
 		modalFilterSpells: {},
 		availableProficiencyManager: y
-	}), x = b._subCompManagers.filter((e) => e instanceof p.CharactermancerFeatureSubCompManagerProficiencyOtherBase), ee = await dr(e, h, a), te = Ue(t.data ?? e), ne = /* @__PURE__ */ new Set(), S = [], C = {};
+	}), x = b._subCompManagers.filter((e) => e instanceof p.CharactermancerFeatureSubCompManagerProficiencyOtherBase), ee = await fr(e, h, a), te = We(t.data ?? e), ne = /* @__PURE__ */ new Set(), S = [], C = {};
 	try {
 		for (let y of x) try {
 			if (await y._pInitSubComp({
 				ix: 0,
 				selectedLinkedEntityInfos: v
 			}), !y._subComps[0]) continue;
-			let b = u && y._subComps[0] instanceof p.Charactermancer_ExpertiseSelect, re = b ? await pr(u, e, {
+			let b = u && y._subComps[0] instanceof p.Charactermancer_ExpertiseSelect, re = b ? await mr(u, e, {
 				...Object.fromEntries(Object.entries(e.system?.advancement ?? {}).filter(([e]) => !ne.has(e))),
 				...C
-			}, o, h) : u, w = await Zn(p, _, y, re, d);
+			}, o, h) : u, w = await Qn(p, _, y, re, d);
 			if (!w.length) {
-				S.push(hr(y, x));
+				S.push(gr(y, x));
 				continue;
 			}
-			let T = w.map(({ index: e }) => sr(n, y._prop, h, a, "author-plan", e)), ie = s ?? c?.map((e) => e.id), E = T.findIndex((e) => ie?.includes(e)), D = E < 0 ? 0 : E, O = w[D];
+			let T = w.map(({ index: e }) => cr(n, y._prop, h, a, "author-plan", e)), ie = s ?? c?.map((e) => e.id), E = T.findIndex((e) => ie?.includes(e)), D = E < 0 ? 0 : E, O = w[D];
 			if (O.extended && s && E < 0) continue;
 			let ae = w.map((e, t) => ({
 				id: T[t],
-				label: e.choices.length ? r(e.choices.map((e) => i(`{0} ×${e.count}`, Qt(e.pool) ? F(Qt(e.pool)) : hr(y, x))), " + ") : Qt(e.grants) ? F(Qt(e.grants)) : hr(y, x)
+				label: e.choices.length ? r(e.choices.map((e) => i(`{0} ×${e.count}`, $t(e.pool) ? F($t(e.pool)) : gr(y, x))), " + ") : $t(e.grants) ? F($t(e.grants)) : gr(y, x)
 			})), oe = [...new Map(O.withheld.map((e) => [e.label, e])).values()].sort((e, t) => e.label.localeCompare(t.label));
-			oe.length && S.push(i("{0}（暂时无法加到人物卡：{1}）", hr(y, x), r(oe.map((e) => e.text ?? mr(e.label)), "、")));
-			let k = m(g[y._prop] || g.entryData?.[y._prop]), se = ee.filter((e) => e.mode === O.mode), A = se.filter(({ id: e }) => te[e]?.field === y._prop && te[e]?.input === k), ce = new Set(A.flatMap((e) => e.grants)), le = A.flatMap((e) => e.slots), ue = ce.size === O.grants.length && O.grants.every((e) => ce.has(e)) && le.length === O.choices.length && fr(O.choices, le)?.length === 0, de = sr(n, y._prop, h, a, "origin"), fe = le.length > 0 && !ue && !O.withheld.length && (!s || s.includes(O.extended ? T[D] : de)), pe = fe ? se.filter((e) => !A.includes(e)) : se, me = new Set(pe.flatMap((e) => e.grants)), he = pe.flatMap((e) => e.slots), ge = O.grants.filter((e) => !me.has(e)), _e = fe ? O.choices : fr(O.choices, he);
+			oe.length && S.push(i("{0}（暂时无法加到人物卡：{1}）", gr(y, x), r(oe.map((e) => e.text ?? hr(e.label)), "、")));
+			let k = m(g[y._prop] || g.entryData?.[y._prop]), se = ee.filter((e) => e.mode === O.mode), A = se.filter(({ id: e }) => te[e]?.field === y._prop && te[e]?.input === k), ce = new Set(A.flatMap((e) => e.grants)), le = A.flatMap((e) => e.slots), ue = ce.size === O.grants.length && O.grants.every((e) => ce.has(e)) && le.length === O.choices.length && pr(O.choices, le)?.length === 0, de = cr(n, y._prop, h, a, "origin"), fe = le.length > 0 && !ue && !O.withheld.length && (!s || s.includes(O.extended ? T[D] : de)), pe = fe ? se.filter((e) => !A.includes(e)) : se, me = new Set(pe.flatMap((e) => e.grants)), he = pe.flatMap((e) => e.slots), ge = O.grants.filter((e) => !me.has(e)), _e = fe ? O.choices : pr(O.choices, he);
 			if (fe && O.choices.some((e) => he.some((t) => e.pool.some((e) => t.pool.has(e))))) {
-				S.push(i("{0}（与资料附带的进阶重叠，已保留原进阶）", hr(y, x)));
+				S.push(i("{0}（与资料附带的进阶重叠，已保留原进阶）", gr(y, x)));
 				continue;
 			}
 			if (!_e) {
-				S.push(hr(y, x));
+				S.push(gr(y, x));
 				continue;
 			}
 			if (!ge.length && !_e.length) {
@@ -2179,7 +2189,7 @@ async function vr(e, t, n, a, o) {
 				continue;
 			}
 			if (fe) for (let e of A) ne.add(e.id);
-			let j = O.extended ? T[D] : fe ? de : sr(n, y._prop, h, a);
+			let j = O.extended ? T[D] : fe ? de : cr(n, y._prop, h, a);
 			if (l?.set(j, {
 				choices: ae.length > 1 ? ae : [],
 				names: O.names
@@ -2197,7 +2207,7 @@ async function vr(e, t, n, a, o) {
 				},
 				value: {}
 			}, b && f) {
-				let t = new ir.CONFIG.Item.documentClass({
+				let t = new ar.CONFIG.Item.documentClass({
 					...e,
 					system: {
 						...e.system,
@@ -2207,31 +2217,31 @@ async function vr(e, t, n, a, o) {
 				f.set(j, t.advancement.byId[j]);
 			}
 		} catch (e) {
-			console.warn("[trpg-assistant] 建卡进阶暂无法处理", n, y._prop, e), S.push(hr(y, x));
+			console.warn("[trpg-assistant] 建卡进阶暂无法处理", n, y._prop, e), S.push(gr(y, x));
 		}
 	} finally {
 		b.unregisterSourceTracking();
 	}
 	if (e.system) {
-		let t = Object.fromEntries(Object.entries(e.system.advancement ?? {}).filter(([e, t]) => !ne.has(e) && !ur(t)));
+		let t = Object.fromEntries(Object.entries(e.system.advancement ?? {}).filter(([e, t]) => !ne.has(e) && !dr(t)));
 		e.system.advancement = {
 			...t,
 			...C
 		};
 	}
-	return gr(S);
+	return _r(S);
 }
 // src/rules/kernel/frame/commands-level.ts
-var R = globalThis;
-function yr() {
-	let e = R.dnd5e?.applications?.advancement?.AdvancementManager;
+var br = globalThis;
+function xr() {
+	let e = br.dnd5e?.applications?.advancement?.AdvancementManager;
 	if (!e) throw Error("dnd5e AdvancementManager is not available");
 	return e;
 }
-function br(e, t, n, r = {}) {
-	return yr().forLevelChange(e, t, n, r);
+function Sr(e, t, n, r = {}) {
+	return xr().forLevelChange(e, t, n, r);
 }
-function z(e) {
+function R(e) {
 	return {
 		level: e.system.details?.level ?? null,
 		hp: e.system.attributes?.hp?.toObject?.() ?? e.system.attributes?.hp ?? null,
@@ -2252,7 +2262,7 @@ function z(e) {
 		})) ?? []
 	};
 }
-function xr(e) {
+function Cr(e) {
 	let t = e?.toObject ? e.toObject() : structuredClone(e);
 	for (let e of [
 		"_id",
@@ -2262,37 +2272,37 @@ function xr(e) {
 		"ownership",
 		"_stats"
 	]) delete t[e];
-	return t.system && "container" in t.system && (t.system.container = null), We(t), t;
+	return t.system && "container" in t.system && (t.system.container = null), Ge(t), t;
 }
-function Sr(e) {
+function wr(e) {
 	let t = e?.toObject ? e.toObject() : structuredClone(e);
 	return t.flags ??= {}, t.flags.plutonium ??= {}, t.flags.plutonium.isStandardDragDrop = !0, t;
 }
-function Cr(e) {
+function Tr(e) {
 	let t = e?.flags?.plutonium;
 	return t?.propDroppable && t.source && t.hash ? `${t.propDroppable}|${t.source}|${t.hash}` : null;
 }
-function wr(e) {
+function Er(e) {
 	return JSON.parse(JSON.stringify(e, (e, t) => t instanceof Set ? [...t] : t));
 }
-async function Tr(e, t, { strict: n = !1, picks: r, blank: i = !1, expertise: a } = {}) {
+async function Dr(e, t, { strict: n = !1, picks: r, blank: i = !1, expertise: a } = {}) {
 	if (!e.steps.length) return { finished: !0 };
 	for (let o of e.steps) {
 		if (o.automatic || !o.flow) continue;
 		let e = o.flow.advancement, s = t?.find((t) => t.id === e.id && t.level === o.flow.level), c = r?.find((t) => t.id === e.id && (t.level ?? null) === (o.flow.level ?? null));
-		if (or(e.id)) {
+		if (sr(e.id)) {
 			if (s?.error || n && !s) return {
 				finished: !1,
 				step: {
-					...Er(o),
+					...Or(o),
 					error: s?.error
 				}
 			};
-			let t = await cr(a?.get(e.id) ?? e, s?.data ?? c?.value);
+			let t = await lr(a?.get(e.id) ?? e, s?.data ?? c?.value);
 			if (!t) return {
 				finished: !1,
 				step: {
-					...Er(o),
+					...Or(o),
 					error: "建卡选择已不在当前候选内"
 				}
 			};
@@ -2303,7 +2313,7 @@ async function Tr(e, t, { strict: n = !1, picks: r, blank: i = !1, expertise: a 
 			if (s.error) return {
 				finished: !1,
 				step: {
-					...Er(o),
+					...Or(o),
 					error: s.error
 				}
 			};
@@ -2312,11 +2322,11 @@ async function Tr(e, t, { strict: n = !1, picks: r, blank: i = !1, expertise: a 
 		}
 		if (await o.flow.getAutomaticApplicationValue() !== !1) continue;
 		if (c) {
-			let t = c.value?.type === "asi" ? on(e, c.value) : c.value;
+			let t = c.value?.type === "asi" ? sn(e, c.value) : c.value;
 			if (!t) return {
 				finished: !1,
 				step: {
-					...Er(o),
+					...Or(o),
 					error: "属性提升的选择不合规"
 				}
 			};
@@ -2325,27 +2335,27 @@ async function Tr(e, t, { strict: n = !1, picks: r, blank: i = !1, expertise: a 
 		}
 		if (n) return {
 			finished: !1,
-			step: Er(o)
+			step: Or(o)
 		};
-		let l = (i ? await fn(o.flow) : void 0) ?? await pn(o.flow);
+		let l = (i ? await pn(o.flow) : void 0) ?? await mn(o.flow);
 		l !== void 0 && (o.flow.getAutomaticApplicationValue = async () => l);
 	}
 	let o = new Promise((t) => {
-		let n = R.Hooks.on("dnd5e.advancementManagerComplete", (r) => {
-			r === e && (R.Hooks.off(n), t(!0));
+		let n = br.Hooks.on("dnd5e.advancementManagerComplete", (r) => {
+			r === e && (br.Hooks.off(n), t(!0));
 		});
 		setTimeout(() => {
-			R.Hooks.off(n), t(!1);
+			br.Hooks.off(n), t(!1);
 		}, 3e3);
 	});
 	await e.render();
 	let s = await o;
 	return s && await C(), s ? { finished: !0 } : {
 		finished: !1,
-		step: Er(e.step)
+		step: Or(e.step)
 	};
 }
-function Er(e) {
+function Or(e) {
 	if (!e) return null;
 	let t = e.flow, n = t?.advancement;
 	return {
@@ -2361,7 +2371,7 @@ function Er(e) {
 		} : null
 	};
 }
-async function Dr(e) {
+async function kr(e) {
 	let t = [];
 	for (let n of e.steps) {
 		let e = n.flow, r = e?.advancement, i = null;
@@ -2388,21 +2398,21 @@ async function Dr(e) {
 	}
 	return t;
 }
-function Or(e) {
+function Ar(e) {
 	return Object.fromEntries(Object.entries(e.system?.abilities ?? {}).map(([e, t]) => [e, t.value]));
 }
-async function kr(e, t, n, r = {}, { strict: i = !1, seed: a, id: o, picks: s, blank: c = !1, traitScope: l, onManager: u } = {}) {
+async function jr(e, t, n, r = {}, { strict: i = !1, seed: a, id: o, picks: s, blank: c = !1, traitScope: l, onManager: u } = {}) {
 	a !== void 0 && k(a);
-	let d = await R.CONFIG.Actor.documentClass.create({
+	let d = await br.CONFIG.Actor.documentClass.create({
 		...o ? { _id: o } : {},
 		name: e,
-		type: cn,
+		type: ln,
 		system: { details: { level: 1 } }
-	}, { keepId: !!o }), f = l ? new Set(l) : void 0, p = Or(d), m = [];
+	}, { keepId: !!o }), f = l ? new Set(l) : void 0, p = Ar(d), m = [];
 	for (let e of t) {
-		let t = xr(e?.data ?? e);
-		R.CONFIG.Item.dataModels[t.type]?.resetData?.(t.system);
-		let n = e?.refKey ?? Cr(t), a = n ? r[n] : void 0, o = n && (!i || a?.some((e) => or(e.id))), l = /* @__PURE__ */ new Map(), h = /* @__PURE__ */ new Map(), g = n ? s?.[n] : void 0, _ = o ? await _r(t, e, n, d.items.some((e) => e.type === "class"), {
+		let t = Cr(e?.data ?? e);
+		br.CONFIG.Item.dataModels[t.type]?.resetData?.(t.system);
+		let n = e?.refKey ?? Tr(t), a = n ? r[n] : void 0, o = n && (!i || a?.some((e) => sr(e.id))), l = /* @__PURE__ */ new Map(), h = /* @__PURE__ */ new Map(), g = n ? s?.[n] : void 0, _ = o ? await vr(t, e, n, d.items.some((e) => e.type === "class"), {
 			actor: d,
 			plans: l,
 			scope: f,
@@ -2415,7 +2425,7 @@ async function kr(e, t, n, r = {}, { strict: i = !1, seed: a, id: o, picks: s, b
 			refKey: n,
 			titles: _
 		});
-		let v = [...a ?? [], ...n ? s?.[n] ?? [] : []].find((e) => or(e.id) && !(e.id in (t.system?.advancement ?? {})));
+		let v = [...a ?? [], ...n ? s?.[n] ?? [] : []].find((e) => sr(e.id) && !(e.id in (t.system?.advancement ?? {})));
 		if (v) return {
 			pending: !0,
 			step: {
@@ -2423,12 +2433,12 @@ async function kr(e, t, n, r = {}, { strict: i = !1, seed: a, id: o, picks: s, b
 				id: v.id,
 				refKey: n
 			},
-			built: z(d),
+			built: R(d),
 			actor: d,
 			initial: p,
 			missingTraits: m
 		};
-		let y = yr().forNewItem(d, t, { automaticApplication: !0 });
+		let y = xr().forNewItem(d, t, { automaticApplication: !0 });
 		await u?.({
 			manager: y,
 			key: n,
@@ -2437,7 +2447,7 @@ async function kr(e, t, n, r = {}, { strict: i = !1, seed: a, id: o, picks: s, b
 			traitPlans: l,
 			expertise: h
 		});
-		let b = await Tr(y, a, {
+		let b = await Dr(y, a, {
 			strict: i,
 			blank: c,
 			picks: g,
@@ -2446,31 +2456,31 @@ async function kr(e, t, n, r = {}, { strict: i = !1, seed: a, id: o, picks: s, b
 		if (!b.finished) return {
 			pending: !0,
 			step: b.step,
-			built: z(d),
+			built: R(d),
 			actor: d,
 			initial: p,
 			missingTraits: m
 		};
-		d.items.contents.some((e) => e.type === t.type && e.flags?.plutonium?.hash === t.flags?.plutonium?.hash) || await d.createEmbeddedDocuments("Item", [Sr(xr(t))]);
+		d.items.contents.some((e) => e.type === t.type && e.flags?.plutonium?.hash === t.flags?.plutonium?.hash) || await d.createEmbeddedDocuments("Item", [wr(Cr(t))]);
 	}
-	return n.length && await d.createEmbeddedDocuments("Item", n.map((e) => Sr(xr(e?.data ?? e)))), {
+	return n.length && await d.createEmbeddedDocuments("Item", n.map((e) => wr(Cr(e?.data ?? e)))), {
 		actor: d,
 		initial: p,
 		missingTraits: m
 	};
 }
-function Ar(e, t) {
+function Mr(e, t) {
 	return {
 		levelUpSteps: (n, r, i = 1) => e([], async () => {
-			let e = await Dr(br(t(n), r, i));
+			let e = await kr(Sr(t(n), r, i));
 			return {
 				status: e.length ? "pending" : "complete",
 				steps: e
 			};
 		}, [n]),
 		levelUpApply: (n, r, i = 1, a) => e([], async () => {
-			let e = t(n), o = br(e, r, i, { automaticApplication: !0 }), s = await Tr(o, a);
-			return s.finished ? z(e) : {
+			let e = t(n), o = Sr(e, r, i, { automaticApplication: !0 }), s = await Dr(o, a);
+			return s.finished ? R(e) : {
 				kernelStatus: "pending",
 				reason: o.step ? "awaiting-choice" : "advancement-manager-not-complete",
 				step: s.step
@@ -2486,7 +2496,7 @@ function Ar(e, t) {
 						id: t.adv.id,
 						type: t.type,
 						level: t.level,
-						data: wr(n)
+						data: Er(n)
 					});
 				} catch (e) {
 					(r[t.key] ??= []).push({
@@ -2504,22 +2514,22 @@ function Ar(e, t) {
 			return await e.update({
 				name: r,
 				"prototypeToken.name": r
-			}), z(e);
+			}), R(e);
 		}, [n]),
 		createActorsFromBase: (t) => e([], async () => {
-			let e = R.CONFIG.Actor.documentClass, n = await e.createDocuments(t.map((e) => ({
+			let e = br.CONFIG.Actor.documentClass, n = await e.createDocuments(t.map((e) => ({
 				...structuredClone(e.base),
 				...e.id ? { _id: e.id } : {}
 			})), { keepId: !0 }), r = [];
 			for (let i = 0; i < n.length; i++) {
-				let a = await xt(n[i], t[i].off, t[i].state);
+				let a = await St(n[i], t[i].off, t[i].state);
 				if (a.problems.length) return await e.deleteDocuments(n.map((e) => e.id)), {
 					kernelStatus: "error",
 					problems: a.problems
 				};
 				r.push({
 					id: n[i].id,
-					...z(n[i]),
+					...R(n[i]),
 					data: n[i].toObject(),
 					base: t[i].base,
 					view: a.view,
@@ -2532,14 +2542,14 @@ function Ar(e, t) {
 			let e = t.seed ?? oe(), n = [];
 			for (let e of t.items) n.push({
 				...e,
-				data: e.data ?? await P(e.prop, e.entry)
+				data: e.data ?? await N(e.prop, e.entry)
 			});
 			let r = [];
 			for (let e of t.equipment ?? []) r.push({
-				data: e.data ?? await P(e.prop, e.entry),
+				data: e.data ?? await N(e.prop, e.entry),
 				refKey: e.refKey
 			});
-			let i = t.starting ? await Nn(t.items.filter((e) => e.entry?.startingEquipment), t.starting, t.startingExcluded) : null, a = await kr(t.name, n, [...r, ...i?.equipment ?? []], t.choices ?? {}, {
+			let i = t.starting ? await Pn(t.items.filter((e) => e.entry?.startingEquipment), t.starting, t.startingExcluded) : null, a = await jr(t.name, n, [...r, ...i?.equipment ?? []], t.choices ?? {}, {
 				strict: !1,
 				seed: e,
 				picks: t.picks,
@@ -2558,39 +2568,39 @@ function Ar(e, t) {
 				initial: a.initial,
 				skipped: i?.skipped ?? [],
 				missingTraits: a.missingTraits,
-				...z(a.actor)
+				...R(a.actor)
 			});
 		}),
 		buildSteps: (t) => e([], async () => {
-			let e = R.CONFIG.Actor.documentClass, n = new e({
+			let e = br.CONFIG.Actor.documentClass, n = new e({
 				name: "Build preview",
-				type: cn,
+				type: ln,
 				system: { details: { level: 1 } }
-			}), r = await Dr(yr().forNewItem(n, t));
+			}), r = await kr(xr().forNewItem(n, t));
 			return {
 				status: r.length ? "pending" : "complete",
 				steps: r
 			};
 		}),
-		importForBuild: (t, n) => e([], async () => P(t, n)),
-		importerProps: $e,
-		importerMeta: et,
-		actorTypes: (t, n) => e([], async () => ln(t, n)),
+		importForBuild: (t, n) => e([], async () => N(t, n)),
+		importerProps: et,
+		importerMeta: tt,
+		actorTypes: (t, n) => e([], async () => un(t, n)),
 		rebuildCharacter: (t) => e([], async () => {
 			let e = t.seed?.trim() || t.name;
 			k(e);
 			let n = [];
 			for (let e of t.items) n.push({
 				...e,
-				data: e.data ?? await P(e.prop, e.entry)
+				data: e.data ?? await N(e.prop, e.entry)
 			});
 			let r = [];
 			for (let e of t.equipment) r.push({
-				data: e.data ?? await P(e.prop, e.entry),
+				data: e.data ?? await N(e.prop, e.entry),
 				refKey: e.refKey,
 				itemId: e.itemId
 			});
-			let i = await kr(t.name, n, r, t.choices, {
+			let i = await jr(t.name, n, r, t.choices, {
 				strict: !0,
 				seed: e,
 				id: t.id
@@ -2601,15 +2611,15 @@ function Ar(e, t) {
 				step: i.step,
 				built: i.built
 			};
-			[...i.actor.items].filter((e) => e.type === "class").length > 1 && await un(i.actor, t.choices, [...t.items, ...t.equipment]);
-			let a = i.actor.toObject(), o = await xt(i.actor, t.off, t.state);
+			[...i.actor.items].filter((e) => e.type === "class").length > 1 && await dn(i.actor, t.choices, [...t.items, ...t.equipment]);
+			let a = i.actor.toObject(), o = await St(i.actor, t.off, t.state);
 			return o.problems.length ? (await i.actor.delete(), {
 				kernelStatus: "error",
 				problems: o.problems
 			}) : {
 				id: i.actor.id,
 				seed: e,
-				...z(i.actor),
+				...R(i.actor),
 				data: i.actor.toObject(),
 				base: a,
 				view: o.view,
@@ -2619,31 +2629,31 @@ function Ar(e, t) {
 	};
 }
 // src/rules/kernel/frame/commands-add.ts
-var jr = globalThis;
-function Mr(e) {
+var Nr = globalThis;
+function Pr(e) {
 	let t = e?.flags?.plutonium;
 	return t?.propDroppable && t.source && t.hash ? `${t.propDroppable}|${t.source}|${t.hash}` : null;
 }
-async function Nr(e, t) {
+async function Fr(e, t) {
 	let n = e.items.get(t);
 	if (!n) throw Error(`人物身上没有这件：${t}`);
-	let r = yr().forDeletedItem(e, t, { automaticApplication: !0 });
+	let r = xr().forDeletedItem(e, t, { automaticApplication: !0 });
 	if (r.steps.length) {
-		let e = await Tr(r, void 0);
+		let e = await Dr(r, void 0);
 		return e.finished ? null : e.step;
 	}
 	return await n.delete(), null;
 }
-function Pr(e, t) {
+function Ir(e, t) {
 	return {
 		addToActor: (n, r) => e([], async () => {
 			let e = t(n), i = e.sheet;
 			if (!i?._onDropSingleItem) throw Error(`人物 ${n} 没有官方人物表单实例`);
 			let a = [];
 			for (let t of r) {
-				let n = Sr(xr(t.data ? structuredClone(t.data) : await P(t.prop, t.entry))), r = new Set(e.items.map((e) => e.id)), o = yr().forNewItem(e, n, { automaticApplication: !0 });
+				let n = wr(Cr(t.data ? structuredClone(t.data) : await N(t.prop, t.entry))), r = new Set(e.items.map((e) => e.id)), o = xr().forNewItem(e, n, { automaticApplication: !0 });
 				if (o.steps.length) {
-					let e = await Tr(o, t.choices, { strict: !1 });
+					let e = await Dr(o, t.choices, { strict: !1 });
 					if (!e.finished) return {
 						kernelStatus: "pending",
 						reason: "add-step-not-complete",
@@ -2651,49 +2661,49 @@ function Pr(e, t) {
 						pending: { step: e.step }
 					};
 				} else {
-					let t = await i._onDropSingleItem({ target: jr.document.createElement("div") }, n);
+					let t = await i._onDropSingleItem({ target: Nr.document.createElement("div") }, n);
 					if (t === !1 || t === void 0) continue;
 					let r = await e.createEmbeddedDocuments("Item", [t], { keepId: !0 });
 					a.push(...r.map((e) => e.toObject()));
 				}
-				for (let t of e.items) !r.has(t.id) && Mr(t) && a.push(t.toObject());
+				for (let t of e.items) !r.has(t.id) && Pr(t) && a.push(t.toObject());
 			}
 			return {
-				...z(e),
+				...R(e),
 				added: a
 			};
 		}, [n]),
 		removeItem: (n, r) => e([], async () => {
-			let e = t(n), i = await Nr(e, r);
+			let e = t(n), i = await Fr(e, r);
 			return i ? {
 				kernelStatus: "pending",
 				reason: "remove-step-not-complete",
 				step: i,
 				pending: { step: i }
 			} : {
-				...z(e),
+				...R(e),
 				removed: r
 			};
 		}, [n])
 	};
 }
 // src/rules/kernel/frame/commands-batch.ts
-var Fr = globalThis;
-function Ir(e, t) {
+var Lr = globalThis;
+function Rr(e, t) {
 	let n = structuredClone(e);
 	delete n._id;
 	for (let e of n.items ?? []) delete e._id;
 	for (let e of n.effects ?? []) delete e._id;
 	return t && (n.name = t), n;
 }
-function Lr(e) {
+function zr(e) {
 	return { createActorsBatch: (t) => e([], async () => {
 		let e = [];
 		for (let n of t) {
-			let t = n.data ?? await P(n.prop, n.entry);
-			e.push(Ir(t, n.name));
+			let t = n.data ?? await N(n.prop, n.entry);
+			e.push(Rr(t, n.name));
 		}
-		return (await Fr.CONFIG.Actor.documentClass.createDocuments(e)).map((e) => ({
+		return (await Lr.CONFIG.Actor.documentClass.createDocuments(e)).map((e) => ({
 			id: e.id,
 			name: e.name,
 			type: e.type,
@@ -2702,7 +2712,7 @@ function Lr(e) {
 	}) };
 }
 // src/rules/kernel/frame/build-extras.ts
-var B = globalThis, Rr = (e) => (t) => B.UrlUtil.URL_TO_HASH_BUILDER[e](t), zr = (e, t) => new Map(e.map((e) => [t(e.entry), e])), Br = [{
+var z = globalThis, Br = (e) => (t) => z.UrlUtil.URL_TO_HASH_BUILDER[e](t), Vr = (e, t) => new Map(e.map((e) => [t(e.entry), e])), Hr = [{
 	field: "featProgression",
 	kind: "feat",
 	primer: "DataPrimerFauxFeatureClassSubclassFeat"
@@ -2711,7 +2721,7 @@ var B = globalThis, Rr = (e) => (t) => B.UrlUtil.URL_TO_HASH_BUILDER[e](t), zr =
 	kind: "optionalfeature",
 	primer: "DataPrimerFauxFeatureClassSubclassOptionalfeature"
 }];
-function Vr(e, t) {
+function Ur(e, t) {
 	let n = "dataSources", r = "isGmUseBlocklist", i = e.Config.get(n, r);
 	e.Config.setTemp(n, r, !1, { isSkipPermissionCheck: !0 });
 	try {
@@ -2720,38 +2730,38 @@ function Vr(e, t) {
 		e.Config.setTemp(n, r, i, { isSkipPermissionCheck: !0 });
 	}
 }
-function Hr(e, t) {
-	let n = t === "classFeature" ? B.DataUtil.class.unpackUidClassFeature : B.DataUtil.class.unpackUidSubclassFeature;
+function Wr(e, t) {
+	let n = t === "classFeature" ? z.DataUtil.class.unpackUidClassFeature : z.DataUtil.class.unpackUidSubclassFeature;
 	return (e[`${t}s`] ?? []).flat(Infinity).map((e) => {
 		let r = e?.[t] ?? e;
 		return typeof r == "string" ? {
-			...n.call(B.DataUtil.class, r),
+			...n.call(z.DataUtil.class, r),
 			...typeof e == "object" ? e : {},
 			[t]: r
 		} : e;
 	});
 }
-function Ur(e, n, r, i, a, o) {
+function Gr(e, n, r, i, a, o) {
 	let s = structuredClone(n.entry);
-	if (s.classFeatures = Hr(s, "classFeature"), s.subclasses = [], e.Charactermancer_Class_Util.getAllFeatures(s).find((e) => e.gainSubclassFeature)?.level === i) {
-		let e = new Set([s, o].filter(Boolean).map((e) => B.UrlUtil.URL_TO_HASH_BUILDER.class(e))), c = (r.subclass ?? []).filter((t) => [t.entry, t.local].filter(Boolean).some((t) => e.has(B.UrlUtil.URL_TO_HASH_BUILDER.class({
+	if (s.classFeatures = Wr(s, "classFeature"), s.subclasses = [], e.Charactermancer_Class_Util.getAllFeatures(s).find((e) => e.gainSubclassFeature)?.level === i) {
+		let e = new Set([s, o].filter(Boolean).map((e) => z.UrlUtil.URL_TO_HASH_BUILDER.class(e))), c = (r.subclass ?? []).filter((t) => [t.entry, t.local].filter(Boolean).some((t) => e.has(z.UrlUtil.URL_TO_HASH_BUILDER.class({
 			name: t.className,
 			source: t.classSource
 		}))));
 		a.extras.push({
 			id: `${n.refKey}|subclass|${i}`,
 			kind: "subclass",
-			title: s.subclassTitle ? t(String(s.subclassTitle)) : F(B.game.i18n.localize("DND5E.ADVANCEMENT.Subclass.Title")),
+			title: s.subclassTitle ? t(String(s.subclassTitle)) : F(z.game.i18n.localize("DND5E.ADVANCEMENT.Subclass.Title")),
 			count: 1,
 			candidates: c.map(({ key: e }) => ({ key: e }))
 		});
 	}
 }
-function Wr(e, n, r, a, o) {
+function Kr(e, n, r, a, o) {
 	let s = n.entry;
-	for (let { field: c, kind: l, primer: u } of Br) {
+	for (let { field: c, kind: l, primer: u } of Hr) {
 		if (!s[c]?.length) continue;
-		let d = new e[u](), f = Rr(l), p = zr(r[l] ?? [], f), m = d._addFauxFeatureFeatures_getFauxFeature, h = 0;
+		let d = new e[u](), f = Br(l), p = Vr(r[l] ?? [], f), m = d._addFauxFeatureFeatures_getFauxFeature, h = 0;
 		d._addFauxFeatureFeatures_getFauxFeature = function(...e) {
 			let r = m.apply(this, e);
 			return r.level === a && e[5] > 0 && (e[6].length ? o.blocked.push(i("{0}：这组包含固定选项，暂时无法在这里应用", t(String(r.name)))) : o.extras.push({
@@ -2769,36 +2779,36 @@ function Wr(e, n, r, a, o) {
 			...structuredClone(s),
 			subclasses: []
 		};
-		if (n.prop === "class" && (g.classFeatures = Hr(g, "classFeature")), n.prop === "subclass") {
-			g.subclassFeatures = Hr(g, "subclassFeature");
+		if (n.prop === "class" && (g.classFeatures = Wr(g, "classFeature")), n.prop === "subclass") {
+			g.subclassFeatures = Wr(g, "subclassFeature");
 			let t = {
 				name: g.className,
 				source: g.classSource,
 				subclasses: [g]
 			};
-			Vr(e, () => d.addFauxFeatureFeatures([t], [...p.values()].map(({ entry: e }) => e)));
-		} else n.prop === "class" && Vr(e, () => d.addFauxFeatureFeatures([g], [...p.values()].map(({ entry: e }) => e)));
+			Ur(e, () => d.addFauxFeatureFeatures([t], [...p.values()].map(({ entry: e }) => e)));
+		} else n.prop === "class" && Ur(e, () => d.addFauxFeatureFeatures([g], [...p.values()].map(({ entry: e }) => e)));
 	}
 }
-async function Gr(e, t, n, a, o) {
+async function qr(e, t, n, a, o) {
 	let c = t.entry.feats;
 	if (e.StatGenUtilAdditionalFeats.isNoChoice(c)) return;
 	if (c.length !== 1) {
 		o.blocked.push(i("专长有多套备选方案，建卡暂时无法在方案间切换"));
 		return;
 	}
-	let l = await a(), u = zr(n, Rr("feat")), d = new e.Charactermancer_AdditionalFeatsSelect({
+	let l = await a(), u = Vr(n, Br("feat")), d = new e.Charactermancer_AdditionalFeatsSelect({
 		available: c,
 		modalFilterFeats: l,
 		modalFilterSpells: {},
 		availableProficiencyManager: {}
 	});
 	d._render_renderPtStatic = () => void 0, d._render_renderPtChooseFromFilter = ({ count: e, filterExpression: n, titleNote: i, featsAdditionType: a }) => {
-		let c = l.getEntitiesMatchingFilterExpression({ filterExpression: n }), d = i ? [...new Set(c.map((e) => e.category).filter((e) => !!e))] : [], f = r([s(B.Parser.getPropDisplayName("feat"), [
+		let c = l.getEntitiesMatchingFilterExpression({ filterExpression: n }), d = i ? [...new Set(c.map((e) => e.category).filter((e) => !!e))] : [], f = r([s(z.Parser.getPropDisplayName("feat"), [
 			"Parser",
 			"CAT_ID_TO_FULL",
-			String(B.Parser.CAT_ID_FEAT)
-		]), ...d.map((e) => s(B.Parser.featCategoryToFull(e), [
+			String(z.Parser.CAT_ID_FEAT)
+		]), ...d.map((e) => s(z.Parser.featCategoryToFull(e), [
 			"Parser",
 			"FEAT_CATEGORY_TO_FULL",
 			e
@@ -2809,7 +2819,7 @@ async function Gr(e, t, n, a, o) {
 			title: f,
 			count: e,
 			candidates: c.flatMap((e) => {
-				let t = u.get(Rr("feat")(e));
+				let t = u.get(Br("feat")(e));
 				return t ? [{ key: t.key }] : [];
 			})
 		});
@@ -2821,14 +2831,14 @@ async function Gr(e, t, n, a, o) {
 		featSet: c[0]
 	});
 }
-function Kr(e, t, n, r) {
+function Jr(e, t, n, r) {
 	t.candidates = t.candidates.filter((t) => {
 		let i = r.get(t.key)?.entry, a = i?.prerequisite;
 		if (!Array.isArray(a) || !a.length) return !0;
 		let [o] = a;
 		if (a.length === 1 && typeof o?.level == "number" && Object.keys(o).length === 1) {
 			let t = e.UtilDataConverter.getPrerequisiteLevelNumber({ prereqs: a });
-			return new B.CONFIG.Item.documentClass({
+			return new z.CONFIG.Item.documentClass({
 				name: i?.name,
 				type: "feat",
 				system: { prerequisites: { level: t } }
@@ -2837,39 +2847,39 @@ function Kr(e, t, n, r) {
 		return t.needsCheck = !0, !0;
 	});
 }
-async function qr(e, t, n, r) {
-	if (!N) throw Error("此版本 Plutonium 缺少建卡选择入口");
-	let i = N, a = t.feat ?? [], o = new Map(Object.values(t).flat().map((e) => [e.key, e])), s, c = () => s ??= i.Charactermancer_AdditionalFeatsSelect._pGetUserInput_pGetModalFilterFeats({ allData: { feat: a.map(({ entry: { prerequisite: e, ...t } }) => t) } }), l = [];
+async function Yr(e, t, n, r) {
+	if (!M) throw Error("此版本 Plutonium 缺少建卡选择入口");
+	let i = M, a = t.feat ?? [], o = new Map(Object.values(t).flat().map((e) => [e.key, e])), s, c = () => s ??= i.Charactermancer_AdditionalFeatsSelect._pGetUserInput_pGetModalFilterFeats({ allData: { feat: a.map(({ entry: { prerequisite: e, ...t } }) => t) } }), l = [];
 	for (let s of e) {
 		let e = {
 			refKey: s.refKey,
 			extras: [],
 			blocked: []
 		};
-		s.prop === "class" && Ur(i, s, t, 1, e, r[s.refKey]), (s.prop === "class" || s.prop === "subclass") && Wr(i, s, t, 1, e), s.entry.feats?.length && await Gr(i, s, a, c, e);
-		for (let t of e.extras) Kr(i, t, n, o);
+		s.prop === "class" && Gr(i, s, t, 1, e, r[s.refKey]), (s.prop === "class" || s.prop === "subclass") && Kr(i, s, t, 1, e), s.entry.feats?.length && await qr(i, s, a, c, e);
+		for (let t of e.extras) Jr(i, t, n, o);
 		l.push(e);
 	}
 	return l;
 }
 // src/rules/kernel/frame/commands-options.ts
-var Jr = (e, t = []) => Object.entries(e ?? {}).flatMap(([e, n]) => n?.children ? Jr(n.children, [...t, F(String(n.label ?? e))]) : [{
+var Xr = (e, t = []) => Object.entries(e ?? {}).flatMap(([e, n]) => n?.children ? Xr(n.children, [...t, F(String(n.label ?? e))]) : [{
 	value: e,
 	label: String(n?.label ?? e),
 	path: t
-}]), Yr = {
+}]), Zr = {
 	Trait: async (e, t, n) => {
-		let { available: r } = await e.unfulfilledChoices(), i = r.filter((e) => e.type === "grant").flatMap((e) => Jr(e.choices)), a = /* @__PURE__ */ new Map();
+		let { available: r } = await e.unfulfilledChoices(), i = r.filter((e) => e.type === "grant").flatMap((e) => Xr(e.choices)), a = /* @__PURE__ */ new Map();
 		for (let e of r.filter((e) => e.type === "choice")) {
 			let t = a.get(e.choiceIdx) ?? {
 				count: 0,
-				options: Jr(e.choices)
+				options: Xr(e.choices)
 			};
 			t.count++, a.set(e.choiceIdx, t);
 		}
 		let o = i[0]?.value ?? [...a.values()][0]?.options[0]?.value, s = n.get(e.id), l = s?.choices.length ? s.choices : void 0;
 		if (!a.size && !l) return null;
-		let u = [...a.values()], d = await zn([...i, ...u.flatMap((e) => e.options)].map((e) => e.value)), f = (e) => {
+		let u = [...a.values()], d = await Bn([...i, ...u.flatMap((e) => e.options)].map((e) => e.value)), f = (e) => {
 			let t = s?.names.get(e.value) ?? (d[e.value] ? c(e.label, d[e.value], !0) : F(e.label)), n = t.$t === "name" ? t.ids : [];
 			return {
 				...e,
@@ -2888,22 +2898,22 @@ var Jr = (e, t = []) => Object.entries(e ?? {}).flatMap(([e, n]) => n?.children 
 			...l ? { plans: l } : {}
 		};
 	},
-	AbilityScoreImprovement: async (e, t) => an(e, t)
-}, Xr = /* @__PURE__ */ new Set([
+	AbilityScoreImprovement: async (e, t) => on(e, t)
+}, Qr = /* @__PURE__ */ new Set([
 	"HitPoints",
 	"ScaleValue",
 	"Size",
 	"ItemGrant",
 	"Subclass"
 ]);
-async function Zr(e, n = [], i, a) {
+async function $r(e, n = [], i, a) {
 	let o = [];
 	for (let c of e.steps) {
 		let e = c.flow?.advancement;
 		if (!e) continue;
 		let l = e.constructor?.typeName ?? e.type, u = await c.flow.getAutomaticApplicationValue?.() !== !1, d = null, f = !1, p = n.find((t) => t.id === e.id && (t.level ?? null) === (c.flow.level ?? null))?.value;
-		Yr[l] ? d = await Yr[l](a.get(e.id) ?? e, p, i) : !u && !Xr.has(l) && (f = !0);
-		let m = l === "Trait" ? en(e) : null, h = e._source?.name || e._source?.title, g = e.name ?? e.title, _ = m ? F(m) : h ? t(String(h), It(String(h))) : g ? F(String(g)) : null, v = l === "Trait" && e.hint ? r(String(e.hint).split("\n").map((e) => s(e, rr(e))), "\n") : void 0;
+		Zr[l] ? d = await Zr[l](a.get(e.id) ?? e, p, i) : !u && !Qr.has(l) && (f = !0);
+		let m = l === "Trait" ? tn(e) : null, h = e._source?.name || e._source?.title, g = e.name ?? e.title, _ = m ? F(m) : h ? t(String(h), Lt(String(h))) : g ? F(String(g)) : null, v = l === "Trait" && e.hint ? r(String(e.hint).split("\n").map((e) => s(e, ir(e))), "\n") : void 0;
 		o.push({
 			id: e.id,
 			level: c.flow.level ?? null,
@@ -2917,14 +2927,14 @@ async function Zr(e, n = [], i, a) {
 	}
 	return o;
 }
-function Qr(e) {
+function ei(e) {
 	return { buildOptions: (t) => e([], async () => {
 		let e = [];
 		for (let n of t.items) e.push({
 			...n,
-			data: n.data ?? await P(n.prop, n.entry)
+			data: n.data ?? await N(n.prop, n.entry)
 		});
-		let n = [], r = await kr("选项预览", e, [], t.choices ?? {}, {
+		let n = [], r = await jr("选项预览", e, [], t.choices ?? {}, {
 			strict: !1,
 			picks: t.picks,
 			blank: t.blank,
@@ -2932,13 +2942,13 @@ function Qr(e) {
 			onManager: async ({ manager: e, key: t, unsupported: r, picks: i, traitPlans: a, expertise: o }) => {
 				n.push({
 					refKey: t,
-					steps: await Zr(e, i, a, o),
+					steps: await $r(e, i, a, o),
 					unsupported: r
 				});
 			}
 		}), i = r.actor ?? r.created;
 		try {
-			let e = t.extraPools && Object.keys(t.extraPools).length ? await qr(t.items, t.extraPools, i, t.local ?? {}) : [], a = new Map(n.map((e) => [e.refKey, e]));
+			let e = t.extraPools && Object.keys(t.extraPools).length ? await Yr(t.items, t.extraPools, i, t.local ?? {}) : [], a = new Map(n.map((e) => [e.refKey, e]));
 			return {
 				items: e.length ? e.map((e) => ({
 					steps: [],
@@ -2949,9 +2959,9 @@ function Qr(e) {
 				complete: !r.pending && !r.missingTraits.length,
 				abilities: {
 					initial: r.initial,
-					auto: Or(i),
+					auto: Ar(i),
 					cap: globalThis.CONFIG?.DND5E?.maxAbilityScore ?? null,
-					labels: Object.fromEntries(Object.entries(qt("abilities")).map(([e, t]) => [e, F(t)]))
+					labels: Object.fromEntries(Object.entries(Jt("abilities")).map(([e, t]) => [e, F(t)]))
 				}
 			};
 		} finally {
@@ -2960,63 +2970,63 @@ function Qr(e) {
 	}) };
 }
 // src/rules/kernel/frame/registry-keys.ts
-var $r = globalThis, ei = null, ti = (e) => typeof e?.label == "string" ? e.label : typeof e?.name == "string" ? e.name : typeof e?.labels?.title == "string" ? e.labels.title : null;
-function ni(e, t = []) {
+var ti = globalThis, ni = null, ri = (e) => typeof e?.label == "string" ? e.label : typeof e?.name == "string" ? e.name : typeof e?.labels?.title == "string" ? e.labels.title : null;
+function ii(e, t = []) {
 	if (!e || typeof e != "object" || Array.isArray(e)) return t;
-	for (let [n, r] of Object.entries(e)) t.push([n, r]), r?.children && ni(r.children, t);
+	for (let [n, r] of Object.entries(e)) t.push([n, r]), r?.children && ii(r.children, t);
 	return t;
 }
-function ri() {
-	let e = (e) => typeof e == "string" ? e : ti(e);
-	ei = {
-		tables: Object.fromEntries(Object.entries($r.CONFIG.DND5E ?? {}).map(([t, n]) => [t, Object.fromEntries(ni(n).flatMap(([t, n]) => {
+function ai() {
+	let e = (e) => typeof e == "string" ? e : ri(e);
+	ni = {
+		tables: Object.fromEntries(Object.entries(ti.CONFIG.DND5E ?? {}).map(([t, n]) => [t, Object.fromEntries(ii(n).flatMap(([t, n]) => {
 			let r = e(n);
 			return r ? [[t, r]] : [];
 		}))])),
-		statuses: Object.fromEntries(($r.CONFIG.statusEffects ?? []).filter((e) => typeof e?.name == "string").map((e) => [e.id, e.name]))
+		statuses: Object.fromEntries((ti.CONFIG.statusEffects ?? []).filter((e) => typeof e?.name == "string").map((e) => [e.id, e.name]))
 	};
 }
-var ii = () => ei !== null, ai = null;
-function oi(e) {
-	let t = $r.game.i18n, n = ai;
+var oi = () => ni !== null, si = null;
+function ci(e) {
+	let t = ti.game.i18n, n = si;
 	if (!n || n.i18n !== t) {
 		let e = /* @__PURE__ */ new Map(), r = (t, n) => {
 			for (let [i, a] of Object.entries(t ?? {})) typeof a == "string" ? e.set(a, [...e.get(a) ?? [], [...n, i].join(".")]) : a && typeof a == "object" && r(a, [...n, i]);
 		};
-		r(t.translations, []), r(t._fallback, []), n = ai = {
+		r(t.translations, []), r(t._fallback, []), n = si = {
 			i18n: t,
 			byText: e
 		};
 	}
 	return (n.byText.get(e) ?? []).filter((e) => t.has(e));
 }
-function si(e, t) {
-	return Rt([.../* @__PURE__ */ new Set([...t && $r.game.i18n.has(t) ? [t] : [], ...oi(e)])], e);
+function B(e, t) {
+	return zt([.../* @__PURE__ */ new Set([...t && ti.game.i18n.has(t) ? [t] : [], ...ci(e)])], e);
 }
-function ci(e, t) {
+function li(e, t) {
 	let n = {};
-	for (let [r, i] of ni(t)) {
-		let t = ei?.tables[e]?.[r] ?? null, a = t && $r.game.i18n.has(t) ? t : null, o = typeof i == "string" ? i : ti(i);
+	for (let [r, i] of ii(t)) {
+		let t = ni?.tables[e]?.[r] ?? null, a = t && ti.game.i18n.has(t) ? t : null, o = typeof i == "string" ? i : ri(i);
 		if (!o || !a && typeof i == "string") continue;
-		let s = si(a ? $r.game.i18n.localize(a) : o, a);
+		let s = B(a ? ti.game.i18n.localize(a) : o, a);
 		s && (n[r] = s);
 	}
 	return n;
 }
-function li() {
-	return ei ? /* @__PURE__ */ new Set([...Object.values(ei.tables).flatMap((e) => Object.keys(e)), ...Object.keys(ei.statuses)]) : /* @__PURE__ */ new Set();
+function ui() {
+	return ni ? /* @__PURE__ */ new Set([...Object.values(ni.tables).flatMap((e) => Object.keys(e)), ...Object.keys(ni.statuses)]) : /* @__PURE__ */ new Set();
 }
-var ui = (e) => ei?.statuses[e] ?? null, di = globalThis;
-function fi(e, t, n) {
-	let r = [], i = [], a = [], o = (e) => String(di.UrlUtil.encodeForHash(e)), s = n.replace(/\s*\.\.\.$/, "").trim().toLowerCase(), c = (e, n, l, u = !1) => {
+var di = (e) => ni?.statuses[e] ?? null, fi = globalThis;
+function pi(e, t, n) {
+	let r = [], i = [], a = [], o = (e) => String(fi.UrlUtil.encodeForHash(e)), s = n.replace(/\s*\.\.\.$/, "").trim().toLowerCase(), c = (e, n, l, u = !1) => {
 		if (Array.isArray(e)) e.forEach((e, t) => c(e, n, [...l, t], u));
-		else if (typeof e == "string") u && s.length >= 8 && String(di.Renderer.stripTags(e)).trim().toLowerCase().startsWith(s) && a.push({
+		else if (typeof e == "string") u && s.length >= 8 && String(fi.Renderer.stripTags(e)).trim().toLowerCase().startsWith(s) && a.push({
 			entry: n,
 			path: l
 		});
 		else if (e && typeof e == "object") {
 			if (l.length && typeof e.name == "string") {
-				let a = String(di.Renderer.stripTags(e.name)), s = a.replace(/\s*\([^()]*\)\s*$/, "").replace(/\s*[.?!]$/, ""), c = N?.UtilEntityBackgroundFeature?._getEntityAliases_name_noFeature?.({ name: a }) ?? null;
+				let a = String(fi.Renderer.stripTags(e.name)), s = a.replace(/\s*\([^()]*\)\s*$/, "").replace(/\s*[.?!]$/, ""), c = M?.UtilEntityBackgroundFeature?._getEntityAliases_name_noFeature?.({ name: a }) ?? null;
 				t.startsWith(`${o(a)}_`) ? r.push({
 					entry: n,
 					path: [...l, "name"]
@@ -3030,8 +3040,8 @@ function fi(e, t, n) {
 	};
 	return e.forEach((e, t) => c(e, t, [])), r.length ? r.length === 1 ? r[0] : null : i.length ? i.length === 1 ? i[0] : null : a.length === 1 ? a[0] : null;
 }
-function pi(e, n) {
-	let r = e.flags?.plutonium, i = r && !r.propDroppable && typeof r.page == "string" && r.page.endsWith(".html") ? di.UrlUtil?.PAGE_TO_PROPS?.[r.page]?.[0] : null, a = i ? {
+function mi(e, n) {
+	let r = e.flags?.plutonium, i = r && !r.propDroppable && typeof r.page == "string" && r.page.endsWith(".html") ? fi.UrlUtil?.PAGE_TO_PROPS?.[r.page]?.[0] : null, a = i ? {
 		...r,
 		propDroppable: i
 	} : r, o = !!a?.propDroppable && typeof a.page == "string" && a.page.endsWith(".html") && !a.isDirectImport, s = e.flags?.["tavern-trpg"]?.named === !0;
@@ -3045,16 +3055,16 @@ function pi(e, n) {
 			name: d(String(e.name ?? "")),
 			author: n
 		} : {
-			name: o ? t(e.name, p(e.name, n, si(String(e.name ?? ""), null) ?? Ut(String(e.name ?? "")))) : c(e.name, n),
+			name: o ? t(e.name, p(e.name, n, B(String(e.name ?? ""), null) ?? Wt(String(e.name ?? "")))) : c(e.name, n),
 			author: n
 		};
 	}
 	if (s) return { name: d(String(e.name ?? "")) };
-	let l = typeof a?.hash == "string" ? fi(n, a.hash, String(e.name ?? "")) : null;
-	return l ? { name: t(e.name, void 0, l) } : { name: si(String(e.name ?? ""), null) ?? t(e.name, Ut(String(e.name ?? ""))) };
+	let l = typeof a?.hash == "string" ? pi(n, a.hash, String(e.name ?? "")) : null;
+	return l ? { name: t(e.name, void 0, l) } : { name: B(String(e.name ?? ""), null) ?? t(e.name, Wt(String(e.name ?? ""))) };
 }
 // src/rules/kernel/frame/action-list.ts
-var mi = globalThis, hi = [
+var hi = globalThis, gi = [
 	"action",
 	"bonus",
 	"reaction",
@@ -3063,48 +3073,48 @@ var mi = globalThis, hi = [
 	"lair",
 	"crew",
 	"special"
-], gi = (e) => e.system.activities?.contents?.[0]?.activation?.type, _i = (e) => !!e && ![
+], _i = (e) => e.system.activities?.contents?.[0]?.activation?.type, vi = (e) => !!e && ![
 	"minute",
 	"hour",
 	"day",
 	"none"
-].includes(e), vi = (e) => !!(e.system.hasLimitedUses && e.system.uses?.recovery?.length), yi = (e) => String(e.system.method ?? e.system.preparation?.mode ?? ""), bi = () => mi.CONFIG.DND5E.spellPreparationStates ?? {};
-function xi(e) {
+].includes(e), yi = (e) => !!(e.system.hasLimitedUses && e.system.uses?.recovery?.length), bi = (e) => String(e.system.method ?? e.system.preparation?.mode ?? ""), xi = () => hi.CONFIG.DND5E.spellPreparationStates ?? {};
+function Si(e) {
 	if (!(e.system.level > 0)) return !1;
 	let t = e.system.prepared;
-	return e.system.canPrepare && t === bi().prepared?.value || e.system.canPrepare && t === bi().always?.value || yi(e) === "atwill" && !vi(e) || yi(e) === "innate" && !vi(e) || vi(e) && e.system.uses?.value > 0 || !!e.system.linkedActivity?.item;
+	return e.system.canPrepare && t === xi().prepared?.value || e.system.canPrepare && t === xi().always?.value || bi(e) === "atwill" && !yi(e) || bi(e) === "innate" && !yi(e) || yi(e) && e.system.uses?.value > 0 || !!e.system.linkedActivity?.item;
 }
-function Si(e) {
+function Ci(e) {
 	let t = e.system.activities;
 	return !!(t?.getByType?.("attack")?.[0] ?? t?.getByType?.("damage")?.[0] ?? t?.getByType?.("save")?.[0])?.damage?.parts?.length;
 }
-function Ci(e) {
+function wi(e) {
 	let t = e.flags?.["tavern-trpg"]?.actionList;
 	if (t === !0 || t === !1) return t;
 	switch (e.type) {
 		case "weapon": return !!e.system.equipped;
-		case "equipment": return !!e.system.equipped && _i(gi(e));
-		case "consumable": return _i(gi(e));
+		case "equipment": return !!e.system.equipped && vi(_i(e));
+		case "consumable": return vi(_i(e));
 		case "spell": {
 			let t = e.system.linkedActivity?.item, n = !!t && (t.system.attunement !== "required" || t.system.attuned), r = e.system.level === 0;
-			if (!r && !(xi(e) || n) || t && r && !n) return !1;
-			let i = gi(e), a = e.system.duration ?? {};
-			return i === "reaction" || i === "bonus" || Si(e) || a.units === "minute" && Number(a.value) === 1 || a.units === "round" && Number(a.value) === 1 || !!e.effects?.size;
+			if (!r && !(Si(e) || n) || t && r && !n) return !1;
+			let i = _i(e), a = e.system.duration ?? {};
+			return i === "reaction" || i === "bonus" || Ci(e) || a.units === "minute" && Number(a.value) === 1 || a.units === "round" && Number(a.value) === 1 || !!e.effects?.size;
 		}
-		case "feat": return !!gi(e);
+		case "feat": return !!_i(e);
 		default: return !1;
 	}
 }
-function wi(e) {
-	let t = new Map(hi.map((e) => [e, []]));
+function Ti(e) {
+	let t = new Map(gi.map((e) => [e, []]));
 	for (let n of e.items) {
-		if (!Ci(n)) continue;
-		let e = gi(n), r = e && hi.includes(e) ? e : "other";
+		if (!wi(n)) continue;
+		let e = _i(n), r = e && gi.includes(e) ? e : "other";
 		t.set(r, [...t.get(r) ?? [], n]);
 	}
 	let n = (e) => {
-		let t = mi.CONFIG.DND5E.activityActivationTypes?.[e]?.label;
-		return F(t ? mi.game.i18n.localize(t) : e === "other" ? "Other" : e);
+		let t = hi.CONFIG.DND5E.activityActivationTypes?.[e]?.label;
+		return F(t ? hi.game.i18n.localize(t) : e === "other" ? "Other" : e);
 	};
 	return [...t.entries()].filter(([, e]) => e.length).map(([e, t]) => ({
 		id: e,
@@ -3113,19 +3123,19 @@ function wi(e) {
 	}));
 }
 // src/rules/kernel/frame/sheet-view.ts
-var V = globalThis, Ti = (e) => !!e && e.constructor === V.foundry.data.fields.StringField;
-function Ei(e, t, n) {
+var V = globalThis, Ei = (e) => !!e && e.constructor === V.foundry.data.fields.StringField;
+function Di(e, t, n) {
 	if (e == null || !t) return n;
-	if (typeof e == "string") return Ti(t) && e.trim() && n.add(e), n;
+	if (typeof e == "string") return Ei(t) && e.trim() && n.add(e), n;
 	if (typeof e != "object") return n;
 	let r = t.element ?? (t.model instanceof V.foundry.data.fields.DataField ? t.model : null), i = t.fields;
 	for (let [t, a] of Object.entries(e)) {
 		let e = i ? i[t] : r;
-		e && Ei(a, e, n);
+		e && Di(a, e, n);
 	}
 	return n;
 }
-function Di(e, t, n, r = /* @__PURE__ */ new Set(), i = 0) {
+function Oi(e, t, n, r = /* @__PURE__ */ new Set(), i = 0) {
 	if (typeof e == "function") return;
 	if (typeof e != "object" || !e) return e;
 	if (i > 10 || r.has(e) || e === V.CONFIG || e === V.CONFIG?.DND5E || e === V.game || n.has(e)) return;
@@ -3135,24 +3145,24 @@ function Di(e, t, n, r = /* @__PURE__ */ new Set(), i = 0) {
 			documentName: e.documentName,
 			id: e.id ?? null
 		};
-		let a = e.labels ? Di(e.labels, t, n, r, i + 1) : void 0;
+		let a = e.labels ? Oi(e.labels, t, n, r, i + 1) : void 0;
 		return {
 			documentName: "Item",
 			id: e.id,
-			...pi(e, t),
+			...mi(e, t),
 			...a ? { labels: a } : {}
 		};
 	}
 	if (!(e instanceof a.data.fields.DataField || e instanceof a.applications.api.ApplicationV2)) {
 		r.add(e);
 		try {
-			if (e instanceof Set) return [...e].map((e) => Di(e, t, n, r, i + 1));
-			if (e instanceof Map) return Object.fromEntries([...Map.prototype.entries.call(e)].map(([e, a]) => [e, Di(a, t, n, r, i + 1)]));
-			if (Array.isArray(e)) return e.map((e) => Di(e, t, n, r, i + 1));
+			if (e instanceof Set) return [...e].map((e) => Oi(e, t, n, r, i + 1));
+			if (e instanceof Map) return Object.fromEntries([...Map.prototype.entries.call(e)].map(([e, a]) => [e, Oi(a, t, n, r, i + 1)]));
+			if (Array.isArray(e)) return e.map((e) => Oi(e, t, n, r, i + 1));
 			let a = {};
 			for (let o of Object.keys(e)) {
 				if (o.startsWith("_")) continue;
-				let s = Di(e[o], t, n, r, i + 1);
+				let s = Oi(e[o], t, n, r, i + 1);
 				s !== void 0 && (a[o] = s);
 			}
 			return a;
@@ -3161,21 +3171,21 @@ function Di(e, t, n, r = /* @__PURE__ */ new Set(), i = 0) {
 		}
 	}
 }
-function Oi(e, t) {
+function ki(e, t) {
 	let n = /* @__PURE__ */ new Set();
 	return [...e.items].map((e) => String(e.name ?? "")).filter((e) => e.length >= 3 && /[A-Za-z]/.test(e) && !n.has(e) && n.add(e)).sort((e, t) => t.length - e.length).map((n) => ({
 		re: RegExp(`(?<![A-Za-z])${n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![A-Za-z])`),
-		text: pi([...e.items].find((e) => e.name === n), t).name
+		text: mi([...e.items].find((e) => e.name === n), t).name
 	}));
 }
-async function ki(e) {
+async function Ai(e) {
 	let t = V.CONFIG.DND5E, n = V.dnd5e.documents.Trait, r = /* @__PURE__ */ new Set([
 		...[...e.system.traits?.weaponProf?.value ?? []].filter((e) => t.weaponIds?.[e]),
 		...[...e.system.traits?.armorProf?.value ?? []].filter((e) => t.armorIds?.[e] || t.shieldIds?.[e]),
 		...Object.keys(e.system.tools ?? {}).filter((e) => t.tools?.[e])
 	]);
 	if (!r.size) return [];
-	let i = await Ee(), a = [];
+	let i = await De(), a = [];
 	for (let e of r) {
 		let r = String(n.getBaseItem(t.weaponIds?.[e] ?? t.armorIds?.[e] ?? t.shieldIds?.[e] ?? t.tools?.[e]?.id ?? e, { indexOnly: !0 })?.name ?? ""), o = i.get(e);
 		r && /[A-Za-z]/.test(r) && o && a.push({
@@ -3185,12 +3195,12 @@ async function ki(e) {
 	}
 	return a;
 }
-function Ai(e, t) {
+function ji(e, t) {
 	if (!/[A-Za-z]/.test(e)) return null;
 	for (let { re: n, text: i } of t) {
 		let a = n.exec(e);
 		if (!a) continue;
-		let o = e.slice(0, a.index), s = e.slice(a.index + a[0].length), c = (e) => e ? [Ai(e, t) ?? d(e)] : [];
+		let o = e.slice(0, a.index), s = e.slice(a.index + a[0].length), c = (e) => e ? [ji(e, t) ?? d(e)] : [];
 		return r([
 			...c(o),
 			i,
@@ -3199,37 +3209,37 @@ function Ai(e, t) {
 	}
 	return null;
 }
-function ji(e, n, r, i) {
+function Mi(e, n, r, i) {
 	if (typeof e == "string") {
 		if (e.includes(".") && !/\s/.test(e) || /^[A-Z][A-Za-z]{2,}$/.test(e)) {
-			let t = Lt(e);
+			let t = Rt(e);
 			if (t) return t;
 		}
-		return n.has(e) && !r.has(e) && /\p{L}/u.test(e) ? si(e, null) ?? t(e) : Ai(e, i) ?? e;
+		return n.has(e) && !r.has(e) && /\p{L}/u.test(e) ? B(e, null) ?? t(e) : ji(e, i) ?? e;
 	}
-	return !e || typeof e != "object" || typeof e.$t == "string" ? e : Array.isArray(e) ? e.map((e) => ji(e, n, r, i)) : Object.fromEntries(Object.entries(e).map(([e, t]) => [e, e === "author" ? t : ji(t, n, r, i)]));
+	return !e || typeof e != "object" || typeof e.$t == "string" ? e : Array.isArray(e) ? e.map((e) => Mi(e, n, r, i)) : Object.fromEntries(Object.entries(e).map(([e, t]) => [e, e === "author" ? t : Mi(t, n, r, i)]));
 }
-async function Mi(e, t) {
+async function Ni(e, t) {
 	let n = e.sheet, r = (e) => JSON.parse(JSON.stringify(e)), i = Object.keys(n.constructor.PARTS ?? {}), a = await n._prepareContext(r({ parts: i })), o = {};
 	for (let e of i) {
 		let t = await n._preparePartContext(e, Object.assign({}, a), r({}));
 		o[e] = Object.fromEntries(Object.entries(t).filter(([e]) => !(e in a)));
 	}
-	let s = Ei(e.toObject().system, e.system.schema, /* @__PURE__ */ new Set());
-	for (let t of e.items) Ei(t.toObject().system, t.system.schema, s);
-	let c = li(), l = new Set([e._source].filter(Boolean));
-	o.actions = await Ni(e, n, o), await Pi(e, a.itemContext);
-	let u = [...Oi(e, t), ...await ki(e)];
+	let s = Di(e.toObject().system, e.system.schema, /* @__PURE__ */ new Set());
+	for (let t of e.items) Di(t.toObject().system, t.system.schema, s);
+	let c = ui(), l = new Set([e._source].filter(Boolean));
+	o.actions = await Pi(e, n, o), await Fi(e, a.itemContext);
+	let u = [...ki(e, t), ...await Ai(e)];
 	return {
 		sheet: n.constructor.name,
-		base: ji(Di(a, t, l), s, c, u),
-		parts: ji(Di(o, t, l), s, c, u)
+		base: Mi(Oi(a, t, l), s, c, u),
+		parts: Mi(Oi(o, t, l), s, c, u)
 	};
 }
-async function Ni(e, t, n) {
-	return t instanceof V.dnd5e.applications.actor.NPCActorSheet ? { sections: n.features?.sections ?? [] } : { sections: wi(e) };
+async function Pi(e, t, n) {
+	return t instanceof V.dnd5e.applications.actor.NPCActorSheet ? { sections: n.features?.sections ?? [] } : { sections: Ti(e) };
 }
-async function Pi(e, t) {
+async function Fi(e, t) {
 	if (!t) return;
 	let n = new Set([...e.items].filter((e) => e.type === "subclass").map((e) => e.system?.classIdentifier));
 	for (let r of [...e.items].filter((e) => e.type === "class")) {
@@ -3240,14 +3250,14 @@ async function Pi(e, t) {
 	}
 }
 // src/rules/kernel/frame/sheet-traits.ts
-var Fi = (e) => typeof e == "number" && Number.isFinite(e) ? e : Number(e) || 0, Ii = (e) => e.constructor?.typeName ?? e.type;
-function Li(e) {
-	let t = e.system, n = e._source?.system ?? {}, r = e.type === "character" && t.details?.race && typeof t.details.race == "object" ? t.details.race : null, i = r ? rt(r) : null, a = r ? Object.values(r.advancement?.byId ?? {}).find((e) => Ii(e) === "Size") : null, o = (e, t, n, r) => Object.keys(e ?? {}).map((a) => {
-		let o = Fi(n?.[a]);
+var Ii = (e) => typeof e == "number" && Number.isFinite(e) ? e : Number(e) || 0, Li = (e) => e.constructor?.typeName ?? e.type;
+function Ri(e) {
+	let t = e.system, n = e._source?.system ?? {}, r = e.type === "character" && t.details?.race && typeof t.details.race == "object" ? t.details.race : null, i = r ? it(r) : null, a = r ? Object.values(r.advancement?.byId ?? {}).find((e) => Li(e) === "Size") : null, o = (e, t, n, r) => Object.keys(e ?? {}).map((a) => {
+		let o = Ii(n?.[a]);
 		return {
 			key: a,
-			value: Fi(e?.[a]),
-			own: Fi(t?.[a]),
+			value: Ii(e?.[a]),
+			own: Ii(t?.[a]),
 			species: o,
 			off: i && o ? {
 				ref: i,
@@ -3267,7 +3277,7 @@ function Li(e) {
 				ref: i,
 				advancement: a.id
 			} : null,
-			codes: { ...N?.VET_SIZE_TO_ABV ?? {} }
+			codes: { ...M?.VET_SIZE_TO_ABV ?? {} }
 		},
 		type: {
 			value: String(s.value ?? ""),
@@ -3293,8 +3303,32 @@ function Li(e) {
 		alignment: String(n.details?.alignment ?? "")
 	};
 }
+// src/rules/kernel/frame/sheet-levels.ts
+var zi = globalThis;
+function Bi(e) {
+	return typeof e != "string" || !e.trim() ? null : Rt(e) ?? B(e, null) ?? s(e, null);
+}
+function Vi(e) {
+	let t = zi.dnd5e?.documents?.Trait;
+	return ot(e).map((n) => {
+		let { items: r, keys: i } = ht(n.adv, n.level);
+		return {
+			itemId: n.item.id,
+			ref: n.key,
+			level: n.level,
+			advancement: n.adv.id,
+			type: n.type,
+			title: Bi(n.adv.title),
+			items: r.filter((t) => e.items.has(t.id)),
+			keys: i.map((e) => ({
+				key: e,
+				label: Bi(typeof t?.keyLabel == "function" ? t.keyLabel(e) : e)
+			}))
+		};
+	});
+}
 // src/rules/kernel/frame/commands-sheet.ts
-var H = globalThis, Ri = { configure: !1 }, zi = { create: !1 }, Bi = [
+var H = globalThis, Hi = { configure: !1 }, Ui = { create: !1 }, Wi = [
 	/^_id$/,
 	/^_stats(\.|$)/,
 	/^type$/,
@@ -3303,35 +3337,35 @@ var H = globalThis, Ri = { configure: !1 }, zi = { create: !1 }, Bi = [
 	/^flags\.plutonium(\.|$)/,
 	/^system\.advancement(\.|$)/
 ];
-function Vi(e, t) {
-	return !t || Bi.some((e) => e.test(t)) ? !1 : t.startsWith("flags.") ? t.split(".").length >= 3 : t.startsWith("system.") ? !!e.system?.schema?.getField?.(t.slice(7)) : !!e.schema?.getField?.(t);
+function Gi(e, t) {
+	return !t || Wi.some((e) => e.test(t)) ? !1 : t.startsWith("flags.") ? t.split(".").length >= 3 : t.startsWith("system.") ? !!e.system?.schema?.getField?.(t.slice(7)) : !!e.schema?.getField?.(t);
 }
-function Hi(e, t, n, r) {
-	if (!Vi(e, t)) throw Error(`不能改这个字段：${t}`);
+function Ki(e, t, n, r) {
+	if (!Gi(e, t)) throw Error(`不能改这个字段：${t}`);
 	if (!r) return { [t]: n };
 	let i = t.lastIndexOf(".");
 	return { [`${t.slice(0, i)}.-=${t.slice(i + 1)}`]: null };
 }
-var Ui = (e, t) => t ? e.items.get(t, { strict: !0 }) : e, Wi = (e) => JSON.parse(JSON.stringify(e ?? null, (e, t) => e === "document" || e === "anchor" || e === "fields" || e === "field" || e === "parent" ? void 0 : t));
-function Gi(e) {
+var qi = (e, t) => t ? e.items.get(t, { strict: !0 }) : e, Ji = (e) => JSON.parse(JSON.stringify(e ?? null, (e, t) => e === "document" || e === "anchor" || e === "fields" || e === "field" || e === "parent" ? void 0 : t));
+function Yi(e) {
 	let t = /* @__PURE__ */ new Set([Object.prototype, H.foundry.abstract.DataModel.prototype]), n = [];
 	for (let r = Object.getPrototypeOf(e); r && !t.has(r); r = Object.getPrototypeOf(r)) for (let [e, t] of Object.entries(Object.getOwnPropertyDescriptors(r))) t.get && !n.some(([t]) => t === e) && n.push([e, t.get]);
 	return n;
 }
-function Ki(e, t = 0, n = /* @__PURE__ */ new WeakSet()) {
+function Xi(e, t = 0, n = /* @__PURE__ */ new WeakSet()) {
 	if (typeof e == "function") return;
 	if (typeof e != "object" || !e) return e;
 	if (t > 12 || n.has(e) || e instanceof H.foundry.abstract.Document) return;
-	if (n.add(e), e instanceof Set) return [...e].map((e) => Ki(e, t + 1, n));
-	if (e instanceof Map) return Object.fromEntries([...Map.prototype.entries.call(e)].map(([e, r]) => [e, Ki(r, t + 1, n)]));
-	if (Array.isArray(e)) return e.map((e) => Ki(e, t + 1, n));
+	if (n.add(e), e instanceof Set) return [...e].map((e) => Xi(e, t + 1, n));
+	if (e instanceof Map) return Object.fromEntries([...Map.prototype.entries.call(e)].map(([e, r]) => [e, Xi(r, t + 1, n)]));
+	if (Array.isArray(e)) return e.map((e) => Xi(e, t + 1, n));
 	let r = {};
 	for (let i of Object.keys(e)) {
 		if (i === "parent" || i.startsWith("_")) continue;
-		let a = Ki(e[i], t + 1, n);
+		let a = Xi(e[i], t + 1, n);
 		a !== void 0 && (r[i] = a);
 	}
-	for (let [i, a] of Gi(e)) {
+	for (let [i, a] of Yi(e)) {
 		if (i in r || i === "parent" || i.startsWith("_")) continue;
 		let o;
 		try {
@@ -3339,27 +3373,27 @@ function Ki(e, t = 0, n = /* @__PURE__ */ new WeakSet()) {
 		} catch {
 			o = void 0;
 		}
-		let s = Ki(o, t + 1, n);
+		let s = Xi(o, t + 1, n);
 		s !== void 0 && (r[i] = s);
 	}
 	return r;
 }
-async function qi(e, t, n) {
+async function Zi(e, t, n) {
 	if (!e) return null;
 	let r = new e({ document: t }), i = await r._prepareContext({ parts: [] }), a = await r._preparePartContext(Object.keys(e.PARTS ?? {})[0] ?? "config", i, {});
-	return Object.fromEntries(n.filter((e) => e in a).map((e) => [e, Wi(a[e])]));
+	return Object.fromEntries(n.filter((e) => e in a).map((e) => [e, Ji(a[e])]));
 }
-var Ji = {
-	ability: (e, t) => e.rollAbilityCheck({ ability: t }, Ri, zi),
-	tool: (e, t) => e.rollToolCheck({ tool: t }, Ri, zi),
-	death: (e) => e.rollDeathSave({}, Ri, zi),
-	hitDie: (e, t) => e.rollHitDie(t ? { denomination: t } : {}, Ri, zi),
+var Qi = {
+	ability: (e, t) => e.rollAbilityCheck({ ability: t }, Hi, Ui),
+	tool: (e, t) => e.rollToolCheck({ tool: t }, Hi, Ui),
+	death: (e) => e.rollDeathSave({}, Hi, Ui),
+	hitDie: (e, t) => e.rollHitDie(t ? { denomination: t } : {}, Hi, Ui),
 	initiative: async (e) => {
 		let t = e.getInitiativeRoll();
 		return t ? (await t.evaluate({ allowInteractive: !1 }), [t]) : null;
 	}
 };
-function Yi(e, r, i) {
+function $i(e, r, i) {
 	return {
 		sheet: (n, i = []) => e([], async () => {
 			let e = r(n), a = H.dnd5e?.applications?.actor ?? {};
@@ -3368,16 +3402,16 @@ function Yi(e, r, i) {
 				name: e.name,
 				img: e.img,
 				type: e.type,
-				flags: Wi(e.flags ?? {}),
-				system: Ki(e.system),
+				flags: Ji(e.flags ?? {}),
+				system: Xi(e.system),
 				statuses: [...e.statuses ?? []],
 				items: [...e.items].map((e) => ({
 					...ve(e),
 					img: e.img,
 					sort: e.sort,
-					flags: Wi(e.flags ?? {}),
-					system: Ki(e.system),
-					labels: Wi(e.labels ?? {})
+					flags: Ji(e.flags ?? {}),
+					system: Xi(e.system),
+					labels: Ji(e.labels ?? {})
 				})),
 				effects: [...e.allApplicableEffects()].map((e) => ({
 					id: e.id,
@@ -3391,30 +3425,31 @@ function Yi(e, r, i) {
 						name: e.parent.name
 					} : null,
 					statuses: [...e.statuses ?? []],
-					duration: Wi(e.duration),
-					durationSource: Wi(e._source?.duration ?? null),
-					changes: Wi(e.system?.changes ?? e.changes ?? [])
+					duration: Ji(e.duration),
+					durationSource: Ji(e._source?.duration ?? null),
+					changes: Ji(e.system?.changes ?? e.changes ?? [])
 				})),
 				shown: {
 					items: [...e.items].map((e) => ({
 						id: e.id,
-						...pi(e, i)
+						...mi(e, i)
 					})),
 					effects: [...e.allApplicableEffects()].map((e) => ({
 						id: e.id,
-						name: si(String(e.name ?? ""), null) ?? t(e.name)
+						name: B(String(e.name ?? ""), null) ?? t(e.name)
 					}))
 				},
-				view: await Mi(e, i),
-				traits: Li(e),
+				view: await Ni(e, i),
+				traits: Ri(e),
+				levels: Vi(e),
 				breakdown: {
-					hp: await qi(a.HitPointsConfig, e, [
+					hp: await Zi(a.HitPointsConfig, e, [
 						"classes",
 						"ability",
 						"effects",
 						"levels"
 					]),
-					ac: await qi(a.ArmorClassConfig, e, ["calculations", "formulaLabel"])
+					ac: await Zi(a.ArmorClassConfig, e, ["calculations", "formulaLabel"])
 				}
 			};
 		}),
@@ -3423,7 +3458,7 @@ function Yi(e, r, i) {
 			name: e.name,
 			img: e.img,
 			type: e.type,
-			system: Ki(e.system),
+			system: Xi(e.system),
 			items: [...e.items].filter((e) => [
 				"class",
 				"race",
@@ -3438,32 +3473,32 @@ function Yi(e, r, i) {
 		}))),
 		edit: (t, n) => e([], async () => {
 			let e = r(t);
-			for (let t of n) if (t.kind === "set") await e.update(Hi(e, t.path, t.value, t.remove));
+			for (let t of n) if (t.kind === "set") await e.update(Ki(e, t.path, t.value, t.remove));
 			else if (t.kind === "item") {
 				let n = e.items.get(t.itemId, { strict: !0 });
-				await n.update(Hi(n, t.path, t.value, t.remove));
+				await n.update(Ki(n, t.path, t.value, t.remove));
 			} else if (t.kind === "itemDelete") await e.deleteEmbeddedDocuments("Item", [t.itemId]);
 			else if (t.kind === "effect") {
-				let n = Ui(e, t.itemId).effects.get(t.effectId, { strict: !0 });
-				await n.update(Hi(n, t.path, t.value, t.remove));
-			} else if (t.kind === "effectCreate") await Ui(e, t.itemId).createEmbeddedDocuments("ActiveEffect", [t.data]);
-			else if (t.kind === "effectDelete") await Ui(e, t.itemId).deleteEmbeddedDocuments("ActiveEffect", [t.effectId]);
+				let n = qi(e, t.itemId).effects.get(t.effectId, { strict: !0 });
+				await n.update(Ki(n, t.path, t.value, t.remove));
+			} else if (t.kind === "effectCreate") await qi(e, t.itemId).createEmbeddedDocuments("ActiveEffect", [t.data]);
+			else if (t.kind === "effectDelete") await qi(e, t.itemId).deleteEmbeddedDocuments("ActiveEffect", [t.effectId]);
 			else if (t.kind === "status") await e.toggleStatusEffect(t.statusId, t.levels === void 0 ? { active: t.active ?? !0 } : { levels: t.levels });
 			else throw Error(`不认识的改动：${t.kind}`);
 			return { edits: n.length };
 		}, [t]),
 		check: (t, n, a, o = []) => e(o, async () => {
-			let e = Ji[n];
+			let e = Qi[n];
 			if (!e) throw Error(`没有这种检定：${n}`);
 			return (await e(r(t), a))?.map(i) ?? null;
 		}, [t]),
 		glossary: () => e([], async () => {
-			if (!ii()) throw Error("开机时没有记下登记表原值（registry-keys.ts）");
+			if (!oi()) throw Error("开机时没有记下登记表原值（registry-keys.ts）");
 			return {
-				tables: Object.fromEntries(Object.entries(H.CONFIG.DND5E ?? {}).map(([e, t]) => [e, ci(e, t)]).filter(([, e]) => Object.keys(e).length)),
+				tables: Object.fromEntries(Object.entries(H.CONFIG.DND5E ?? {}).map(([e, t]) => [e, li(e, t)]).filter(([, e]) => Object.keys(e).length)),
 				statuses: (H.CONFIG.statusEffects ?? []).flatMap((e) => typeof e?.name == "string" ? [{
 					id: e.id,
-					name: si(e.name, ui(e.id)) ?? s(e.name, null),
+					name: B(e.name, di(e.id)) ?? s(e.name, null),
 					img: e.img ?? null
 				}] : [])
 			};
@@ -3477,8 +3512,8 @@ function Yi(e, r, i) {
 			for (let e = o.length; e > 0; e--) {
 				let t = o.slice(0, e).join("."), n = (t.startsWith("system.") ? a.system?.schema?.getField(t.slice(7)) : a.schema?.getField(t))?.label;
 				if (typeof n == "string" && n) return {
-					field: Lt(n) ?? si(n, null) ?? s(n, null),
-					...i[1] ? { item: pi(a, []).name } : {}
+					field: Rt(n) ?? B(n, null) ?? s(n, null),
+					...i[1] ? { item: mi(a, []).name } : {}
 				};
 			}
 			return null;
@@ -3492,9 +3527,9 @@ function Yi(e, r, i) {
 // src/rules/kernel/frame/commands-fields.ts
 var U = globalThis;
 function W(e) {
-	return typeof e != "string" || !e.trim() ? null : Lt(e) || (si(e, null) ?? s(e, null));
+	return typeof e != "string" || !e.trim() ? null : Rt(e) || (B(e, null) ?? s(e, null));
 }
-var Xi = [
+var ea = [
 	{
 		path: /\.roll\.mode$/,
 		options: () => [
@@ -3527,29 +3562,29 @@ var Xi = [
 		path: /^system\.attributes\.(movement|senses)\.units$/,
 		options: () => Object.entries(U.CONFIG.DND5E.movementUnits).map(([e, t]) => [e, t.label])
 	}
-], Zi = (e) => Xi.find((t) => t.path.test(e))?.options().map(([e, t]) => ({
+], ta = (e) => ea.find((t) => t.path.test(e))?.options().map(([e, t]) => ({
 	value: String(e),
 	label: (typeof t == "string" ? W(t) : null) ?? d(String(e))
 }));
-function Qi(e) {
+function na(e) {
 	let t = e?.choices;
 	if (typeof t == "function" && (t = t()), t) return (Array.isArray(t) ? t.map((e) => [String(e), e]) : Object.entries(t)).map(([e, t]) => ({
 		value: e,
 		label: W(typeof t == "string" ? t : t?.label ?? t?.name ?? e) ?? d(e)
 	}));
 }
-function $i(e) {
+function ra(e) {
 	let t = U.foundry.data.fields, n = U.dnd5e?.dataModels?.fields ?? {};
 	if (e instanceof t.BooleanField) return "boolean";
 	if (e instanceof t.NumberField) return "number";
 	if (e instanceof t.HTMLField) return "html";
 	if (e instanceof t.SetField || e instanceof t.ArrayField) {
 		let n = e.element;
-		return n instanceof t.StringField ? Qi(n) ? "multi" : "tags" : null;
+		return n instanceof t.StringField ? na(n) ? "multi" : "tags" : null;
 	}
-	return n.FormulaField && e instanceof n.FormulaField ? "formula" : e instanceof t.StringField ? Qi(e) ? "select" : "text" : null;
+	return n.FormulaField && e instanceof n.FormulaField ? "formula" : e instanceof t.StringField ? na(e) ? "select" : "text" : null;
 }
-function ea(e, t, n, r, i) {
+function ia(e, t, n, r, i) {
 	let a = U.foundry.data.fields, o = {
 		path: t,
 		label: W(e.label),
@@ -3557,7 +3592,7 @@ function ea(e, t, n, r, i) {
 	};
 	if (e instanceof a.SchemaField && !(e instanceof a.EmbeddedDataField && !e.fields)) {
 		if (r > 4) return null;
-		let a = Object.entries(e.fields ?? {}).map(([e, a]) => ea(a, `${t}.${e}`, n?.[e], r + 1, i)).filter((e) => !!e);
+		let a = Object.entries(e.fields ?? {}).map(([e, a]) => ia(a, `${t}.${e}`, n?.[e], r + 1, i)).filter((e) => !!e);
 		return a.length ? {
 			...o,
 			children: a
@@ -3565,21 +3600,21 @@ function ea(e, t, n, r, i) {
 	}
 	if (e.model instanceof a.DataField && e instanceof a.ObjectField && n && typeof n == "object") {
 		if (r > 4) return null;
-		let a = Object.keys(n).map((a) => ea(e.model, `${t}.${a}`, n[a], r + 1, i)).filter((e) => !!e);
+		let a = Object.keys(n).map((a) => ia(e.model, `${t}.${a}`, n[a], r + 1, i)).filter((e) => !!e);
 		return a.length ? {
 			...o,
 			children: a
 		} : null;
 	}
-	let s = Zi(t), c = s && e instanceof a.SetField ? "multi" : s && (e instanceof a.StringField || e instanceof a.NumberField) ? "select" : $i(e);
+	let s = ta(t), c = s && e instanceof a.SetField ? "multi" : s && (e instanceof a.StringField || e instanceof a.NumberField) ? "select" : ra(e);
 	if (!c) return null;
-	let l = e.options?.persisted === !1, u = l ? ta(i, t) : n, d = {
+	let l = e.options?.persisted === !1, u = l ? aa(i, t) : n, d = {
 		...o,
 		kind: c,
 		value: u instanceof Set ? [...u] : u ?? null,
 		...l ? { derived: !0 } : {}
 	};
-	return s ? (d.choices = s, e instanceof a.NumberField && (d.numeric = !0)) : c === "select" && (d.choices = Qi(e)), c === "multi" && (d.choices = Qi(e.element)), c === "number" && Object.assign(d, {
+	return s ? (d.choices = s, e instanceof a.NumberField && (d.numeric = !0)) : c === "select" && (d.choices = na(e)), c === "multi" && (d.choices = na(e.element)), c === "number" && Object.assign(d, {
 		min: e.min,
 		max: e.max,
 		step: e.step,
@@ -3587,8 +3622,8 @@ function ea(e, t, n, r, i) {
 		nullable: !!e.nullable
 	}), d;
 }
-var ta = (e, t) => t.split(".").reduce((e, t) => e?.[t], e);
-function na(e, t) {
+var aa = (e, t) => t.split(".").reduce((e, t) => e?.[t], e);
+function oa(e, t) {
 	let n = t.split(".");
 	for (let t = n.length; t > 0; t--) {
 		let r = n.slice(0, t).join("."), i = (r.startsWith("system.") ? e.system?.schema?.getField(r.slice(7)) : e.schema?.getField(r))?.label;
@@ -3596,18 +3631,18 @@ function na(e, t) {
 	}
 	return null;
 }
-function ra(e, t) {
+function sa(e, t) {
 	return {
 		fieldInfo: (n, r) => e([], async () => {
 			let e = t(n), i = r.itemId ? e.items.get(r.itemId) : e;
 			if (!i) throw Error(`没有这件物品：${r.itemId}`);
 			let { path: a } = r, o = a === "system" ? i.system?.schema : a.startsWith("system.") ? i.system?.schema?.getField(a.slice(7)) : i.schema?.getField(a);
 			if (!o) throw Error(`官方没有这个字段：${a}`);
-			let s = ea(o, a, ta(i._source, a), 0, i), c = U.CONFIG.ActiveEffect.documentClass.CHANGE_TYPES ?? {}, l = (e) => typeof e.type == "string" ? e.type : (Object.entries(U.CONST.ACTIVE_EFFECT_MODES ?? {}).find(([, t]) => t === e.mode)?.[0] ?? "").toLowerCase(), u = (e) => W(String(c[e]?.label ?? e));
+			let s = ia(o, a, aa(i._source, a), 0, i), c = U.CONFIG.ActiveEffect.documentClass.CHANGE_TYPES ?? {}, l = (e) => typeof e.type == "string" ? e.type : (Object.entries(U.CONST.ACTIVE_EFFECT_MODES ?? {}).find(([, t]) => t === e.mode)?.[0] ?? "").toLowerCase(), u = (e) => W(String(c[e]?.label ?? e));
 			return {
 				tree: s,
 				effects: r.itemId ? [] : [...e.allApplicableEffects?.() ?? []].flatMap((t) => [...t.system?.changes ?? t.changes ?? []].filter((e) => e.key === a || e.key.startsWith(`${a}.`) || a.startsWith(`${e.key}.`)).map((n) => {
-					let r = t.parent && t.parent !== e ? pi(t.parent, []).name : null, i = l(n);
+					let r = t.parent && t.parent !== e ? mi(t.parent, []).name : null, i = l(n);
 					return {
 						effect: t.id,
 						itemId: t.parent && t.parent !== e ? t.parent.id : null,
@@ -3617,7 +3652,7 @@ function ra(e, t) {
 						disabled: !!t.disabled,
 						manual: !!t.flags?.["tavern-trpg"]?.manual,
 						key: n.key,
-						keyLabel: W(na(e, n.key)),
+						keyLabel: W(oa(e, n.key)),
 						mode: i ? u(i) : null,
 						modeCode: i,
 						value: n.value
@@ -3664,7 +3699,7 @@ function ra(e, t) {
 				"weapon",
 				"armor",
 				"tool"
-			].includes(t) ? await Ee() : /* @__PURE__ */ new Map(), r = (e) => e.split(":").pop() ?? e, i = [], a = (e, t) => {
+			].includes(t) ? await De() : /* @__PURE__ */ new Map(), r = (e) => e.split(":").pop() ?? e, i = [], a = (e, t) => {
 				for (let [o, s] of Object.entries(e ?? {})) {
 					if (s?.wildcard) continue;
 					let e = String(s.label ?? o), l = n.get(r(o));
@@ -3701,35 +3736,35 @@ function ra(e, t) {
 	};
 }
 // src/rules/kernel/frame/author-ask-forms.ts
-var ia = globalThis;
-async function aa(e, t) {
-	let n = N, r = [];
+var ca = globalThis;
+async function la(e, t) {
+	let n = M, r = [];
 	if (e instanceof n.Charactermancer_ImmResVulnSelect) return {
-		slots: Jn(n, e) ?? [],
+		slots: Yn(n, e) ?? [],
 		cleanup: r
 	};
 	let i = (e._available ?? [])[t];
 	return e._state.ixSet = t, e instanceof n.Charactermancer_ExpertiseSelect ? {
-		slots: qn(n, e, i, r),
+		slots: Jn(n, e, i, r),
 		cleanup: r
 	} : ((i?.all?.length || i?.choose?.some((e) => e.fromFilter)) && await e.pNotRender(), {
-		slots: Kn(n, e, i ?? {}, r),
+		slots: qn(n, e, i ?? {}, r),
 		cleanup: r
 	});
 }
-var oa = (e) => ({
+var ua = (e) => ({
 	title: e.hints?.length ? I(e.hints.join(" ")) : null,
 	count: e.count,
 	options: e.options.map((t) => ({ label: t.text ?? l(t.label, e.options.map((e) => e.label), F(t.label)) }))
-}), sa = {
+}), da = {
 	async read({ comp: e, opts: t }, n) {
-		let r = N.Charactermancer_ImmResVulnSelect && e instanceof N.Charactermancer_ImmResVulnSelect ? 1 : Math.max(1, (e._available ?? []).length), a = [];
+		let r = M.Charactermancer_ImmResVulnSelect && e instanceof M.Charactermancer_ImmResVulnSelect ? 1 : Math.max(1, (e._available ?? []).length), a = [];
 		for (let t = 0; t < r; t++) {
-			let { slots: n, cleanup: o } = await aa(e, t);
+			let { slots: n, cleanup: o } = await la(e, t);
 			try {
 				a.push({
 					label: r > 1 ? i("方案 {0}", d(String(t + 1))) : null,
-					groups: n.map(oa)
+					groups: n.map(ua)
 				});
 			} finally {
 				for (let e of o) e();
@@ -3749,7 +3784,7 @@ var oa = (e) => ({
 	},
 	async write({ comp: e }, t) {
 		if (t.default) return e.pGetFormData();
-		let { slots: n, cleanup: r } = await aa(e, t.set ?? 0);
+		let { slots: n, cleanup: r } = await la(e, t.set ?? 0);
 		try {
 			for (let [e, r] of (t.picks ?? []).entries()) {
 				let t = n[e];
@@ -3766,7 +3801,7 @@ var oa = (e) => ({
 			for (let e of r) e();
 		}
 	}
-}, ca = {
+}, fa = {
 	read({ comp: e, opts: n }, r) {
 		let i = e.constructor, a = i._PROP_METAS.map((n) => {
 			let r = e._tables[n.prop];
@@ -3774,7 +3809,7 @@ var oa = (e) => ({
 				title: I(i._PROP_TO_FULL?.[n.prop]),
 				count: n.count || 1,
 				custom: !0,
-				options: (r?.rows ?? []).map((e) => ({ label: t(ia.Renderer.stripTags(String(e?.[1] ?? ""))) }))
+				options: (r?.rows ?? []).map((e) => ({ label: t(ca.Renderer.stripTags(String(e?.[1] ?? ""))) }))
 			};
 		});
 		return {
@@ -3798,8 +3833,8 @@ var oa = (e) => ({
 		}), e.pGetFormData();
 	}
 };
-function la(e) {
-	let n = String(e?.entity?.name ?? e?.name ?? ""), r = ia.UrlUtil?.PAGE_TO_PROPS?.[e?.page]?.[0];
+function pa(e) {
+	let n = String(e?.entity?.name ?? e?.name ?? ""), r = ca.UrlUtil?.PAGE_TO_PROPS?.[e?.page]?.[0];
 	return r && e?.hash && e?.source ? c(n, {
 		propDroppable: r,
 		source: e.source,
@@ -3807,10 +3842,10 @@ function la(e) {
 		page: e.page
 	}) : t(n);
 }
-var ua = (e) => F(qt("abilities")[e] ?? e), da = {
+var ma = (e) => F(Jt("abilities")[e] ?? e), ha = {
 	read({ comp: e, opts: n }, r) {
 		let { count: a, required: o } = e._getOptionsNameAndCount(), s = e._optionsSet.map((e, t) => ({
-			label: la(e),
+			label: pa(e),
 			disabled: o.includes(t)
 		})), c = e._optionsSet[0]?.optionsMeta?.name;
 		return {
@@ -3833,10 +3868,10 @@ var ua = (e) => F(qt("abilities")[e] ?? e), da = {
 		};
 	},
 	async write({ comp: e }, t) {
-		return t.default || await da.select(e, t), e.pGetFormData();
+		return t.default || await ha.select(e, t), e.pGetFormData();
 	},
 	async select(e, t) {
-		let { count: n, required: r } = e._getOptionsNameAndCount(), i = N.ComponentUiUtil.getMetaWrpMultipleChoice(e, "ixsChosen", {
+		let { count: n, required: r } = e._getOptionsNameAndCount(), i = M.ComponentUiUtil.getMetaWrpMultipleChoice(e, "ixsChosen", {
 			values: e._optionsSet,
 			ixsRequired: r,
 			count: n,
@@ -3854,21 +3889,21 @@ var ua = (e) => F(qt("abilities")[e] ?? e), da = {
 			i.cleanup?.();
 		}
 	}
-}, fa = {
+}, ga = {
 	read({ comp: e, opts: t }, n) {
 		let a = e.constructor, o = e._ability.map((t, n) => {
-			let o = Object.keys(qt("abilities")).filter((e) => t[e]).map((e) => i("{0} {1}", ua(e), d(`${t[e] > 0 ? "+" : ""}${t[e]}`))), s = [];
+			let o = Object.keys(Jt("abilities")).filter((e) => t[e]).map((e) => i("{0} {1}", ma(e), d(`${t[e] > 0 ? "+" : ""}${t[e]}`))), s = [];
 			if (t.choose?.from) s.push({
 				title: i("选 {0} 项，各 +{1}", d(String(t.choose.count || 1)), d(String(t.choose.amount || 1))),
 				count: t.choose.count || 1,
-				options: t.choose.from.map((e) => ({ label: ua(e) }))
+				options: t.choose.from.map((e) => ({ label: ma(e) }))
 			});
 			else if (t.choose?.weighted) {
 				let e = a._getSortedWeightedFrom(t);
 				for (let n of a._getSortedWeights(t)) s.push({
 					title: i("+{0}", d(String(n))),
 					count: 1,
-					options: e.map((e) => ({ label: ua(e) }))
+					options: e.map((e) => ({ label: ma(e) }))
 				});
 			}
 			return {
@@ -3892,7 +3927,7 @@ var ua = (e) => F(qt("abilities")[e] ?? e), da = {
 		if (t.default) return e.pGetFormData();
 		let n = t.set ?? 0, r = e._ability[n];
 		if (!r) throw Error("方案不在作者给的范围里");
-		if (e._state.ixSet = n, e.render(N.veE(document.createElement("div"))), r.choose?.from) {
+		if (e._state.ixSet = n, e.render(M.veE(document.createElement("div"))), r.choose?.from) {
 			let n = e._lastMeta?.rowMetas ?? [];
 			for (let r of t.picks?.[0] ?? []) {
 				if (!n[r]) throw Error("选项不在作者给的范围里");
@@ -3901,7 +3936,7 @@ var ua = (e) => F(qt("abilities")[e] ?? e), da = {
 		} else if (r.choose?.weighted) for (let [n, r] of (t.picks ?? []).entries()) for (let t of r) e._state[e._getWeightedProps(t, n).propWeightAbility] = !0;
 		return e.pGetFormData();
 	}
-}, pa = {
+}, _a = {
 	read({ comp: e }, t) {
 		let n = e._comp, r = [
 			"str",
@@ -3912,7 +3947,7 @@ var ua = (e) => F(qt("abilities")[e] ?? e), da = {
 			"cha"
 		].map((e) => ({
 			key: e,
-			label: ua(e),
+			label: ma(e),
 			value: Number(n._state[e] ?? 0)
 		}));
 		return {
@@ -3950,20 +3985,20 @@ var ua = (e) => F(qt("abilities")[e] ?? e), da = {
 		let i = n._getActorUpdate();
 		return i && await n._actor.update(i), n.getFeat();
 	}
-}, ma = (e) => c(String(e.name), {
+}, va = (e) => c(String(e.name), {
 	propDroppable: "spell",
 	source: e.source,
-	hash: ia.UrlUtil.URL_TO_HASH_BUILDER[ia.UrlUtil.PG_SPELLS](e)
+	hash: ca.UrlUtil.URL_TO_HASH_BUILDER[ca.UrlUtil.PG_SPELLS](e)
 }, !0);
-function ha(e) {
+function ya(e) {
 	let t = [];
 	return e._spellDatas.forEach((n, r) => {
 		n.level === 0 && (e.isAvailableClassSpell_(n) || e.isAvailableSubclassSpell_(n) || e.isAvailableExpandedSpell_(n)) && (e.isAlwaysKnownSpell_?.(n) || e.getExistingSpellMeta_?.(n) || t.push(r));
 	}), t.sort((t, n) => String(e._spellDatas[t].name).localeCompare(String(e._spellDatas[n].name)));
 }
-var ga = {
+var ba = {
 	read({ comp: e, opts: t }, n) {
-		let r = ha(e), i = Number(e._state.maxLearnedCantrips ?? 0) - Number(e._state.cntLearnedCantrips ?? 0);
+		let r = ya(e), i = Number(e._state.maxLearnedCantrips ?? 0) - Number(e._state.cntLearnedCantrips ?? 0);
 		return {
 			kind: n,
 			title: I(e.modalTitle),
@@ -3975,7 +4010,7 @@ var ga = {
 					groups: [{
 						title: null,
 						count: Math.max(0, i),
-						options: r.map((t) => ({ label: ma(e._spellDatas[t]) }))
+						options: r.map((t) => ({ label: va(e._spellDatas[t]) }))
 					}]
 				}],
 				set: 0
@@ -3985,7 +4020,7 @@ var ga = {
 	},
 	async write({ comp: e }, t) {
 		if (t.default) return e.pGetFormData();
-		let n = ha(e), r = e._compsLevel[0], i = t.picks?.[0] ?? [];
+		let n = ya(e), r = e._compsLevel[0], i = t.picks?.[0] ?? [];
 		for (let e of i) {
 			let t = n[e];
 			if (t == null) throw Error("戏法不在作者给的候选里");
@@ -3995,8 +4030,8 @@ var ga = {
 	}
 };
 // src/rules/kernel/frame/author-ask-equipment.ts
-async function _a(e) {
-	let t = await kn(e);
+async function xa(e) {
+	let t = await An(e);
 	return t ? "unsupported" in t ? {
 		kind: "special",
 		quantity: 1,
@@ -4020,12 +4055,12 @@ async function _a(e) {
 		text: d(JSON.stringify(e).slice(0, 80))
 	};
 }
-var va = {
+var Sa = {
 	async read({ comp: e }, t) {
 		let n = e._compCurrency.startingEquipment?.defaultData ?? [], r = [];
 		for (let e of n) {
 			let t = [];
-			for (let [, n] of Object.entries(e)) t.push({ entries: await Promise.all(n.map(_a)) });
+			for (let [, n] of Object.entries(e)) t.push({ entries: await Promise.all(n.map(xa)) });
 			r.push({ choices: t });
 		}
 		let i = e._compGold?.isAvailable ? e._compCurrency.rollableExpressionGold ?? null : null;
@@ -4066,15 +4101,15 @@ var va = {
 			}
 		};
 	}
-}, G = globalThis, ya = () => N.veE(document.createElement("div"));
-function ba(e) {
+}, G = globalThis, Ca = () => M.veE(document.createElement("div"));
+function wa(e) {
 	return e.type === "choose" ? e.sets.length > 1 || e.sets.some((e) => e.groups.some((e) => e.count > 0 && e.options.length > 0)) : e.type !== "enum" || e.options.length > 1;
 }
-var xa = (e) => !!e._isChooseOptionsFeatures?.() && !!e._optionsSet?.[0]?.optionsMeta, Sa = /* @__PURE__ */ new WeakSet();
-async function Ca(e, t = !1) {
-	(!Sa.has(e) || t) && (Sa.add(e), await e.pRender(ya()));
+var Ta = (e) => !!e._isChooseOptionsFeatures?.() && !!e._optionsSet?.[0]?.optionsMeta, Ea = /* @__PURE__ */ new WeakSet();
+async function Da(e, t = !1) {
+	(!Ea.has(e) || t) && (Ea.add(e), await e.pRender(Ca()));
 }
-function wa(e) {
+function Oa(e) {
 	async function t(t) {
 		let n = [];
 		for (let r of t._subCompManagers ?? []) for (let t of r._subComps ?? []) {
@@ -4083,7 +4118,7 @@ function wa(e) {
 				comp: t,
 				opts: {}
 			}, r);
-			ba(i.form) && n.push({
+			wa(i.form) && n.push({
 				sub: t,
 				kind: r,
 				part: i
@@ -4093,11 +4128,11 @@ function wa(e) {
 	}
 	let n = {
 		read: async ({ comp: e }, n) => {
-			await Ca(e);
+			await Da(e);
 			let r = await t(e), i = e._getSelectedLoadeds?.()?.[0] ?? e._optionsSet?.[0];
 			return {
 				kind: n,
-				title: i ? la(i) : I(e.modalTitle),
+				title: i ? pa(i) : I(e.modalTitle),
 				note: null,
 				form: {
 					type: "parts",
@@ -4107,7 +4142,7 @@ function wa(e) {
 			};
 		},
 		write: async ({ comp: n }, r) => {
-			await Ca(n);
+			await Da(n);
 			let i = await t(n);
 			for (let [t, { sub: n, kind: a }] of i.entries()) await (e()[a] ?? e()["*"]).write({
 				comp: n,
@@ -4118,14 +4153,14 @@ function wa(e) {
 	}, r = "Charactermancer_FeatureOptionsSelect.parts";
 	return {
 		Charactermancer_FeatureOptionsSelect: {
-			auto: async ({ comp: e }) => xa(e) ? Ba : (await Ca(e), (await t(e)).length ? Ba : e.pGetFormData()),
-			read: async (e, t) => xa(e.comp) ? da.read(e, t) : {
+			auto: async ({ comp: e }) => Ta(e) ? Wa : (await Da(e), (await t(e)).length ? Wa : e.pGetFormData()),
+			read: async (e, t) => Ta(e.comp) ? ha.read(e, t) : {
 				...await n.read(e, r),
 				kind: t
 			},
 			write: async (e, i) => {
 				let { comp: a } = e;
-				return xa(a) ? i.default ? a.pGetFormData() : (await da.select(a, i), await Ca(a, !0), (await t(a)).length ? new za(r, {
+				return Ta(a) ? i.default ? a.pGetFormData() : (await ha.select(a, i), await Da(a, !0), (await t(a)).length ? new Ua(r, {
 					comp: a,
 					opts: {}
 				}) : a.pGetFormData()) : n.write(e, i);
@@ -4134,8 +4169,8 @@ function wa(e) {
 		[r]: n
 	};
 }
-var Ta = (e) => G.DataUtil.proxy.unpackUid("spell", e, "spell");
-function Ea(e, t) {
+var ka = (e) => G.DataUtil.proxy.unpackUid("spell", e, "spell");
+function Aa(e, t) {
 	let n = [], r = e._getFlatSpellsInRange(t).filter((e) => !e.isExpanded), a = /* @__PURE__ */ new Map();
 	for (let e of r.filter((e) => e.type !== "all" && e.filterExpression != null && !e.chooseFromGroup)) a.set(e.filterExpression, [...a.get(e.filterExpression) ?? [], e]);
 	let o = [...a].map(([t, n]) => ({
@@ -4148,7 +4183,7 @@ function Ea(e, t) {
 			group: {
 				title: i("{1}任选 {0} 条", d(String(e.length)), a),
 				count: e.length,
-				options: t.map((e) => ({ label: ma(e) }))
+				options: t.map((e) => ({ label: va(e) }))
 			},
 			apply: (n, r) => r.forEach((r, i) => {
 				let a = t[r];
@@ -4165,10 +4200,10 @@ function Ea(e, t) {
 			group: {
 				title: i("选 {0} 条法术", d(String(r))),
 				count: r,
-				options: t.map((e) => ({ label: ma(Ta(e.uid)) }))
+				options: t.map((e) => ({ label: va(ka(e.uid)) }))
 			},
 			apply: (n, i) => {
-				let { propBase: a } = n._getProps_chooseFrom({ groupUid: e }), o = N.ComponentUiUtil.getMetaWrpMultipleChoice(n, a, {
+				let { propBase: a } = n._getProps_chooseFrom({ groupUid: e }), o = M.ComponentUiUtil.getMetaWrpMultipleChoice(n, a, {
 					values: t.map((e) => e.uid),
 					count: r,
 					fnDisplay: () => ""
@@ -4186,7 +4221,7 @@ function Ea(e, t) {
 		group: {
 			title: I("Spellcasting Ability"),
 			count: 1,
-			options: c.map((e) => ({ label: ua(e) }))
+			options: c.map((e) => ({ label: ma(e) }))
 		},
 		apply: (e, t) => {
 			if (t.length) {
@@ -4197,11 +4232,11 @@ function Ea(e, t) {
 		}
 	}), n;
 }
-var Da = (e, n, r) => e > 1 ? typeof r == "string" && r ? t(r) : i("方案 {0}", d(String(n + 1))) : null, Oa = {
+var ja = (e, n, r) => e > 1 ? typeof r == "string" && r ? t(r) : i("方案 {0}", d(String(n + 1))) : null, Ma = {
 	read: ({ comp: e, opts: t }, n) => {
 		let r = e._additionalSpellsFlat.map((t, n) => ({
-			label: Da(e._additionalSpellsFlat.length, n, t?.meta?.name),
-			groups: Ea(e, n).map((e) => e.group)
+			label: ja(e._additionalSpellsFlat.length, n, t?.meta?.name),
+			groups: Aa(e, n).map((e) => e.group)
 		}));
 		return {
 			kind: n,
@@ -4219,9 +4254,9 @@ var Da = (e, n, r) => e > 1 ? typeof r == "string" && r ? t(r) : i("方案 {0}",
 		if (t.default) return e.pGetFormData();
 		let n = t.set ?? 0;
 		if (!e._additionalSpellsFlat[n]) throw Error("方案不在作者给的范围里");
-		return e._state.ixSet = n, Ea(e, n).forEach((n, r) => n.apply(e, t.picks?.[r] ?? [])), e.pGetFormData();
+		return e._state.ixSet = n, Aa(e, n).forEach((n, r) => n.apply(e, t.picks?.[r] ?? [])), e.pGetFormData();
 	}
-}, ka = {
+}, Na = {
 	read: ({ comp: e, opts: t }, n) => ({
 		kind: n,
 		title: I(e.modalTitle),
@@ -4242,12 +4277,12 @@ var Da = (e, n, r) => e > 1 ? typeof r == "string" && r ? t(r) : i("方案 {0}",
 		if (!n) throw Error("体型不在作者给的范围里");
 		return e._state.size = n, e.pGetFormData();
 	}
-}, Aa = (e) => c(String(e.name), {
+}, Pa = (e) => c(String(e.name), {
 	propDroppable: "feat",
 	source: e.source,
 	hash: G.UrlUtil.URL_TO_HASH_BUILDER[G.UrlUtil.PG_FEATS](e)
 }, !0);
-function ja(e, t) {
+function Fa(e, t) {
 	let n = e._available[t] ?? {}, r = [], a = (t, n, i, a) => {
 		let o = new Set(e._modalFilterFeats.getEntitiesMatchingFilterExpression({ filterExpression: i }).map((e) => G.UrlUtil.URL_TO_HASH_BUILDER[G.UrlUtil.PG_FEATS](e))), s = e._featDatas.map((e, t) => o.has(e._hash) ? t : -1).filter((e) => e >= 0).sort((t, n) => String(e._featDatas[t].name).localeCompare(String(e._featDatas[n].name)));
 		r.push({
@@ -4256,7 +4291,7 @@ function ja(e, t) {
 			group: {
 				title: a,
 				count: n,
-				options: s.map((t) => ({ label: Aa(e._featDatas[t]) }))
+				options: s.map((t) => ({ label: Pa(e._featDatas[t]) }))
 			}
 		});
 	};
@@ -4266,13 +4301,13 @@ function ja(e, t) {
 	}
 	return r;
 }
-var Ma = {
+var Ia = {
 	read: ({ comp: e, opts: t }, n) => {
 		let a = e._available.map((t, n) => {
-			let a = (N.StatGenUtilAdditionalFeats?.getUidsStatic?.(t) ?? []).map((e) => Aa(G.DataUtil.proxy.unpackUid("feat", e, "feat")));
+			let a = (M.StatGenUtilAdditionalFeats?.getUidsStatic?.(t) ?? []).map((e) => Pa(G.DataUtil.proxy.unpackUid("feat", e, "feat")));
 			return {
-				label: a.length ? i("固定：{0}", r(a, "、")) : Da(e._available.length, n),
-				groups: ja(e, n).map((e) => e.group)
+				label: a.length ? i("固定：{0}", r(a, "、")) : ja(e._available.length, n),
+				groups: Fa(e, n).map((e) => e.group)
 			};
 		});
 		return {
@@ -4291,7 +4326,7 @@ var Ma = {
 		if (t.default) return e.pGetFormData();
 		let n = t.set ?? 0;
 		if (!e._available[n]) throw Error("方案不在作者给的范围里");
-		return e._state.ixSet = n, ja(e, n).forEach(({ type: n, ixs: r, group: i }, a) => {
+		return e._state.ixSet = n, Fa(e, n).forEach(({ type: n, ixs: r, group: i }, a) => {
 			let o = t.picks?.[a] ?? [];
 			if (o.length > i.count) throw Error(`最多选 ${i.count} 个`);
 			o.forEach((t, i) => {
@@ -4304,21 +4339,21 @@ var Ma = {
 			});
 		}), e.pGetFormData();
 	}
-}, Na = "Charactermancer_Background_Features.other", Pa = "Charactermancer_Background_Features.manual", Fa = (e) => {
+}, La = "Charactermancer_Background_Features.other", Ra = "Charactermancer_Background_Features.manual", za = (e) => {
 	let t = e.constructor;
 	return [
-		N.UtilsEntityBackground?.isCustomBackground?.(e._background) ? null : t._MODE_DEFAULT,
+		M.UtilsEntityBackground?.isCustomBackground?.(e._background) ? null : t._MODE_DEFAULT,
 		t._MODE_OTHER_BACKGROUND,
 		t._MODE_MANUAL
 	].filter((e) => e != null);
-}, Ia = (e) => c(String(e.name), {
+}, Ba = (e) => c(String(e.name), {
 	propDroppable: "background",
 	source: e.source,
 	hash: G.UrlUtil.URL_TO_HASH_BUILDER[G.UrlUtil.PG_BACKGROUNDS](e)
-}, !0), La = (e) => (e._modalFilter?.allData ?? []).map((e, t) => t).filter((t) => e._modalFilter.allData[t] !== e._background && e.constructor.getFeatureEntries(e._modalFilter.allData[t]).length).sort((t, n) => String(e._modalFilter.allData[t].name).localeCompare(String(e._modalFilter.allData[n].name))), Ra = {
+}, !0), Va = (e) => (e._modalFilter?.allData ?? []).map((e, t) => t).filter((t) => e._modalFilter.allData[t] !== e._background && e.constructor.getFeatureEntries(e._modalFilter.allData[t]).length).sort((t, n) => String(e._modalFilter.allData[t].name).localeCompare(String(e._modalFilter.allData[n].name))), Ha = {
 	Charactermancer_Background_Features: {
 		read: ({ comp: e, opts: t }, n) => {
-			let r = Fa(e), i = r.indexOf(e._state.mode);
+			let r = za(e), i = r.indexOf(e._state.mode);
 			return {
 				kind: n,
 				title: I(e.modalTitle),
@@ -4333,20 +4368,20 @@ var Ma = {
 		},
 		write: ({ comp: e }, t) => {
 			if (t.default) return e.getFormData();
-			let n = Fa(e)[Number(t.value)];
+			let n = za(e)[Number(t.value)];
 			if (n == null) throw Error("选项不在作者给的范围里");
 			e._state.mode = n;
 			let r = e.constructor;
-			return n === r._MODE_OTHER_BACKGROUND ? new za(Na, {
+			return n === r._MODE_OTHER_BACKGROUND ? new Ua(La, {
 				comp: e,
 				opts: {}
-			}) : n === r._MODE_MANUAL ? new za(Pa, {
+			}) : n === r._MODE_MANUAL ? new Ua(Ra, {
 				comp: e,
 				opts: {}
 			}) : e.getFormData();
 		}
 	},
-	[Na]: {
+	[La]: {
 		read: ({ comp: e }, t) => ({
 			kind: t,
 			title: I("Choose Background"),
@@ -4360,18 +4395,18 @@ var Ma = {
 					groups: [{
 						title: null,
 						count: 1,
-						options: La(e).map((t) => ({ label: Ia(e._modalFilter.allData[t]) }))
+						options: Va(e).map((t) => ({ label: Ba(e._modalFilter.allData[t]) }))
 					}]
 				}]
 			}
 		}),
 		write: ({ comp: e }, t) => {
-			let n = La(e)[t.picks?.[0]?.[0] ?? -1];
+			let n = Va(e)[t.picks?.[0]?.[0] ?? -1];
 			if (n == null) throw Error("背景不在作者给的候选里");
 			return e._state.ixBackgroundOther = n, e.getFormData();
 		}
 	},
-	[Pa]: {
+	[Ra]: {
 		read: (e, t) => ({
 			kind: t,
 			title: i("自定义特性"),
@@ -4402,17 +4437,17 @@ var Ma = {
 			}, e._state.manualEntryMetas = [i], e.getFormData();
 		}
 	}
-}, za = class {
+}, Ua = class {
 	kind;
 	subject;
 	constructor(e, t) {
 		this.kind = e, this.subject = t;
 	}
-}, Ba = Symbol("ask"), Va = (e) => typeof e == "string" ? e.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() : "", Ha = {
+}, Wa = Symbol("ask"), Ga = (e) => typeof e == "string" ? e.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() : "", Ka = {
 	read: ({ comp: e, opts: t }, n) => ({
 		kind: n,
 		title: I(e?.modalTitle ?? t?.title),
-		note: I(Va(t?.htmlDescription)),
+		note: I(Ga(t?.htmlDescription)),
 		form: { type: "unknown" },
 		skippable: !t?.isUnskippable,
 		raw: e ? {
@@ -4425,40 +4460,40 @@ var Ma = {
 		if (!n.default) throw Error("这种提问还没登记，只能照作者默认或跳过");
 		return e ? e.pGetFormData() : t?.default ?? null;
 	}
-}, Ua = globalThis, Wa = (e, t, n, r, i) => ({
+}, qa = globalThis, Ja = (e, t, n, r, i) => ({
 	kind: e,
 	title: t,
-	note: I(Va(i ?? r?.htmlDescription)),
+	note: I(Ga(i ?? r?.htmlDescription)),
 	form: n,
 	skippable: !!r?.isSkippable || (r && "isUnskippable" in r ? !r.isUnskippable : !1)
 });
-function Ga(e) {
+function Ya(e) {
 	let t = document.createElement("div");
-	return e.render(N.veE(t)), t;
+	return e.render(M.veE(t)), t;
 }
-var Ka = (e) => [...e.querySelectorAll("select")], qa = {
+var Xa = (e) => [...e.querySelectorAll("select")], Za = {
 	read: ({ comp: e, opts: t }, n) => {
-		let r = Ka(Ga(e))[0];
-		return r ? Wa(n, I(e.modalTitle), {
+		let r = Xa(Ya(e))[0];
+		return r ? Ja(n, I(e.modalTitle), {
 			type: "enum",
 			options: [...r.options].map((e) => ({
 				label: I(e.text) ?? d(e.text),
 				disabled: e.disabled
 			})),
 			selected: r.selectedIndex
-		}, t) : Ha.read({
+		}, t) : Ka.read({
 			comp: e,
 			opts: t
 		}, n);
 	},
 	write: async ({ comp: e }, t) => {
 		if (t.default) return e.pGetFormData();
-		let n = Ka(Ga(e))[0], r = Number(t.value);
+		let n = Xa(Ya(e))[0], r = Number(t.value);
 		if (!n || !Number.isInteger(r) || r < 0 || r >= n.options.length) throw Error("选项不在作者给的范围里");
 		return n.selectedIndex = r, n.dispatchEvent(new Event("change")), e.pGetFormData();
 	}
-}, Ja = (e) => {
-	let t = e.subclassFeature || e.__prop === "subclassFeature" || e.subclassSource ? "subclassFeature" : "classFeature", n = t === "subclassFeature" ? e.subclassFeature : e.classFeature, r = typeof n == "string" ? Ua.DataUtil?.class?.[t === "subclassFeature" ? "unpackUidSubclassFeature" : "unpackUidClassFeature"]?.(n) : null, i = {
+}, Qa = (e) => {
+	let t = e.subclassFeature || e.__prop === "subclassFeature" || e.subclassSource ? "subclassFeature" : "classFeature", n = t === "subclassFeature" ? e.subclassFeature : e.classFeature, r = typeof n == "string" ? qa.DataUtil?.class?.[t === "subclassFeature" ? "unpackUidSubclassFeature" : "unpackUidClassFeature"]?.(n) : null, i = {
 		...r ?? {},
 		...e,
 		...r ? {
@@ -4467,17 +4502,17 @@ var Ka = (e) => [...e.querySelectorAll("select")], qa = {
 			level: r.level,
 			source: e.source ?? r.source
 		} : {}
-	}, a = Ua.UrlUtil?.URL_TO_HASH_BUILDER?.[t]?.(i), o = String(e.tableDisplayName || e.name || "");
+	}, a = qa.UrlUtil?.URL_TO_HASH_BUILDER?.[t]?.(i), o = String(e.tableDisplayName || e.name || "");
 	return a && i.source ? c(o, {
 		propDroppable: t,
 		source: i.source,
 		hash: a,
 		page: t
 	}, !0) : I(o) ?? d(o);
-}, Ya = {
-	"*": Ha,
+}, $a = {
+	"*": Ka,
 	"InputUiUtil.pGetUserBoolean": {
-		read: ({ opts: e }, t) => Wa(t, I(e.title), {
+		read: ({ opts: e }, t) => Ja(t, I(e.title), {
 			type: "boolean",
 			yes: I(e.textYes ?? "Yes"),
 			no: I(e.textNo ?? "No")
@@ -4485,7 +4520,7 @@ var Ka = (e) => [...e.querySelectorAll("select")], qa = {
 		write: (e, t) => t.default ? !0 : !!t.value
 	},
 	"InputUiUtil.pGetUserEnum": {
-		read: ({ opts: e }, t) => Wa(t, I(e.title), {
+		read: ({ opts: e }, t) => Ja(t, I(e.title), {
 			type: "enum",
 			options: (e.values ?? []).map((t) => {
 				let n = e.fnDisplay ? e.fnDisplay(t) : t;
@@ -4500,7 +4535,7 @@ var Ka = (e) => [...e.querySelectorAll("select")], qa = {
 		}
 	},
 	"InputUiUtil.pGetUserNumber": {
-		read: ({ opts: e }, t) => Wa(t, I(e.title), {
+		read: ({ opts: e }, t) => Ja(t, I(e.title), {
 			type: "number",
 			min: e.min ?? null,
 			max: e.max ?? null,
@@ -4513,36 +4548,36 @@ var Ka = (e) => [...e.querySelectorAll("select")], qa = {
 		}
 	},
 	"InputUiUtil.pGetUserString": {
-		read: ({ opts: e }, t) => Wa(t, I(e.title), {
+		read: ({ opts: e }, t) => Ja(t, I(e.title), {
 			type: "string",
 			value: String(e.default ?? "")
 		}, e),
 		write: ({ opts: e }, t) => String(t.default ? e.default ?? "" : t.value ?? "")
 	},
-	Charactermancer_Class_HpIncreaseModeSelect: qa,
-	Charactermancer_OtherProficiencySelect: sa,
-	Charactermancer_ExpertiseSelect: sa,
-	Charactermancer_DamageResistanceSelect: sa,
-	Charactermancer_DamageImmunitySelect: sa,
-	Charactermancer_DamageVulnerabilitySelect: sa,
-	Charactermancer_ConditionImmunitySelect: sa,
-	Charactermancer_Background_Characteristics: ca,
-	Charactermancer_AdditionalSpellsSelect: Oa,
-	Charactermancer_Race_SizeSelect: ka,
-	Charactermancer_AdditionalFeatsSelect: Ma,
-	Charactermancer_AbilityScoreSelect: fa,
-	EquipmentApp: va,
-	Charactermancer_Spell_Modal: ga,
-	ActorAbilityScoreIncrease: pa,
-	Charactermancer_Class_ProficiencyImportModeSelect: qa,
+	Charactermancer_Class_HpIncreaseModeSelect: Za,
+	Charactermancer_OtherProficiencySelect: da,
+	Charactermancer_ExpertiseSelect: da,
+	Charactermancer_DamageResistanceSelect: da,
+	Charactermancer_DamageImmunitySelect: da,
+	Charactermancer_DamageVulnerabilitySelect: da,
+	Charactermancer_ConditionImmunitySelect: da,
+	Charactermancer_Background_Characteristics: fa,
+	Charactermancer_AdditionalSpellsSelect: Ma,
+	Charactermancer_Race_SizeSelect: Na,
+	Charactermancer_AdditionalFeatsSelect: Ia,
+	Charactermancer_AbilityScoreSelect: ga,
+	EquipmentApp: Sa,
+	Charactermancer_Spell_Modal: ba,
+	ActorAbilityScoreIncrease: _a,
+	Charactermancer_Class_ProficiencyImportModeSelect: Za,
 	Charactermancer_Class_LevelSelect: {
 		read: ({ comp: e, opts: t }, n) => {
 			let a = e._maxPreviousLevel || 0, o = e._featureArr.map((t, n) => ({
 				label: i("{0} 级", d(String(n + 1))),
-				note: t.length ? r(t.map(Ja), "、") : null,
+				note: t.length ? r(t.map(Qa), "、") : null,
 				disabled: !e._isSubclass && n < a
 			}));
-			return Wa(n, I(e.modalTitle), {
+			return Ja(n, I(e.modalTitle), {
 				type: "levels",
 				levels: o,
 				radio: e._isRadio,
@@ -4566,33 +4601,33 @@ var Ka = (e) => [...e.querySelectorAll("select")], qa = {
 		}
 	}
 };
-Object.assign(Ya, wa(() => Ya), Ra);
+Object.assign($a, Oa(() => $a), Ha);
 // src/rules/kernel/frame/author-ask.ts
-var Xa = () => globalThis.VeCt?.SYM_UI_SKIP, Za = [
+var eo = () => globalThis.VeCt?.SYM_UI_SKIP, to = [
 	"pGetUserBoolean",
 	"pGetUserEnum",
 	"pGetUserNumber",
 	"pGetUserString",
 	"pGetUserGenericButton"
-], Qa = ["EquipmentApp", "ActorAbilityScoreIncrease"];
-function $a(e, t) {
-	let n = N;
+], no = ["EquipmentApp", "ActorAbilityScoreIncrease"];
+function ro(e, t) {
+	let n = M;
 	if (!n?.UtilApplications || !n?.InputUiUtil) throw Error("此版本 Plutonium 缺少提问入口（UtilApplications / InputUiUtil）");
 	let r = 0, i = !1, a = null, o = [], s = null, c = (e) => {
 		if (s) {
 			let t = s;
 			s = null, t(e);
 		} else o.push(e);
-	}, l = async (e, t, n) => n.skip ? e.skip ? e.skip() : Xa() : e.write(t, n), u = async (e) => {
+	}, l = async (e, t, n) => n.skip ? e.skip ? e.skip() : eo() : e.write(t, n), u = async (e) => {
 		let t = e;
-		for (; t instanceof za;) t = await d(t.kind, t.subject);
+		for (; t instanceof Ua;) t = await d(t.kind, t.subject);
 		return t;
 	}, d = async (t, n) => {
 		if (i) return null;
-		let o = Ya[t] ?? Ya["*"];
+		let o = $a[t] ?? $a["*"];
 		if (o.auto) {
 			let e = await o.auto(n);
-			if (e !== Ba) return e;
+			if (e !== Wa) return e;
 		}
 		let s = r++;
 		if (e[s] !== void 0) return u(await l(o, n, e[s]));
@@ -4607,13 +4642,13 @@ function $a(e, t) {
 				resolve: e
 			}, c({ question: d });
 		});
-	}, f = n.UtilApplications, p = n.InputUiUtil, m = f.pGetImportCompApplicationFormData, h = Object.fromEntries(Za.map((e) => [e, p[e]]));
+	}, f = n.UtilApplications, p = n.InputUiUtil, m = f.pGetImportCompApplicationFormData, h = Object.fromEntries(to.map((e) => [e, p[e]]));
 	f.pGetImportCompApplicationFormData = (e) => d(e?.comp?.constructor?.name ?? "?", {
 		comp: e.comp,
 		opts: e
 	});
-	for (let e of Za) p[e] = (t = {}) => d(`InputUiUtil.${e}`, { opts: t });
-	let g = Qa.map((e) => ({
+	for (let e of to) p[e] = (t = {}) => d(`InputUiUtil.${e}`, { opts: t });
+	let g = no.map((e) => ({
 		name: e,
 		proto: n[e]?.prototype
 	})).filter((e) => e.proto), _ = g.map(({ proto: e }) => ({
@@ -4623,7 +4658,7 @@ function $a(e, t) {
 	for (let { name: e, proto: t } of g) t.render = async function() {
 		return this;
 	}, t.pWaitForUserInput = async function() {
-		return "_cntModesAvailable" in this && !this._cntModesAvailable ? Xa() : (typeof this.pInit == "function" && await this.pInit(), d(e, {
+		return "_cntModesAvailable" in this && !this._cntModesAvailable ? eo() : (typeof this.pInit == "function" && await this.pInit(), d(e, {
 			comp: this,
 			opts: {}
 		}));
@@ -4632,7 +4667,7 @@ function $a(e, t) {
 	for (let [e, t] of y) v?.setTemp?.("dataSources", e, t, { isSkipPermissionCheck: !0 });
 	let x = () => {
 		y.forEach(([e], t) => v?.setTemp?.("dataSources", e, b[t], { isSkipPermissionCheck: !0 })), f.pGetImportCompApplicationFormData = m;
-		for (let e of Za) p[e] = h[e];
+		for (let e of to) p[e] = h[e];
 		g.forEach(({ proto: e }, t) => {
 			_[t].render ? Object.defineProperty(e, "render", _[t].render) : delete e.render, e.pWaitForUserInput = _[t].wait;
 		});
@@ -4652,7 +4687,7 @@ function $a(e, t) {
 			let t = a;
 			if (!t) throw Error("作者现在没有在等回答");
 			let n = await l(t.adapter, t.subject, e);
-			a = null, t.resolve(n instanceof za ? u(n) : n);
+			a = null, t.resolve(n instanceof Ua ? u(n) : n);
 		},
 		abort() {
 			i = !0;
@@ -4662,8 +4697,8 @@ function $a(e, t) {
 	};
 }
 // src/rules/kernel/frame/commands-import.ts
-var eo = globalThis, to = () => eo.CONFIG.Actor.documentClass, K = null;
-function no(e, t) {
+var io = globalThis, ao = () => io.CONFIG.Actor.documentClass, K = null;
+function oo(e, t) {
 	async function n(e) {
 		if ("question" in e) return {
 			kernelStatus: "pending",
@@ -4673,7 +4708,7 @@ function no(e, t) {
 		let { actorId: n, entry: r, before: i } = K;
 		if (K = null, "error" in e) throw e.error;
 		let a = t(n), o = e.value, s = () => a.items.filter((e) => !i.has(e.id)), c = s().flatMap((e) => {
-			let t = e.flags?.plutonium, n = t && !t.propDroppable && typeof t.page == "string" && t.page.endsWith(".html") ? eo.UrlUtil?.PAGE_TO_PROPS?.[t.page]?.[0] : null;
+			let t = e.flags?.plutonium, n = t && !t.propDroppable && typeof t.page == "string" && t.page.endsWith(".html") ? io.UrlUtil?.PAGE_TO_PROPS?.[t.page]?.[0] : null;
 			return n ? [{
 				_id: e.id,
 				"flags.plutonium.propDroppable": n
@@ -4683,9 +4718,9 @@ function no(e, t) {
 		let l = s().map((e) => ({
 			_id: e.id,
 			name: e.name,
-			label: pi(e, [r]).name,
+			label: mi(e, [r]).name,
 			type: e.type,
-			typeLabel: Lt(String(eo.CONFIG.Item.typeLabels?.[e.type] ?? "")),
+			typeLabel: Rt(String(io.CONFIG.Item.typeLabels?.[e.type] ?? "")),
 			flags: { plutonium: e.flags?.plutonium ?? null }
 		}));
 		return {
@@ -4696,10 +4731,10 @@ function no(e, t) {
 	return {
 		draftStart: (t) => e([], async () => {
 			k(t.seed);
-			let e = await to().create({
+			let e = await ao().create({
 				...t.id ? { _id: t.id } : {},
 				name: t.name,
-				type: cn
+				type: ln
 			}, { keepId: !!t.id });
 			return {
 				id: e.id,
@@ -4708,7 +4743,7 @@ function no(e, t) {
 		}),
 		draftLoad: (t) => e([], async () => {
 			k(t.seed);
-			let e = await to().create(structuredClone(t.data), { keepId: !0 });
+			let e = await ao().create(structuredClone(t.data), { keepId: !0 });
 			return {
 				id: e.id,
 				data: e.toObject()
@@ -4718,16 +4753,16 @@ function no(e, t) {
 			if (K) throw Error("上一次导入还没结束");
 			let e = t(r);
 			if (o) {
-				let t = await Nr(e, o);
+				let t = await Fr(e, o);
 				if (t) return {
 					kernelStatus: "pending",
 					reason: "remove-step-not-complete",
 					step: t
 				};
 			}
-			let s = eo.game.modules.get("plutonium")?.api, c = await s?.importer?.pGetImporter({ prop: i.prop });
+			let s = io.game.modules.get("plutonium")?.api, c = await s?.importer?.pGetImporter({ prop: i.prop });
 			if (!c) throw Error(`作者没有「${i.prop}」的导入器`);
-			let l = new Set(e.items.map((e) => e.id)), u = $a(a, () => c.pImportEntry(structuredClone(i.entry), new s.importer.ImportOpts({ actor: e })));
+			let l = new Set(e.items.map((e) => e.id)), u = ro(a, () => c.pImportEntry(structuredClone(i.entry), new s.importer.ImportOpts({ actor: e })));
 			return K = {
 				run: u,
 				actorId: r,
@@ -4749,7 +4784,7 @@ function no(e, t) {
 	};
 }
 // src/rules/kernel/frame/native-builder-review.ts
-function ro(e) {
+function so(e) {
 	let t = /* @__PURE__ */ new Map(), n = e.compClass.compsClassLevelSelect.flatMap((e) => e?.getTargetLevel() ?? []);
 	t.set("职业", n.length ? { text: n.map((e) => `${e} 级`).join(" / ") } : {
 		text: "待选职业和等级",
@@ -4805,37 +4840,37 @@ function J(e, t, n = "p6-builder-btn") {
 	return r.type = "button", r.addEventListener("click", t), r;
 }
 // src/rules/kernel/frame/native-builder-controls.ts
-var io = globalThis, ao = (e) => e.trim().toLowerCase(), oo = /* @__PURE__ */ new WeakMap();
-function so(e, t) {
-	let n = ao(e), r = Object.hasOwn(t.terms, n) ? t.terms[n] : void 0;
+var co = globalThis, lo = (e) => e.trim().toLowerCase(), uo = /* @__PURE__ */ new WeakMap();
+function fo(e, t) {
+	let n = lo(e), r = Object.hasOwn(t.terms, n) ? t.terms[n] : void 0;
 	if (r) return r;
 	if (!/[a-zA-Z]/.test(e)) return e;
-	let i = oo.get(t);
-	i || (i = /* @__PURE__ */ new Map(), oo.set(t, i));
+	let i = uo.get(t);
+	i || (i = /* @__PURE__ */ new Map(), uo.set(t, i));
 	let a = i.get(e);
 	if (a !== void 0) return a;
-	for (let { $t: t, ...n } of [It(e), F(e)]) {
-		if (t !== "system" || !("key" in n) || !io.game.i18n.has(n.key)) continue;
-		let r = io.game.i18n.localize(n.key);
+	for (let { $t: t, ...n } of [Lt(e), F(e)]) {
+		if (t !== "system" || !("key" in n) || !co.game.i18n.has(n.key)) continue;
+		let r = co.game.i18n.localize(n.key);
 		if (r !== e) return i.set(e, r), r;
 	}
 	return i.set(e, e), e;
 }
-function co(e, t) {
-	let n = so(e.trim(), t);
+function po(e, t) {
+	let n = fo(e.trim(), t);
 	if (n !== e.trim()) return e.replace(e.trim(), n);
 	let r = /^\s*\((\w{3})\)\s*$/.exec(e);
 	if (r) {
-		let t = io.CONFIG.DND5E.abilities[r[1].toLowerCase()]?.label;
+		let t = co.CONFIG.DND5E.abilities[r[1].toLowerCase()]?.label;
 		if (t) return e.replace(r[1], t);
 	}
 	if (e.includes(", ")) {
-		let n = e.split(", "), r = n.map((e) => so(e, t));
+		let n = e.split(", "), r = n.map((e) => fo(e, t));
 		if (r.some((e, t) => e !== n[t])) return r.join("，");
 	}
 	return e;
 }
-function lo(e, t) {
+function mo(e, t) {
 	for (let t of e.querySelectorAll(".p6-choice-group")) {
 		let e = t.previousElementSibling;
 		e?.classList.contains("ve-mb-1") && /^Choose\b/.test(e.textContent ?? "") && e.classList.add("p6-choice-instruction");
@@ -4844,7 +4879,7 @@ function lo(e, t) {
 	for (; r = n.nextNode();) {
 		let e = r;
 		if (!e.data.trim() || e.parentElement?.closest("script,style,textarea,.p6-builder-ui")) continue;
-		let n = e.parentElement?.closest("option"), i = co(e.data, t);
+		let n = e.parentElement?.closest("option"), i = po(e.data, t);
 		i !== e.data && (n && !n.hasAttribute("value") && n.setAttribute("value", n.value), e.data = i);
 	}
 	for (let n of e.querySelectorAll("[title],[placeholder],[aria-label]")) for (let e of [
@@ -4854,7 +4889,7 @@ function lo(e, t) {
 	]) {
 		let r = n.getAttribute(e);
 		if (!r) continue;
-		let i = co(r, t);
+		let i = po(r, t);
 		i !== r && n.setAttribute(e, i);
 	}
 	for (let t of e.querySelectorAll("button[name=\"btn-learn-cantrip\"],button[name=\"btn-learn-spell\"],button[name=\"btn-prepare\"]")) {
@@ -4862,7 +4897,7 @@ function lo(e, t) {
 		t.textContent !== e && (t.textContent = e), t.setAttribute("aria-pressed", String(t.classList.contains("ve-active")));
 	}
 }
-function uo(e, t) {
+function ho(e, t) {
 	let n = e.ComponentUiUtil, r = n.getMetaWrpMultipleChoice, i = e.Charactermancer_Spell_Level.prototype, a = i._getListItem;
 	return n.getMetaWrpMultipleChoice = function(e, t, n) {
 		let i = r.call(this, e, t, n);
@@ -4885,7 +4920,7 @@ function uo(e, t) {
 			return e._removeHookBase(i.propPulse, o), s.apply(this, t);
 		}, o(), i;
 	}, i._getListItem = function(e, ...n) {
-		let r = a.call(this, e, ...n), i = io.UrlUtil.URL_TO_HASH_BUILDER.spell(e), o = t.labels.spell?.[i];
+		let r = a.call(this, e, ...n), i = co.UrlUtil.URL_TO_HASH_BUILDER.spell(e), o = t.labels.spell?.[i];
 		if (o && r?.ele) {
 			let e = r.ele.firstElementChild;
 			e && (e.textContent = o.name, e.classList.add("p6-spell-name")), r.values.alias = [r.values.alias, o.name].filter(Boolean).join(" "), r.ele.dataset.p6Spell = i;
@@ -4895,13 +4930,13 @@ function uo(e, t) {
 		n.getMetaWrpMultipleChoice = r, i._getListItem = a;
 	};
 }
-function fo(e, t, n) {
+function go(e, t, n) {
 	let r = e.querySelector(".ve-statgen-shared__wrp-header"), i = r?.querySelector("select"), a = t.compAbility.compStatgen, o = e.closest(".p6-builder-attributes");
 	if (o && (o.dataset.mode = a.getMode()), !r || !i || r.querySelector(".p6-ability-methods")) return;
 	let s = q("div", "p6-ability-methods p6-builder-ui");
 	s.setAttribute("role", "group"), s.setAttribute("aria-label", "怎么定属性");
 	let c = [...i.options].slice(1).map((e) => {
-		let t = Number(e.value), r = J(so(e.textContent ?? "", n), () => {
+		let t = Number(e.value), r = J(fo(e.textContent ?? "", n), () => {
 			a.ixActiveTab = t, l();
 		});
 		return r.disabled = e.disabled, s.append(r), {
@@ -4916,13 +4951,13 @@ function fo(e, t, n) {
 	}
 	i.style.setProperty("display", "none", "important"), r.replaceChildren(i, q("b", "", "怎么定属性？"), s), l();
 }
-var po = /* @__PURE__ */ new WeakSet();
-function mo(e) {
+var _o = /* @__PURE__ */ new WeakSet();
+function vo(e) {
 	for (let t of e.compClass.compsClassLevelSelect) {
-		if (!t?._isRadio || po.has(t)) continue;
+		if (!t?._isRadio || _o.has(t)) continue;
 		let e = t._list?.items ?? [], n = e[0]?.ele.closest(".ve-min-h-0");
 		if (!n || !e.length) continue;
-		po.add(t);
+		_o.add(t);
 		let r = q("label", "p6-level p6-builder-ui", "目标等级"), i = q("select");
 		i.setAttribute("aria-label", "目标等级");
 		for (let t of e) {
@@ -4938,13 +4973,13 @@ function mo(e) {
 	}
 }
 // src/rules/kernel/frame/native-builder-pickers.ts
-var ho = {
+var yo = {
 	race: "种族",
 	background: "背景",
 	class: "职业",
 	subclass: "子职业"
 };
-function go(e, t, n) {
+function bo(e, t, n) {
 	let r = e.entry(t);
 	if (!r?.name || !r.source) return;
 	let i = globalThis.UrlUtil.URL_TO_HASH_BUILDER[e.category]?.(r), a = n.labels[e.category]?.[i];
@@ -4956,17 +4991,17 @@ function go(e, t, n) {
 		label: a
 	} : void 0;
 }
-function _o(e, t, n, r) {
-	let i = ho[n.category], a = q("section", "p6-picker"), o = q("input", "p6-picker-search");
+function xo(e, t, n, r) {
+	let i = yo[n.category], a = q("section", "p6-picker"), o = q("input", "p6-picker-search");
 	o.type = "search", o.placeholder = `搜索${i}`, o.setAttribute("aria-label", o.placeholder);
 	let s = q("div", "p6-picker-list"), c = q("p", "p6-picker-status");
 	c.setAttribute("aria-live", "polite"), a.append(o, s, c);
-	let l = /* @__PURE__ */ new Map(), u, d = () => e.getSelected() == null ? void 0 : go(n, e.getSelected(), r), f = () => {
+	let l = /* @__PURE__ */ new Map(), u, d = () => e.getSelected() == null ? void 0 : bo(n, e.getSelected(), r), f = () => {
 		let t = e.getSelected();
 		for (let [e, n] of l) n.setAttribute("aria-pressed", String(t === e)), n.dataset.preview = String(u?.value === e);
 		a.dispatchEvent(new Event("p6-picker-change", { bubbles: !0 }));
 	}, p = () => {
-		let t = o.value.trim().normalize("NFKC").toLocaleLowerCase(), i = e._rdState.getAvailableOptionMetas().flatMap(({ value: e }) => e == null ? [] : go(n, e, r) ?? []).filter((e) => `${e.label.name} ${e.name} ${e.source}`.normalize("NFKC").toLocaleLowerCase().includes(t));
+		let t = o.value.trim().normalize("NFKC").toLocaleLowerCase(), i = e._rdState.getAvailableOptionMetas().flatMap(({ value: e }) => e == null ? [] : bo(n, e, r) ?? []).filter((e) => `${e.label.name} ${e.name} ${e.source}`.normalize("NFKC").toLocaleLowerCase().includes(t));
 		u && i.some((e) => e.value === u?.value) || (u = i.find((t) => t.value === e.getSelected()) ?? i[0]), l = new Map(i.map((e) => {
 			let t = J("", () => {
 				u = e, a.dispatchEvent(new Event("p6-picker-preview", { bubbles: !0 })), f();
@@ -4995,7 +5030,7 @@ function _o(e, t, n, r) {
 		}
 	};
 }
-function vo(e, t, n) {
+function So(e, t, n) {
 	let r = e.ComponentUiUtil, i = e.Charactermancer_Util, a = r.getSelSearchable, o = i.getFilterSearchMeta, s = r._SearchableDropdownComponent.prototype, c = s.render, l;
 	return i.getFilterSearchMeta = function(e) {
 		let t = {
@@ -5030,7 +5065,7 @@ function vo(e, t, n) {
 		let u = o;
 		s.render = function() {
 			let e = c.call(this);
-			return n(_o(this, e.wrp, u, t)), e;
+			return n(xo(this, e.wrp, u, t)), e;
 		};
 		try {
 			return a.call(this, e, r, i);
@@ -5042,8 +5077,8 @@ function vo(e, t, n) {
 	};
 }
 // src/rules/kernel/frame/native-equipment-picker.ts
-var yo = globalThis, bo = (e) => e.normalize("NFKC").toLocaleLowerCase();
-function xo(e, t) {
+var Co = globalThis, wo = (e) => e.normalize("NFKC").toLocaleLowerCase();
+function To(e, t) {
 	let n = e.prototype, r = n.pGetUserChoiceFromEquipmentTypes, i = null, a;
 	function o(e) {
 		let t = e.target instanceof Element && e.target.closest(".p6-builder-equipment button:has(.fa-magnifying-glass)");
@@ -5054,7 +5089,7 @@ function xo(e, t) {
 	return document.addEventListener("click", o, !0), n.pGetUserChoiceFromEquipmentTypes = function(e) {
 		let n = i;
 		if (!n || (a?.(), !n.closest(".imp-cls__wrp-equi-group"))) return r.call(this, e);
-		let o = yo.SortUtil, s = [...new Set(e.flatMap((e) => this._getSetChoices(e)))].sort(o.ascSortLower);
+		let o = Co.SortUtil, s = [...new Set(e.flatMap((e) => this._getSetChoices(e)))].sort(o.ascSortLower);
 		return new Promise((e) => {
 			let r = q("div", "p6-equip-picker p6-builder-ui"), i = q("input", "p6-picker-search");
 			i.type = "search", i.placeholder = "搜索装备", i.setAttribute("aria-label", i.placeholder);
@@ -5068,13 +5103,13 @@ function xo(e, t) {
 			}
 			a = () => c(!1);
 			let u = s.map((e) => {
-				let n = yo.DataUtil.proxy.unpackUid("item", e, "item"), r = yo.UrlUtil.URL_TO_HASH_BUILDER.item(n), i = t.labels.item?.[r]?.name ?? so(n.name, t), a = J("", () => c(!0, e), "p6-picker-row");
+				let n = Co.DataUtil.proxy.unpackUid("item", e, "item"), r = Co.UrlUtil.URL_TO_HASH_BUILDER.item(n), i = t.labels.item?.[r]?.name ?? fo(n.name, t), a = J("", () => c(!0, e), "p6-picker-row");
 				return a.dataset.uid = e, a.append(q("span", "", i), q("small", "p6-picker-source", n.source)), {
 					row: a,
-					term: bo(`${i} ${n.name} ${n.source}`)
+					term: wo(`${i} ${n.name} ${n.source}`)
 				};
 			}), d = () => {
-				let e = bo(i.value.trim()), t = u.filter((t) => t.term.includes(e));
+				let e = wo(i.value.trim()), t = u.filter((t) => t.term.includes(e));
 				o.replaceChildren(...t.map(({ row: e }) => e)), t.length || o.append(q("p", "p6-picker-status", "没有匹配的装备"));
 			};
 			i.addEventListener("input", d), r.addEventListener("keydown", (e) => {
@@ -5086,7 +5121,7 @@ function xo(e, t) {
 	};
 }
 // src/rules/kernel/frame/native-builder-ui.ts
-var So = [
+var Eo = [
 	{
 		name: "Origin (Species)",
 		label: "种族",
@@ -5132,7 +5167,7 @@ var So = [
 		optional: "spells"
 	}
 ];
-function Co(e) {
+function Do(e) {
 	let t = e.wrpTab;
 	t.classList.remove("ve-flex-col"), t.classList.add("p6-builder-step");
 	let n = q("aside", "p6-builder-rail");
@@ -5154,10 +5189,10 @@ function Co(e) {
 		}
 	};
 }
-function wo(e, t) {
+function Oo(e, t) {
 	let { heading: n, title: r, brief: i, form: a, source: o, action: s } = e;
 	e.focus(t);
-	let c = t?.preview(), l = t?.chosen(), u = c && l?.value === c.value, d = t && ho[t.category];
+	let c = t?.preview(), l = t?.chosen(), u = c && l?.value === c.value, d = t && yo[t.category];
 	if (n.hidden = !t, a.hidden = !!t && !u, i.hidden = !t, r.textContent = c?.label.name ?? (t ? `选择${d}` : ""), o.textContent = c?.source ?? "", s.hidden = !c, !c || !t) {
 		delete i.dataset.entry, i.textContent = t ? "请从左栏选择一条资料。" : "";
 		return;
@@ -5176,8 +5211,8 @@ function wo(e, t) {
 		i.dataset.entry === f && (i.textContent = "资料卡读取失败，关掉重开建卡再试。");
 	}));
 }
-function To(e, t, n, r, i) {
-	let a = e._tabs, o = new Map(a.map((e) => [e.name, Co(e)])), s = new Set(So.flatMap((e) => e.shop ? [e.name, e.shop] : [e.name])), c = [...So, ...a.filter((e) => !s.has(e.name)).map((e) => ({
+function ko(e, t, n, r, i) {
+	let a = e._tabs, o = new Map(a.map((e) => [e.name, Do(e)])), s = new Set(Eo.flatMap((e) => e.shop ? [e.name, e.shop] : [e.name])), c = [...Eo, ...a.filter((e) => !s.has(e.name)).map((e) => ({
 		name: e.name,
 		label: e.btnTab.textContent?.trim() || "作者选项"
 	}))], l = a[0].btnTab.parentElement, u = t.lastElementChild;
@@ -5240,7 +5275,7 @@ function To(e, t, n, r, i) {
 		se();
 	}
 	function ae() {
-		let t = ro(e), r = q("dl", "p6-builder-summary"), i = q("div", "p6-builder-todo"), a = q("div", "p6-builder-todo");
+		let t = so(e), r = q("dl", "p6-builder-summary"), i = q("div", "p6-builder-todo"), a = q("div", "p6-builder-todo");
 		for (let e of c.filter(T)) {
 			let o = t.get(E(e)), s = n.filter((t) => t.category === e.prop).flatMap((e) => e.chosen()?.label.name ?? []);
 			(s.length || o?.text) && r.append(q("dt", "", e.label), q("dd", "", [...s, o?.text].filter(Boolean).join(" · ")));
@@ -5263,7 +5298,7 @@ function To(e, t, n, r, i) {
 	}
 	async function k() {
 		if (b) return;
-		let t = ro(e), n = c.filter(T).find((e) => t.get(E(e))?.pending), r = t.get("装备商店");
+		let t = so(e), n = c.filter(T).find((e) => t.get(E(e))?.pending), r = t.get("装备商店");
 		if (n || r?.pending) {
 			let e = n ?? c.find((e) => e.shop);
 			D(e), !n && r?.pending && (y = !0, O()), g.textContent = (n ? t.get(E(e))?.text : r?.text) ?? "";
@@ -5279,9 +5314,9 @@ function To(e, t, n, r, i) {
 		}
 	}
 	function se() {
-		mo(e);
+		vo(e);
 		for (let e = n.length - 1; e >= 0; e--) n[e].anchor.isConnected || (n[e].element.remove(), n.splice(e, 1));
-		let t = ro(e), i = 1;
+		let t = so(e), i = 1;
 		m.textContent = t.get("法术")?.text ?? "本次可在下方选择法术";
 		for (let [e, r] of w) {
 			r.hidden = !!e && !T(e), e === v ? r.setAttribute("aria-current", "step") : r.removeAttribute("aria-current");
@@ -5297,7 +5332,7 @@ function To(e, t, n, r, i) {
 		let s = n.filter((e) => a.form.contains(e.anchor));
 		for (let e of s) e.element.isConnected || e.mount(a.rail), e.element.hidden = e.category !== v.prop;
 		let c = s.filter((e) => e.category === v.prop), l = te.get(v.prop ?? ""), u = l && c.includes(l) ? l : c[0];
-		a.rail.hidden = !u, a.tab.wrpTab.classList.toggle("p6-builder-split", !!u), ee !== v && (ee = v, a.tab.wrpTab.dataset.view = u?.chosen() ? "card" : "list"), a.tab.wrpTab.classList.toggle("p6-builder-spells", v.label === "法术"), a.tab.wrpTab.classList.toggle("p6-builder-attributes", v.label === "属性值"), a.tab.wrpTab.classList.toggle("p6-builder-equipment", !!v.shop && !y), wo(a, u), lo(a.form, r), v.label === "属性值" && fo(a.form, e, r);
+		a.rail.hidden = !u, a.tab.wrpTab.classList.toggle("p6-builder-split", !!u), ee !== v && (ee = v, a.tab.wrpTab.dataset.view = u?.chosen() ? "card" : "list"), a.tab.wrpTab.classList.toggle("p6-builder-spells", v.label === "法术"), a.tab.wrpTab.classList.toggle("p6-builder-attributes", v.label === "属性值"), a.tab.wrpTab.classList.toggle("p6-builder-equipment", !!v.shop && !y), Oo(a, u), mo(a.form, r), v.label === "属性值" && go(a.form, e, r);
 	}
 	function A() {
 		x ||= requestAnimationFrame(() => {
@@ -5319,8 +5354,8 @@ function To(e, t, n, r, i) {
 		le.disconnect(), cancelAnimationFrame(x), t.removeEventListener("p6-picker-change", A), t.removeEventListener("p6-picker-preview", ce), t.removeEventListener("p6-choice-change", A), t.removeEventListener("change", A), t.removeEventListener("click", A);
 	};
 }
-function Eo(e, t) {
-	let n = e.ActorCharactermancer.Component.prototype, r = n._pRender, i = n._pHandleSaveClick_postSave, a = !1, o, s = !1, c, l = [], u = t ? uo(e, t) : void 0, d = t ? xo(e.Charactermancer_AvailableEquipmentInfo, t) : void 0, f = t ? vo(e, t, (e) => l.push(e)) : void 0;
+function Ao(e, t) {
+	let n = e.ActorCharactermancer.Component.prototype, r = n._pRender, i = n._pHandleSaveClick_postSave, a = !1, o, s = !1, c, l = [], u = t ? ho(e, t) : void 0, d = t ? To(e.Charactermancer_AvailableEquipmentInfo, t) : void 0, f = t ? So(e, t, (e) => l.push(e)) : void 0;
 	n._pHandleSaveClick_postSave = async function(...e) {
 		let t = await i.apply(this, e);
 		return a = !0, t;
@@ -5331,7 +5366,7 @@ function Eo(e, t) {
 	}, t && (n._pRender = async function(e) {
 		await r.call(this, e);
 		try {
-			c?.(), c = To(this, e, l, t, async () => {
+			c?.(), c = ko(this, e, l, t, async () => {
 				if (await this._pHandleSaveClick(), s) throw Error("作者未完成建卡，请关掉本次草稿重试。");
 			});
 		} catch (t) {
@@ -5348,24 +5383,24 @@ function Eo(e, t) {
 	};
 }
 // src/rules/kernel/frame/commands-native.ts
-var Y = globalThis, Do = (e) => new Promise((t) => setTimeout(t, e));
-function Oo(e) {
+var Y = globalThis, jo = (e) => new Promise((t) => setTimeout(t, e));
+function Mo(e) {
 	return { nativeBuild: (t) => e([], async () => {
 		let e = Y.game.modules.get("plutonium")?.api;
 		if (typeof e?.charactermancer?.pOpen != "function") throw Error("这份 Plutonium 没有完整建卡器（需要本机私人完整版，放在 vendor/private/modules/plutonium/）");
 		let n = Y.game.actors.get(t.id);
 		if (!n) throw Error(`草稿人不在：${t.id}`);
-		if (t.presentation && !Re) throw Error("当前私人完整版和分步建卡支持的版本不一致");
+		if (t.presentation && !ze) throw Error("当前私人完整版和分步建卡支持的版本不一致");
 		await Y.ExcludeUtil.pInitialise(), await Y.ExcludeUtil.pSetList([...Y.ExcludeUtil.getList(), ...structuredClone(t.excludes)]);
 		let r = new URL(".", location.href).href;
 		if (await e.config.setValue("dataSources", "localHomebrew", t.brewFiles.map((e) => r + e)) === !1) throw Error("作者不让登记本战役自制包（dataSources.localHomebrew）");
-		let i = JSON.stringify(n.toObject()), a = Re && Eo(Re, t.presentation), o = /* @__PURE__ */ new Set(), s = () => void 0, c = Y.Hooks.on("renderApplicationV2", (e) => {
+		let i = JSON.stringify(n.toObject()), a = ze && Ao(ze, t.presentation), o = /* @__PURE__ */ new Set(), s = () => void 0, c = Y.Hooks.on("renderApplicationV2", (e) => {
 			o.add(e);
 		}), l = Y.Hooks.on("closeApplicationV2", (e) => {
 			o.delete(e), o.size || s();
 		});
 		try {
-			for (await e.charactermancer.pOpen({ actor: n }); await Do(500), o.size;) await new Promise((e) => {
+			for (await e.charactermancer.pOpen({ actor: n }); await jo(500), o.size;) await new Promise((e) => {
 				s = e, o.size || e();
 			});
 		} finally {
@@ -5381,23 +5416,23 @@ function Oo(e) {
 	}, [], { ui: !0 }) };
 }
 // src/rules/kernel/frame/commands.ts
-var X = globalThis, ko = class extends Error {
+var X = globalThis, No = class extends Error {
 	request;
 	constructor(e) {
 		super("KERNEL_NEEDS_DICE"), this.request = e;
 	}
-}, Ao = class extends Error {
+}, Po = class extends Error {
 	where;
 	constructor(e) {
 		super("KERNEL_NEEDS_INPUT"), this.where = e;
 	}
 };
-function jo(e, t) {
+function Fo(e, t) {
 	let n = X.CONFIG.Dice, r = n.randomUniform, i = X.foundry.dice.terms.Die.prototype, a = Object.hasOwn(i, "roll"), o = i.roll, s = 0, c = 0;
 	i.roll = function(...e) {
 		return c = this.faces, o.apply(this, e);
 	}, n.randomUniform = () => {
-		if (s >= e.length) throw new ko({
+		if (s >= e.length) throw new No({
 			faces: c,
 			index: s
 		});
@@ -5412,18 +5447,18 @@ function jo(e, t) {
 		value: e,
 		used: s
 	}), (e) => {
-		if (l(), e instanceof ko) return {
+		if (l(), e instanceof No) return {
 			used: s,
 			needs: e.request
 		};
-		if (e instanceof Ao) return {
+		if (e instanceof Po) return {
 			used: s,
 			input: e.where
 		};
 		throw e;
 	});
 }
-async function Mo(e) {
+async function Io(e) {
 	let t = X.game.socket, n = t.emit, r = [];
 	t.emit = function(e, ...t) {
 		if (e === "modifyDocument" || e === "modifyDocumentBatch") {
@@ -5450,16 +5485,16 @@ async function Mo(e) {
 		t.emit = n;
 	}
 }
-function No(e) {
+function Lo(e) {
 	let t = X.foundry.applications.api.ApplicationV2.prototype, n = X.foundry.applications.sidebar?.AbstractSidebarTab, r = t.render;
 	return t.render = function() {
 		if (n && this instanceof n) return Promise.resolve(this);
-		throw new Ao(this.constructor.name);
+		throw new Po(this.constructor.name);
 	}, e().finally(() => {
 		t.render = r;
 	});
 }
-function Po(e) {
+function Ro(e) {
 	return e ? {
 		formula: e.formula,
 		total: e.total,
@@ -5475,7 +5510,7 @@ function Po(e) {
 	} : null;
 }
 var Z = (e) => X.game.actors.get(e, { strict: !0 });
-function Fo(e) {
+function zo(e) {
 	let t = {};
 	for (let n of e) {
 		if (n.action !== "update" || n.type !== "Actor" || n.parentUuid) continue;
@@ -5494,7 +5529,7 @@ function Fo(e) {
 async function Q(e, t, n = [], { ui: r = !1 } = {}) {
 	let i, a = [];
 	try {
-		({value: i, changes: a} = await Mo(() => jo(e, () => r ? t() : No(t)).then(async (e) => (await C(), e))));
+		({value: i, changes: a} = await Io(() => Fo(e, () => r ? t() : Lo(t)).then(async (e) => (await C(), e))));
 	} catch (e) {
 		return {
 			status: "error",
@@ -5507,7 +5542,7 @@ async function Q(e, t, n = [], { ui: r = !1 } = {}) {
 	return {
 		status: i.needs ? "missing" : i.input ? "pending" : s?.kernelStatus ?? (o.length ? "unsupported" : "complete"),
 		result: s ?? null,
-		sources: Fo(a),
+		sources: zo(a),
 		changes: a,
 		diceUsed: i.used,
 		missing: i.needs ? { dice: i.needs } : i.missing ?? null,
@@ -5515,27 +5550,27 @@ async function Q(e, t, n = [], { ui: r = !1 } = {}) {
 		unsupported: o
 	};
 }
-var Io = xe(Q, Z), Lo = Ne(Q, Z), Ro = At(Q), zo = Ar(Q, Z), Bo = Pr(Q, Z), Vo = Lr(Q), Ho = Yi(Q, Z, Po), Uo = ra(Q, Z), Wo = Qr(Q), Go = Fn(Q), Ko = no(Q, Z), qo = Oo(Q), Jo = { configure: !1 }, Yo = 15e3, Xo = { create: !1 }, Zo = {
-	warmImport: () => Cn(),
-	...Ko,
-	...qo,
-	...Io,
-	...Lo,
-	...Ro,
-	...zo,
+var Bo = xe(Q, Z), Vo = Pe(Q, Z), Ho = jt(Q), Uo = Mr(Q, Z), Wo = Ir(Q, Z), Go = zr(Q), Ko = $i(Q, Z, Ro), qo = sa(Q, Z), Jo = ei(Q), Yo = In(Q), Xo = oo(Q, Z), Zo = Mo(Q), Qo = { configure: !1 }, $o = 15e3, es = { create: !1 }, ts = {
+	warmImport: () => wn(),
+	...Xo,
+	...Zo,
 	...Bo,
 	...Vo,
 	...Ho,
 	...Uo,
 	...Wo,
 	...Go,
+	...Ko,
+	...qo,
+	...Jo,
+	...Yo,
 	roll: (e, t = {}, n = [], r = {}) => Q(n, async () => {
 		let n = {
 			basic: X.CONFIG.Dice.BasicRoll,
 			d20: X.CONFIG.Dice.D20Roll,
 			damage: X.CONFIG.Dice.DamageRoll
 		}, i = new (r.kind ? n[r.kind] : X.Roll)(e, t, r.options ? structuredClone(r.options) : void 0);
-		return await i.evaluate({ allowInteractive: !1 }), Po(i);
+		return await i.evaluate({ allowInteractive: !1 }), Ro(i);
 	}),
 	damage: (e, t, n = [], r = {}) => Q(n, async () => {
 		let n = Z(e);
@@ -5549,15 +5584,15 @@ var Io = xe(Q, Z), Lo = Ne(Q, Z), Ro = At(Q), zo = Ar(Q, Z), Bo = Pr(Q, Z), Vo =
 		});
 		return n ? JSON.parse(JSON.stringify(n, (e, t) => e === "clone" ? void 0 : t)) : null;
 	}, [e]),
-	save: (e, t, n = []) => Q(n, async () => (await Z(e).rollSavingThrow({ ability: t }, Jo, Xo))?.map(Po) ?? null, [e]),
-	skill: (e, t, n = []) => Q(n, async () => (await Z(e).rollSkill({ skill: t }, Jo, Xo))?.map(Po) ?? null, [e]),
+	save: (e, t, n = []) => Q(n, async () => (await Z(e).rollSavingThrow({ ability: t }, Qo, es))?.map(Ro) ?? null, [e]),
+	skill: (e, t, n = []) => Q(n, async () => (await Z(e).rollSkill({ skill: t }, Qo, es))?.map(Ro) ?? null, [e]),
 	attack: (e, t, n = []) => Q(n, async () => {
 		let n = Z(e).items.get(t, { strict: !0 }).system.activities.find((e) => e.type === "attack");
 		if (!n) return null;
-		let r = await n.rollAttack({}, Jo, Xo), i = await n.rollDamage({}, Jo, Xo);
+		let r = await n.rollAttack({}, Qo, es), i = await n.rollDamage({}, Qo, es);
 		return {
-			attack: r?.map(Po) ?? null,
-			damage: i?.map(Po) ?? null
+			attack: r?.map(Ro) ?? null,
+			damage: i?.map(Ro) ?? null
 		};
 	}, [e]),
 	attribution: (e, t) => Object.fromEntries(t.map((t) => [t, (Z(e)._prepareActiveEffectAttributions(t) ?? []).map((e) => ({
@@ -5581,7 +5616,7 @@ var Io = xe(Q, Z), Lo = Ne(Q, Z), Ro = At(Q), zo = Ar(Q, Z), Bo = Pr(Q, Z), Vo =
 		}, a = (e) => {
 			let t;
 			return Promise.race([e, new Promise((e, n) => {
-				t = setTimeout(() => n(Error(`PROBE_TIMEOUT ${Yo}`)), Yo);
+				t = setTimeout(() => n(Error(`PROBE_TIMEOUT ${$o}`)), $o);
 			})]).finally(() => clearTimeout(t));
 		}, o = (e) => r.MiscUtil.copyFast(e), s = [];
 		for (let c of t) {
@@ -5617,8 +5652,8 @@ var Io = xe(Q, Z), Lo = Ne(Q, Z), Ro = At(Q), zo = Ar(Q, Z), Bo = Pr(Q, Z), Vo =
 		}
 		return s;
 	}
-}, Qo = (e) => e instanceof Error ? e.message : String(e);
-async function $o(t, n, r) {
+}, ns = (e) => e instanceof Error ? e.message : String(e);
+async function rs(t, n, r) {
 	let i = (e) => e.pack.docIdLocal, a = /* @__PURE__ */ new Map();
 	if (await r(t) === null) return {
 		accepted: t,
@@ -5657,7 +5692,7 @@ async function $o(t, n, r) {
 		errors: a
 	};
 }
-async function es(e, t) {
+async function is(e, t) {
 	let { BrewUtil2: n, DataUtil: r, Parser: i, Renderer: a } = globalThis;
 	await n.pGetBrew(), r.brew.pLoadSourceIndex = async () => ({}), r.prerelease.pLoadSourceIndex = async () => ({});
 	let o = a.item;
@@ -5668,7 +5703,7 @@ async function es(e, t) {
 		"entryMap",
 		"_additionalTypeEntriesMap",
 		"_masteryMap"
-	], l = c.map((e) => o[e]), u = new Set(Object.values(r).filter((e) => typeof e?.pMergeCopy == "function")), { accepted: d, errors: f } = await $o(e, new Set(Object.keys(i.SOURCE_JSON_TO_FULL).map((e) => e.toLowerCase())), async (e) => {
+	], l = c.map((e) => o[e]), u = new Set(Object.values(r).filter((e) => typeof e?.pMergeCopy == "function")), { accepted: d, errors: f } = await rs(e, new Set(Object.keys(i.SOURCE_JSON_TO_FULL).map((e) => e.toLowerCase())), async (e) => {
 		let i = structuredClone(e.map((e) => e.doc)), a = "trpg-kernel-brew-check", d = [...u].map((e) => [e, e._mergeCache]), f = /* @__PURE__ */ new Set(), p = ["pLoadByMeta", "_pDoMetaMerge_handleCopyProp"].map((e) => [e, r[e]]);
 		try {
 			for (let [e] of d) e._mergeCache = {};
@@ -5703,7 +5738,7 @@ async function es(e, t) {
 			}
 			return null;
 		} catch (e) {
-			return Qo(e);
+			return ns(e);
 		} finally {
 			for (; f.size;) await Promise.allSettled(f);
 			for (let [e, t] of p) r[e] = t;
@@ -5737,8 +5772,8 @@ async function es(e, t) {
 	};
 }
 // src/rules/kernel/frame/module-roots.ts
-var ts = globalThis;
-function ns(e, t) {
+var as = globalThis;
+function os(e, t) {
 	if (!e) return null;
 	let n = new URL(".", location.href);
 	if (t.origin !== n.origin || !t.pathname.startsWith(n.pathname)) return null;
@@ -5749,32 +5784,32 @@ function ns(e, t) {
 	}
 	return null;
 }
-function rs(e) {
+function ss(e) {
 	if (!e || !Object.keys(e).length) return;
-	let t = ts.fetch.bind(ts);
-	ts.fetch = async (n, r) => {
-		let i = typeof n == "string" ? n : n instanceof URL ? n.href : n.url, a = ns(e, new URL(i, location.href));
+	let t = as.fetch.bind(as);
+	as.fetch = async (n, r) => {
+		let i = typeof n == "string" ? n : n instanceof URL ? n.href : n.url, a = os(e, new URL(i, location.href));
 		if (!a) return t(n, r);
 		let o = await t(n instanceof Request ? new Request(a, n) : a, r);
 		return o.status === 404 ? t(n, r) : o;
 	};
 }
 // src/ui/styles/build-frame.css?inline
-var is = "html,body{color:var(--text);font-family:var(--font-sans);font-size:var(--fs-md);line-height:var(--lh-ui);--lightningcss-light:initial;--lightningcss-dark: ;color-scheme:light;background:var(--bg)!important}@media (prefers-color-scheme:dark){html,body{--lightningcss-light: ;--lightningcss-dark:initial;color-scheme:dark}}body,.application,.window-app{--background:var(--surface);--color-header-background:var(--head-bg);--color-border:var(--line);--color-tabs-border:var(--line);--color-fieldset-border:var(--line);--color-form-hint:var(--text3);--color-form-hint-hover:var(--text2);--color-form-label:var(--text2);--color-form-label-hover:var(--text);--color-text-emphatic:var(--text);--color-text-primary:var(--text);--color-text-secondary:var(--text2);--color-text-subtle:var(--text3);--color-text-selection:var(--text);--color-text-selection-bg:var(--primary-tint);--table-background-color:var(--surface);--table-header-bg-color:var(--bg-sunk);--table-header-border-color:var(--line);--table-header-text-color:var(--text);--table-row-color-even:var(--bg-sunk);--table-row-color-odd:transparent;--table-row-color-highlight:var(--primary-tint);--content-link-background:var(--primary-tint);--content-link-border-color:var(--primary-tint-line);--content-link-text-color:var(--primary-text);--content-link-icon-color:var(--primary-text);--color-text-dark-primary:var(--text);--hotbar-height:0px;--color-scheme:light}@media (prefers-color-scheme:dark){body,.application,.window-app{--color-scheme:dark}}.application,.window-app{overflow:hidden;color-scheme:var(--color-scheme)!important;background:var(--surface)!important;color:var(--text)!important;font-family:var(--font-sans)!important;border:var(--border) solid var(--line)!important;border-radius:var(--r-lg)!important;box-shadow:var(--shadow-3)!important}.application .window-header,.window-app .window-header{min-height:var(--hit);background:var(--head-bg)!important;color:var(--head-ink)!important;border:0!important;border-bottom:var(--border) solid var(--head-line)!important;font-family:var(--font-sans)!important;font-size:var(--fs-md)!important;padding:0 var(--sp-3)!important}.window-title{font-family:var(--font-sans)!important;font-size:var(--fs-md)!important;font-weight:var(--fw-semibold)!important;color:inherit!important}.window-header button,.window-header .header-control,.window-header a{box-shadow:none!important;color:var(--head-ink2)!important;background:0 0!important;border:0!important;min-height:0!important}.window-header button:hover,.window-header .header-control:hover,.window-header a:hover{color:var(--head-ink)!important;background:var(--head-hover)!important}.window-content{background:var(--surface)!important;color:var(--text)!important;-webkit-backdrop-filter:none!important;font-family:var(--font-sans)!important;font-size:var(--fs-md)!important}.window-resize-handle{opacity:.5;filter:none!important}.ve-app-window,.ve-window,.ve-ui-modal__overlay,.ve-hwin,.ve-ui-tab-side__wrp-tab{background:var(--surface)!important;color:var(--text)!important}.window-content a{color:var(--primary-text)!important}.window-content hr{border:0!important;border-top:var(--border) solid var(--line)!important;background:0 0!important}.window-content h1,.window-content h2,.window-content h3,.window-content h4,.window-content h5{border:0;color:var(--text)!important;font-family:var(--font-sans)!important;text-shadow:none!important}.window-content table,.window-content th,.window-content td{color:var(--text)!important;border-color:var(--line)!important}.window-content button,.window-content .ve-btn{font:inherit;min-height:30px;padding:0 var(--sp-3);cursor:pointer;font-size:var(--fs-sm)!important;border:var(--border) solid var(--line-ctrl)!important;border-radius:var(--r-sm)!important;background:var(--surface)!important;color:var(--text)!important;box-shadow:none!important;text-shadow:none!important;background-image:none!important}.window-content button:hover,.window-content .ve-btn:hover{background:var(--bg-hover)!important}.window-content .ve-btn-primary,.window-content button.ve-btn-primary{background:var(--primary)!important;border-color:var(--primary)!important;color:var(--on-primary)!important}.window-content .ve-btn-primary:hover{background:var(--primary-hover)!important}.window-content .ve-btn.active,.window-content button.active{background:var(--primary-tint)!important;border-color:var(--primary-tint-line)!important;color:var(--primary-text)!important}.window-content button:disabled,.window-content .ve-btn:disabled{opacity:.5;cursor:default}.window-content input[type=text],.window-content input[type=number],.window-content input[type=search],.window-content select,.window-content textarea{font:inherit;min-height:30px;font-size:var(--fs-sm)!important;color:var(--text)!important;background:var(--surface)!important;border:var(--border) solid var(--line-ctrl)!important;border-radius:var(--r-sm)!important;box-shadow:none!important}.window-content input[type=checkbox],.window-content input[type=radio]{accent-color:var(--primary)}.window-content button:focus-visible,.window-content input:focus-visible,.window-content select:focus-visible,.window-content textarea:focus-visible{outline-offset:1px;outline:2px solid var(--focus)!important}.window-content .ve-muted,.window-content .ve-text-muted{color:var(--text2)!important}", as = ".application.trpg-main{box-shadow:none!important;border:0!important;border-radius:0!important}.application.trpg-main>.window-header{display:none!important}.application.trpg-main>.window-content{padding:0!important}.application:not(.trpg-main)>.window-header{min-height:52px;background:var(--surface)!important;color:var(--text)!important;border-bottom:var(--border) solid var(--line)!important;padding:0 var(--sp-3) 0 var(--sp-5)!important}.application:not(.trpg-main) .window-title{font-size:var(--fs-xl)!important}.window-header [data-action=close]{border-radius:var(--r-sm);width:32px;height:32px;color:var(--text2)!important;font-size:0!important}.window-header [data-action=close]:before{content:\"✕\";font:16px/1 var(--font-sans)}.window-header [data-action=close]:hover{background:var(--bg-hover)!important;color:var(--text)!important}.ve-ui-tab__wrp-tab-heads--border{gap:var(--sp-1);counter-reset:trpg-step;flex-wrap:wrap;padding:var(--sp-3) var(--sp-4)!important;border:0!important;border-bottom:var(--border) solid var(--line)!important;background:var(--surface)!important;display:flex!important}.window-content .ve-ui-tab__btn-tab-head{counter-increment:trpg-step;align-items:center;gap:var(--sp-2);min-height:32px!important;padding:0 var(--sp-3)!important;border-radius:var(--r-pill)!important;color:var(--text2)!important;font-size:var(--fs-sm)!important;background:0 0!important;border:0!important;width:auto!important;transition:none!important;display:inline-flex!important}.window-content .ve-ui-tab__btn-tab-head:before{content:counter(trpg-step);border:var(--border) solid var(--line-ctrl);width:20px;height:20px;font-size:var(--fs-xs);border-radius:50%;place-items:center;display:inline-grid}.window-content .ve-ui-tab__btn-tab-head:hover{background:var(--bg-hover)!important}.window-content .ve-ui-tab__btn-tab-head.ve-active{font-weight:var(--fw-semibold);background:var(--primary)!important;color:var(--on-primary)!important}.window-content .ve-ui-tab__btn-tab-head.ve-active:before{border-color:currentColor}.window-content hr.ve-hr-1.ve-w-100:has(+.ve-flex-h-right){display:none}.window-content .ve-flex-h-right.ve-no-shrink:has(>.ve-btn-primary){gap:var(--sp-2);border-top:var(--border) solid var(--line-ctrl);padding:var(--sp-3) var(--sp-4)!important;background:var(--bg-side)!important}.window-content .ve-flex-h-right.ve-no-shrink:has(>.ve-btn-primary) .ve-btn{font-weight:var(--fw-semibold);min-height:var(--hit)!important;padding:0 var(--sp-5)!important;font-size:var(--fs-md)!important}.window-content .ve-flex-h-right.ve-no-shrink:has(>.ve-btn-primary) .ve-btn-group{gap:var(--sp-2)}.window-content .ve-flex-h-right.ve-no-shrink:has(>.ve-btn-primary) .ve-vr-2{display:none}.window-content .ve-flex-col:has(>hr.ve-hr-2:first-child){padding:var(--sp-3) 0;border:0;border-top:var(--border) solid var(--line);border-radius:0;margin:0;background:0 0!important}.window-content .ve-flex-col>hr.ve-hr-2:first-child{display:none}.window-content .ve-bold{font-weight:var(--fw-semibold)}.window-content .veapp__bg-foundry{background:var(--surface)!important}.window-content .stripe-even,.window-content .stripe-odd,.window-content .stripe-odd-table tr,.window-content .ve-cls-tbl__stripe-odd,.window-content .stripe-odd-table tbody tr:nth-child(odd){background:0 0!important}.window-content input[type=checkbox],.window-content input[type=radio]{accent-color:var(--primary);margin:0;appearance:auto!important;background:0 0!important;border:0!important;width:16px!important;height:16px!important}.window-content input[type=checkbox]:before,.window-content input[type=checkbox]:after,.window-content input[type=radio]:before,.window-content input[type=radio]:after{content:none!important;display:none!important}:is(.window-content label:not(.p6-choice-option):has(>label>input[type=checkbox]),.window-content label:not(.p6-choice-option):has(>label>input[type=radio])){margin:0 0 var(--sp-1);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);cursor:pointer;padding:var(--sp-1) var(--sp-2)!important;background:var(--surface)!important}.window-content label:not(.p6-choice-option):has(>label>input:checked){border-color:var(--primary);background:var(--primary-tint)!important}.window-content .veapp__list-row,.window-content .manc__list-row{border-bottom:var(--border) solid var(--line);align-items:center;min-height:36px;background:var(--surface)!important}.window-content .veapp__list-row-hoverable:hover,.window-content .manc__list-row:hover{background:var(--bg-hover)!important}.window-content .veapp__list-row:has(input:checked){box-shadow:inset 3px 0 0 var(--primary);font-weight:var(--fw-semibold);background:var(--primary-tint)!important}:is(.window-content .ve-input-group:has(>.ve-btn-5et)>.ve-btn,.window-content .sortlabel .ve-btn,.window-content .ve-btn.sort){font-weight:var(--fw-semibold);background:var(--bg-sunk)!important;border-color:var(--line)!important;color:var(--text2)!important;font-size:var(--fs-xs)!important;border-radius:0!important}.window-content .manc-sp__btn-learn-spell,.window-content .manc-sp__btn-prepare,.window-content .ve-fltr__mini-pill{border-radius:var(--r-sm)!important}.window-content .manc-sp__btn-learn-spell.ve-active,.window-content .manc-sp__btn-prepare.ve-active,.window-content .ve-btn.ve-active:not(.ve-ui-tab__btn-tab-head){background:var(--primary)!important;border-color:var(--primary)!important;color:var(--on-primary)!important}.window-content .ve-fltr__mini-pill{background:var(--primary-tint)!important;border:var(--border) solid var(--primary-tint-line)!important;color:var(--primary-text)!important}.window-content .ve-ui-sel2__ipt-display,.window-content .ve-ui-sel2__ipt-search{min-height:var(--hit)!important;padding:0 var(--sp-3)!important;background:var(--surface)!important;color:var(--text)!important;font-size:var(--fs-md)!important}.window-content .ve-ui-sel2__wrp-options{border-radius:var(--r-sm);box-shadow:var(--shadow-2);z-index:20;background:var(--surface)!important;border:var(--border) solid var(--line-ctrl)!important}.window-content .ve-ui-sel2__disp-option{border-bottom:var(--border) solid var(--line);min-height:40px;font-weight:var(--fw-semibold);padding:0 var(--sp-4)!important;background:var(--surface)!important;color:var(--text)!important}.window-content .ve-ui-sel2__disp-option:hover,.window-content .ve-ui-sel2__disp-option:focus{box-shadow:inset 3px 0 0 var(--primary);outline:0;background:var(--bg-hover)!important}.window-content .ve-rd__h,.window-content .entry-title-inner,.window-content .ve-rd__h .entry-title-inner{font-family:var(--font-sans)!important;font-variant:normal!important;font-weight:var(--fw-semibold)!important;letter-spacing:0!important;color:var(--text)!important}.window-content table th,.window-content .ve-rd__table thead th,.window-content .ve-cls-tbl th{font-weight:var(--fw-semibold);font-size:var(--fs-xs);background:var(--bg-sunk)!important;color:var(--text2)!important}.window-content table td,.window-content table th{padding:var(--sp-1) var(--sp-2);border:0!important;border-bottom:var(--border) solid var(--line)!important}.window-content table{background:var(--surface)!important;color:var(--text)!important;font-family:var(--font-sans)!important;border-color:var(--line)!important}.window-content table tr{background:0 0!important}.window-content .ve-tbl-border{background:var(--line)!important}.window-content .ve-stats__th-name{background:var(--surface)!important;border-bottom:var(--border) solid var(--line)!important}.window-content .ve-stats__h-name{font-family:var(--font-sans)!important;font-variant:normal!important;font-size:var(--fs-lg)!important;font-weight:var(--fw-semibold)!important;color:var(--text)!important}.window-content .ve-stats__wrp-h-source,.window-content .ve-stats__wrp-h-source a{font-family:var(--font-sans)!important;font-size:var(--fs-xs)!important;color:var(--text3)!important}.application.trpg-main .ve-ui-tab__wrp-tab-body{padding:var(--sp-3) var(--sp-4)!important;background:var(--surface)!important;border:0!important}.window-content input[readonly],.window-content input:disabled{background:var(--bg-sunk)!important;border-color:var(--line)!important;color:var(--text2)!important}", os = ".p6-builder{width:100%;height:100%;min-height:0;font-family:var(--font-sans);flex-direction:column;display:flex}.p6-builder [hidden],.p6-builder .p6-builder-inactive{display:none!important}.p6-builder-nav{align-items:center;gap:var(--sp-1);padding:var(--sp-3) var(--sp-4);border-bottom:var(--border) solid var(--line);flex:none;display:flex;overflow-x:auto}.p6-builder button.p6-builder-tab,.p6-builder button.p6-builder-btn,.p6-builder button.p6-picker-row{color:var(--text);background:var(--surface);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);min-height:var(--hit);padding:0 var(--sp-3);font:inherit;cursor:pointer;transition:none}.p6-builder button.p6-builder-btn:hover,.p6-builder button.p6-builder-tab:hover,.p6-builder button.p6-picker-row:hover{background:var(--bg-hover)}.p6-builder .p6-builder-tab{align-items:center;gap:var(--sp-2);white-space:nowrap;flex:none;display:inline-flex}.p6-builder button.p6-builder-tab{min-height:32px;color:var(--text2);font-size:var(--fs-sm);border-radius:var(--r-pill)!important;background:0 0!important;border-color:#0000!important}.p6-builder button.p6-builder-tab:hover{background:var(--bg-hover)!important}.p6-builder-tab i{border:var(--border) solid var(--line-ctrl);border-radius:50%;place-items:center;width:20px;height:20px;font-style:normal;display:inline-grid}.p6-builder .p6-builder-tab[data-done=true] i{background:var(--primary);color:var(--on-primary);border-color:var(--primary)}.p6-builder .p6-builder-past{padding:0 var(--sp-3);color:var(--text2);font-size:var(--fs-sm)}.p6-builder button.p6-builder-tab[aria-current],.p6-builder button.p6-builder-primary,.p6-builder button.p6-builder-btn[aria-pressed=true]{background:var(--primary)!important;color:var(--on-primary)!important}.p6-builder button.p6-builder-tab[aria-current] i{border-color:currentColor}.p6-builder button:disabled{cursor:not-allowed}.p6-builder button.p6-builder-btn:disabled{opacity:.55}.p6-builder .p6-builder-step{flex-direction:column;flex:1;min-height:0;display:flex;overflow:hidden;padding:0!important}.p6-builder .p6-builder-split:not(.p6-builder-inactive){grid-template-columns:minmax(175px,5fr) minmax(0,7fr);display:grid!important}.p6-builder-panel{flex-direction:column;min-width:0;min-height:0;display:flex;overflow:auto}.p6-native-body{padding:var(--sp-3) var(--sp-4);min-width:0}.p6-builder-selection{align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);z-index:2;background:var(--surface);border-bottom:var(--border) solid var(--line);flex-wrap:wrap;flex:none;display:flex;position:sticky;top:0}.p6-builder-selection-title{min-width:4em;font-size:var(--fs-lg);font-weight:var(--fw-semibold);flex:1;margin:0}.p6-builder-selection .p6-builder-btn{min-height:32px!important}.p6-builder-split .p6-native-body>.ve-flex{flex-direction:column;height:auto!important}.p6-builder-split .p6-native-body>.ve-flex>.ve-flex-col{width:100%!important;overflow:visible!important}.p6-builder-split .p6-native-body>.ve-flex>.ve-vr-1{display:none!important}.p6-builder-split .p6-native-body>.ve-flex:has(>.ve-vr-1)>.ve-vr-1+.ve-flex-col{display:none!important}.p6-builder-rail{border-right:var(--border) solid var(--line);min-width:0;min-height:0}.p6-picker{flex-direction:column;height:100%;min-height:0;display:flex}.p6-picker-search{min-height:var(--hit);width:auto;margin:var(--sp-3) var(--sp-4) var(--sp-2);color:var(--text);background:var(--surface);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);flex:none}.p6-picker-list{flex-direction:column;flex:1;min-height:0;display:flex;overflow:auto}.p6-builder button.p6-picker-row{justify-content:space-between;align-items:center;gap:var(--sp-2);text-align:left;flex:none;width:100%;display:flex;border:0!important;border-bottom:var(--border) solid var(--line)!important;border-radius:0!important}.p6-builder button.p6-picker-row[data-preview=true]{background:var(--primary-tint)!important;box-shadow:inset 2px 0 var(--accent)!important}.p6-builder .p6-picker-row[aria-pressed=true] .p6-picker-source:before{content:\"✓\";margin-right:var(--sp-2);color:var(--text)}.p6-picker-source,.p6-picker-status{color:var(--text2);font-size:var(--fs-xs)}.p6-picker-status{padding:var(--sp-2) var(--sp-4);flex:none;margin:0}.p6-builder-footer{justify-content:flex-end;align-items:center;gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);background:var(--bg-side);border-top:var(--border) solid var(--line);flex-wrap:wrap;flex:none;display:flex}.p6-builder-hint{color:var(--text2);font-size:var(--fs-xs);margin-right:auto}.p6-builder-feedback{color:var(--danger-text);flex-basis:100%;margin:0}.p6-builder-feedback:empty{display:none}.p6-builder-switch{gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-bottom:var(--border) solid var(--line);display:flex}.p6-builder-review{min-height:0;padding:var(--sp-4) var(--sp-5);flex:1;overflow:auto}.p6-builder-review h2{margin:0 0 var(--sp-4);font-size:var(--fs-xl)}.p6-builder-summary{gap:var(--sp-2) var(--sp-3);grid-template-columns:minmax(64px,100px) 1fr;margin:0;display:grid}.p6-builder-summary dt{color:var(--text2)}.p6-builder-summary dd{margin:0}.p6-builder-todo{margin-top:var(--sp-4);padding:var(--sp-3);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--warn-bg)}.p6-builder-todo-row{justify-content:space-between;gap:var(--sp-2);padding-top:var(--sp-2);align-items:center;display:flex}.p6-level{justify-content:space-between;align-items:center;gap:var(--sp-2);padding:var(--sp-1) 0;display:flex}.p6-level select{width:auto;min-height:34px;padding:0 var(--sp-3)}.p6-choice-progress{color:var(--accent-text);width:100%}.p6-choice-progress[data-done=true]{color:var(--success-text)}.p6-builder button[title]:has(>.fa-magnifying-glass:only-child){width:auto!important;padding-inline:var(--sp-2)!important}.p6-builder button[title]:has(>.fa-magnifying-glass:only-child):after{content:attr(title)}.window-content button.ve-btn-xxs:has(>.fa-check:only-child){width:auto!important;padding-inline:var(--sp-2)!important}.window-content button.ve-btn-xxs:has(>.fa-check:only-child):after{content:\"选择\"}.p6-builder-spells .p6-native-body>.ve-flex{flex-direction:column;height:auto!important}.p6-builder-spells .p6-native-body>.ve-flex>.ve-flex-col{flex:none!important;height:auto!important;overflow:visible!important}.p6-builder-spells .p6-native-body>.ve-flex>.ve-vr-1,.p6-builder-spells .manc__list-row>:is(:nth-child(2),:nth-child(3),:nth-child(4),:nth-child(5),:nth-child(6)){display:none!important}.p6-builder-spells .p6-native-body .manc__list:has(.manc__list-row)~.ve-input-group{display:none!important}.p6-builder-spells .manc__list-row{gap:var(--sp-2);min-height:var(--hit);justify-content:space-between}.p6-builder-spells .manc__list-row>:first-child{flex:1;width:auto!important}.p6-builder-spells .manc__list-row>:nth-child(7){flex:0 0 4.5em;text-align:right!important;width:auto!important}.p6-builder-spells .manc__list-row>:last-child{gap:var(--sp-1);flex:none;display:flex;width:auto!important}@media (width<=520px){.p6-builder-rail{border-right:0}.p6-builder-nav,.p6-builder-footer,.p6-builder-review{padding-inline:var(--sp-3)}.p6-builder-attributes .p6-native-body{padding-inline:var(--sp-2);overflow-x:auto}.p6-builder-attributes .ve-statgen-pb__cell{min-width:0!important}.p6-builder-attributes .ve-statgen-shared__ipt:not(.ve-statgen-pb__ipt-budget){width:41px!important;padding-inline:var(--sp-1)!important}.p6-builder-attributes select.ve-statgen-shared__ipt{appearance:none;text-align:center;padding-inline:0!important}}.p6-choice-instruction{display:none!important}.p6-ability-methods{gap:var(--sp-1);flex-wrap:wrap;display:flex}.p6-builder-attributes .ve-statgen-shared__wrp-header{gap:var(--sp-3);flex-wrap:wrap}.p6-builder-attributes:not([data-mode=pointbuy]) .ve-mobile-sm__flex-col.ve-mb-2:has(.ve-statgen-pb__ipt-budget){display:none!important}.p6-builder [onmouseover*=Renderer\\.hover],.p6-builder [onclick*=Renderer\\.hover]{pointer-events:none!important;color:inherit!important;cursor:inherit!important;text-decoration:none!important}.p6-builder .veapp__btn-filter,.p6-builder .ve-fltr__mini-view{display:none!important}.p6-builder button:has(>.glyphicon-filter){display:none!important}.p6-builder button:has(>.glyphicon-resize-small){display:none!important}.p6-builder .ve-btn-group:has(>button>.glyphicon-refresh){display:none!important}:is(.p6-builder .ve-btn-group:has(.ve-ui-sel2__wrp[style*=none]),.p6-builder .ve-bold:has(+.ve-btn-group .ve-ui-sel2__wrp[style*=none])){display:none!important}.p6-builder-spells .manc__list-row>:nth-child(7),.p6-builder-spells .manc__list-row>:nth-child(7) *{font-size:var(--fs-xs);color:var(--text3)!important}.p6-builder-card{padding:var(--sp-3) var(--sp-4) var(--sp-5);border-top:var(--border) solid var(--line);color:var(--text);font-size:var(--fs-sm);line-height:1.65}.p6-builder-card>table{width:100%;border:0!important}.p6-builder-card td,.p6-builder-card th{padding:var(--sp-1) 0!important;border:0!important}.p6-builder-card-note{margin:0 0 var(--sp-2);color:var(--text2)}.p6-builder .p6-choice-group{align-items:center;gap:var(--sp-2);flex-wrap:wrap;background:0 0!important;border:0!important;height:auto!important;min-height:0!important;padding:0!important;display:flex!important;overflow:visible!important}.p6-builder .p6-choice-group>:not(.p6-choice-option){flex-basis:100%;width:100%!important}.p6-builder .p6-choice-group>hr{margin:var(--sp-1) 0}.p6-builder .p6-choice-progress{color:var(--accent-text);font-size:var(--fs-xs)}.p6-builder .p6-choice-progress[data-done=true]{color:var(--success-text)}.p6-builder .p6-choice-option{white-space:nowrap;align-items:center;gap:var(--sp-1);border-radius:var(--r-sm);min-height:36px;color:var(--text);cursor:pointer;flex:none;position:relative;width:auto!important;padding:0 var(--sp-3)!important;border:var(--border) solid var(--line-ctrl)!important;background:var(--surface)!important;justify-content:flex-start!important;margin:0!important;display:inline-flex!important}.p6-builder .p6-choice-option>label:has(>input){clip-path:inset(50%);margin:0;padding:0;overflow:hidden;width:1px!important;height:1px!important;position:absolute!important}.p6-builder .p6-choice-option>div,.p6-builder .p6-choice-option .ve-w-100{white-space:nowrap;flex:none!important;width:auto!important;max-width:none!important;padding:0!important}.p6-builder .p6-choice-option .ve-help{border-bottom:0!important;text-decoration:none!important}.p6-builder .p6-choice-option:hover{background:var(--bg-hover)!important}.p6-builder .p6-choice-option:has(input:checked){color:var(--on-primary);background:var(--primary)!important;border-color:var(--primary)!important}.p6-builder .p6-choice-option:has(input:checked):before{content:\"✓\";font-size:var(--fs-xs)}.p6-builder .p6-choice-option:has(input:checked) .ve-muted{opacity:.8;color:inherit!important}.p6-builder .p6-choice-option:has(input:disabled):not(:has(input:checked)){color:var(--disabled-text);cursor:not-allowed;background:var(--disabled-bg)!important}.p6-builder .p6-choice-option:has(input:focus-visible){outline:2px solid var(--focus);outline-offset:2px}.p6-builder .p6-choice-option .veapp__msg-warning:empty{display:none}.p6-builder .p6-choice-option .veapp__msg-warning:has(.fa-check){display:none!important}.p6-builder .p6-choice-option:has(.veapp__msg-warning .fa-check):after{content:\"已有\";margin-left:var(--sp-1);color:var(--text3);font-size:var(--fs-xs)}.p6-builder-equipment .imp-cls__wrp-equi-group{gap:var(--sp-2);padding:var(--sp-3) 0!important;border:0!important;border-top:var(--border) solid var(--line)!important;background:0 0!important;margin:0!important}.p6-builder-equipment .imp-cls__wrp-equi-group>div{min-height:var(--hit);padding:var(--sp-2) var(--sp-3) var(--sp-2) 40px;border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);position:relative;justify-content:flex-start!important}.p6-builder-equipment .imp-cls__wrp-equi-group>div:has(>.ve-active){border-color:var(--primary);background:var(--primary-tint)}.p6-builder-equipment .imp-cls__wrp-equi-group .ve-btn.imp-cls__disp-equi-choice-key,.p6-builder-equipment .imp-cls__wrp-equi-group .ve-btn.imp-cls__disp-equi-choice-key.ve-active{z-index:0;inset:0;border-radius:var(--r-sm)!important;color:#0000!important;width:auto!important;height:auto!important;box-shadow:none!important;background:0 0!important;border:0!important;margin:0!important;font-size:0!important;position:absolute!important}.p6-builder-equipment .imp-cls__disp-equi-choice-key:before{content:\"\";left:var(--sp-3);border:2px solid var(--line-ctrl);box-sizing:border-box;border-radius:50%;width:16px;height:16px;margin-top:-8px;position:absolute;top:50%}.p6-builder-equipment .imp-cls__disp-equi-choice-key.ve-active:before{border:5px solid var(--primary)}.p6-builder-equipment .imp-cls__disp-equi-choice-key:focus-visible{outline:2px solid var(--focus)!important}.p6-builder-equipment .imp-cls__wrp-equi-group>div>.ve-w-100{z-index:1;pointer-events:none;position:relative}.p6-builder-equipment .imp-cls__wrp-equi-group>div>.ve-w-100 :is(button,input,select){pointer-events:auto}.p6-builder-equipment .imp-cls__wrp-equi-group>div:has(>.imp-cls__disp-equi-choice-key:disabled){padding-left:var(--sp-3);border-color:var(--line);background:var(--bg-sunk)}.p6-builder-equipment .imp-cls__wrp-equi-group .ve-btn.imp-cls__disp-equi-choice-key:disabled{visibility:hidden!important;display:none!important}.p6-builder-equipment .imp-cls__wrp-equi-group .ve-btn.imp-cls__disp-equi-choice-key:disabled:before{content:none!important}.p6-builder-equipment button:has(>.fa-magnifying-glass){align-items:center;gap:var(--sp-1);min-height:32px;width:auto!important;padding:0 var(--sp-2)!important;border:var(--border) solid var(--line-ctrl)!important;border-radius:var(--r-sm)!important;background:var(--surface)!important;color:var(--text)!important;display:inline-flex!important}.p6-builder-equipment button:has(>.fa-magnifying-glass)>.fa-magnifying-glass{display:none}.p6-builder-equipment button:has(>.fa-magnifying-glass):after{content:attr(title) \" ▾\"!important}.p6-equip-picker{z-index:30;pointer-events:auto;background:var(--surface);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);width:min(340px,100%);box-shadow:var(--shadow-2);flex-direction:column;display:flex;position:absolute;top:calc(100% + 4px);left:0}.p6-builder-equipment .imp-cls__wrp-equi-group>div>.ve-w-100:has(.p6-equip-picker){z-index:20}.p6-equip-picker .p6-picker-search{margin:var(--sp-2)}.p6-equip-picker-list{border-top:var(--border) solid var(--line);max-height:220px;overflow:auto}.p6-builder button.p6-equip-picker-clear{min-height:32px;margin:var(--sp-1) var(--sp-2);padding:0 var(--sp-2);color:var(--primary-text);font:inherit;font-size:var(--fs-sm);cursor:pointer;background:0 0;border:0;align-self:flex-start}.p6-builder-to-list{display:none}@media (width<=520px){.p6-builder .p6-builder-split:not(.p6-builder-inactive){grid-template-rows:minmax(0,1fr)!important;grid-template-columns:1fr!important}.p6-builder-split[data-view=list]>.p6-builder-panel,.p6-builder-split[data-view=card]>.p6-builder-rail{display:none!important}.p6-builder-split .p6-builder-rail{border-bottom:0}.p6-builder button.p6-builder-to-list{color:var(--primary-text);align-items:center;display:inline-flex;padding:0 var(--sp-1)!important;background:0 0!important;border:0!important}}", ss = globalThis;
-function cs(e = [
+var cs = "html,body{color:var(--text);font-family:var(--font-sans);font-size:var(--fs-md);line-height:var(--lh-ui);--lightningcss-light:initial;--lightningcss-dark: ;color-scheme:light;background:var(--bg)!important}@media (prefers-color-scheme:dark){html,body{--lightningcss-light: ;--lightningcss-dark:initial;color-scheme:dark}}body,.application,.window-app{--background:var(--surface);--color-header-background:var(--head-bg);--color-border:var(--line);--color-tabs-border:var(--line);--color-fieldset-border:var(--line);--color-form-hint:var(--text3);--color-form-hint-hover:var(--text2);--color-form-label:var(--text2);--color-form-label-hover:var(--text);--color-text-emphatic:var(--text);--color-text-primary:var(--text);--color-text-secondary:var(--text2);--color-text-subtle:var(--text3);--color-text-selection:var(--text);--color-text-selection-bg:var(--primary-tint);--table-background-color:var(--surface);--table-header-bg-color:var(--bg-sunk);--table-header-border-color:var(--line);--table-header-text-color:var(--text);--table-row-color-even:var(--bg-sunk);--table-row-color-odd:transparent;--table-row-color-highlight:var(--primary-tint);--content-link-background:var(--primary-tint);--content-link-border-color:var(--primary-tint-line);--content-link-text-color:var(--primary-text);--content-link-icon-color:var(--primary-text);--color-text-dark-primary:var(--text);--hotbar-height:0px;--color-scheme:light}@media (prefers-color-scheme:dark){body,.application,.window-app{--color-scheme:dark}}.application,.window-app{overflow:hidden;color-scheme:var(--color-scheme)!important;background:var(--surface)!important;color:var(--text)!important;font-family:var(--font-sans)!important;border:var(--border) solid var(--line)!important;border-radius:var(--r-lg)!important;box-shadow:var(--shadow-3)!important}.application .window-header,.window-app .window-header{min-height:var(--hit);background:var(--head-bg)!important;color:var(--head-ink)!important;border:0!important;border-bottom:var(--border) solid var(--head-line)!important;font-family:var(--font-sans)!important;font-size:var(--fs-md)!important;padding:0 var(--sp-3)!important}.window-title{font-family:var(--font-sans)!important;font-size:var(--fs-md)!important;font-weight:var(--fw-semibold)!important;color:inherit!important}.window-header button,.window-header .header-control,.window-header a{box-shadow:none!important;color:var(--head-ink2)!important;background:0 0!important;border:0!important;min-height:0!important}.window-header button:hover,.window-header .header-control:hover,.window-header a:hover{color:var(--head-ink)!important;background:var(--head-hover)!important}.window-content{background:var(--surface)!important;color:var(--text)!important;-webkit-backdrop-filter:none!important;font-family:var(--font-sans)!important;font-size:var(--fs-md)!important}.window-resize-handle{opacity:.5;filter:none!important}.ve-app-window,.ve-window,.ve-ui-modal__overlay,.ve-hwin,.ve-ui-tab-side__wrp-tab{background:var(--surface)!important;color:var(--text)!important}.window-content a{color:var(--primary-text)!important}.window-content hr{border:0!important;border-top:var(--border) solid var(--line)!important;background:0 0!important}.window-content h1,.window-content h2,.window-content h3,.window-content h4,.window-content h5{border:0;color:var(--text)!important;font-family:var(--font-sans)!important;text-shadow:none!important}.window-content table,.window-content th,.window-content td{color:var(--text)!important;border-color:var(--line)!important}.window-content button,.window-content .ve-btn{font:inherit;min-height:30px;padding:0 var(--sp-3);cursor:pointer;font-size:var(--fs-sm)!important;border:var(--border) solid var(--line-ctrl)!important;border-radius:var(--r-sm)!important;background:var(--surface)!important;color:var(--text)!important;box-shadow:none!important;text-shadow:none!important;background-image:none!important}.window-content button:hover,.window-content .ve-btn:hover{background:var(--bg-hover)!important}.window-content .ve-btn-primary,.window-content button.ve-btn-primary{background:var(--primary)!important;border-color:var(--primary)!important;color:var(--on-primary)!important}.window-content .ve-btn-primary:hover{background:var(--primary-hover)!important}.window-content .ve-btn.active,.window-content button.active{background:var(--primary-tint)!important;border-color:var(--primary-tint-line)!important;color:var(--primary-text)!important}.window-content button:disabled,.window-content .ve-btn:disabled{opacity:.5;cursor:default}.window-content input[type=text],.window-content input[type=number],.window-content input[type=search],.window-content select,.window-content textarea{font:inherit;min-height:30px;font-size:var(--fs-sm)!important;color:var(--text)!important;background:var(--surface)!important;border:var(--border) solid var(--line-ctrl)!important;border-radius:var(--r-sm)!important;box-shadow:none!important}.window-content input[type=checkbox],.window-content input[type=radio]{accent-color:var(--primary)}.window-content button:focus-visible,.window-content input:focus-visible,.window-content select:focus-visible,.window-content textarea:focus-visible{outline-offset:1px;outline:2px solid var(--focus)!important}.window-content .ve-muted,.window-content .ve-text-muted{color:var(--text2)!important}", ls = ".application.trpg-main{box-shadow:none!important;border:0!important;border-radius:0!important}.application.trpg-main>.window-header{display:none!important}.application.trpg-main>.window-content{padding:0!important}.application:not(.trpg-main)>.window-header{min-height:52px;background:var(--surface)!important;color:var(--text)!important;border-bottom:var(--border) solid var(--line)!important;padding:0 var(--sp-3) 0 var(--sp-5)!important}.application:not(.trpg-main) .window-title{font-size:var(--fs-xl)!important}.window-header [data-action=close]{border-radius:var(--r-sm);width:32px;height:32px;color:var(--text2)!important;font-size:0!important}.window-header [data-action=close]:before{content:\"✕\";font:16px/1 var(--font-sans)}.window-header [data-action=close]:hover{background:var(--bg-hover)!important;color:var(--text)!important}.ve-ui-tab__wrp-tab-heads--border{gap:var(--sp-1);counter-reset:trpg-step;flex-wrap:wrap;padding:var(--sp-3) var(--sp-4)!important;border:0!important;border-bottom:var(--border) solid var(--line)!important;background:var(--surface)!important;display:flex!important}.window-content .ve-ui-tab__btn-tab-head{counter-increment:trpg-step;align-items:center;gap:var(--sp-2);min-height:32px!important;padding:0 var(--sp-3)!important;border-radius:var(--r-pill)!important;color:var(--text2)!important;font-size:var(--fs-sm)!important;background:0 0!important;border:0!important;width:auto!important;transition:none!important;display:inline-flex!important}.window-content .ve-ui-tab__btn-tab-head:before{content:counter(trpg-step);border:var(--border) solid var(--line-ctrl);width:20px;height:20px;font-size:var(--fs-xs);border-radius:50%;place-items:center;display:inline-grid}.window-content .ve-ui-tab__btn-tab-head:hover{background:var(--bg-hover)!important}.window-content .ve-ui-tab__btn-tab-head.ve-active{font-weight:var(--fw-semibold);background:var(--primary)!important;color:var(--on-primary)!important}.window-content .ve-ui-tab__btn-tab-head.ve-active:before{border-color:currentColor}.window-content hr.ve-hr-1.ve-w-100:has(+.ve-flex-h-right){display:none}.window-content .ve-flex-h-right.ve-no-shrink:has(>.ve-btn-primary){gap:var(--sp-2);border-top:var(--border) solid var(--line-ctrl);padding:var(--sp-3) var(--sp-4)!important;background:var(--bg-side)!important}.window-content .ve-flex-h-right.ve-no-shrink:has(>.ve-btn-primary) .ve-btn{font-weight:var(--fw-semibold);min-height:var(--hit)!important;padding:0 var(--sp-5)!important;font-size:var(--fs-md)!important}.window-content .ve-flex-h-right.ve-no-shrink:has(>.ve-btn-primary) .ve-btn-group{gap:var(--sp-2)}.window-content .ve-flex-h-right.ve-no-shrink:has(>.ve-btn-primary) .ve-vr-2{display:none}.window-content .ve-flex-col:has(>hr.ve-hr-2:first-child){padding:var(--sp-3) 0;border:0;border-top:var(--border) solid var(--line);border-radius:0;margin:0;background:0 0!important}.window-content .ve-flex-col>hr.ve-hr-2:first-child{display:none}.window-content .ve-bold{font-weight:var(--fw-semibold)}.window-content .veapp__bg-foundry{background:var(--surface)!important}.window-content .stripe-even,.window-content .stripe-odd,.window-content .stripe-odd-table tr,.window-content .ve-cls-tbl__stripe-odd,.window-content .stripe-odd-table tbody tr:nth-child(odd){background:0 0!important}.window-content input[type=checkbox],.window-content input[type=radio]{accent-color:var(--primary);margin:0;appearance:auto!important;background:0 0!important;border:0!important;width:16px!important;height:16px!important}.window-content input[type=checkbox]:before,.window-content input[type=checkbox]:after,.window-content input[type=radio]:before,.window-content input[type=radio]:after{content:none!important;display:none!important}:is(.window-content label:not(.p6-choice-option):has(>label>input[type=checkbox]),.window-content label:not(.p6-choice-option):has(>label>input[type=radio])){margin:0 0 var(--sp-1);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);cursor:pointer;padding:var(--sp-1) var(--sp-2)!important;background:var(--surface)!important}.window-content label:not(.p6-choice-option):has(>label>input:checked){border-color:var(--primary);background:var(--primary-tint)!important}.window-content .veapp__list-row,.window-content .manc__list-row{border-bottom:var(--border) solid var(--line);align-items:center;min-height:36px;background:var(--surface)!important}.window-content .veapp__list-row-hoverable:hover,.window-content .manc__list-row:hover{background:var(--bg-hover)!important}.window-content .veapp__list-row:has(input:checked){box-shadow:inset 3px 0 0 var(--primary);font-weight:var(--fw-semibold);background:var(--primary-tint)!important}:is(.window-content .ve-input-group:has(>.ve-btn-5et)>.ve-btn,.window-content .sortlabel .ve-btn,.window-content .ve-btn.sort){font-weight:var(--fw-semibold);background:var(--bg-sunk)!important;border-color:var(--line)!important;color:var(--text2)!important;font-size:var(--fs-xs)!important;border-radius:0!important}.window-content .manc-sp__btn-learn-spell,.window-content .manc-sp__btn-prepare,.window-content .ve-fltr__mini-pill{border-radius:var(--r-sm)!important}.window-content .manc-sp__btn-learn-spell.ve-active,.window-content .manc-sp__btn-prepare.ve-active,.window-content .ve-btn.ve-active:not(.ve-ui-tab__btn-tab-head){background:var(--primary)!important;border-color:var(--primary)!important;color:var(--on-primary)!important}.window-content .ve-fltr__mini-pill{background:var(--primary-tint)!important;border:var(--border) solid var(--primary-tint-line)!important;color:var(--primary-text)!important}.window-content .ve-ui-sel2__ipt-display,.window-content .ve-ui-sel2__ipt-search{min-height:var(--hit)!important;padding:0 var(--sp-3)!important;background:var(--surface)!important;color:var(--text)!important;font-size:var(--fs-md)!important}.window-content .ve-ui-sel2__wrp-options{border-radius:var(--r-sm);box-shadow:var(--shadow-2);z-index:20;background:var(--surface)!important;border:var(--border) solid var(--line-ctrl)!important}.window-content .ve-ui-sel2__disp-option{border-bottom:var(--border) solid var(--line);min-height:40px;font-weight:var(--fw-semibold);padding:0 var(--sp-4)!important;background:var(--surface)!important;color:var(--text)!important}.window-content .ve-ui-sel2__disp-option:hover,.window-content .ve-ui-sel2__disp-option:focus{box-shadow:inset 3px 0 0 var(--primary);outline:0;background:var(--bg-hover)!important}.window-content .ve-rd__h,.window-content .entry-title-inner,.window-content .ve-rd__h .entry-title-inner{font-family:var(--font-sans)!important;font-variant:normal!important;font-weight:var(--fw-semibold)!important;letter-spacing:0!important;color:var(--text)!important}.window-content table th,.window-content .ve-rd__table thead th,.window-content .ve-cls-tbl th{font-weight:var(--fw-semibold);font-size:var(--fs-xs);background:var(--bg-sunk)!important;color:var(--text2)!important}.window-content table td,.window-content table th{padding:var(--sp-1) var(--sp-2);border:0!important;border-bottom:var(--border) solid var(--line)!important}.window-content table{background:var(--surface)!important;color:var(--text)!important;font-family:var(--font-sans)!important;border-color:var(--line)!important}.window-content table tr{background:0 0!important}.window-content .ve-tbl-border{background:var(--line)!important}.window-content .ve-stats__th-name{background:var(--surface)!important;border-bottom:var(--border) solid var(--line)!important}.window-content .ve-stats__h-name{font-family:var(--font-sans)!important;font-variant:normal!important;font-size:var(--fs-lg)!important;font-weight:var(--fw-semibold)!important;color:var(--text)!important}.window-content .ve-stats__wrp-h-source,.window-content .ve-stats__wrp-h-source a{font-family:var(--font-sans)!important;font-size:var(--fs-xs)!important;color:var(--text3)!important}.application.trpg-main .ve-ui-tab__wrp-tab-body{padding:var(--sp-3) var(--sp-4)!important;background:var(--surface)!important;border:0!important}.window-content input[readonly],.window-content input:disabled{background:var(--bg-sunk)!important;border-color:var(--line)!important;color:var(--text2)!important}", us = ".p6-builder{width:100%;height:100%;min-height:0;font-family:var(--font-sans);flex-direction:column;display:flex}.p6-builder [hidden],.p6-builder .p6-builder-inactive{display:none!important}.p6-builder-nav{align-items:center;gap:var(--sp-1);padding:var(--sp-3) var(--sp-4);border-bottom:var(--border) solid var(--line);flex:none;display:flex;overflow-x:auto}.p6-builder button.p6-builder-tab,.p6-builder button.p6-builder-btn,.p6-builder button.p6-picker-row{color:var(--text);background:var(--surface);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);min-height:var(--hit);padding:0 var(--sp-3);font:inherit;cursor:pointer;transition:none}.p6-builder button.p6-builder-btn:hover,.p6-builder button.p6-builder-tab:hover,.p6-builder button.p6-picker-row:hover{background:var(--bg-hover)}.p6-builder .p6-builder-tab{align-items:center;gap:var(--sp-2);white-space:nowrap;flex:none;display:inline-flex}.p6-builder button.p6-builder-tab{min-height:32px;color:var(--text2);font-size:var(--fs-sm);border-radius:var(--r-pill)!important;background:0 0!important;border-color:#0000!important}.p6-builder button.p6-builder-tab:hover{background:var(--bg-hover)!important}.p6-builder-tab i{border:var(--border) solid var(--line-ctrl);border-radius:50%;place-items:center;width:20px;height:20px;font-style:normal;display:inline-grid}.p6-builder .p6-builder-tab[data-done=true] i{background:var(--primary);color:var(--on-primary);border-color:var(--primary)}.p6-builder .p6-builder-past{padding:0 var(--sp-3);color:var(--text2);font-size:var(--fs-sm)}.p6-builder button.p6-builder-tab[aria-current],.p6-builder button.p6-builder-primary,.p6-builder button.p6-builder-btn[aria-pressed=true]{background:var(--primary)!important;color:var(--on-primary)!important}.p6-builder button.p6-builder-tab[aria-current] i{border-color:currentColor}.p6-builder button:disabled{cursor:not-allowed}.p6-builder button.p6-builder-btn:disabled{opacity:.55}.p6-builder .p6-builder-step{flex-direction:column;flex:1;min-height:0;display:flex;overflow:hidden;padding:0!important}.p6-builder .p6-builder-split:not(.p6-builder-inactive){grid-template-columns:minmax(175px,5fr) minmax(0,7fr);display:grid!important}.p6-builder-panel{flex-direction:column;min-width:0;min-height:0;display:flex;overflow:auto}.p6-native-body{padding:var(--sp-3) var(--sp-4);min-width:0}.p6-builder-selection{align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);z-index:2;background:var(--surface);border-bottom:var(--border) solid var(--line);flex-wrap:wrap;flex:none;display:flex;position:sticky;top:0}.p6-builder-selection-title{min-width:4em;font-size:var(--fs-lg);font-weight:var(--fw-semibold);flex:1;margin:0}.p6-builder-selection .p6-builder-btn{min-height:32px!important}.p6-builder-split .p6-native-body>.ve-flex{flex-direction:column;height:auto!important}.p6-builder-split .p6-native-body>.ve-flex>.ve-flex-col{width:100%!important;overflow:visible!important}.p6-builder-split .p6-native-body>.ve-flex>.ve-vr-1{display:none!important}.p6-builder-split .p6-native-body>.ve-flex:has(>.ve-vr-1)>.ve-vr-1+.ve-flex-col{display:none!important}.p6-builder-rail{border-right:var(--border) solid var(--line);min-width:0;min-height:0}.p6-picker{flex-direction:column;height:100%;min-height:0;display:flex}.p6-picker-search{min-height:var(--hit);width:auto;margin:var(--sp-3) var(--sp-4) var(--sp-2);color:var(--text);background:var(--surface);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);flex:none}.p6-picker-list{flex-direction:column;flex:1;min-height:0;display:flex;overflow:auto}.p6-builder button.p6-picker-row{justify-content:space-between;align-items:center;gap:var(--sp-2);text-align:left;flex:none;width:100%;display:flex;border:0!important;border-bottom:var(--border) solid var(--line)!important;border-radius:0!important}.p6-builder button.p6-picker-row[data-preview=true]{background:var(--primary-tint)!important;box-shadow:inset 2px 0 var(--accent)!important}.p6-builder .p6-picker-row[aria-pressed=true] .p6-picker-source:before{content:\"✓\";margin-right:var(--sp-2);color:var(--text)}.p6-picker-source,.p6-picker-status{color:var(--text2);font-size:var(--fs-xs)}.p6-picker-status{padding:var(--sp-2) var(--sp-4);flex:none;margin:0}.p6-builder-footer{justify-content:flex-end;align-items:center;gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);background:var(--bg-side);border-top:var(--border) solid var(--line);flex-wrap:wrap;flex:none;display:flex}.p6-builder-hint{color:var(--text2);font-size:var(--fs-xs);margin-right:auto}.p6-builder-feedback{color:var(--danger-text);flex-basis:100%;margin:0}.p6-builder-feedback:empty{display:none}.p6-builder-switch{gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-bottom:var(--border) solid var(--line);display:flex}.p6-builder-review{min-height:0;padding:var(--sp-4) var(--sp-5);flex:1;overflow:auto}.p6-builder-review h2{margin:0 0 var(--sp-4);font-size:var(--fs-xl)}.p6-builder-summary{gap:var(--sp-2) var(--sp-3);grid-template-columns:minmax(64px,100px) 1fr;margin:0;display:grid}.p6-builder-summary dt{color:var(--text2)}.p6-builder-summary dd{margin:0}.p6-builder-todo{margin-top:var(--sp-4);padding:var(--sp-3);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--warn-bg)}.p6-builder-todo-row{justify-content:space-between;gap:var(--sp-2);padding-top:var(--sp-2);align-items:center;display:flex}.p6-level{justify-content:space-between;align-items:center;gap:var(--sp-2);padding:var(--sp-1) 0;display:flex}.p6-level select{width:auto;min-height:34px;padding:0 var(--sp-3)}.p6-choice-progress{color:var(--accent-text);width:100%}.p6-choice-progress[data-done=true]{color:var(--success-text)}.p6-builder button[title]:has(>.fa-magnifying-glass:only-child){width:auto!important;padding-inline:var(--sp-2)!important}.p6-builder button[title]:has(>.fa-magnifying-glass:only-child):after{content:attr(title)}.window-content button.ve-btn-xxs:has(>.fa-check:only-child){width:auto!important;padding-inline:var(--sp-2)!important}.window-content button.ve-btn-xxs:has(>.fa-check:only-child):after{content:\"选择\"}.p6-builder-spells .p6-native-body>.ve-flex{flex-direction:column;height:auto!important}.p6-builder-spells .p6-native-body>.ve-flex>.ve-flex-col{flex:none!important;height:auto!important;overflow:visible!important}.p6-builder-spells .p6-native-body>.ve-flex>.ve-vr-1,.p6-builder-spells .manc__list-row>:is(:nth-child(2),:nth-child(3),:nth-child(4),:nth-child(5),:nth-child(6)){display:none!important}.p6-builder-spells .p6-native-body .manc__list:has(.manc__list-row)~.ve-input-group{display:none!important}.p6-builder-spells .manc__list-row{gap:var(--sp-2);min-height:var(--hit);justify-content:space-between}.p6-builder-spells .manc__list-row>:first-child{flex:1;width:auto!important}.p6-builder-spells .manc__list-row>:nth-child(7){flex:0 0 4.5em;text-align:right!important;width:auto!important}.p6-builder-spells .manc__list-row>:last-child{gap:var(--sp-1);flex:none;display:flex;width:auto!important}@media (width<=520px){.p6-builder-rail{border-right:0}.p6-builder-nav,.p6-builder-footer,.p6-builder-review{padding-inline:var(--sp-3)}.p6-builder-attributes .p6-native-body{padding-inline:var(--sp-2);overflow-x:auto}.p6-builder-attributes .ve-statgen-pb__cell{min-width:0!important}.p6-builder-attributes .ve-statgen-shared__ipt:not(.ve-statgen-pb__ipt-budget){width:41px!important;padding-inline:var(--sp-1)!important}.p6-builder-attributes select.ve-statgen-shared__ipt{appearance:none;text-align:center;padding-inline:0!important}}.p6-choice-instruction{display:none!important}.p6-ability-methods{gap:var(--sp-1);flex-wrap:wrap;display:flex}.p6-builder-attributes .ve-statgen-shared__wrp-header{gap:var(--sp-3);flex-wrap:wrap}.p6-builder-attributes:not([data-mode=pointbuy]) .ve-mobile-sm__flex-col.ve-mb-2:has(.ve-statgen-pb__ipt-budget){display:none!important}.p6-builder [onmouseover*=Renderer\\.hover],.p6-builder [onclick*=Renderer\\.hover]{pointer-events:none!important;color:inherit!important;cursor:inherit!important;text-decoration:none!important}.p6-builder .veapp__btn-filter,.p6-builder .ve-fltr__mini-view{display:none!important}.p6-builder button:has(>.glyphicon-filter){display:none!important}.p6-builder button:has(>.glyphicon-resize-small){display:none!important}.p6-builder .ve-btn-group:has(>button>.glyphicon-refresh){display:none!important}:is(.p6-builder .ve-btn-group:has(.ve-ui-sel2__wrp[style*=none]),.p6-builder .ve-bold:has(+.ve-btn-group .ve-ui-sel2__wrp[style*=none])){display:none!important}.p6-builder-spells .manc__list-row>:nth-child(7),.p6-builder-spells .manc__list-row>:nth-child(7) *{font-size:var(--fs-xs);color:var(--text3)!important}.p6-builder-card{padding:var(--sp-3) var(--sp-4) var(--sp-5);border-top:var(--border) solid var(--line);color:var(--text);font-size:var(--fs-sm);line-height:1.65}.p6-builder-card>table{width:100%;border:0!important}.p6-builder-card td,.p6-builder-card th{padding:var(--sp-1) 0!important;border:0!important}.p6-builder-card-note{margin:0 0 var(--sp-2);color:var(--text2)}.p6-builder .p6-choice-group{align-items:center;gap:var(--sp-2);flex-wrap:wrap;background:0 0!important;border:0!important;height:auto!important;min-height:0!important;padding:0!important;display:flex!important;overflow:visible!important}.p6-builder .p6-choice-group>:not(.p6-choice-option){flex-basis:100%;width:100%!important}.p6-builder .p6-choice-group>hr{margin:var(--sp-1) 0}.p6-builder .p6-choice-progress{color:var(--accent-text);font-size:var(--fs-xs)}.p6-builder .p6-choice-progress[data-done=true]{color:var(--success-text)}.p6-builder .p6-choice-option{white-space:nowrap;align-items:center;gap:var(--sp-1);border-radius:var(--r-sm);min-height:36px;color:var(--text);cursor:pointer;flex:none;position:relative;width:auto!important;padding:0 var(--sp-3)!important;border:var(--border) solid var(--line-ctrl)!important;background:var(--surface)!important;justify-content:flex-start!important;margin:0!important;display:inline-flex!important}.p6-builder .p6-choice-option>label:has(>input){clip-path:inset(50%);margin:0;padding:0;overflow:hidden;width:1px!important;height:1px!important;position:absolute!important}.p6-builder .p6-choice-option>div,.p6-builder .p6-choice-option .ve-w-100{white-space:nowrap;flex:none!important;width:auto!important;max-width:none!important;padding:0!important}.p6-builder .p6-choice-option .ve-help{border-bottom:0!important;text-decoration:none!important}.p6-builder .p6-choice-option:hover{background:var(--bg-hover)!important}.p6-builder .p6-choice-option:has(input:checked){color:var(--on-primary);background:var(--primary)!important;border-color:var(--primary)!important}.p6-builder .p6-choice-option:has(input:checked):before{content:\"✓\";font-size:var(--fs-xs)}.p6-builder .p6-choice-option:has(input:checked) .ve-muted{opacity:.8;color:inherit!important}.p6-builder .p6-choice-option:has(input:disabled):not(:has(input:checked)){color:var(--disabled-text);cursor:not-allowed;background:var(--disabled-bg)!important}.p6-builder .p6-choice-option:has(input:focus-visible){outline:2px solid var(--focus);outline-offset:2px}.p6-builder .p6-choice-option .veapp__msg-warning:empty{display:none}.p6-builder .p6-choice-option .veapp__msg-warning:has(.fa-check){display:none!important}.p6-builder .p6-choice-option:has(.veapp__msg-warning .fa-check):after{content:\"已有\";margin-left:var(--sp-1);color:var(--text3);font-size:var(--fs-xs)}.p6-builder-equipment .imp-cls__wrp-equi-group{gap:var(--sp-2);padding:var(--sp-3) 0!important;border:0!important;border-top:var(--border) solid var(--line)!important;background:0 0!important;margin:0!important}.p6-builder-equipment .imp-cls__wrp-equi-group>div{min-height:var(--hit);padding:var(--sp-2) var(--sp-3) var(--sp-2) 40px;border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);position:relative;justify-content:flex-start!important}.p6-builder-equipment .imp-cls__wrp-equi-group>div:has(>.ve-active){border-color:var(--primary);background:var(--primary-tint)}.p6-builder-equipment .imp-cls__wrp-equi-group .ve-btn.imp-cls__disp-equi-choice-key,.p6-builder-equipment .imp-cls__wrp-equi-group .ve-btn.imp-cls__disp-equi-choice-key.ve-active{z-index:0;inset:0;border-radius:var(--r-sm)!important;color:#0000!important;width:auto!important;height:auto!important;box-shadow:none!important;background:0 0!important;border:0!important;margin:0!important;font-size:0!important;position:absolute!important}.p6-builder-equipment .imp-cls__disp-equi-choice-key:before{content:\"\";left:var(--sp-3);border:2px solid var(--line-ctrl);box-sizing:border-box;border-radius:50%;width:16px;height:16px;margin-top:-8px;position:absolute;top:50%}.p6-builder-equipment .imp-cls__disp-equi-choice-key.ve-active:before{border:5px solid var(--primary)}.p6-builder-equipment .imp-cls__disp-equi-choice-key:focus-visible{outline:2px solid var(--focus)!important}.p6-builder-equipment .imp-cls__wrp-equi-group>div>.ve-w-100{z-index:1;pointer-events:none;position:relative}.p6-builder-equipment .imp-cls__wrp-equi-group>div>.ve-w-100 :is(button,input,select){pointer-events:auto}.p6-builder-equipment .imp-cls__wrp-equi-group>div:has(>.imp-cls__disp-equi-choice-key:disabled){padding-left:var(--sp-3);border-color:var(--line);background:var(--bg-sunk)}.p6-builder-equipment .imp-cls__wrp-equi-group .ve-btn.imp-cls__disp-equi-choice-key:disabled{visibility:hidden!important;display:none!important}.p6-builder-equipment .imp-cls__wrp-equi-group .ve-btn.imp-cls__disp-equi-choice-key:disabled:before{content:none!important}.p6-builder-equipment button:has(>.fa-magnifying-glass){align-items:center;gap:var(--sp-1);min-height:32px;width:auto!important;padding:0 var(--sp-2)!important;border:var(--border) solid var(--line-ctrl)!important;border-radius:var(--r-sm)!important;background:var(--surface)!important;color:var(--text)!important;display:inline-flex!important}.p6-builder-equipment button:has(>.fa-magnifying-glass)>.fa-magnifying-glass{display:none}.p6-builder-equipment button:has(>.fa-magnifying-glass):after{content:attr(title) \" ▾\"!important}.p6-equip-picker{z-index:30;pointer-events:auto;background:var(--surface);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);width:min(340px,100%);box-shadow:var(--shadow-2);flex-direction:column;display:flex;position:absolute;top:calc(100% + 4px);left:0}.p6-builder-equipment .imp-cls__wrp-equi-group>div>.ve-w-100:has(.p6-equip-picker){z-index:20}.p6-equip-picker .p6-picker-search{margin:var(--sp-2)}.p6-equip-picker-list{border-top:var(--border) solid var(--line);max-height:220px;overflow:auto}.p6-builder button.p6-equip-picker-clear{min-height:32px;margin:var(--sp-1) var(--sp-2);padding:0 var(--sp-2);color:var(--primary-text);font:inherit;font-size:var(--fs-sm);cursor:pointer;background:0 0;border:0;align-self:flex-start}.p6-builder-to-list{display:none}@media (width<=520px){.p6-builder .p6-builder-split:not(.p6-builder-inactive){grid-template-rows:minmax(0,1fr)!important;grid-template-columns:1fr!important}.p6-builder-split[data-view=list]>.p6-builder-panel,.p6-builder-split[data-view=card]>.p6-builder-rail{display:none!important}.p6-builder-split .p6-builder-rail{border-bottom:0}.p6-builder button.p6-builder-to-list{color:var(--primary-text);align-items:center;display:inline-flex;padding:0 var(--sp-1)!important;background:0 0!important;border:0!important}}", ds = globalThis;
+function fs(e = [
 	f,
 	u,
-	is,
-	as,
-	os
+	cs,
+	ls,
+	us
 ]) {
 	return e.join("\n").replace(/:host\b/g, ":root").replace(/^\s*all:\s*initial;\s*$/m, "").replace(/^\s*pointer-events:\s*inherit;.*$/m, "");
 }
-var ls = JSON.stringify({ colorScheme: {
+var ps = JSON.stringify({ colorScheme: {
 	applications: "",
 	interface: ""
 } });
-function us(e) {
+function ms(e) {
 	return new Promise((t) => {
 		let n = Object.assign(document.createElement("link"), {
 			rel: "stylesheet",
@@ -5783,7 +5818,7 @@ function us(e) {
 		n.onload = n.onerror = () => t(), document.head.append(n);
 	});
 }
-var ds = [
+var hs = [
 	"background",
 	"background-color",
 	"color",
@@ -5794,18 +5829,18 @@ var ds = [
 	"border-left-color",
 	"box-shadow"
 ];
-function fs(e) {
+function gs(e) {
 	for (let t of Array.from(e)) {
 		let e = t.style;
 		if (e) {
 			e.backgroundImage?.includes("url(") && (e.backgroundImage = "none");
-			for (let t of ds) e.getPropertyPriority(t) === "important" && e.setProperty(t, e.getPropertyValue(t));
+			for (let t of hs) e.getPropertyPriority(t) === "important" && e.setProperty(t, e.getPropertyValue(t));
 		}
 		let n = t.cssRules;
-		n && fs(n);
+		n && gs(n);
 	}
 }
-function ps(e) {
+function _s(e) {
 	let t = (e) => Array.from(e).some((e) => e.selectorText === ".ve-hidden"), n = Array.from(e.cssRules).filter((e) => typeof CSSLayerBlockRule < "u" && e instanceof CSSLayerBlockRule), r = new Set(n.filter((e) => t(e.cssRules)).map((e) => e.name));
 	for (let e of r) {
 		let t = n.filter((t) => t.name === e).at(-1);
@@ -5813,48 +5848,48 @@ function ps(e) {
 	}
 	t(e.cssRules) && e.insertRule(".ve-hidden { display: none !important; }", e.cssRules.length);
 }
-var ms = 0, hs = 160, gs = () => Math.max(hs, document.documentElement.clientHeight - hs), _s = /* @__PURE__ */ new WeakSet();
-function vs(e) {
+var vs = 0, ys = 160, bs = () => Math.max(ys, document.documentElement.clientHeight - ys), xs = /* @__PURE__ */ new WeakSet();
+function Ss(e) {
 	e.setPosition({
-		left: ms,
-		top: ms,
+		left: vs,
+		top: vs,
 		width: innerWidth - 0,
 		height: innerHeight - 0
 	});
 }
-function ys() {
-	ss.Hooks.on("renderApplicationV2", (e, t, n, r) => {
-		r?.isFirstRender && e?.options?.window?.resizable && (Math.abs(Number(e.position?.height) - gs()) > 2 || (_s.add(e), e.element?.classList.add("trpg-main"), vs(e)));
+function Cs() {
+	ds.Hooks.on("renderApplicationV2", (e, t, n, r) => {
+		r?.isFirstRender && e?.options?.window?.resizable && (Math.abs(Number(e.position?.height) - bs()) > 2 || (xs.add(e), e.element?.classList.add("trpg-main"), Ss(e)));
 	});
 	let e = 0;
 	addEventListener("resize", () => {
 		clearTimeout(e), e = setTimeout(() => {
-			for (let e of ss.foundry.applications.instances.values()) e.rendered && _s.has(e) && vs(e);
+			for (let e of ds.foundry.applications.instances.values()) e.rendered && xs.has(e) && Ss(e);
 		}, 150);
 	});
 }
-async function bs(e, t) {
-	ys();
-	let n = [ss.game.system, ...ss.game.modules.filter((e) => e.active)].flatMap((e) => [...e.styles ?? []].map((e) => String(e.src ?? e))), r = [...e.styles, ...n].map((e) => {
+async function ws(e, t) {
+	Cs();
+	let n = [ds.game.system, ...ds.game.modules.filter((e) => e.active)].flatMap((e) => [...e.styles ?? []].map((e) => String(e.src ?? e))), r = [...e.styles, ...n].map((e) => {
 		let n = new URL(e, location.href);
-		return (ns(t, n) ?? n).href;
+		return (os(t, n) ?? n).href;
 	}), i = new Set(e.styles.map((e) => new URL(e, location.href).href)), a = r.map(async (e) => {
-		if (await us(e), i.has(e)) return;
+		if (await ms(e), i.has(e)) return;
 		let t = [...document.styleSheets].find((t) => t.href === e);
-		t && (fs(t.cssRules), ps(t));
+		t && (gs(t.cssRules), _s(t));
 	}), o = document.createElement("style");
-	o.dataset.trpgTheme = "build", o.textContent = cs(), document.head.append(o), new MutationObserver(() => {
+	o.dataset.trpgTheme = "build", o.textContent = fs(), document.head.append(o), new MutationObserver(() => {
 		document.head.lastElementChild !== o && document.head.append(o);
 	}).observe(document.head, { childList: !0 }), await Promise.all(a);
 }
 // src/rules/kernel/frame/main.ts
-var $ = globalThis, xs = new URLSearchParams(location.search).get("frame") ?? "", Ss = $.__trpgFrameErrors ?? [];
-async function Cs(e) {
+var $ = globalThis, Ts = new URLSearchParams(location.search).get("frame") ?? "", Es = $.__trpgFrameErrors ?? [];
+async function Ds(e) {
 	let t = await fetch(new URL(e, location.href));
 	if (!t.ok) throw Error(`${t.status}: ${e}`);
 	return t.text();
 }
-async function ws(e) {
+async function Os(e) {
 	let t = await b({
 		op: "file",
 		path: `packs/${e}.json`
@@ -5862,11 +5897,11 @@ async function ws(e) {
 	if (typeof t != "string") throw Error(`Pack is not available: ${e}`);
 	return JSON.parse(t);
 }
-var Ts;
-async function Es(e) {
-	if (Ts) throw Error("Kernel is already booted");
+var ks;
+async function As(e) {
+	if (ks) throw Error("Kernel is already booted");
 	let t = [], { foundry: n, Hooks: r } = $;
-	k(e.seed ?? "kernel"), rs(e.moduleRoots), $.release = new n.config.ReleaseData(e.release);
+	k(e.seed ?? "kernel"), ss(e.moduleRoots), $.release = new n.config.ReleaseData(e.release);
 	let i = te(e);
 	$.packages = {
 		System: new n.utils.Collection([[i.system.id, new n.packages.System(i.system)]]),
@@ -5876,12 +5911,12 @@ async function Es(e) {
 		autoConnect: !1,
 		forceNew: !0
 	});
-	Ts = {
+	ks = {
 		...re(a, {
 			userId: e.userId,
 			worldTime: e.worldTime,
-			readPack: ws,
-			readText: Cs
+			readPack: Os,
+			readText: Ds
 		}),
 		steps: t
 	};
@@ -5912,20 +5947,20 @@ async function Es(e) {
 	}
 	$.game = new s("game", i, a), $.game.issues._detectUsabilityIssues = () => {
 		t.push("omit usability warnings");
-	}, $.game.nue && ($.game.nue.initialize = () => void 0), $.game.settings.storage.get("client").setItem("core.noCanvas", "true"), e.display && $.game.settings.storage.get("client").setItem("core.uiConfig", ls), await As(`systems/${i.system.id}/dnd5e.js`);
+	}, $.game.nue && ($.game.nue.initialize = () => void 0), $.game.settings.storage.get("client").setItem("core.noCanvas", "true"), e.display && $.game.settings.storage.get("client").setItem("core.uiConfig", ps), await Ps(`systems/${i.system.id}/dnd5e.js`);
 	let c = !!e.moduleRoots?.plutonium && e.language === "zh.core";
-	for (let e of i.modules) for (let t of e.esmodules ?? []) await ze(new URL(t, location.href), c);
-	r.once("init", ri), r.once("setup", () => {
+	for (let e of i.modules) for (let t of e.esmodules ?? []) await Be(new URL(t, location.href), c);
+	r.once("init", ai), r.once("setup", () => {
 		$.CONFIG.DND5E?.calendar && ($.CONFIG.DND5E.calendar.application = null), he();
-	}), await $.game.initialize(), e.display && await bs(e.display, e.moduleRoots);
+	}), await $.game.initialize(), e.display && await ws(e.display, e.moduleRoots);
 	let l = Date.now() + 3e4;
 	for (; i.modules.some((e) => e.id === "plutonium") && typeof $.game.modules.get("plutonium")?.api != "object";) {
 		if (Date.now() > l) throw Error("Plutonium API was not ready within 30 seconds");
 		await new Promise((e) => setTimeout(e, 50));
 	}
-	return Ds();
+	return js();
 }
-function Ds() {
+function js() {
 	let e = $.game;
 	return {
 		release: e.release.version,
@@ -5939,10 +5974,10 @@ function Ds() {
 			availability: e.availability
 		}])),
 		plutoniumApi: typeof e.modules.get("plutonium")?.api,
-		errors: [...Ss]
+		errors: [...Es]
 	};
 }
-function Os() {
+function Ms() {
 	return $.game.actors.contents.map((e) => ({
 		source: e.toObject(),
 		system: e.system.toObject(!1),
@@ -5950,19 +5985,19 @@ function Os() {
 		validation: e.validationFailures
 	}));
 }
-var ks = {
-	...Zo,
-	boot: Es,
-	loadBrews: es,
-	status: Ds,
-	preparedActors: Os,
+var Ns = {
+	...ts,
+	boot: As,
+	loadBrews: is,
+	status: js,
+	preparedActors: Ms,
 	reserveActorIds: (e) => {
-		if (!Ts) throw Error("Kernel is not booted");
-		Ts.reserve(e);
+		if (!ks) throw Error("Kernel is not booted");
+		ks.reserve(e);
 	},
-	changes: () => Ts?.changes ?? [],
-	calls: () => Ts?.calls ?? [],
-	steps: () => Ts?.steps ?? []
+	changes: () => ks?.changes ?? [],
+	calls: () => ks?.calls ?? [],
+	steps: () => ks?.steps ?? []
 };
 addEventListener("message", (e) => {
 	let t = e.data;
@@ -5970,10 +6005,10 @@ addEventListener("message", (e) => {
 	let n = (e) => parent.postMessage({
 		channel: g,
 		type: "result",
-		frame: xs,
+		frame: Ts,
 		id: t.id,
 		...e
-	}, location.origin), r = ks[t.fn];
+	}, location.origin), r = Ns[t.fn];
 	if (!r) return n({
 		ok: !1,
 		error: `Unknown kernel command: ${t.fn}`
@@ -5986,13 +6021,13 @@ addEventListener("message", (e) => {
 		error: e instanceof Error ? e.stack ?? e.message : String(e)
 	}));
 });
-function As(e) {
+function Ps(e) {
 	return new Promise((t, n) => {
 		let r = document.createElement("script");
 		r.src = e, r.onload = () => t(), r.onerror = () => n(Error(`Failed to load ${e}`)), document.head.append(r);
 	});
 }
-async function js() {
+async function Fs() {
 	$.SIGNED_EULA = !0, $.ROUTE_PREFIX = new URL(".", location.href).pathname.replace(/^\/+|\/+$/g, ""), $.MESSAGES = null, await import(
 		/* @vite-ignore */
 		new URL("scripts/foundry.mjs", location.href).href
@@ -6000,14 +6035,14 @@ async function js() {
 	let e = {
 		channel: g,
 		type: "ready",
-		frame: xs,
+		frame: Ts,
 		codeSet: "foundry",
 		authorVersion: $.foundry?.CONST?.vtt ?? null,
 		present: { foundry: !!$.foundry?.Game },
-		errors: [...Ss]
+		errors: [...Es]
 	};
 	parent.postMessage(e, location.origin);
 }
-document.readyState === "complete" ? js() : addEventListener("load", () => {
-	js();
+document.readyState === "complete" ? Fs() : addEventListener("load", () => {
+	Fs();
 }, { once: !0 });

@@ -49,6 +49,8 @@ export const kernelOffRowSchema = z.object({
   part: z.string().min(1).optional(),
   /** 这件条目上的一个效果（作者的「停用」）。 */
   effect: z.string().min(1).optional(),
+  /** 取下时界面上这一项的名字（已过显示出口）：取下后作者把它从人物身上撤掉，「已取下」那一行靠它显示；不参与取下判断。 */
+  label: z.string().optional(),
 })
 export type KernelOffRow = z.infer<typeof kernelOffRowSchema>
 

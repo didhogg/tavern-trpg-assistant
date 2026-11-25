@@ -239,4 +239,20 @@
   padding: 2px 8px; border-radius: var(--r-sm); background: var(--text); color: var(--surface); font-size: var(--fs-xs); line-height: 1.6; pointer-events: none; white-space: nowrap;
 }
 .tr-src-inline { color: var(--text3); font-size: var(--fs-xs); }
+/* 职业与出身：每个职业下面一级一行（写这一级得到的东西）；右边逐级细节（LevelParts） */
+.ps-build-lvl { min-height: 28px; font-size: var(--fs-xs); color: var(--text2); }
+.ps-build-lvl-n { flex: none; min-width: 3em; font-weight: var(--fw-semibold); color: var(--text); font-variant-numeric: tabular-nums; }
+.ps-build-lvl-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.od-sub { margin: var(--sp-3) 0 var(--sp-2); font-size: var(--fs-md); }
+.lp { display: grid; gap: var(--sp-3); }
+.lp-adv { display: grid; gap: var(--sp-2); padding-bottom: var(--sp-2); border-bottom: var(--border) dashed var(--line); }
+.lp-adv h5 { margin: 0; font-size: var(--fs-sm); display: flex; gap: var(--sp-2); align-items: baseline; }
+.lp-adv h5 small { color: var(--text2); font-weight: var(--fw-regular); }
+.lp-items { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
+.lp-item { position: relative; display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); min-height: 32px; padding: 0 var(--sp-2); border-radius: var(--r-sm); font-size: var(--fs-sm); }
+.lp-item:hover { background: var(--bg-hover); }
+.lp-none { margin: 0; color: var(--text2); font-size: var(--fs-xs); }
+/* 悬停小注释（和特征单元同一种）：一行小字出在这一项上方 */
+.lp [data-src] { position: relative; }
+.lp [data-src]:hover::after { content: attr(data-src); position: absolute; left: 0; bottom: calc(100% + 4px); z-index: 2; width: max-content; padding: 2px 8px; border-radius: var(--r-sm); background: var(--text); color: var(--surface); font-size: var(--fs-xs); line-height: 1.6; pointer-events: none; white-space: nowrap; }
 

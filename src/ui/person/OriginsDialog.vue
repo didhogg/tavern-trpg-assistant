@@ -33,7 +33,12 @@ function entryOf(key: string): OriginsView | null {
   }
   if (key === 'race' || key === 'background') {
     const row = key === 'race' ? species(s.value) : background(s.value)
-    return row ? { kind: 'entry', key, itemId: originId(s.value, key), name: row.name, ref: (row.ref ?? null) as EntryRef | null } : null
+    return row ? { kind: 'entry', key, itemId: originId(s.value, key), name: row.name, ref: (row.ref ?? null) as EntryRef | null, parts: true } : null
+  }
+  if (key.startsWith('lvl:')) {
+    const [, id, lv] = key.split(':')
+    const c = cls.value.find((x) => x.id === id)
+    return c ? { kind: 'levels', key, itemIds: [c.id, c.subclass?.id].filter((x): x is string => !!x), name: c.name, level: Number(lv) } : null
   }
   return null
 }
@@ -44,7 +49,7 @@ const current = ref<OriginsView | null>(null)
 function show(v: OriginsView | null): void {
   if (!v) return
   if (wide.value) { current.value = v; return }
-  modal.push({ key: `origins-page:${v.key}`, title: v.kind === 'level' ? `${v.name}改到 ${v.to} 级` : v.name, component: markRaw(OriginsDetail), props: { view: v, page: true }, variant: 'dialog', width: 920, height: 720 })
+  modal.push({ key: `origins-page:${v.key}`, title: v.kind === 'level' ? `${v.name}改到 ${v.to} 级` : v.kind === 'levels' ? `${v.name} ${v.level} 级` : v.name, component: markRaw(OriginsDetail), props: { view: v, page: true }, variant: 'dialog', width: 920, height: 720 })
 }
 function pick(key: string): void { show(entryOf(key)) }
 function changeLevel(c: ClassBuild, delta: number): void { show(levelView(c, delta)) }
@@ -64,12 +69,12 @@ watch(() => person.sheet, () => {
   if (!wide.value || v?.kind === 'level') return
   current.value = (v && entryOf(v.key)) ?? entryOf(firstKey() ?? '')
 })
-const selected = computed(() => (current.value?.kind === 'entry' ? current.value.key : current.value?.kind === 'level' ? `class:${current.value.classId}` : null))
+const selected = computed(() => (current.value?.kind === 'entry' || current.value?.kind === 'levels' ? current.value.key : current.value?.kind === 'level' ? `class:${current.value.classId}` : null))
 </script>
 
 <template>
   <div class="od-wrap" :data-wide="wide || undefined" data-testid="origins-dialog">
-    <div class="od-list"><BuildRows :selected="selected" @pick="pick" @level="changeLevel" /></div>
+    <div class="od-list"><BuildRows :selected="selected" levels @pick="pick" @level="changeLevel" /></div>
     <div v-if="wide" class="od-side">
       <OriginsDetail v-if="current" :key="current.key" :view="current" @back="back" />
       <p v-else class="od-hint">先在左边选职业、种族或背景。</p>

@@ -148,12 +148,12 @@ export class KernelPeople {
     const out = await this.call(ownerKey, 'sheet', actorId, shownBy.entries)
     if (out.status !== 'complete') return out
     // 物品 / 效果名和官方显示数据（view）一起过唯一显示出口
-    const shown = await shownBy.show({ shown: out.result.shown, view: out.result.view })
+    const shown = await shownBy.show({ shown: out.result.shown, view: out.result.view, levels: out.result.levels })
     // P6-R：人物存完整数据，没有“自动基准”可比，金线不再有（changed 留空给旧调用方）
     const changed: ChangedField[] = []
     // off = 这个人现在取下了哪几项（存档里的安排；特征 / 职业与出身单元按它显示「已取下」、装回 = 去掉那一行）
     const off = (await this.saved(ownerKey, actorId))?.off ?? []
-    return { ...out, result: { ...out.result, shown: shown.value.shown, view: shown.value.view, off, changed, changedItems: {} as Record<string, ChangedField[]>, baseKnown: true, ...(shown.missed.length ? { untranslated: shown.missed } : {}) } }
+    return { ...out, result: { ...out.result, shown: shown.value.shown, view: shown.value.view, levels: shown.value.levels, off, changed, changedItems: {} as Record<string, ChangedField[]>, baseKnown: true, ...(shown.missed.length ? { untranslated: shown.missed } : {}) } }
   }
 
   /** 编辑窗口：一块字段的官方定义（名字 / 种类 / 选项 / 底值）+ 改到它的效果 + 官方明细（P6-R），过唯一出口。 */

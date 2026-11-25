@@ -10,10 +10,13 @@ import { usePersonStore } from '../../stores/person'
 import { useModalStore } from '../../stores/modal'
 import EntryPage from '../libview/EntryPage.vue'
 import ImportAsk from './ask/ImportAsk.vue'
+import LevelParts from './LevelParts.vue'
 import { openFields } from './edit-open'
 
 export type OriginsView =
-  | { kind: 'entry'; key: string; itemId: string | null; name: string; ref: EntryRef | null }
+  | { kind: 'entry'; key: string; itemId: string | null; name: string; ref: EntryRef | null; /** 种族 / 背景：资料卡上方列出它带来的（可取下）。 */ parts?: boolean }
+  /** 职业的某一级：这一级每条成长给了什么（itemIds = 职业和它的子职业）。 */
+  | { kind: 'levels'; key: string; itemIds: string[]; name: string; level: number }
   | { kind: 'level'; key: string; classId: string; name: string; ref: EntryRef | null; from: number; to: number }
 
 const props = defineProps<{ view: OriginsView; page?: boolean }>()
@@ -33,8 +36,13 @@ async function down(): Promise<void> {
 
 <template>
   <div class="od" data-testid="origins-detail">
-    <template v-if="v.kind === 'entry'">
+    <template v-if="v.kind === 'levels'">
+      <h3 class="od-title" data-testid="origins-detail-title">{{ v.name }} {{ v.level }} 级</h3>
+      <LevelParts :item-ids="v.itemIds" :level="v.level" :source="`${v.name}-${v.level} 级`" />
+    </template>
+    <template v-else-if="v.kind === 'entry'">
       <h3 class="od-title" data-testid="origins-detail-title">{{ v.name }}</h3>
+      <template v-if="v.parts && v.itemId"><h4 class="od-sub">它带来的</h4><LevelParts :item-ids="[v.itemId]" :source="v.name" /><h4 class="od-sub">资料</h4></template>
       <component :is="CardPane" v-if="v.ref && lib.campaignLib" :key="v.key" :entry-ref="v.ref" :page-key="`origins:${v.key}`" body-only />
       <div v-else class="od-empty">
         <p>{{ v.name }} 是自定义条目，库里没有它的资料。</p>
