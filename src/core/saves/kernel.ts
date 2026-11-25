@@ -92,6 +92,7 @@ export interface KernelPreviewRow {
 
 const DEFAULT_UNDO_LIMIT = 50
 import { libraryKey } from './view'
+import { KernelParseMemo, parseKernel } from './kernel-parse'
 export { libraryKey }
 
 export class KernelSaveService {
@@ -110,18 +111,23 @@ export class KernelSaveService {
     return ws
   }
 
-  private parse(raw: unknown): KernelCampaign | null {
-    if (!raw) return null
-    try {
-      return kernelCampaignSchema.parse(raw)
-    } catch {
-      throw new TrpgError('E_BAD_KERNEL', '存档里的结算内核段损坏')
-    }
-  }
+  private parse(raw: unknown): KernelCampaign | null { return parseKernel(raw) }
+
+  /** 同一版工作副本只校验一次（kernel-parse.ts）。 */
+  private readonly memo = new KernelParseMemo()
+  private parseOf(ownerKey: string, ws: Workspace): KernelCampaign | null { return this.memo.of(ownerKey, ws) }
 
   async read(ownerKey: string): Promise<KernelCampaign | null> {
     const ws = await this.workspace(ownerKey)
-    return this.parse(ws.data.kernel)
+    return this.parseOf(ownerKey, ws)
+  }
+
+  /** 读一次工作副本，交回结算内核段、选书设置、战役名（结算小窗每次取战役用；以前分三次各读一遍工作副本）。 */
+  async campaignView(ownerKey: string): Promise<{ kernel: KernelCampaign | null; library: KernelLibrary | null; title: string }> {
+    const ws = await this.workspace(ownerKey)
+    const kernel = this.parseOf(ownerKey, ws)
+    const library = kernel ? await this.libraryAt(ws.campaignId ?? await this.deps.campaign.campaignIdOf(ownerKey), ws.data.library ?? kernel.library) : null
+    return { kernel, library, title: ws.ownerLabel }
   }
 
   /** 绑定战役规则与结算内核；规则必须和当前战役一致。 */
@@ -142,9 +148,9 @@ export class KernelSaveService {
    */
   async libraryOf(ownerKey: string): Promise<KernelLibrary> {
     const ws = await this.workspace(ownerKey)
-    const kernel = this.parse(ws.data.kernel)
+    const kernel = this.parseOf(ownerKey, ws)
     if (!kernel) throw new TrpgError('E_NO_KERNEL', '这个战役还没有绑定结算内核')
-    return this.libraryAt(await this.deps.campaign.campaignIdOf(ownerKey), ws.data.library ?? kernel.library)
+    return this.libraryAt(ws.campaignId ?? await this.deps.campaign.campaignIdOf(ownerKey), ws.data.library ?? kernel.library)
   }
 
   /** 某个存档所在战役的选书设置（读档检查用）；算不出战役的旧自动存档用它自己快照里的副本。 */

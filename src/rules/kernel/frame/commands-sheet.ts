@@ -13,6 +13,8 @@ import { sheetLevels } from './sheet-levels'
 import { nameText, registryCaptured, statusKey, tableNames } from './registry-keys'
 import { keyText } from './system-text'
 
+import { stopwatch } from '../../../core/stopwatch'
+
 const g = globalThis as any
 const NO_DIALOG = { configure: false }
 const NO_MESSAGE = { create: false }
@@ -125,7 +127,9 @@ export function createSheetCommands(operate: Operate, actor: ActorGetter, rollSu
     sheet: (actorId: string, entries: unknown[] = []) => operate([], async () => {
       const a = actor(actorId)
       const apps = g.dnd5e?.applications?.actor ?? {}
-      return {
+      // 分段计时（写完重读人物里小窗这一段在真机上要半秒多）：各块各算多久，主线写进「人物读数用时」
+      const w = stopwatch()
+      const base = {
         id: a.id, name: a.name, img: a.img, type: a.type,
         flags: plain(a.flags ?? {}),
         system: live(a.system),
@@ -137,22 +141,29 @@ export function createSheetCommands(operate: Operate, actor: ActorGetter, rollSu
           statuses: [...(e.statuses ?? [])], duration: plain(e.duration), durationSource: plain(e._source?.duration ?? null), changes: plain(e.system?.changes ?? e.changes ?? []),
         })),
         // 界面显示的文字：标好来路，主线交唯一显示出口（kernel/display.ts）换成本战役语言；数值与编号照上面原样
-        shown: {
-          items: [...a.items].map((i: any) => ({ id: i.id, ...itemText(i, entries) })),
-          // 效果名：状态这类登记过的名字按名字键取；其余（物品自带的效果）按条目原文位置
-          effects: [...a.allApplicableEffects()].map((e: any) => ({ id: e.id, name: nameText(String(e.name ?? ''), null) ?? fromEntry(e.name) })),
-        },
-        // 官方角色表 / NPC 表自己的显示数据（sheet-view.ts），界面显示读这一份
-        view: await sheetView(a, entries),
-        // 特征单元：体型 / 类型 / 速度 / 感官 / 阵营的现在值、来源（种族 / 手改）和种族那份的取下写法
-        traits: sheetTraits(a),
-        // 职业与出身单元：每条成长按级给了什么（逐级细节、按级取下 / 补回）；标题和键名标好来路，主线过显示出口
-        levels: await sheetLevels(a),
-        breakdown: {
-          hp: await configContext(apps.HitPointsConfig, a, ['classes', 'ability', 'effects', 'levels']),
-          ac: await configContext(apps.ArmorClassConfig, a, ['calculations', 'formulaLabel']),
-        },
       }
+      w.lap('data')
+      const shown = {
+        items: [...a.items].map((i: any) => ({ id: i.id, ...itemText(i, entries) })),
+        // 效果名：状态这类登记过的名字按名字键取；其余（物品自带的效果）按条目原文位置
+        effects: [...a.allApplicableEffects()].map((e: any) => ({ id: e.id, name: nameText(String(e.name ?? ''), null) ?? fromEntry(e.name) })),
+      }
+      w.lap('names')
+      // 官方角色表 / NPC 表自己的显示数据（sheet-view.ts），界面显示读这一份
+      const view = await sheetView(a, entries)
+      w.lap('view')
+      // 特征单元：体型 / 类型 / 速度 / 感官 / 阵营的现在值、来源（种族 / 手改）和种族那份的取下写法
+      const traits = sheetTraits(a)
+      w.lap('traits')
+      // 职业与出身单元：每条成长按级给了什么（逐级细节、按级取下 / 补回）；标题和键名标好来路，主线过显示出口
+      const levels = await sheetLevels(a)
+      w.lap('levels')
+      const breakdown = {
+        hp: await configContext(apps.HitPointsConfig, a, ['classes', 'ability', 'effects', 'levels']),
+        ac: await configContext(apps.ArmorClassConfig, a, ['calculations', 'formulaLabel']),
+      }
+      w.lap('breakdown')
+      return { ...base, shown, view, traits, levels, breakdown, ms: w.done() }
     }),
 
     /** 人物列表：全员（或指定的人）引擎算好的数值 + 物品类别 / 名字 / 等级 + 状态效果；摘哪些字段在宿主 people.roster。 */

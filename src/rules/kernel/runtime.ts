@@ -9,7 +9,7 @@ import type { ScopedLibrary } from '../../library/scoped'
 import type { LibraryService } from '../../library/service'
 import type { LibraryRevisionStore, LibraryView } from '../../library/revision'
 import type { CampaignLibrary, EntryRef } from '../../library/scopes'
-import { kernelActorSchema, type KernelActor, type KernelDataVersion } from '../../schemas/kernel'
+import { type KernelActor, type KernelDataVersion } from '../../schemas/kernel'
 import { refKey } from '../../core/saves/split'
 import { executed, type KernelSession } from './host'
 import { PreparedActors, type OffChoices } from './prepared'
@@ -20,14 +20,16 @@ import type { KernelBrewReport } from './frame/brew-input'
 import { hashValue, sha256Hex } from '../../core/hash'
 import { KernelCache, kernelBaseKey, kernelFilesVersion, kernelLangOf, wrapKernelSession } from './cache'
 import type { LibraryDatabase } from '../../library/db'
-import { actorData, compactActor, rebuildActor, refMapperFor, type RebuildInput, type RebuildResult } from './rebuild'
+import { actorData, rebuildActor, refMapperFor, type RebuildInput, type RebuildResult } from './rebuild'
 import { kernelEntryOf } from './entry'
 import { resolveBuildOptions, traitItemScope, type BuildOptionPlan, type BuildOptionsResult } from './resolve-build-options'
 import type { BuildPick } from './frame/commands-level'
 import type { SheetEdit } from './frame/commands-sheet'
 import { checkAbilities, type AbilityPlan, type AbilityView } from './ability-rules'
-import { pairsSource, type PairsOf } from './sidecar'
-import { display, type DisplayResult } from './display'
+import { pairsSource } from './sidecar'
+import { display } from './display'
+import { DisplayCache, type DisplayFor } from './display-cache'
+import { compactActors, type KernelOpen as Open } from './runtime-open'
 import { namerFor } from './naming'
 import { legendaryGroupRefs } from './related-entries'
 import { kernelDataSource } from '../../library/sources'
@@ -64,24 +66,6 @@ export interface KernelRuntimeDeps {
   hasKernel?: (ownerKey: string) => Promise<boolean>
 }
 
-interface Open {
-  session: KernelSession
-  rule: string
-  /** 每个人的完整基准 / 取下后视图 / 原始选择（prepared.ts）。 */
-  bases: PreparedActors
-  seeds: Map<string, string>
-  boot: unknown
-  bootMs: number
-  brews: KernelBrewReport
-  brewFingerprint: string | undefined
-  brewIssue: (ref: EntryRef, altId: string | null, source: string | null) => string | null
-  view: LibraryView
-  cache: KernelCache | null
-  cacheBase: string
-  /** 小窗语言码：换算缓存行记在这个语言名下，清理按语言分开。 */ cacheLang: string
-  dataVersion: () => Promise<KernelDataVersion>
-  /** 显示文字的中英对照：条目 + 同编号的补充记录（sidecar.ts）。 */ pairsOf: PairsOf
-}
 
 export class KernelRuntime {
   private readonly open = new Map<string, Promise<Open>>()
@@ -366,30 +350,20 @@ export class KernelRuntime {
   }
 
   /** 唯一显示出口（display.ts）用在本战役的小窗结果上；refs = 文字出自哪些条目。entries = 交给小窗定位用的英文条目，show 按同一顺序取本战役语言版。 */
-  /**
-   * 同一个小窗里、同一份选书、同一串条目的显示出口只建一次（每次写完重读整张人物都要它；人物条目越多建得越久，曾占重读的一半以上）。
-   * 小窗重开（库发布了新版）就是新的一份；选书变了钥匙跟着变。只留最近几份。
-   */
-  private readonly displays = new WeakMap<Open, Map<string, Promise<{ entries: unknown[]; show: <T>(value: T) => Promise<DisplayResult<T>> }>>>()
-  async displayFor(ownerKey: string, refs: EntryRef[]): Promise<{ entries: unknown[]; show: <T>(value: T) => Promise<DisplayResult<T>> }> {
+  private readonly displays = new DisplayCache<Open>()
+  async displayFor(ownerKey: string, refs: EntryRef[]): Promise<DisplayFor> {
     const [o, library] = await Promise.all([this.get(ownerKey), this.library(ownerKey)])
-    let memo = this.displays.get(o)
-    if (!memo) { memo = new Map(); this.displays.set(o, memo) }
-    const key = JSON.stringify([library, refs.map((r) => [r.set, r.prop, r.hash])])
-    const hit = memo.get(key)
-    if (hit) return hit
-    const made = this.buildDisplay(ownerKey, o, library, refs)
-    memo.set(key, made)
-    made.catch(() => memo!.delete(key))
-    while (memo.size > 6) memo.delete(memo.keys().next().value!)
-    return made
-  }
-  private async buildDisplay(ownerKey: string, o: Open, library: CampaignLibrary, refs: EntryRef[]): Promise<{ entries: unknown[]; show: <T>(value: T) => Promise<DisplayResult<T>> }> {
-    const base = refs.length ? await this.entries(ownerKey, refs).then((got) => got.status === 'complete' ? got.rows : []) : []
-    const groups = await legendaryGroupRefs(this.deps.service, library.codeSet, o.view, base)
-    const rows = [...base, ...(groups.length ? await this.entries(ownerKey, groups).then((got) => got.status === 'complete' ? got.rows : []) : [])]
-    const ctx = { translate: library.codeSet !== kernelDataSource().codeSet, pairs: await o.pairsOf(rows), entries: rows, namer: await namerFor(this.deps.scoped, library), author: this.deps.service.texts.reader(library.codeSet) }
-    return { entries: rows.map((r) => r.entry), show: (value) => display(value, ctx) }
+    // 同一个小窗 + 选书 + 条目只建一次（display-cache.ts）
+    return this.displays.get(o, library, refs, async (w) => {
+      const base = refs.length ? await this.entries(ownerKey, refs).then((got) => got.status === 'complete' ? got.rows : []) : []
+      w.lap('entries')
+      const groups = await legendaryGroupRefs(this.deps.service, library.codeSet, o.view, base)
+      const rows = [...base, ...(groups.length ? await this.entries(ownerKey, groups).then((got) => got.status === 'complete' ? got.rows : []) : [])]
+      const pairs = await o.pairsOf(rows)
+      w.lap('pairs')
+      const ctx = { translate: library.codeSet !== kernelDataSource().codeSet, pairs, entries: rows, namer: await namerFor(this.deps.scoped, library), author: this.deps.service.texts.reader(library.codeSet) }
+      return { entries: rows.map((r) => r.entry), show: (value) => display(value, ctx) }
+    })
   }
   /** 本战役现在的选书（每次现读，关书/开书后立刻生效）。 */
   private async library(ownerKey: string): Promise<CampaignLibrary> {
@@ -400,35 +374,8 @@ export class KernelRuntime {
     return refMapperFor(this.deps.scoped, await this.library(ownerKey))
   }
 
-  /** 把小窗里的人物拆回存档要的引用 / 选择 / 状态差别（内核存档写入前调用）。 */
+  /** 把小窗里的人物拆回存档要的引用 / 选择 / 状态差别（内核存档写入前调用；runtime-open.ts）。 */
   async compact(ownerKey: string, ids: string[]): Promise<KernelActorCompact[]> {
-    const o = await this.get(ownerKey)
-    const library = await this.library(ownerKey)
-    const out: KernelActorCompact[] = []
-    for (const id of ids) {
-      const base = o.bases.view(id)
-      const full = o.bases.base(id)
-      if (!base || !full) throw new Error(`人物 ${id} 没有重建基准：先建卡后记住，或从存档重建`)
-      const current = await actorData(o.session, id)
-      if (!current) throw new Error(`结算小窗里没有这个人物：${id}`)
-      const stored = o.bases.isStored(id) // B′ 人物读档按完整数据建回，不需要成长选择
-      const captured = stored ? { status: 'complete', result: {} } : await o.session.call('captureChoices', id)
-      if (!executed(captured.status)) throw new Error(`记下 ${id} 的成长选择失败：${captured.error ?? captured.status}`)
-      const name = typeof current.name === 'string' ? current.name : id
-      // 差别相对取下后的视图算；取下时动过的成长用原始选择（不让「当前没应用」写成「原来没选」）
-      const compact = await compactActor({ lib: this.deps.scoped, library, actor: { id, name }, seed: o.seeds.get(id) ?? name, current, base, choices: o.bases.protect(id, captured.result ?? {}), stored })
-      if (o.cache && !stored) {
-        const version = await o.dataVersion()
-        const key = await kernelBaseKey({ base: o.cacheBase, brewFingerprint: o.brewFingerprint, dataVersion: version, actor: compact })
-        await o.cache.put(key, full, { rule: o.rule, base: o.cacheBase, official: kernelFilesVersion(version), lang: o.cacheLang })
-      }
-      // 有取下安排（P6 取下 / 装回，驾驶员 11-25 定修法 A）：完整数据存「没取下的完整基准」，差别相对取下后的视图算，
-      // 读档 = 基准 → 作者按安排取下 → 叠差别（people.ts withBase 保留 off / state）；基准不动，下次照样相对同一个视图算
-      if (stored && o.bases.hasOff(id)) { out.push({ ...compact, doc: structuredClone(full) }); continue }
-      // P6-R：没有取下 = 完整数据就是现在的样子（读档 / 撤销按它建回），差别为空；小窗里按「完整数据建回的人」记
-      out.push({ ...compact, state: kernelActorSchema.shape.state.parse(undefined), doc: current })
-      o.bases.set(id, structuredClone(current), null, {}, true)
-    }
-    return out
+    return compactActors(await this.get(ownerKey), this.deps.scoped, await this.library(ownerKey), ids)
   }
 }

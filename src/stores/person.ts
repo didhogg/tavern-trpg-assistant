@@ -95,8 +95,8 @@ export const usePersonStore = defineStore('person', () => {
       return false
     }
     const tr = performance.now()
-    // 先重读眼前这个人（玩家等的是它），人物列表排在后面再刷（同时刷会和它抢同一个小窗，重读慢一截）
-    const refreshed = reload().then(() => { console.debug('[trpg-assistant] 写完重读用时', label, Math.round(performance.now() - tr)); void roster.refresh().catch((e: unknown) => console.warn('[trpg-assistant] 人物列表没刷新', e)) })
+    // 只重读眼前这个人（玩家等的是它）。人物列表回到列表时再刷（PeopleView）：在人物页里连着改，后台刷列表会和下一步抢同一个小窗
+    const refreshed = reload().then(() => { console.debug('[trpg-assistant] 写完重读用时', label, Math.round(performance.now() - tr)) })
     if (!soon) await refreshed
     else void refreshed.catch((e: unknown) => toast.error(`${label}已保存，但人物页没刷新出来：${message(e)}`))
     toast.undoable(label, () => undo())

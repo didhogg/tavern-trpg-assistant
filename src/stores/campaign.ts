@@ -32,9 +32,21 @@ export const useCampaignStore = defineStore('campaign', () => {
     if (readOnly.value) throw new TrpgError('E_READ_ONLY', '另一个窗口正在使用助手，此窗口为只读')
   }
 
+  /**
+   * 「有没有没存的改动」要把整个当前数据算一遍摘要：人物存完整数据后很大，真机上一次几百毫秒。
+   * 每次改人物后都要算，以前跟着改动一起等，人物页要晚这么久才刷新；现在放到刷新之后（半秒内连续写只算最后一次）。
+   */
+  let dirtyTimer: ReturnType<typeof setTimeout> | null = null
   function adopt(ws: Workspace | null): void {
+    const prev = workspace.value
     workspace.value = ws
-    dirty.value = ws ? isDirty(ws) : false
+    if (dirtyTimer) { clearTimeout(dirtyTimer); dirtyTimer = null }
+    if (!ws) { dirty.value = false; return }
+    // 刚存档 / 读档 / 换战役（存档摘要变了）：当场算，「保存」按钮马上对
+    if (!prev || prev.ownerKey !== ws.ownerKey || prev.savedHash !== ws.savedHash) { dirty.value = isDirty(ws); return }
+    // 普通改动：先按「有没存的改动」显示（离开前的提醒不会漏），过一会儿再核对（撤销回到存档时的样子会变回没有）
+    if (prev.data !== ws.data) dirty.value = true
+    dirtyTimer = setTimeout(() => { dirtyTimer = null; if (workspace.value === ws) dirty.value = isDirty(ws) }, 400)
   }
 
   /** 当前存档的名称等信息（页头芯片与存档抽屉显示）。 */

@@ -4,7 +4,7 @@
 //   选项：全部从本战役【库】取（trait-options.ts）；来源和种族那份的取下写法：后端读数 sheet.traits / sheet.off。
 //   种族给的项：悬停小注释「来源：种族-半精灵」，× = 取下（虚线留在原位，点它补回）；手改的项：× = 去掉手改（种族的值回来）。
 import { computed, ref, shallowRef, watch } from 'vue'
-import type { FieldEffect } from '../../rules/kernel/person-views'
+import type { ShownFieldInfo } from '../../rules/kernel/person-views'
 import type { SheetTraits, TraitRow } from '../../rules/kernel/frame/sheet-traits'
 import type { OffRow } from '../../rules/kernel/frame/off'
 import { usePersonStore } from '../../stores/person'
@@ -119,21 +119,24 @@ function confirmAdd(): void {
 }
 
 // —— 物品 / 专长效果改到速度、感官的（编辑窗口同一份读数 person.fields：名字、来源、改哪项、加多少）：开关 = 作者的「停用」——
-type Shown<T> = { [K in keyof T]: T[K] extends unknown ? (T[K] extends object | null ? string | null : T[K]) : never }
-const effects = shallowRef<Record<Group, Shown<FieldEffect>[]>>({ movement: [], senses: [] })
+/** 效果一行（已过显示出口的编辑窗口读数 person.fields，和编辑窗口同一份类型）。 */
+type Effect = NonNullable<ShownFieldInfo['effects']>[number]
+const effects = shallowRef<Record<Group, Effect[]>>({ movement: [], senses: [] })
 async function loadEffects(): Promise<void> {
   const [m, s] = await Promise.all([person.fields({ path: 'system.attributes.movement' }), person.fields({ path: 'system.attributes.senses' })])
-  effects.value = { movement: ((m?.effects ?? []) as never as Shown<FieldEffect>[]).filter((e) => !e.manual), senses: ((s?.effects ?? []) as never as Shown<FieldEffect>[]).filter((e) => !e.manual) }
+  effects.value = { movement: (m?.effects ?? []).filter((e) => !e.manual), senses: (s?.effects ?? []).filter((e) => !e.manual) }
 }
-watch(() => person.sheet, () => void loadEffects(), { immediate: true })
+// 效果有变（加删物品 / 专长、开关效果）才重读；改体型、取下感官这类不碰效果的改动不重读（以前每次都多跑两趟小窗，和下一步改动抢）
+const effectSig = computed(() => JSON.stringify([(person.sheet?.effects as Array<{ id: string; disabled: boolean }> | undefined)?.map((e) => `${e.id}${e.disabled ? '-' : '+'}`), (person.sheet?.items ?? []).length]))
+watch(effectSig, () => void loadEffects(), { immediate: true })
 /** 开关点下去马上翻过去、写的时候标「正在写入」；没写成就翻回已保存的样子（写失败的原因由提示条说）。 */
-async function toggleEffect(e: Shown<FieldEffect>, on: boolean): Promise<void> {
+async function toggleEffect(e: Effect, on: boolean): Promise<void> {
   pendingOn.value = { ...pendingOn.value, [e.effect]: on }
   const ok = await person.edit(`${on ? '启用' : '停用'}${effectName(e)}的效果`, [{ kind: 'effect', effectId: e.effect, ...(e.itemId ? { itemId: e.itemId } : {}), path: 'disabled', value: !on }])
   if (!ok) { const { [e.effect]: _drop, ...rest } = pendingOn.value; pendingOn.value = rest }
 }
 /** 效果改的是哪一项（速度 / 感官种类按库里的名字）、怎么改（加法写成 +10，其余照官方改法名 + 值）。 */
-const effectText = (group: Group, e: Shown<FieldEffect>): string => {
+const effectText = (group: Group, e: Effect): string => {
   const what = nameOf(group, e.key.split('.').at(-1) ?? e.key)
   const plain = e.value.replace(/\s+/g, '')
   return `${what} ${e.modeCode === 'add' && /^[+-]?\d+(\.\d+)?$/.test(plain) ? (Number(plain) >= 0 ? `+${Number(plain)}` : String(Number(plain))) : `${e.mode ?? ''} ${e.value}`}`
@@ -142,9 +145,9 @@ const effectText = (group: Group, e: Shown<FieldEffect>): string => {
 /** 刚点过、还在写的开关先按点的样子显示（写完人物读数一更新就清掉），点下去马上有反馈。 */
 const pendingOn = ref<Record<string, boolean>>({})
 watch(() => person.sheet, () => { pendingOn.value = {} })
-const effectOn = (e: Shown<FieldEffect>): boolean => pendingOn.value[e.effect] ?? !((person.sheet?.effects as Array<{ id: string; disabled: boolean }> | undefined)?.find((x) => x.id === e.effect)?.disabled ?? e.disabled)
+const effectOn = (e: Effect): boolean => pendingOn.value[e.effect] ?? !((person.sheet?.effects as Array<{ id: string; disabled: boolean }> | undefined)?.find((x) => x.id === e.effect)?.disabled ?? e.disabled)
 /** 效果这一行叫什么：来自哪件物品 / 专长（已过显示出口），人物自己身上的效果用效果名。 */
-const effectName = (e: Shown<FieldEffect>): string => e.origin ?? e.name ?? '效果'
+const effectName = (e: Effect): string => e.origin ?? e.name ?? '效果'
 
 // —— 阵营：库里的阵营代号按两条轴排成九宫格（守序 / 中立 / 混乱 × 善良 / 中立 / 邪恶），外加无阵营；也能自己写 ——
 const AXES = { law: ['L', 'NX', 'C'], good: ['G', 'NY', 'E'] } // 作者阵营代号的两条轴（NX / NY = 某一条轴上的中立）

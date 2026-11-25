@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, markRaw, ref, onMounted } from 'vue'
+import { computed, markRaw, ref, onMounted, watch } from 'vue'
 import { useCampaignStore } from '../../stores/campaign'
 import { CATEGORIES, SORTS, useRosterStore, type CategoryId, type ListView } from '../../stores/roster'
 import Icon from '../kit/Icon.vue'
@@ -17,6 +17,8 @@ const campaign = useCampaignStore()
 const modal = useModalStore()
 const person = usePersonStore()
 onMounted(() => void store.ensure())
+// 从人物页回到列表：人物页里的改动（升级、改名……）不在后台刷列表（会和下一步改动抢小窗），回来时刷一次
+watch(() => person.id, (now, was) => { if (was && !now) void store.refresh() })
 
 const tabs = computed(() => [...CATEGORIES.map((c) => ({ id: c.id as ListView, label: c.label })), { id: 'all' as ListView, label: '全部' }])
 const trash = computed(() => store.view === 'trash')

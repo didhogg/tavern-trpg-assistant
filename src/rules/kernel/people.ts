@@ -9,9 +9,10 @@ import type { EntryRef } from '../../library/scopes'
 import { kernelActorSchema, type KernelActor, type KernelChange } from '../../schemas/kernel'
 import type { SheetEdit } from './frame/commands-sheet'
 import type { Displayed, FrameText } from './shown'
-import type { FieldInfo } from './person-views'
 export type { FieldEffect, FieldInfo, ShownField, ShownFieldInfo, SpecialTraits, TraitChoices } from './person-views'
 import { executed } from './host'
+import { stopwatch } from '../../core/stopwatch'
+import { readFields, readLevelPreview, readShown, readSheet } from './people-sheet'
 import { actorData } from './rebuild'
 import { baseName, nextNames } from './people-names'
 export { nextNames } from './people-names'
@@ -140,45 +141,20 @@ export class KernelPeople {
     return this.call(ownerKey, 'preparedActors')
   }
 
-  /** 读人物页：官方数值 + 官方显示数据（过唯一出口）。 */
-  async sheet(ownerKey: string, actorId: string) {
-    // 显示文字过唯一出口：物品 / 特性 / 效果名换成本战役语言，带作者编号的配上库条目（ref）；怪物动作等由小窗按作者编号在条目里定位
-    // 分段计时（写完重读整张人物是每次改动后等得最久的一段）：对照表 / 小窗读数 / 过显示出口
-    const t0 = performance.now(); const ms: Record<string, number> = {}; let t = t0
-    const lap = (name: string): void => { const now = performance.now(); ms[name] = Math.round(now - t); t = now }
-    const savedActor = await this.saved(ownerKey, actorId)
-    lap('saved')
-    const refs = (savedActor?.refs ?? []).map((r) => ({ set: r.set, prop: r.prop, hash: r.hash }))
-    const shownBy = await this.deps.runtime.displayFor(ownerKey, refs)
-    lap('display')
-    const out = await this.call(ownerKey, 'sheet', actorId, shownBy.entries)
-    lap('frame')
-    if (out.status !== 'complete') return out
-    // 物品 / 效果名和官方显示数据（view）一起过唯一显示出口
-    const shown = await shownBy.show({ shown: out.result.shown, view: out.result.view, levels: out.result.levels })
-    lap('show')
-    console.debug('[trpg-assistant] 人物读数用时', JSON.stringify({ ...ms, refs: refs.length }))
-    // P6-R：人物存完整数据，没有“自动基准”可比，金线不再有（changed 留空给旧调用方）
-    const changed: ChangedField[] = []
-    // off = 这个人现在取下了哪几项（存档里的安排；特征 / 职业与出身单元按它显示「已取下」、装回 = 去掉那一行）
-    const off = savedActor?.off ?? []
-    return { ...out, result: { ...out.result, shown: shown.value.shown, view: shown.value.view, levels: shown.value.levels, off, changed, changedItems: {} as Record<string, ChangedField[]>, baseKnown: true, ...(shown.missed.length ? { untranslated: shown.missed } : {}) } }
+  /** 只读取数用的几样（people-sheet.ts 的实现拿它读存档、调小窗、过显示出口）。 */
+  private ctx() { return { saved: (k: string, id: string) => this.saved(k, id), call: (k: string, fn: string, ...args: unknown[]) => this.call(k, fn, ...args), runtime: this.deps.runtime } }
+  /** 读人物页：官方数值 + 官方显示数据（过唯一出口），实现在 people-sheet.ts。 */
+  sheet(ownerKey: string, actorId: string) {
+    return readSheet(this.ctx(), ownerKey, actorId)
   }
 
-  /** 编辑窗口：一块字段的官方定义（名字 / 种类 / 选项 / 底值）+ 改到它的效果 + 官方明细（P6-R），过唯一出口。 */
-  async fields(ownerKey: string, actorId: string, target: { itemId?: string; path: string }) {
-    const out = await this.call(ownerKey, 'fieldInfo', actorId, target)
-    if (out.status !== 'complete') return out
-    const shown = await (await this.deps.runtime.displayFor(ownerKey, [])).show(out.result as FieldInfo)
-    return { ...out, result: shown.value }
+  /** 编辑窗口：一块字段的官方定义 + 改到它的效果 + 官方明细（people-sheet.ts readFields）。 */
+  fields(ownerKey: string, actorId: string, target: { itemId?: string; path: string }) {
+    return readFields(this.ctx(), ownerKey, actorId, target)
   }
 
   /** 只读的小窗取数并过唯一出口（特质选项 traitChoices、特殊特质 specialTraits……）：不写存档；没取成 = null。 */
-  async shown<T>(ownerKey: string, fn: string, ...args: unknown[]): Promise<T | null> {
-    const out = await this.call(ownerKey, fn, ...args)
-    if (out.status !== 'complete') return null
-    return (await (await this.deps.runtime.displayFor(ownerKey, [])).show(out.result)).value as T
-  }
+  shown<T>(ownerKey: string, fn: string, ...args: unknown[]): Promise<T | null> { return readShown<T>(this.ctx(), ownerKey, fn, ...args) }
 
   /** 官方物品筛选（人物页工具条筛选开关）：只读，交回通过的物品编号。 */
   async filterItems(ownerKey: string, actorId: string, filters: string[]): Promise<string[] | null> {
@@ -264,14 +240,7 @@ export class KernelPeople {
    * 降级演练（职业与出身弹窗右边的降级预览）：官方在小窗里真降一次，交回会收回的物品（已过显示出口）、生命上限 / 总等级前后；
    * 只算不存，算完马上按存档退回。
    */
-  async levelPreview(ownerKey: string, actorId: string, classId: string, delta: number) {
-    const refs = ((await this.saved(ownerKey, actorId))?.refs ?? []).map((r) => ({ set: r.set, prop: r.prop, hash: r.hash }))
-    const shownBy = await this.deps.runtime.displayFor(ownerKey, refs)
-    const out = await this.call(ownerKey, 'levelPreview', actorId, classId, delta, shownBy.entries)
-    await this.cancel(ownerKey, [actorId])
-    if (out.status !== 'complete') return out
-    return { ...out, result: (await shownBy.show(out.result)).value }
-  }
+  levelPreview(ownerKey: string, actorId: string, classId: string, delta: number) { return readLevelPreview({ ...this.ctx(), cancel: (k, ids) => this.cancel(k, ids) }, ownerKey, actorId, classId, delta) }
   /** 取消：小窗里这些人按存档退回。 */
   async cancel(ownerKey: string, ids: string[]) {
     for (const id of ids) await this.deps.runtime.restore(ownerKey, id, await this.saved(ownerKey, id))
@@ -365,8 +334,7 @@ export class KernelPeople {
    */
   async setOff(ownerKey: string, actorId: string, off: KernelActor['off']) {
     // 分段计时（驾驶员 11-25 评测：取下 / 装回超过 1 秒，要量清等在哪一段）：读存档 / 小窗重新准备 / 拆成存档格式 / 写存档
-    const t0 = performance.now(); const ms: Record<string, number> = {}; let t = t0
-    const lap = (name: string): void => { const now = performance.now(); ms[name] = Math.round(now - t); t = now }
+    const w = stopwatch(); const lap = w.lap
     const saved = await this.saved(ownerKey, actorId)
     if (!saved) throw new Error(`存档里没有这个人物：${actorId}`)
     const rev = await this.rev(ownerKey)
@@ -384,7 +352,7 @@ export class KernelPeople {
       lap('compact')
       const kernel = (await this.deps.saves.setOff(ownerKey, compact, off, rev)).kernel
       lap('save')
-      return { ok: true as const, problems: [], kernel, ms: { ...ms, total: Math.round(performance.now() - t0) } }
+      return { ok: true as const, problems: [], kernel, ms: w.done() }
     } catch (error) {
       await back()
       throw error
