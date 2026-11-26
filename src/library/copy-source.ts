@@ -34,7 +34,7 @@ export interface CopyOptions {
   /** 要存的来源（作者的 source 标识）。 */
   source: string
   /** 只存这一条（类别 + 作者编号）；不给就是整个来源。 */
-  entry?: { prop: string; hash: string }
+  entry?: { prop: string; hash: string; resolved?: Record<string, unknown> }
   /** 已有的本地副本内容：新内容并进去，同编号的换成新的（作者按来源认包，同来源再存会整个替换）。 */
   base?: Record<string, unknown>
   /** 固定的库版本；不给时按旧 files 表读。 */
@@ -44,17 +44,22 @@ export interface CopyOptions {
 }
 
 export async function copyRawSource(o: CopyOptions): Promise<RawCopy> {
-  const frame = await o.lib.frameOf(o.official.codeSet)
+  const frame = await o.lib.frameOf(o.official.codeSet, o.view)
   const loaders = await frame.call('loaders')
   const corpusData = new Set(loaders.filter((l) => l.kind === 'corpus').flatMap((l) => l.props.slice(1)))
   const props = new Set(loaders.flatMap((l) => l.props).filter((p) => !p.startsWith('raw_') && !corpusData.has(p)))
+  if (o.entry) for (const prop of props) if (prop !== o.entry.prop) props.delete(prop)
   const want = low(o.source)
   const found: Record<string, Record<string, unknown>[]> = {}
   const skipped: RawCopy['skipped'] = []
 
   // 1. 官方原始文件里这个来源的记录：只看作者网站实际读的数据文件
   const have = new Set(o.view ? await o.view.filePaths(o.official) : (await o.db.files.where('source').equals(o.official.id).toArray()).map((f) => f.path))
-  for (const path of await o.authorFiles()) {
+  const paths = new Set(await o.authorFiles())
+  for (const loader of loaders) {
+    if (loader.kind === 'corpus' && loader.index && props.has(loader.props[0])) paths.add(`data/${loader.index}`)
+  }
+  for (const path of paths) {
     // 生成文件（作者从书正文里抽出来的表格等）照旧不复制，书 / 冒险正文在第 3 步按目录取
     if (!have.has(path) || path.startsWith('data/generated/') || path.startsWith('data/adventure/') || path.startsWith('data/book/')) continue
     const text = o.view ? (await o.view.fileGet(o.official, path))?.text : (await o.db.files.get([o.official.id, path]))?.text
@@ -75,27 +80,27 @@ export async function copyRawSource(o: CopyOptions): Promise<RawCopy> {
     const hashes = all.length ? await frame.call('rawHashes', o.entry.prop, all) : []
     const one = all.filter((_, i) => hashes[i] === o.entry!.hash)
     for (const k of Object.keys(found)) delete found[k]
+    if (one.length > 1 && o.entry.resolved) throw new Error('作者文件里有多个相同编号，无法确认要导出哪一条')
     if (one.length) found[o.entry.prop] = one
+    else if (o.entry.resolved) found[o.entry.prop] = [await frame.call('cleanEntity', o.entry.resolved)]
   }
 
   // 3. 书 / 冒险正文：目录行在 book / adventure 里，正文在各自的文件里（作者加载器的文件拼法 corpusFile）
   const corpora: RawCopy['corpora'] = []
-  if (!o.entry) {
-    for (const l of loaders.filter((x) => x.kind === 'corpus')) {
-      const [prop, propData] = l.props
-      for (const row of found[prop] ?? []) {
-        const id = String(row.id ?? '')
-        const path = await frame.call('corpusFile', prop, id)
-        const text = o.view ? (await o.view.fileGet(o.official, path))?.text : (await o.db.files.get([o.official.id, path]))?.text
-        if (text == null) { skipped.push({ what: `${prop} ${id}`, reason: '正文还没下载' }); continue }
-        try {
-          const data = (JSON.parse(text) as Record<string, unknown>)[propData]
-          if (!Array.isArray(data)) throw new Error(`没有 ${propData}`)
-          found[propData] = [...(found[propData] ?? []), ...data.filter(isEntity)]
-          corpora.push({ prop, id })
-        } catch (e) {
-          skipped.push({ what: `${prop} ${id}`, reason: e instanceof Error ? e.message : String(e) })
-        }
+  for (const l of loaders.filter((x) => x.kind === 'corpus')) {
+    const [prop, propData] = l.props
+    for (const row of found[prop] ?? []) {
+      const id = String(row.id ?? '')
+      const path = await frame.call('corpusFile', prop, id)
+      const text = o.view ? (await o.view.fileGet(o.official, path))?.text : (await o.db.files.get([o.official.id, path]))?.text
+      if (text == null) { skipped.push({ what: `${prop} ${id}`, reason: '正文还没下载' }); continue }
+      try {
+        const data = (JSON.parse(text) as Record<string, unknown>)[propData]
+        if (!Array.isArray(data)) throw new Error(`没有 ${propData}`)
+        found[propData] = [...(found[propData] ?? []), ...data.filter(isEntity)]
+        corpora.push({ prop, id })
+      } catch (e) {
+        skipped.push({ what: `${prop} ${id}`, reason: e instanceof Error ? e.message : String(e) })
       }
     }
   }

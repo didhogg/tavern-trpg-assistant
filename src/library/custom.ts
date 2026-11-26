@@ -5,6 +5,7 @@ import { BrewPacks } from './brew-packs'
 import { copyEntryToPack, copyToMine, type CopyDeps } from './custom-copy'
 import { flattenOldCopies, migrateMine } from './custom-migrate'
 import { importReplaces } from './import-replace'
+import { exportBrew, exportSelection, type LibraryExportTarget } from './custom-export'
 import { exportBackup, exportScopes, importBackup, importScopes, type BackupDeps, type ScopeConfig } from './custom-backup'
 import { listDrafts, saveDraft, type DraftInput } from './custom-drafts'
 import { blankEntry, entryTypes, type ConvertMode, type ConverterInfo, type NewEntryDeps } from './custom-new'
@@ -326,17 +327,9 @@ export class CustomLibrary {
     return { kind: 'pack' as const, ...made }
   }
 
-  /** 导出一个包：作者格式原样（文件名 + 内容）。 */
-  async exportBrew(codeSet: string, docIdLocal: string) {
-    try { return await (await this.frame(codeSet)).call('brewExport', docIdLocal) }
-    catch {
-      // 官方资料没装时作者窗口开不起来：直接读作者存储原文，包仍是作者格式（M5）
-      const view = await this.lib.currentView()
-      const raw = (await view.kvGet(codeSet, 'HOMEBREW_2_STORAGE')) as Array<{ head?: Record<string, unknown>; body?: unknown }> | null
-      const hit = (raw ?? []).find((d) => String(d.head?.docIdLocal ?? '') === docIdLocal)
-      return hit ? { filename: (hit.head?.filename as string | undefined) ?? `${docIdLocal}.json`, body: hit.body } : null
-    }
-  }
+  /** 导出原始包或书架指定的包 / 条目，均只读。 */
+  exportBrew(codeSet: string, docIdLocal: string) { return exportBrew({ lib: this.lib }, codeSet, docIdLocal) }
+  exportSelection(target: LibraryExportTarget) { return exportSelection({ db: this.db, lib: this.lib, scoped: this.scoped }, target) }
 
   /** 完整备份：自制（作者格式原样）+ 范围设置 + 房规链接；官方数据不进备份（custom-backup.ts）。 */
   exportBackup(): Promise<Record<string, string>> { return exportBackup(this.backupDeps) }

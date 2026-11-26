@@ -35,6 +35,7 @@ import EntryOverridesPage from './EntryOverridesPage.vue'
 import { openMineById } from './mine-actions'
 import { openEditMine, openHouseEditor } from './edit-flow'
 import { packTitle, sideOf } from './mine'
+import { useLibraryExport } from './export-menu'
 
 /** 条目详情壳（U1b）：弹窗里的一页。在 sheet 弹窗里前进；‹ 返回由宿主给。 */
 // bodyOnly：嵌在别处原地看原文（人物行动页展开一行）——只要正文，不带本战役开关、编辑、分页这些库页的操作
@@ -44,6 +45,7 @@ const lib = useLibViewStore()
 const campaign = useCampaignStore()
 const modal = useModalStore()
 const toast = useToastStore()
+const { menu: exportItem, run: exportJson } = useLibraryExport('导出这个条目')
 
 /** 这一条在【我的库】的哪个包里（✎ 直接编辑）；不是就 null。 */
 const mineOf = computed(() => {
@@ -76,6 +78,14 @@ function openVersionManage(): void {
 function onEntryMenu(key: string): void {
   const d = detail.value
   if (!d) return
+  if (key === 'export') {
+    const c = lib.campaignLib
+    if (!c) { toast.error('库还没准备好，请重新打开这个条目'); return }
+    const selection = d.docIdLocal ? { docIdLocal: d.docIdLocal } : props.selection
+    const target = { kind: 'entry' as const, campaign: c, ref: props.entryRef, selection }
+    void authorName(app.svc(), codeSet.value, d.ref.prop, d.item).then((name) => exportJson(target, name))
+    return
+  }
   if (key === 'manage') { openVersionManage(); return }
   if (key !== 'copy') return
   modal.push({ key: `copy:${props.pageKey ?? d.ref.hash}`, title: '复制成我的', component: CopyEntryPage, variant: 'sheet', props: { entryRef: d.ref, name: itemName(d.item), onDone: (id: string, cs: string) => void openMineById(app.svc(), id, cs) } })
@@ -226,7 +236,7 @@ async function setEnabled(next: boolean): Promise<void> {
         <span class="trpg-switch-wrap"><Switch :model-value="enabled" label="本战役启用这一条" :disabled="!lib.bound" @update:model-value="setEnabled" /><span>本战役启用</span></span>
         <span class="lib-end">
           <button class="trpg-icon-btn" type="button" :aria-label="mineOf ? '编辑这一条' : '改成房规（原件不动）'" :title="mineOf ? '编辑这一条' : '改成房规（原件不动）'" data-testid="entry-edit" @click="editThis"><Icon name="pencil-simple" :size="18" /></button>
-          <MoreMenu label="这一条" :items="[{ key: 'copy', label: '复制成我的' }, { key: 'manage', label: '版本管理' }]" @select="onEntryMenu" />
+          <MoreMenu label="这一条" :items="[{ key: 'copy', label: '复制成我的' }, { key: 'manage', label: '版本管理' }, exportItem]" @select="onEntryMenu" />
         </span>
       </div>
       <TabsRoot v-model="tab" class="lib-entrytabs">

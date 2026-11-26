@@ -7,6 +7,7 @@ import { stableStringify } from '../core/hash'
 import type { EditFilter, EditRow } from './custom-edits'
 import type { FieldChange } from './house-diff'
 import type { LibraryService } from './service'
+import type { LibraryView } from './revision'
 import type { ScopedLibrary } from './scoped'
 import type { CampaignLibrary, EntryRef } from './scopes'
 import { getSource } from './sources'
@@ -17,13 +18,13 @@ type Frame = { call: (cmd: string, ...a: unknown[]) => Promise<unknown> }
 export type RawDeps = { lib: Pick<LibraryService, 'frameOf' | 'storedItem'> }
 
 /** 一条现在的原文。自制的给所在的包（可编辑自制 = 房规）和作者 uniqueId。找不到给 null。 */
-export async function rawEntry(d: RawDeps, ref: EntryRef): Promise<{ entity: Ent; docIdLocal: string | null; uniqueId: string | null } | null> {
+export async function rawEntry(d: RawDeps, ref: EntryRef, view?: LibraryView): Promise<{ entity: Ent; docIdLocal: string | null; uniqueId: string | null } | null> {
   const set = getSource(ref.set)
   if (set.kind === 'official') {
-    const s = await d.lib.storedItem(ref.set, ref.prop, ref.hash)
+    const s = await d.lib.storedItem(ref.set, ref.prop, ref.hash, view)
     return s ? { entity: s.item as Ent, docIdLocal: null, uniqueId: null } : null
   }
-  const f = (await d.lib.frameOf(set.codeSet)) as unknown as Frame
+  const f = (await d.lib.frameOf(set.codeSet, view)) as unknown as Frame
   const docs = ((await f.call('brewDocIndex')) as Array<{ docIdLocal: string; isEditable: boolean }>) ?? []
   // 可编辑自制（房规）先找，再找各个包
   for (const doc of [...docs].sort((a, b) => Number(b.isEditable) - Number(a.isEditable))) {

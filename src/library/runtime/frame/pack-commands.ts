@@ -4,6 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者程序是没有类型的 JS，这里只做转调 */
 import { A, hashOf, init } from './author'
 import { prepareProp } from './page-prepare'
+import { corpusPairs } from './entry-types-commands'
 
 const mod = (path: string): Promise<any> => import(/* @vite-ignore */ new URL(`js/${path}`, location.href).href)
 const same = (a: unknown, b: string): boolean => String(a ?? '').toLowerCase() === b.toLowerCase()
@@ -100,6 +101,39 @@ export async function packExport(docIdLocal: string, edition?: 'classic' | 'one'
   }
   const src = doc.body._meta?.sources?.at(-1)
   return { filename: doc.head.filename ?? `${A.DataUtil.getCleanFilename(src?.full ?? src?.json ?? 'pack')}.json`, body }
+}
+
+/** 作者单条下载：沿用所属包的包头，按原始类别导出打开的那一条。 */
+export async function packExportEntry(docIdLocal: string, prop: string, hash: string, resolved?: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const doc = await docOf(docIdLocal)
+  const page = A.DataLoader.getPropPage(prop)
+  const related: string[] = A.UrlUtil.PAGE_TO_PROPS?.[page] ?? []
+  let entity: any
+  let rawProp = prop
+  for (const category of new Set([prop, ...related])) {
+    const matches = (doc.body?.[category] ?? []).filter((item: any) => hashOf(prop, item) === hash)
+    if (matches.length > 1) throw new Error('这个包内有多个相同编号，无法确认要导出哪一条')
+    if (matches.length === 1) {
+      entity = matches[0]
+      rawProp = category
+      break
+    }
+  }
+  // 作者运行时生成的条目在原包没有单独一行。使用同包详情给出的作者对象。
+  if (!entity) entity = resolved
+  if (!entity || !doc.body?._meta?.sources?.length) throw new Error('这个条目没有可导出的作者数据')
+  const meta = A.MiscUtil.copyFast(doc.body._meta)
+  const parent = entity._copy?.source
+  // 原包内部引用只导出一条时，目标不一定在文件里。用当前条目已合并的结果。
+  if (parent && meta.sources.some((src: any) => same(src.json, parent)) && resolved && !resolved._copy) {
+    entity = resolved
+    rawProp = prop
+  }
+  const out = { _meta: meta, [rawProp]: [A.DataUtil.cleanJson(A.MiscUtil.copyFast(entity))] }
+  const pair = (await corpusPairs()).find((p) => p.head === rawProp)
+  const attached = pair && entity.id ? doc.body[pair.body]?.find((e: any) => same(e?.id, String(entity.id))) : undefined
+  if (pair && attached) out[pair.body] = [A.DataUtil.cleanJson(A.MiscUtil.copyFast(attached))]
+  return out
 }
 
 /**

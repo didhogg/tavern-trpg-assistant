@@ -3,6 +3,7 @@
 // 整本 / 整包：条目编号一个不改（不用改任何引用），包头在原来源之外多登记一行这份复制件自己的来源（作者按「来源编号组合」认包，
 // utils-brew-base.js _getBrewId，所以每份是不同的包）；和原件同编号的按「同编号不同包」并排，整包选用在 B8-4。
 // 单条：换成目标包自己的来源（成为独立的一条），_copy 别的来源的在包头补依赖声明。
+import { uuid } from '../core/ids'
 import { rawEntry } from './custom-raw'
 import { copyRawSource } from './copy-source'
 import { listPacks, docIdOf, type MyPack, type PackDeps } from './custom-packs'
@@ -12,6 +13,7 @@ import type { LibraryService } from './service'
 import { BUILTIN_SCOPES, sourceUnit, type EntryRef } from './scopes'
 import { officialSourceOf, SOURCES } from './sources'
 import { packStableId } from './versions'
+import type { LibraryView } from './revision'
 
 export interface CopyDeps extends PackDeps {
   db: LibraryDatabase
@@ -32,18 +34,19 @@ const brewSetOf = (codeSet: string) => {
  * 作者网站实际读哪些数据文件：开一个全新的隔离小窗（自制列表放空，只读官方数据；作者缓存是空的，不会漏），
  * 让作者把每类网站数据取一遍（小窗 authorDataFiles）。用完关掉、清掉临时存储。
  */
-export async function authorFiles(d: Pick<CopyDeps, "db" | "lib">, codeSet: string): Promise<string[]> {
-  const view = await d.lib.currentView()
-  const scope = `${codeSet}:author-files:${Date.now()}`
+export async function authorFiles(d: Pick<CopyDeps, 'db' | 'lib'>, codeSet: string, viewArg?: LibraryView): Promise<string[]> {
+  const view = viewArg ?? await d.lib.currentView()
+  const scope = `${codeSet}:author-files:${uuid()}`
   // 临时范围里找不到的会退回读当前版本的存储（handlers.ts）：先放一个空的自制列表，作者只看得到官方数据（alternatives.ts withIsolatedBrew 同法）
   await d.db.kv.put({ scope, key: 'HOMEBREW_2_STORAGE', value: [] })
-  const f = await d.lib.openFrameIn(codeSet, scope, view)
+  let f: Awaited<ReturnType<CopyDeps['lib']['openFrameIn']>> | undefined
   try {
+    f = await d.lib.openFrameIn(codeSet, scope, view)
     const r = await f.call('authorDataFiles')
     if (!r.paths.length) throw new Error(`作者一个数据文件都没读到，没法确定复制哪些内容${r.failed.length ? `（${r.failed[0].error}）` : ''}`)
     return r.paths
   } finally {
-    f.close()
+    f?.close()
     await d.db.kv.where('scope').anyOf(scope, `${scope}:local`).delete()
   }
 }
