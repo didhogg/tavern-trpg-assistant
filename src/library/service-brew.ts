@@ -49,7 +49,7 @@ export async function afterBrewChange(ctx: BrewContext, s: SourceEntry, view: Li
 export class BrewDependencyError extends Error {
   readonly missing: NonNullable<BrewParseReport['parse']['missingDeps']>
   constructor(readonly setId: string, missing: NonNullable<BrewParseReport['parse']['missingDeps']>, detail: string) {
-    super(`缺依赖包 ${missing.map((m) => m.source).join('、') || '（未知）'}，这次改动已取消，原有内容没有变化（${detail.slice(0, 160)}）`)
+    super(`缺依赖包 ${missing.map((m) => m.source).join('、')}，这次改动已取消，原有内容没有变化（${detail.slice(0, 160)}）`)
     this.name = 'BrewDependencyError'
     this.missing = missing
   }
@@ -57,7 +57,7 @@ export class BrewDependencyError extends Error {
 
 /** 解析结果能不能发布：缺依赖 / 整类解析失败都不发布（P5 核验 5 + 修法 A）。所有发布自制改动的路径都先过这里。 */
 export function assertPublishable(s: SourceEntry, report: BrewParseReport): void {
-  if (report.parse.missingDeps) throw new BrewDependencyError(s.id, report.parse.missingDeps, report.parse.errors[0]?.error ?? '')
+  if (report.parse.missingDeps?.length) throw new BrewDependencyError(s.id, report.parse.missingDeps, report.parse.errors[0]?.error ?? '')
   const fatal = report.parse.errors.length || Object.values(report.parse.corpora ?? {}).some((c) => c.failed.length)
   if (fatal) {
     const first = report.parse.errors[0]?.error ?? Object.values(report.parse.corpora ?? {}).flatMap((c) => c.failed)[0]?.error ?? '自制解析失败'

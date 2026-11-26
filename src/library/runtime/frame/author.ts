@@ -4,10 +4,23 @@ export const A = globalThis as any
 
 let initialised: Promise<void> | null = null
 
+/** 作者的通用复制流程用 _PAGE 查编号；个别加载器（如 table）只登记了类别和页面，没填 _PAGE。 */
+function bindCopyPages(): void {
+  const builders = A.UrlUtil.URL_TO_HASH_BUILDER
+  for (const [prop, builder] of Object.entries(builders)) {
+    const loader = A.DataUtil[prop]
+    if (loader?._PAGE !== null || typeof loader.pMergeCopy !== 'function') continue
+    const page = A.DataLoader.getPropPage(prop)
+    // 只有作者明确把这两个键登记成同一个编号函数时才补；自定义编号和已有页面照旧。
+    if (page && typeof builder === 'function' && builder === builders[page]) loader._PAGE = page
+  }
+}
+
 /** 作者页面启动时做的初始化（B0 已验证的顺序）。 */
 export function init(): Promise<void> {
   initialised ??= (async () => {
     A.Renderer.get().setBaseUrl('')
+    bindCopyPages()
     await A.PrereleaseUtil.pInit()
     await A.BrewUtil2.pInit()
     await A.ExcludeUtil.pInitialise()

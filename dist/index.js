@@ -22927,9 +22927,9 @@ async function $ie({ source: e, db: t, view: n, openFrame: r, openFrameIn: i }) 
 	try {
 		o.installed = (await c.call("brewInstalled")).map((e) => e.head);
 		let r = await c.call("brewMergeCheck");
-		if (!r.ok) return o.parse.missingDeps = r.missing, o.parse.errors.push({
+		if (!r.ok) return r.missing.length && (o.parse.missingDeps = r.missing), o.parse.errors.push({
 			prop: "*",
-			error: `自制包合并失败（缺依赖）：${r.error ?? ""}`
+			error: `自制包合并失败：${r.error ?? ""}`
 		}), o;
 		for (let t of await c.call("loaders")) if (t.kind === "corpus") {
 			let r = t.props[0], i = o.parse.corpora[r] = {
@@ -23025,11 +23025,11 @@ var eae = class extends Error {
 	setId;
 	missing;
 	constructor(e, t, n) {
-		super(`缺依赖包 ${t.map((e) => e.source).join("、") || "（未知）"}，这次改动已取消，原有内容没有变化（${n.slice(0, 160)}）`), this.setId = e, this.name = "BrewDependencyError", this.missing = t;
+		super(`缺依赖包 ${t.map((e) => e.source).join("、")}，这次改动已取消，原有内容没有变化（${n.slice(0, 160)}）`), this.setId = e, this.name = "BrewDependencyError", this.missing = t;
 	}
 };
 function jw(e, t) {
-	if (t.parse.missingDeps) throw new eae(e.id, t.parse.missingDeps, t.parse.errors[0]?.error ?? "");
+	if (t.parse.missingDeps?.length) throw new eae(e.id, t.parse.missingDeps, t.parse.errors[0]?.error ?? "");
 	if (t.parse.errors.length || Object.values(t.parse.corpora ?? {}).some((e) => e.failed.length)) {
 		let e = t.parse.errors[0]?.error ?? Object.values(t.parse.corpora ?? {}).flatMap((e) => e.failed)[0]?.error ?? "自制解析失败";
 		throw Error(`自制解析失败，没有发布：${e}`);

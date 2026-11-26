@@ -26,7 +26,7 @@ export interface BrewParseReport {
     corpora: Record<string, { count: number; failed: Array<{ id: string; error: string }> }>
     /** 解析期间作者自己报的错误原文（例：自制内容引用了找不到的条目）。内容问题归自制作者，原样交给体检。 */
     authorErrors: string[]
-    /** 作者合并全部自制包失败（缺依赖）：缺的来源与需要它的包。有它就不发布（修法 A，P5 T6）。 */
+    /** 作者明确找不到的依赖来源与需要它的包。有它就不发布（修法 A，P5 T6）。 */
     missingDeps?: Array<{ source: string; packs: Array<{ docIdLocal: string; filename: string | null }> }>
   }
   /** 同编号挂备选（P3-1）：挂了几条、取备选失败的。 */
@@ -59,11 +59,11 @@ export async function parseBrew({ source, db, view, openFrame, openFrameIn }: {
   const frame = await openFrame()
   try {
     report.installed = (await frame.call('brewInstalled')).map((b) => b.head)
-    // 修法 A：先让作者合并一次，缺依赖时它会把整个自制库置空却不报错；在这里接住，标成解析失败（不发布）
+    // 先让作者合并一次，接住本来会丢给网页的错误，避免发布被置空的自制库。
     const merge = await frame.call('brewMergeCheck')
     if (!merge.ok) {
-      report.parse.missingDeps = merge.missing
-      report.parse.errors.push({ prop: '*', error: `自制包合并失败（缺依赖）：${merge.error ?? ''}` })
+      if (merge.missing.length) report.parse.missingDeps = merge.missing
+      report.parse.errors.push({ prop: '*', error: `自制包合并失败：${merge.error ?? ''}` })
       return report
     }
     for (const loader of await frame.call('loaders')) {

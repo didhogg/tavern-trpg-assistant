@@ -83,8 +83,8 @@ export interface MergeCheck {
 
 /**
  * 修法 A（P5 T6）：作者 pGetBrewProcessed 把所有自制包合并成一份；任一依赖缺了，它把错误扔进 setTimeout、结果置空，
- * 整个自制库就静悄悄变空。这里直接调作者同一个合并步骤（_pGetBrewProcessed_），让错误交回来；缺的来源从作者错误原文
- * 和各包声明的依赖里找出来。不改作者程序。
+ * 整个自制库就静悄悄变空。这里直接调作者同一个合并步骤（_pGetBrewProcessed_），让错误交回来；
+ * 只有作者明确找不到某个依赖来源时，才用各包的声明查出谁需要它。
  */
 export async function brewMergeCheck(): Promise<MergeCheck> {
   await init()
@@ -97,22 +97,17 @@ export async function brewMergeCheck(): Promise<MergeCheck> {
   } catch (e) {
     U._cache_brewsProc = null
     const error = e instanceof Error ? e.message : String(e)
-    const named = new Set([...error.matchAll(/source "([^"]+)"/g)].map((m) => m[1].toLowerCase()))
-    const brews: any[] = await U.pGetBrew({ lockToken })
-    const have = new Set(brews.flatMap((b) => (b.body?._meta?.sources ?? []).map((x: any) => String(x?.json ?? '').toLowerCase())))
-    const by = new Map<string, { source: string; packs: Array<{ docIdLocal: string; filename: string | null }> }>()
-    for (const b of brews) {
+    // DataUtil._pLoadByMeta_pGetPrereleaseBrew 在试玩稿和自制来源都找不到时抛出这句。
+    const source = /^Could not find prerelease\/brew URL for source "([^"]+)"$/.exec(error)?.[1]
+    if (!source) return { ok: false, error, missing: [] }
+    const missing: MergeCheck['missing'][number] = { source, packs: [] }
+    for (const b of await U.pGetBrew({ lockToken })) {
       const { available, unavailable } = U._getBrewDependencySources({ brewDoc: b, brewIndex: {} })
-      for (const src of [...available, ...unavailable] as string[]) {
-        const k = src.toLowerCase()
-        if (have.has(k) && !named.has(k)) continue
-        if (named.size && !named.has(k)) continue
-        const hit = by.get(k) ?? { source: src, packs: [] }
-        hit.packs.push({ docIdLocal: String(b.head?.docIdLocal ?? ''), filename: b.head?.filename ?? null })
-        by.set(k, hit)
+      if (([...available, ...unavailable] as string[]).some((src) => src.toLowerCase() === source.toLowerCase())) {
+        missing.packs.push({ docIdLocal: String(b.head?.docIdLocal ?? ''), filename: b.head?.filename ?? null })
       }
     }
-    return { ok: false, error, missing: [...by.values()] }
+    return { ok: false, error, missing: [missing] }
   } finally {
     U._LOCK.unlock()
   }
