@@ -48,7 +48,6 @@ import { KernelPrecompute } from '../rules/kernel/precompute'
 import { kernelFilesVersion } from '../rules/kernel/cache'
 import { cardFields, cardTypes, type CardFields, type CardTypesResult } from '../rules/kernel/card-types'
 import { PrecomputeQueue } from '../rules/kernel/precompute-queue'
-import { convertSchedule } from '../rules/kernel/convert-schedule'
 import { SOURCES, brewSourceOf, getSource } from '../library/sources'
 import { TrpgError } from './errors'
 import type { ImportDeps } from './transfer/importer'
@@ -198,9 +197,12 @@ export function createBackend(opts: BackendOptions): Backend {
     for (const codeSet of [...new Set(codeSets)]) rows.push(await precompute.run({ codeSet, signal, onProgress }))
     return rows
   }
-  // 后台换算排队（改自制、装资料都在这里；convert-schedule.ts）
-  const schedule = convertSchedule({ db, precompute: () => precompute, installing: () => tasks.list().some((t) => t.status === 'running' && t.kind !== 'precompute') })
-  const queue = schedule.queue
+  // 自动补算只由自制、房规改动触发。全量换算会和酒馆界面争抢 WebKit 主线程，留给显式任务；实际使用走会话缓存。
+  const queue = new PrecomputeQueue(
+    async (codeSet, _mode, signal) => precompute?.run({ codeSet, mode: 'changed', signal }),
+    5000,
+    () => tasks.list().some((t) => t.status === 'running' && t.kind !== 'precompute'),
+  )
   const logs = new LogStore(db)
   // P5.5 U2：编辑只写原文就发布，停手 5 秒后后台批量解析（brew-queue.ts）
   let brewQueue: BrewParseQueue | null = null
@@ -245,14 +247,10 @@ export function createBackend(opts: BackendOptions): Backend {
     },
     // 单独重跑换算的任务（startPrecompute）
     precompute: async (setId, _view, signal, onProgress) => runPrecompute([getSource(setId).codeSet], signal, onProgress),
-    afterInstall: async (setId, view) => {
-      await service.warmEnglishPairs(setId, view) // 配对表换版本后要重建，趁下载刚完成建好（P5-1 B-42）
-      await schedule.afterInstall(setId)
-    },
-    onChange: (t) => { if (t.status === 'running' && t.kind !== 'precompute') schedule.installStarted() } })
+    afterInstall: async (setId, view) => { await service.warmEnglishPairs(setId, view) }, // 配对表换版本后要重建（P5-1 B-42）
+    onChange: (t) => { if (t.status === 'running' && t.kind !== 'precompute') queue.interrupt() } })
   ready = ready.then(async () => {
     await tasks.restore()
-    await schedule.resume()
     if (await db.revisions.where('status').equals('preparing').count()) afterPublish()
   })
   const dataVersion = libraryDataVersion(revisions, service)
